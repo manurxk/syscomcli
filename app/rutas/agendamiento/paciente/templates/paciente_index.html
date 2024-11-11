@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Formulario Registrar Paciente
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h3>Formulario Registrar Paciente</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col col-md-6">
+                <!-- Input nombre -->
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" class="form-control" id="nombre">
+                </div>
+        
+                <!-- Input apellido -->
+                <div class="form-group">
+                    <label for="apellido">Apellido:</label>
+                    <input type="text" class="form-control" id="apellido">
+                </div>
+        
+                <!-- Input CI -->
+                <div class="form-group">
+                    <label for="cedula">Documento de Identidad:</label>
+                    <input type="text" class="form-control" id="cedula">
+                </div>
+        
+                <!-- Input fecha de nacimiento -->
+                <div class="form-group">
+                    <label for="fecha_nacimiento">Fecha de Nacimiento:</label>
+                    <input type="date" class="form-control" id="fecha_nacimiento">
+                </div>
+        
+                <!-- Input contacto -->
+                <div class="form-group">
+                    <label for="contacto">Contacto:</label>
+                    <input type="text" class="form-control" id="contacto">
+                </div>
+                 
+                <br>
+                <!-- Botón de registro -->
+                <div>
+                    <button type="button" class="btn btn-outline-info" id="btn_registrar_paciente">Registrar Paciente</button>
+                </div>
+            </div>
+        
+            <div class="col col-md-6">
+                <!-- Input fecha de registro -->
+                <div class="form-group">
+                    <label for="fecha_registro">Fecha de Registro:</label>
+                    <input type="date" class="form-control" id="fecha_registro">
+                </div>
+        
+                <!-- Combo país -->
+                <div class="form-group">
+                    <label for="cbo_pais">País:</label>
+                    <select id="cbo_pais" class="custom-select">
+                        <option selected>Seleccione el país</option>
+                        <option value="1">Paraguay</option>
+                        <option value="2">Argentina</option>
+                        <option value="3">Colombia</option>
+                        <option value="4">México</option>
+                    </select>
+                </div>
+        
+                <!-- Combo ciudad -->
+                <div class="form-group">
+                    <label for="cbo_ciudad">Ciudad:</label>
+                    <select id="cbo_ciudad" class="custom-select">
+                        <option selected>Seleccione la ciudad</option>
+                        <option value="1">Ñemby</option>
+                        <option value="2">Limpio</option>
+                        <option value="3">Asunción</option>
+                        <option value="4">Villa Rica</option>
+                    </select>
+                </div>
+        
+                <!-- Combo barrio -->
+                <div class="form-group">
+                    <label for="cbo_barrio">Barrio:</label>
+                    <select id="cbo_barrio" class="custom-select">
+                        <option selected>Seleccione el barrio</option>
+                        <option value="1">Barrio 1</option>
+                        <option value="2">Barrio 2</option>
+                        <option value="3">Barrio 3</option>
+                        <option value="4">Barrio 4</option>
+                    </select>
+                </div>
+        
+                <!-- Input contacto de emergencia -->
+                <div class="form-group">
+                    <label for="contacto_emergencia">Contacto de Emergencia:</label>
+                    <input type="text" class="form-control" id="contacto_emergencia">
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
