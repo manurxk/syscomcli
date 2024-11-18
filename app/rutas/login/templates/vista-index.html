@@ -1,134 +1,338 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Inicio
 {% endblock %}
 
 {% block contenido %}
+<style>
+    /* Estilos generales para el cuerpo */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f2f5;
+    }
 
+    /* Estilos para el banner de bienvenida */
+    .welcome-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #2bbe7c;
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilos para el texto del banner */
+    .welcome-text {
+        max-width: 50%;
+    }
+
+    .welcome-text h1 {
+        font-size: 2.5em;
+        margin: 0;
+    }
+
+    .welcome-text p {
+        font-size: 1.2em;
+        margin: 10px 0;
+    }
+
+    /* Estilos para los botones */
+    button {
+        background-color: #0f9976;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 1em;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0f9976;
+    }
+
+    /* Estilo para la imagen del banner */
+    .welcome-image {
+        width: 150px;
+        height: 150px;
+        background-image: url('https://www.flaticon.com/svg/static/icons/svg/2907/2907259.svg'); /* Reemplazar por URL o imagen local */
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    /* Estilos para el contenedor de los botones */
+    .button-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        margin: 20px;
+    }
+
+    /* Estilo base para los botones grandes */
+    .large-button {
+        flex: 1 0 30%;
+        max-width: 30%;
+        margin: 10px;
+        padding: 50px;
+        background-color: transparent;
+        color: #0f0f0f;
+        border: 2px solid #2bbe7c;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 30px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        border-radius: 5px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Efecto hover para los botones */
+    .large-button:hover {
+        background-color: #2bbe7c;
+        color: white;
+        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+        .large-button {
+            flex: 1 0 45%;
+            max-width: 45%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .large-button {
+            flex: 1 0 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horario Interactivo Consultorio Médico</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
             margin: 0;
             padding: 0;
-            background-color: #f0f2f5;
         }
-
-        .welcome-banner {
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 36px;
+            color: #2c3e50;
+        }
+        .header p {
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        .info-box {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background-color: #2bbe7c;
-            color: white;
+            margin-bottom: 20px;
+        }
+        .info-box div {
             padding: 20px;
-            border-radius: 15px;
-            margin: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .welcome-text {
-            max-width: 50%;
-        }
-
-        .welcome-text h1 {
-            font-size: 2.5em;
-            margin: 0;
-        }
-
-        .welcome-text p {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-
-        button {
-            background-color: #0f9976;
-            border: none;
-            color: white;
-            padding: 10px 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            margin: 0 10px;
             text-align: center;
-            text-decoration: none;
-            font-size: 1em;
-            border-radius: 5px;
-            cursor: pointer;
         }
-
-        button:hover {
-            background-color: #0f9976;
+        .info-box div h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
-
-        .welcome-image {
-            width: 150px;
-            height: 150px;
-            background-image: url('https://www.flaticon.com/svg/static/icons/svg/2907/2907259.svg'); /* Reemplaza con una URL o imagen local */
-            background-size: contain;
-            background-repeat: no-repeat;
+        .status-indicator {
+            font-size: 20px;
+            color: #16a085;
         }
-    </style>
-
-    <style>
-        /* Contenedor para los botones */
-        .button-container {
+        .status-indicator.closed {
+            color: #e74c3c;
+        }
+        /* Estilos para el horario interactivo */
+        .horario {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            margin: 20px;
+            justify-content: center;
+            margin-top: 30px;
         }
-    
-        /* Estilo base para los botones con un color azul oscuro */
-        .large-button {
-            flex: 1 0 30%;
-            max-width: 30%;
-            margin: 10px;
-            padding: 50px;
-            background-color: transparent; /* Fondo transparente para el outline */
-            color: #0f0f0f; /* Color del texto azul oscuro */
-            border: 2px solid #2bbe7c; /* Borde azul oscuro */
+        .hora {
+            display: flex;
+            flex-direction: column;
+            margin: 0 5px;
             text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 30px;
-            cursor: pointer;
-            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
-            border-radius: 5px; /* Borde redondeado */
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Sombra */
+            position: relative;
         }
-    
-        /* Efecto hover para los botones */
-        .large-button:hover {
-            background-color: #2bbe7c; /* Fondo azul oscuro en hover */
-            color: white; /* Texto en blanco cuando se hace hover */
-            box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.4); /* Sombra más intensa en hover */
+        .hora span {
+            font-size: 16px;
+            display: block;
+            padding: 5px;
         }
-    
-        /* Responsivo */
-        @media (max-width: 768px) {
-            .large-button {
-                flex: 1 0 45%;
-                max-width: 45%;
-            }
+        .hora.open {
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 5px;
         }
-    
-        @media (max-width: 480px) {
-            .large-button {
-                flex: 1 0 100%;
-                max-width: 100%;
-            }
+        .hora.closed {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 5px;
+        }
+        .line {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background-color: #bdc3c7;
+            transform: translateX(-50%);
         }
     </style>
-
+</head>
 <body>
-    <div class="welcome-banner">
-        <div class="welcome-text">
-            <h1>Bienvenido</h1>
-            <p>Que hacemos hoy</p>
-            <form>
-                <label for="fecha">Fecha:</label>
-                <input type="date" id="fecha" name="fecha">
-            </form>
-            
+
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Consultorio Médico "Salud Total"</h1>
+            <p>Bienvenido al sistema de gestión del consultorio</p>
         </div>
-        <div class="welcome-image">
-            <!-- Imagen de útiles escolares -->
+
+        <!-- Información General -->
+        <div class="info-box">
+            <!-- Nombre del Consultorio -->
+            <div>
+                <h2>Consultorio Médico</h2>
+                <p>Consultorio "Salud Total"</p>
+            </div>
+            <!-- Horarios de Atención -->
+            <div>
+                <h2>Horario de Atención</h2>
+                <p>Lunes a Viernes</p>
+            </div>
+            <!-- Estado del Consultorio -->
+            <div>
+                <h2>Estado</h2>
+                <p id="estado" class="status-indicator">Cargando...</p>
+            </div>
+        </div>
+
+        <!-- Horarios Interactivos -->
+        <div class="horario">
+            <div class="hora open" id="hora1">
+                <span>09:00 - 13:00</span>
+                <div class="line"></div>
+            </div>
+            <div class="hora closed" id="hora2">
+                <span>13:00 - 14:00</span>
+                <div class="line"></div>
+            </div>
+            <div class="hora open" id="hora3">
+                <span>14:00 - 19:00</span>
+                <div class="line"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Hora actual para determinar si está abierta o cerrada
+        const horaActual = new Date().getHours();
+        
+        // Definimos los periodos de atención (en horas)
+        const periodo1 = { inicio: 9, fin: 13 }; // 09:00 - 13:00
+        const periodo2 = { inicio: 13, fin: 14 }; // 13:00 - 14:00
+        const periodo3 = { inicio: 14, fin: 19 }; // 14:00 - 19:00
+
+        // Función para actualizar el estado del consultorio
+        function actualizarEstado() {
+            let estado = "Cerrado"; // Por defecto, el consultorio está cerrado
+            
+            // Compara la hora actual con los periodos
+            if (horaActual >= periodo1.inicio && horaActual < periodo1.fin) {
+                document.getElementById('hora1').classList.add('open');
+                document.getElementById('hora1').classList.remove('closed');
+                estado = "Abierto";
+            } else {
+                document.getElementById('hora1').classList.add('closed');
+                document.getElementById('hora1').classList.remove('open');
+            }
+
+            if (horaActual >= periodo2.inicio && horaActual < periodo2.fin) {
+                document.getElementById('hora2').classList.add('open');
+                document.getElementById('hora2').classList.remove('closed');
+                estado = "Abierto";
+            } else {
+                document.getElementById('hora2').classList.add('closed');
+                document.getElementById('hora2').classList.remove('open');
+            }
+
+            if (horaActual >= periodo3.inicio && horaActual < periodo3.fin) {
+                document.getElementById('hora3').classList.add('open');
+                document.getElementById('hora3').classList.remove('closed');
+                estado = "Abierto";
+            } else {
+                document.getElementById('hora3').classList.add('closed');
+                document.getElementById('hora3').classList.remove('open');
+            }
+
+            // Actualizamos el estado en el área correspondiente
+            const estadoElemento = document.getElementById('estado');
+            if (estado === "Abierto") {
+                estadoElemento.textContent = "Abierto";
+                estadoElemento.classList.remove('closed');
+                estadoElemento.classList.add('open');
+            } else {
+                estadoElemento.textContent = "Cerrado";
+                estadoElemento.classList.remove('open');
+                estadoElemento.classList.add('closed');
+            }
+        }
+
+        // Llamamos la función al cargar la página
+        actualizarEstado();
+    </script>
+
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+      
+            <p>Selecciona una de las opciones a continuación para gestionar el sistema</p>
+        </div>
+
+        <!-- Botones de Navegación -->
+        <div class="button-container">
+            <div class="button-container">
+                <a class="large-button" href="{{ url_for('cita.citaIndex') }}">Agenda Médica</a>
+                <a class="large-button" href="{{ url_for('vistaAGENDAR.vistaAGENDARIndex') }}">Gestionar Citas</a>
+            </div>
         </div>
     </div>
 
@@ -138,33 +342,36 @@ Inicio
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
-   
-    <body>
-        <div class="button-container">
-            <a class="large-button" href="{{ url_for('cita.citaIndex') }}">Agenda Medica</a>
-            <a class="collapse-item" href="{{ url_for('pdcmod.pedidos_index') }}">Registrar pedido de compras</a>
-            <a class="collapse-item" href="{{ url_for('vistaAGENDAR.vistaAGENDARIndex') }}">Gestionar Citas</a>
-        </div>
 
-  
-  <head></head>
-    <meta charset="UTF-8">
-    <script>
-        function ponerFechaActual() {
-            // Obtener la fecha actual en formato YYYY-MM-DD
-            let hoy = new Date().toISOString().split('T')[0];
-            // Asignar la fecha al input
-            document.getElementById('fecha').value = hoy;
-        }
-    </script>
-</head>
+
+<script>
+    function ponerFechaActual() {
+        // Obtener la fecha actual en formato YYYY-MM-DD
+        let hoy = new Date().toISOString().split('T')[0];
+        // Asignar la fecha al input
+        document.getElementById('fecha').value = hoy;
+    }
+</script>
+
+<!-- Llamada a la función para poner la fecha actual cuando se carga la página -->
 <body onload="ponerFechaActual()">
-   
- 
-
 {% endblock %}
 
 {% block js %}
-#scripts
+<!-- Aquí irían los scripts adicionales -->
 {% endblock %}

@@ -22,18 +22,16 @@ from app.rutas.referenciales.turno.turno_routes import turmod  #turno
 from app.rutas.referenciales.tratamiento.tratamiento_routes import tratmod  #tratamiento
 from app.rutas.referenciales.diagnostico.diagnostico_routes import diagmod  #diagnostico
 
-# importar gestionar compras
-from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes  import pdcmod
 
 # Importar rutas de usuario
-from app.rutas.agendamiento.cita.cita_routes import citamod   # Cita
-from app.rutas.agendamiento.index.index_routes import indmod  # index
+from app.rutas.administracion.cita.cita_routes import citamod   # Cita
+from app.rutas.administracion.index.index_routes import indmod  # index
 
 #importacion de cita
-from app.rutas.agendamiento.cita.cita_routes import citamod   # Cita
-from app.rutas.agendamiento.paciente.paciente_routes import paciemod
-from app.rutas.agendamiento.consulta.consulta_routes import consumod
-from app.rutas.agendamiento.vistaAGENDAR.vistaAGENDAR_routes import vistagendamod
+from app.rutas.administracion.cita.cita_routes import citamod   # Cita
+from app.rutas.administracion.paciente.paciente_routes import paciemod
+from app.rutas.administracion.consulta.consulta_routes import consumod
+from app.rutas.administracion.vistaAGENDAR.vistaAGENDAR_routes import vistagendamod
 
 
 
@@ -61,12 +59,8 @@ app.register_blueprint(turmod, url_prefix=f'{modulo0}/turno') #turno
 app.register_blueprint(tratmod, url_prefix=f'{modulo0}/tratamiento') #tratamiento
 app.register_blueprint(diagmod, url_prefix=f'{modulo0}/diagnostico') #diagnostico
 
-# registro de modulos - gestionar compras
-modulo1 = '/gestionar-compras'
-app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
-
 # registrar agendamientos
-modulo0 = '/agendamientos'
+modulo0 = '/administracion'
 app.register_blueprint(citamod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(paciemod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(consumod, url_prefix=f'{modulo0}/cita')  # cita
@@ -106,12 +100,8 @@ from app.rutas.referenciales.tratamiento.tratamiento_api import tratapi
 #diagnostico
 from app.rutas.referenciales.diagnostico.diagnostico_api import diagapi
 #cita
-from app.rutas.agendamiento.cita.cita_api import citaapi
+from app.rutas.administracion.cita.cita_api import citaapi
 
-
-#pedido de compra
-from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api import pdcapi
-from app.rutas.referenciales.sucursal.sucursal_api import sucapi
 
 
 
@@ -175,14 +165,6 @@ app.register_blueprint(diagapi, url_prefix=apiversion1)
 # Cita
 version1 = '/api/v1'
 app.register_blueprint(citaapi, url_prefix=version1)
-
-
-
-# Gestionar compras API
-apiversion1 = '/api/v1'
-app.register_blueprint(pdcapi, url_prefix=f'{apiversion1}/{modulo1}/registrar-pedido-compras')
-app.register_blueprint(sucapi, url_prefix=apiversion1)
-
 
 
 
