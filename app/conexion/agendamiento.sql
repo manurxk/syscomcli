@@ -223,8 +223,7 @@ CREATE TABLE documentos_fichas (
     fecha_subida DATE NOT NULL,
     fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
     hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
-    FOREIGN KEY (id_paciente) REFERENCES pacientes(id) ON DELETE CASCADE,
-    -- Nuevas columnas y restricciones
+    FOREIGN KEY (id_paciente) REFERENCES pacientes(id) ON DELETE CASCADE
     id_diagnostico INT,
     CONSTRAINT fk_diagnostico FOREIGN KEY (id_diagnostico) REFERENCES diagnosticos(id) ON DELETE CASCADE,
     id_tratamiento INT,
