@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Citas
+{% endblock %}
+
+{% block contenido %}
+<style>
+  /* Estilos generales para el cuerpo */
+  body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+  }
+
+  /* Estilos para el banner de bienvenida */
+  .welcome-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #2bbe7c;
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Estilos para el texto del banner */
+  .welcome-text {
+      max-width: 50%;
+  }
+
+  .welcome-text h1 {
+      font-size: 2.5em;
+      margin: 0;
+  }
+
+  .welcome-text p {
+      font-size: 1.2em;
+      margin: 10px 0;
+  }
+
+  /* Estilos para los botones */
+  button {
+      background-color: #0f9976;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+  }
+
+  button:hover {
+      background-color: #0f9976;
+  }
+
+  /* Estilo para la imagen del banner */
+  .welcome-image {
+      width: 150px;
+      height: 150px;
+      background-image: url('https://www.flaticon.com/svg/static/icons/svg/2907/2907259.svg'); /* Reemplazar por URL o imagen local */
+      background-size: contain;
+      background-repeat: no-repeat;
+  }
+
+  /* Estilos para el contenedor de los botones */
+  .button-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin: 20px;
+  }
+
+  /* Estilo base para los botones grandes */
+  .large-button {
+      flex: 1 0 30%;
+      max-width: 30%;
+      margin: 10px;
+      padding: 50px;
+      background-color: transparent;
+      color: #0f0f0f;
+      border: 2px solid #2bbe7c;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+      border-radius: 5px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Efecto hover para los botones */
+  .large-button:hover {
+      background-color: #2bbe7c;
+      color: white;
+      box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Estilos responsivos */
+  @media (max-width: 768px) {
+      .large-button {
+          flex: 1 0 45%;
+          max-width: 45%;
+      }
+  }
+
+  @media (max-width: 480px) {
+      .large-button {
+          flex: 1 0 100%;
+          max-width: 100%;
+      }
+  }
+</style>
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horario Interactivo Consultorio Médico</title>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f9;
+          margin: 0;
+          padding: 0;
+      }
+      .container {
+          width: 100%;
+          max-width: 1200px;
+          margin: 20px auto;
+          padding: 20px;
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+          text-align: center;
+          margin-bottom: 30px;
+      }
+      .header h1 {
+          font-size: 36px;
+          color: #2c3e50;
+      }
+      .header p {
+          font-size: 18px;
+          color: #7f8c8d;
+      }
+      .info-box {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+      }
+      .info-box div {
+          padding: 20px;
+          background-color: #ecf0f1;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+          flex: 1;
+          margin: 0 10px;
+          text-align: center;
+      }
+      .info-box div h2 {
+          font-size: 24px;
+          margin-bottom: 10px;
+      }
+      .status-indicator {
+          font-size: 20px;
+          color: #16a085;
+      }
+      .status-indicator.closed {
+          color: #e74c3c;
+      }
+      /* Estilos para el horario interactivo */
+      .horario {
+          display: flex;
+          justify-content: center;
+          margin-top: 30px;
+      }
+      .hora {
+          display: flex;
+          flex-direction: column;
+          margin: 0 5px;
+          text-align: center;
+          position: relative;
+      }
+      .hora span {
+          font-size: 16px;
+          display: block;
+          padding: 5px;
+      }
+      .hora.open {
+          background-color: #2ecc71;
+          color: white;
+          border-radius: 5px;
+      }
+      .hora.closed {
+          background-color: #e74c3c;
+          color: white;
+          border-radius: 5px;
+      }
+      .line {
+          position: absolute;
+          bottom: -5px;
+          left: 50%;
+          width: 2px;
+          height: 100%;
+          background-color: #bdc3c7;
+          transform: translateX(-50%);
+      }
+  </style>
+
+
+
+
+
+
+
+
+
+
+<div class="container">
+  <!-- Header Section -->
+  <div class="header">
+      <h1>Agenda Médica</h1>
+      <p>Bienvenido</p>
+  </div>
+  <div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>#</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>#</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>#</h5>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="row my-4">
+    <div class="col-md-4">
+        <a href="#" class="btn btn-info btn-block" id="btnAgregar">Registrar Agenda Médica</a>
+    </div>
+    <div class="col-md-4">
+        <a href="#" class="btn btn-primary btn-block">Registrar Nuevo Médico</a>
+    </div>
+    <div class="col-md-4">
+        <a href="/registrar-paciente" class="btn btn-warning btn-block">Registrar Paciente</a>
+    </div>
+  </div>
+  
+ 
+</div>
+
+
+
+
+
+<div class="container mt-4">
+    <h3>Listar Agenda Cita</h3>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped" id="tbl">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Paciente</th>
+                        <th>Motivo de Consulta</th>
+                        <th>Médico</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal" id="modalFormulario">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modalTitle"></h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <input type="hidden" id="txtIdCita">
+                        <label for="txtPaciente">Paciente:</label>
+                        <input type="text" class="form-control" id="txtPaciente" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtMotivoConsulta">Motivo de Consulta:</label>
+                        <input type="text" class="form-control" id="txtMotivoConsulta" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtMedico">Médico:</label>
+                        <input type="text" class="form-control" id="txtMedico" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtFecha">Fecha:</label>
+                        <input type="date" class="form-control" id="txtFecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtHora">Hora:</label>
+                        <input type="time" class="form-control" id="txtHora" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-success" id="btnGuardar">Guardar</button>
+                    <button type="button" class="btn btn-outline-warning" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4 d-none" id="rowAlerta">
+        <div class="col col-md-12">
+            <div class="alert alert-success">
+                <strong>Registro Exitoso!</strong>
+                <div class="row" id="mostrarAlerta"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Librerías de jQuery y jQuery UI -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+{% endblock %}
+
+{% block js %}
+<script>
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/citas',
+      columns: [
+        { data: 'id' },  // Asegúrate de que el ID esté en la respuesta de la API
+        { data: 'nombrepaciente' },
+        { data: 'motivoconsulta' },
+        { data: 'medico' },
+        { data: 'fecha' },
+        { data: 'hora' },
+        { data: function(row) {
+            return `
+              <button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
+              <button type="button" name="btn_eliminar" class="btn btn-warning" data-id="${row.id}">Eliminar</button>`;
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function() {
+      $('#modalTitle').text("Agregar una Cita");
+      $('#txtIdCita').val("");
+      $('#txtPaciente').val("");
+      $('#txtMotivoConsulta').val("");
+      $('#txtMedico').val("");
+      $('#txtFecha').val("");
+      $('#txtHora').val("");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const nombrepaciente = $('#txtPaciente').val(); 
+      const motivoconsulta = $('#txtMotivoConsulta').val();
+      const medico = $('#txtMedico').val();
+      const fecha = $('#txtFecha').val();
+      const hora = $('#txtHora').val();
+
+      // Validar que todos los campos sean obligatorios
+      if (!nombrepaciente || !motivoconsulta || !medico || !fecha || !hora) {
+        Swal.fire("Error", "Todos los campos son obligatorios.", "error");
+        return;
+      }
+
+      const idCita = $('#txtIdCita').val();
+      const tabla = $('#tbl').DataTable();
+
+      const method = idCita ? 'PUT' : 'POST';
+      const url = idCita ? `/api/v1/citas/${idCita}` : `/api/v1/citas`;
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          nombrepaciente, 
+          motivoconsulta,
+          medico,
+          fecha, 
+          hora
+        })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success) {
+          tabla.ajax.reload();
+          Swal.fire("Éxito", idCita ? "La cita ha sido actualizada correctamente." : "La cita ha sido agregada correctamente.", "success");
+        } else {
+          Swal.fire("Error", data.error || "Ocurrió un error al procesar la solicitud.", "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+      })
+      .finally(() => {
+        $('#modalFormulario').modal("hide");
+      });
+    });
+  }
+
+  const editar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_editar"]', function() {
+      const id = $(this).data('id');
+      const tabla = $('#tbl').DataTable();
+
+      fetch(`/api/v1/citas/${id}`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            $('#modalTitle').text("Editar Cita");
+            $('#txtIdCita').val(data.data.id);
+            $('#txtPaciente').val(data.data.nombrepaciente); 
+            $('#txtMotivoConsulta').val(data.data.motivoconsulta);
+            $('#txtMedico').val(data.data.medico); 
+            $('#txtFecha').val(data.data.fecha);
+            $('#txtHora').val(data.data.hora);
+            $('#modalFormulario').modal();
+          } else {
+            Swal.fire("Error", data.error, "error");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+        });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_eliminar"]', function() {
+      const id = $(this).data('id');
+      const tabla = $('#tbl').DataTable();
+
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás recuperar este registro!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/citas/${id}`, {
+            method: 'DELETE'
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              tabla.ajax.reload();
+              Swal.fire("Eliminado", "La cita ha sido eliminada correctamente.", "success");
+            } else {
+              Swal.fire("Error", data.error || "Ocurrió un error al procesar la solicitud.", "error");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  $(document).ready(() => {
+    initDatatable();
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}

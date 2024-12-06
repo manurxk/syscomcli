@@ -5,8 +5,6 @@ from flask import render_template
 app = Flask(__name__)
 
 # importar referenciales
-from app.rutas.login.login_routes import loginmod
-from app.rutas.login.vista_routes import vistamod
 from app.rutas.referenciales.ciudad.ciudad_routes import ciumod #ciudad
 from app.rutas.referenciales.paises.pais_routes import paimod   #pais
 from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod  #nacionalidad
@@ -22,12 +20,12 @@ from app.rutas.referenciales.turno.turno_routes import turmod  #turno
 from app.rutas.referenciales.tratamiento.tratamiento_routes import tratmod  #tratamiento
 from app.rutas.referenciales.diagnostico.diagnostico_routes import diagmod  #diagnostico
 
+# Importar rutas de inicio
+from app.rutas.login.login_routes import loginmod
+from app.rutas.login.vista_routes import vistamod
 
-# Importar rutas de usuario
-from app.rutas.administracion.cita.cita_routes import citamod   # Cita
-from app.rutas.administracion.index.index_routes import indmod  # index
-
-#importacion de cita
+#importacion de Administrativa
+from app.rutas.administracion.agenda.agenda_routes import agemod   # Agendamiento
 from app.rutas.administracion.cita.cita_routes import citamod   # Cita
 from app.rutas.administracion.paciente.paciente_routes import paciemod
 from app.rutas.administracion.consulta.consulta_routes import consumod
@@ -61,11 +59,12 @@ app.register_blueprint(diagmod, url_prefix=f'{modulo0}/diagnostico') #diagnostic
 
 # registrar agendamientos
 modulo0 = '/administracion'
+app.register_blueprint(agemod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(citamod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(paciemod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(consumod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(vistagendamod, url_prefix=f'{modulo0}/cita')  # cita
-app.register_blueprint(indmod, url_prefix=f'{modulo0}/index')  # index
+
 
 
 
