@@ -260,10 +260,10 @@ Citas
         <a href="#" class="btn btn-info btn-block" id="btnAgregar">Registrar Agenda Médica</a>
     </div>
     <div class="col-md-4">
-        <a href="#" class="btn btn-primary btn-block">Registrar Nuevo Médico</a>
+        <a href="{{ url_for('medico.medicoIndex') }}" class="btn btn-primary btn-block">Registrar Nuevo Médico</a>
     </div>
     <div class="col-md-4">
-        <a href="/registrar-paciente" class="btn btn-warning btn-block">Registrar Paciente</a>
+        <a href="/registrar-paciente" class="btn btn-warning btn-block">-</a>
     </div>
   </div>
   
@@ -283,11 +283,13 @@ Citas
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Paciente</th>
-                        <th>Motivo de Consulta</th>
                         <th>Médico</th>
-                        <th>Fecha</th>
-                        <th>Hora</th>
+                        <th>Registro</th>
+                        <th>Especialidad</th>
+                        <th>Disponibilidad</th>
+                        <th>Dia</th>
+                        <th>Turno</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>

@@ -223,7 +223,7 @@ CREATE TABLE documentos_fichas (
     fecha_subida DATE NOT NULL,
     fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
     hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
-    FOREIGN KEY (id_paciente) REFERENCES pacientes(id) ON DELETE CASCADE
+    FOREIGN KEY (id_paciente) REFERENCES pacientes(id) ON DELETE CASCADE,
     id_diagnostico INT,
     CONSTRAINT fk_diagnostico FOREIGN KEY (id_diagnostico) REFERENCES diagnosticos(id) ON DELETE CASCADE,
     id_tratamiento INT,
@@ -231,6 +231,7 @@ CREATE TABLE documentos_fichas (
     id_instrumento INT,
     CONSTRAINT fk_instrumento FOREIGN KEY (id_instrumento) REFERENCES instrumentos(id) ON DELETE CASCADE
 );
+
 
 
 -- Tabla de avisos_recordatorios

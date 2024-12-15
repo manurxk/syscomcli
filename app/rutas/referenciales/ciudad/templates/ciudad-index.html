@@ -8,7 +8,6 @@ Ciudades
 <div class="container mt-4">
     <h3>Listar Ciudades</h3>
 
-    <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
         <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
@@ -25,21 +24,15 @@ Ciudades
       </table>
       </div>
     </div>
-    <!-- /tarjeta -->
 
-    <!-- El formulario -->
     <div class="modal" id="modalFormulario">
-      <!-- La clase modal-dialog-centered centra el modal -->
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
-          <!-- Modal Header -->
           <div class="modal-header">
             <h4 class="modal-title" id="modalTitle"></h4>
             <button type="button" class="close" data-dismiss="modal">&times;</button>
           </div>
 
-          <!-- Modal body -->
           <div class="modal-body">
             <div class="form-group">
               <input type="hidden" id="txtIdCiudad">
@@ -48,7 +41,6 @@ Ciudades
             </div>
           </div>
 
-          <!-- Modal footer -->
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
@@ -91,9 +83,7 @@ Ciudades
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      // Setear un título a modal
       $('#modalTitle').text("Agregar una Ciudad");
-      // inicia ventana modal
       $('#txtIdCiudad').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
@@ -107,7 +97,6 @@ Ciudades
       const tabla = $('#tbl').DataTable();
 
       if(id_ciudad) {
-        // update
         fetch(`/api/v1/ciudades/${id_ciudad}`, {
           method: 'PUT',
           headers: {
@@ -127,7 +116,6 @@ Ciudades
           Swal.fire("Error", "Ocurrió un error al actualizar la ciudad.", "error");
         });
       } else {
-        // insert
         fetch(`/api/v1/ciudades`, {
           method: 'POST',
           headers: {
@@ -154,7 +142,6 @@ Ciudades
 
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]', function() {
-        // Mostrar mensaje de confirmación usando sweetalert
         Swal.fire({
             title: "¿Deseas editar este registro?",
             showCancelButton: true,
@@ -167,7 +154,6 @@ Ciudades
                 const id_ciudad = $(this).data('id_ciudad');
                 $('#txtIdCiudad').val(id_ciudad);
 
-                // Necesitamos obtener la descripción del backend
                 fetch(`/api/v1/ciudades/${id_ciudad}`, {
                     method: 'GET',
                     headers: {
@@ -176,7 +162,7 @@ Ciudades
                 })
                 .then(resp => resp.json())
                 .then(data => {
-                    $('#txtDescripcion').val(data.data.descripcion); // Asegúrate que aquí accedes a la propiedad correcta
+                    $('#txtDescripcion').val(data.data.descripcion);
                     $('#modalFormulario').modal();
                 });
             }
@@ -187,7 +173,6 @@ Ciudades
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
       const id_ciudad = $(this).data('id_ciudad');
-      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
@@ -204,7 +189,6 @@ Ciudades
           .then(resp => resp.json())
           .then(data => {
             if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
               const fila = $(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
