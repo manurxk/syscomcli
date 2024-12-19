@@ -22,7 +22,6 @@ CREATE TABLE ocupaciones (
     descripcion VARCHAR(100) NOT NULL UNIQUE
 );
 
-
 -- Tabla de especialidades
 CREATE TABLE especialidades (
     id SERIAL PRIMARY KEY,
@@ -45,7 +44,20 @@ CREATE TABLE barrios (
     FOREIGN KEY (id_ciudad) REFERENCES ciudades(id) ON DELETE CASCADE
 );
 
--- Tabla de personas
+-- Tabla de ubicacion (geografía), vincula país, nacionalidad, ciudad y barrio
+CREATE TABLE ubicacion (
+    id SERIAL PRIMARY KEY,
+    id_pais INT,
+    id_nacionalidad INT,
+    id_ciudad INT,
+    id_barrio INT,
+    FOREIGN KEY (id_pais) REFERENCES paises(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_nacionalidad) REFERENCES nacionalidades(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_ciudad) REFERENCES ciudades(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_barrio) REFERENCES barrios(id) ON DELETE CASCADE
+);
+
+-- Tabla de personas con agregado de estado_civil y vínculo con ubicacion
 CREATE TABLE personas (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -55,55 +67,25 @@ CREATE TABLE personas (
     direccion VARCHAR(255),
     sexo VARCHAR(50) NOT NULL CHECK (sexo IN ('femenino', 'masculino', 'otro')),
     correo_electronico VARCHAR(100) UNIQUE,
-    id_ciudad INT,
-    id_pais INT,
-    id_nacionalidad INT,
-    id_estado_civil INT,
-    id_ocupacion INT,  -- Nueva columna para ocupación
-    id_barrio INT,  -- Nueva columna para barrio
+    estado_civil VARCHAR(50) NOT NULL CHECK (estado_civil IN ('soltero', 'casado', 'viudo')),  -- Estado civil
+    id_ubicacion INT,  -- Relación con la tabla de ubicación
+    id_ocupacion INT,  -- Relación con la tabla de ocupaciones
     fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
     hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
-    FOREIGN KEY (id_ciudad) REFERENCES ciudades(id) ON DELETE SET NULL,
-    FOREIGN KEY (id_pais) REFERENCES paises(id) ON DELETE SET NULL,
-    FOREIGN KEY (id_nacionalidad) REFERENCES nacionalidades(id) ON DELETE SET NULL,
-    FOREIGN KEY (id_estado_civil) REFERENCES estados_civiles(id) ON DELETE SET NULL,
-    FOREIGN KEY (id_ocupacion) REFERENCES ocupaciones(id) ON DELETE CASCADE,  -- Eliminar personas al eliminar ocupación
-    FOREIGN KEY (id_barrio) REFERENCES barrios(id) ON DELETE CASCADE
-);
-
--- Tabla de pacientes (actualizada)
-CREATE TABLE pacientes (
-    id SERIAL PRIMARY KEY,
-    nro_ficha VARCHAR(50) NOT NULL UNIQUE,  -- Nuevo campo para el número de ficha del paciente
-    fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
-    hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
-    id_persona INT NOT NULL UNIQUE,  -- Vinculado con la tabla personas
-    FOREIGN KEY (id_persona) REFERENCES personas(id) ON DELETE CASCADE
+    FOREIGN KEY (id_ubicacion) REFERENCES ubicacion(id) ON DELETE SET NULL,
+    FOREIGN KEY (id_ocupacion) REFERENCES ocupaciones(id) ON DELETE CASCADE
 );
 
 -- Tabla de médicos con vínculo a especialidades
 CREATE TABLE medicos (
     id SERIAL PRIMARY KEY,
     id_persona INT NOT NULL UNIQUE,
-    id_especialidad INT, -- Nueva columna para la especialidad
+    id_especialidad INT,  -- Nueva columna para la especialidad
     nro_registro_profesional VARCHAR(50) NOT NULL,
     fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
     hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
     FOREIGN KEY (id_persona) REFERENCES personas(id) ON DELETE CASCADE,
     FOREIGN KEY (id_especialidad) REFERENCES especialidades(id) ON DELETE CASCADE
-);
-
-
--- Tabla de empleados
-CREATE TABLE empleados (
-    id SERIAL PRIMARY KEY,
-    id_persona INT NOT NULL UNIQUE,
-    cargo VARCHAR(100) NOT NULL,
-    fecha_contratacion DATE NOT NULL,
-    salario DECIMAL(10, 2),
-    fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
-    hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
-    FOREIGN KEY (id_persona) REFERENCES personas(id) ON DELETE CASCADE
 );
 
 -- Tabla de diagnósticos
@@ -117,7 +99,6 @@ CREATE TABLE instrumentos (
     id SERIAL PRIMARY KEY,
     descripcion VARCHAR(100) NOT NULL UNIQUE
 );
-
 
 -- Tabla de tratamientos
 CREATE TABLE tratamientos (
@@ -199,7 +180,7 @@ CREATE TABLE citas (
     id SERIAL PRIMARY KEY,
     id_paciente INT NOT NULL,
     id_medico INT NOT NULL,
-    id_duracion INT, -- Nueva columna para duración de consulta
+    id_duracion INT,  -- Nueva columna para duración de consulta
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
     motivo_consulta VARCHAR(255) NOT NULL,
@@ -210,27 +191,6 @@ CREATE TABLE citas (
     FOREIGN KEY (id_medico) REFERENCES medicos(id) ON DELETE CASCADE,
     FOREIGN KEY (id_duracion) REFERENCES duracion_consulta(id) ON DELETE CASCADE
 );
-
--- Tabla de documentos relacionados a ficha médica del paciente
-CREATE TABLE documentos_fichas (
-    id SERIAL PRIMARY KEY,
-    id_paciente INT NOT NULL,
-    tipo_documento VARCHAR(100),
-    descripcion TEXT,
-    ruta_archivo VARCHAR(255),  -- Almacenar la ruta del archivo
-    fecha_subida DATE NOT NULL,
-    fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
-    hora_registro TIME NOT NULL DEFAULT CURRENT_TIME,
-    FOREIGN KEY (id_paciente) REFERENCES pacientes(id) ON DELETE CASCADE,
-    id_diagnostico INT,
-    CONSTRAINT fk_diagnostico FOREIGN KEY (id_diagnostico) REFERENCES diagnosticos(id) ON DELETE CASCADE,
-    id_tratamiento INT,
-    CONSTRAINT fk_tratamiento FOREIGN KEY (id_tratamiento) REFERENCES tratamientos(id) ON DELETE CASCADE,
-    id_instrumento INT,
-    CONSTRAINT fk_instrumento FOREIGN KEY (id_instrumento) REFERENCES instrumentos(id) ON DELETE CASCADE
-);
-
-
 
 -- Tabla de avisos_recordatorios
 CREATE TABLE avisos_recordatorios (

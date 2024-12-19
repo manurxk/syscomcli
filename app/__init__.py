@@ -34,7 +34,7 @@ from app.rutas.administracion.consulta.consulta_routes import consumod
 
 
 
-
+from app.rutas.administracion.medico.medico_routes import medimod
 
 
 
