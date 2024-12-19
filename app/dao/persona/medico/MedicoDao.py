@@ -7,10 +7,9 @@ class MedicoDao:
         medicoSQL = """
         SELECT
             m.id, m.nombre, m.apellido, m.documento_identidad, m.registro_profesional, m.especialidad, 
-            m.telefono, m.correo, m.ocupacion, m.sexo, ec.descripcion, c.descripcion, b.descripcion, p.descripcion,
+            m.telefono, m.correo, m.ocupacion, m.sexo, m.estado_civil, c.descripcion AS ciudad, b.descripcion AS barrio, p.descripcion AS pais,
             m.direccion, m.fecha_nacimiento, m.fecha_registro, m.contacto_emergencia, m.numero_emergencia
         FROM medicos m
-        JOIN estado_civiles ec ON m.id_estado_civil = ec.id
         JOIN ciudades c ON m.id_ciudad = c.id
         JOIN barrios b ON m.id_barrio = b.id
         JOIN paises p ON m.id_pais = p.id
@@ -57,10 +56,9 @@ class MedicoDao:
         medicoSQL = """
         SELECT
             m.id, m.nombre, m.apellido, m.documento_identidad, m.registro_profesional, m.especialidad, 
-            m.telefono, m.correo, m.ocupacion, m.sexo, ec.descripcion, c.descripcion, b.descripcion, p.descripcion,
+            m.telefono, m.correo, m.ocupacion, m.sexo, m.estado_civil, c.descripcion AS ciudad, b.descripcion AS barrio, p.descripcion AS pais,
             m.direccion, m.fecha_nacimiento, m.fecha_registro, m.contacto_emergencia, m.numero_emergencia
         FROM medicos m
-        JOIN estado_civiles ec ON m.id_estado_civil = ec.id
         JOIN ciudades c ON m.id_ciudad = c.id
         JOIN barrios b ON m.id_barrio = b.id
         JOIN paises p ON m.id_pais = p.id
@@ -106,13 +104,13 @@ class MedicoDao:
             con.close()
 
     def guardarMedico(self, nombre, apellido, documento_identidad, registro_profesional, especialidad, telefono, correo, 
-                      ocupacion, sexo, id_estado_civil, id_ciudad, id_barrio, id_pais, direccion, fecha_nacimiento, 
+                      ocupacion, sexo, estado_civil, id_ciudad, id_barrio, id_pais, direccion, fecha_nacimiento, 
                       fecha_registro, contacto_emergencia, numero_emergencia):
         insertMedicoSQL = """
         INSERT INTO medicos (nombre, apellido, documento_identidad, registro_profesional, especialidad, telefono, correo, 
-                             ocupacion, sexo, id_estado_civil, id_ciudad, id_barrio, id_pais, direccion, fecha_nacimiento, 
+                             ocupacion, sexo, estado_civil, id_ciudad, id_barrio, id_pais, direccion, fecha_nacimiento, 
                              fecha_registro, contacto_emergencia, numero_emergencia) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
         RETURNING id
         """
         conexion = Conexion()
@@ -121,7 +119,7 @@ class MedicoDao:
 
         try:
             cur.execute(insertMedicoSQL, (nombre, apellido, documento_identidad, registro_profesional, especialidad, telefono, 
-                                          correo, ocupacion, sexo, id_estado_civil, id_ciudad, id_barrio, id_pais, direccion, 
+                                          correo, ocupacion, sexo, estado_civil, id_ciudad, id_barrio, id_pais, direccion, 
                                           fecha_nacimiento, fecha_registro, contacto_emergencia, numero_emergencia))
             medico_id = cur.fetchone()[0]
             con.commit()
