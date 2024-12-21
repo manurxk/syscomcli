@@ -1,39 +1,39 @@
 {% extends 'base.html' %}
 
 {% block titulo %}
-Formulario Pedido de Compras
+Formulario Agendamiento de Citas Médicas
 {% endblock %}
 
 {% block contenido %}
 <div class="container mt-4">
     <div class="card">
         <div class="card-header bg-primary text-white">
-            <h3>Formulario Pedido de Compras</h3>
+            <h3>Formulario Agendamiento de Cita Médica</h3>
         </div>
         <div class="card-body">
             <div class="row">
-
+                
+                <!-- Combo médicos -->
                 <div class="col col-md-6">
-
-                  <!-- Combo empleados -->
                   <div class="form-group">
-                    <label for="cbo_empleado">Empleados:</label>
-                    <select id="cbo_empleado" class="custom-select">
-                      <option selected>Empleados</option>
-                      {% for item in empleados %}
-                        <option value="{{ item['id_empleado'] }}">
-                          {{ item['empleado'] }} - CEDULA: {{ item['ci'] }}
+                    <label for="cbo_medico">Médicos:</label>
+                    <select id="cbo_medico" class="custom-select">
+                      <option selected>Seleccionar Médico</option>
+                      {% for item in medicos %}
+                        <option value="{{ item['id_medico'] }}">
+                          {{ item['nombre_medico'] }} - Cédula: {{ item['ci'] }}
                         </option>
                       {% endfor %}
                     </select>
                   </div>
-                  <!--  -->
-
-                  <!-- Combo sucursales -->
+                </div>
+                
+                <!-- Combo sucursales -->
+                <div class="col col-md-6">
                   <div class="form-group">
                     <label for="cbo_sucursal">Sucursales:</label>
                     <select id="cbo_sucursal" class="custom-select">
-                      <option value="">Sucursales</option>
+                      <option value="">Seleccionar Sucursal</option>
                       {% for item in sucursales %}
                         <option value="{{ item['id'] }}">
                           {{ item['descripcion'] }}
@@ -41,64 +41,44 @@ Formulario Pedido de Compras
                       {% endfor %}
                     </select>
                   </div>
-
-                  <!--  -->
-                  <div class="form-group">
-                    <label for="txt_fecha_de_pedido">Fecha de Pedido:</label>
-                    <input type="date" class="form-control" id="txt_fecha_de_pedido" />
-                  </div>
                 </div>
 
-                <!-- Combo deposito -->
-                <div class="col col-md-6">
-                    <div class="form-group">
-                      <label for="cbo_deposito">Depósitos:</label>
-                      <select id="cbo_deposito" class="custom-select">
-                        <option value="">Depósitos</option>
-                      </select>
-                    </div>
-                </div>
-                <!--  -->
             </div>
 
-            <!-- Combo producto -->
-            <div class="form-group row mt-3">
-              <label for="cbo_producto" class="col-md-2 col-form-label">Producto:</label>
+            <!-- Fecha de la cita -->
+            <div class="form-group row">
+              <label for="txt_fecha_de_cita" class="col-md-2 col-form-label">Fecha de Cita:</label>
               <div class="col-md-6">
-                  <select id="cbo_producto" class="custom-select">
-                    <option value="">Productos</option>
-                      {% for item in productos %}
-                        <option value="{{ item['id_producto'] }}">
+                  <input type="datetime-local" class="form-control" id="txt_fecha_de_cita" />
+              </div>
+            </div>
+
+            <!-- Especialidad -->
+            <div class="form-group row mt-3">
+              <label for="cbo_especialidad" class="col-md-2 col-form-label">Especialidad:</label>
+              <div class="col-md-6">
+                  <select id="cbo_especialidad" class="custom-select">
+                    <option value="">Seleccionar Especialidad</option>
+                    {% for item in especialidades %}
+                        <option value="{{ item['id_especialidad'] }}">
                           {{ item['nombre'] }}
                         </option>
-                      {% endfor %}
+                    {% endfor %}
                   </select>
               </div>
-              <div class="col col-md-4">
-                <button type="button" class="btn btn-primary" id="btn_agregar_producto">Agregar</button>
-              </div>
             </div>
-            <!-- -->
-
-            <!-- Cantidad de producto -->
-            <div class="form-group row mt-3">
-              <label for="txt_cantidad" class="col-md-2 col-form-label">Cantidad:</label>
-              <div class="col-md-2">
-                <input type="number" class="form-control mb-2 mr-md-2" placeholder="Cantidad" id="txt_cantidad" min="0">
-              </div>
-            </div>
-            <!--  -->
 
             <hr>
+
             <div class="row">
                 <div class="col col-md-12">
-                    <table class="table table-hover" id="tbl_productos">
+                    <table class="table table-hover" id="tbl_citas">
                         <thead>
                           <tr>
                             <th>id</th>
-                            <th>Producto</th>
-                            <th>Precio</th>
-                            <th>Cantidad</th>
+                            <th>Médico</th>
+                            <th>Especialidad</th>
+                            <th>Fecha y Hora</th>
                             <th>Acciones</th>
                           </tr>
                         </thead>
@@ -107,9 +87,10 @@ Formulario Pedido de Compras
                 </div>
             </div>
         </div>
+
         <div class="card-footer">
-            <button type="button" class="btn btn-primary" id="btn_registrar_pedido">Registrar pedido</button>
-            <button type="button" class="btn btn-warning" id="btn_salir_operacion">Salir de la operación</button>
+            <button type="button" class="btn btn-primary" id="btn_agendar_cita">Agendar Cita</button>
+            <button type="button" class="btn btn-warning" id="btn_salir_agendamiento">Cancelar</button>
         </div>
     </div>
 </div>
@@ -118,157 +99,122 @@ Formulario Pedido de Compras
 {% block js %}
 <script>
   // variables y constantes globales
-  let acumular_productos = [];
+  let citas_agendadas = [];
 
   // Todo lo que provenga del Backend
   const data_from_server = {
-    productos: {{ productos|tojson }}
+    medicos: {{ medicos|tojson }},
+    especialidades: {{ especialidades|tojson }}
   }
 
   function creaTr(item) {
     return `
-      <tr data-id="${item.id_producto}">
-        <td>${item.id_producto}</td>
-        <td>${item.nombre}</td>
-        <td>${item.precio_unitario}</td>
-        <td>${item.cantidad}</td>
-        <td><button type="button" class="eliminar btn btn-warning btn-sm">Eliminar Item</button></td>
+      <tr data-id="${item.id}">
+        <td>${item.id}</td>
+        <td>${item.medico}</td>
+        <td>${item.especialidad}</td>
+        <td>${item.fecha}</td>
+        <td><button type="button" class="eliminar btn btn-warning btn-sm">Eliminar Cita</button></td>
       </tr>
     `;
   }
 
-  function obtieneDetalleProductos() {
-    const productos = [];
-    $('#tbl_productos tbody tr').each(function(k, v) {
-      productos.push({
-        id_producto: Number($(v).children().eq(0).text())
-        , cantidad: Number($(v).children().eq(3).text())
+  // Obtener detalles de las citas agendadas
+  function obtieneDetalleCitas() {
+    const citas = [];
+    $('#tbl_citas tbody tr').each(function(k, v) {
+      citas.push({
+        id: Number($(v).children().eq(0).text()),
+        fecha: $(v).children().eq(3).text(),
       });
     });
-    return productos;
-  }
-
-  // Crea los nodos en el combo deposito
-  function actualizarDepositos(depositos) {
-    let options = "<option value=''>Depósitos</option>";
-    for(const item of depositos) {
-      options += `<option value="${item.id_deposito}">${item.nombre_deposito}</option>`;
-    }
-    $('#cbo_deposito').empty().append(options);
+    return citas;
   }
 
   /**
-  *
-  * Define todos los eventos del formularios
-  *
+  * Define todos los eventos del formulario de agendamiento
   */
   function addEvents() {
-    $('#cbo_sucursal').on('change', function() {
-      const id_sucursal = $(this).val();
-      if(id_sucursal) {
-        fetch(`/api/v1/sucursal-depositos/${Number(id_sucursal)}`, {
-          method: 'GET',
-          headers: {'Content-Type': 'application/json'}
-        })
-        .then(resp => {
-          if(!resp.ok) {
-            throw new Error(`HTTP error! status: ${resp.status}`);
-          }
-          return resp.json();
-        })
-        .then(data => {
-          if(data && data.data.length > 0) {
-            // Si hay depósitos, los agregamos al select
-            actualizarDepositos(data.data);
-          } else {
-            // Si no hay depósitos, mostramos una opción por defecto
-            $('#cbo_deposito').empty().append("<option value=''>No hay depósitos disponibles</option>");
-          }
-        })
-        .catch(err => {
-          console.error('Fetch error:', err);
-        })
+    $('#btn_agendar_cita').on('click', function() {
+      // Obtener los valores seleccionados
+      const id_medico = Number($('#cbo_medico').val());
+      const id_sucursal = Number($('#cbo_sucursal').val());
+      const fecha_cita = $('#txt_fecha_de_cita').val();
+      const id_especialidad = Number($('#cbo_especialidad').val());
+
+      // Validaciones
+      if (!id_medico || !id_sucursal || !fecha_cita || !id_especialidad) {
+        Swal.fire("Error", "Debe completar todos los campos para agendar la cita", "error");
+        return;
       }
+
+      // Buscar médico, especialidad y sucursal correspondientes en los datos
+      const medico_seleccionado = data_from_server.medicos.find(m => m.id_medico === id_medico);
+      const especialidad_seleccionada = data_from_server.especialidades.find(e => e.id_especialidad === id_especialidad);
+
+      // Añadir cita a la tabla
+      const nueva_cita = {
+        id: citas_agendadas.length + 1,
+        medico: medico_seleccionado.nombre_medico,
+        especialidad: especialidad_seleccionada.nombre,
+        fecha: fecha_cita,
+      };
+      
+      citas_agendadas.push(nueva_cita);
+
+      // Crear fila en la tabla
+      $('#tbl_citas tbody').append(creaTr(nueva_cita));
+
+      // Limpiar los campos después de agregar
+      $('#cbo_medico').val("");
+      $('#cbo_sucursal').val("");
+      $('#txt_fecha_de_cita').val("");
+      $('#cbo_especialidad').val("");
     });
 
-    $('#btn_agregar_producto').on('click', function() {
-      // Obtener el id_producto seleccionado
-      const id_producto = $('#cbo_producto').val() ? Number($('#cbo_producto').val()) : null;
-      const cantidad = $('#txt_cantidad').val() ? Number($('#txt_cantidad').val()) : null;
-      // Validar que no sea null
-      if(!id_producto) {
-        Swal.fire("Error", "Debe seleccionar un producto al menos", "error");
-        return; // detener la operación
-      }
-      if(!cantidad) {
-        Swal.fire("Error", "Falta la cantidad", "error");
-        return; // detener la operación
-      }
-      // recuperar los productos de data_from_server
-      const { productos } = data_from_server;
-      // encontrar el producto por id_producto
-      producto_encontrado = productos.find(producto => producto.id_producto === id_producto);
-      // verificar si hay algun producto guardado en acumular_productos
-      // para evitar duplicados
-      if(acumular_productos.includes(producto_encontrado.id_producto)) {
-        Swal.fire("Warning", `El producto ${producto_encontrado.nombre} ya existe`, "error");
-        return; // detener la operación
-      }
-      // agregar la cantidad
-      producto_encontrado.cantidad = cantidad;
-      // si no existe el producto o no está duplicado, se agrega a acumular_productos
-      acumular_productos.push(producto_encontrado.id_producto);
-      // se agrega el producto al la tabla html
-      $('#tbl_productos tbody').append(creaTr(producto_encontrado));
-
-      // se limpia
-      $('#cbo_producto').val("");
-      $('#txt_cantidad').val("");
-    });
-
-    // eliminar item en la tabla de productos
-    $('#tbl_productos tbody').on('click', '.eliminar', function(){
-      const id_producto = Number($(this).closest('tr').data('id'));
-      // eliminar item acumulado
-      acumular_productos = acumular_productos.filter(item => item !== id_producto);
-      // eliminar el tr
+    // Eliminar cita de la tabla
+    $('#tbl_citas tbody').on('click', '.eliminar', function(){
+      const id_cita = Number($(this).closest('tr').data('id'));
+      citas_agendadas = citas_agendadas.filter(cita => cita.id !== id_cita);
       $(this).closest('tr').remove();
     });
 
-    $('#btn_registrar_pedido').on('click', function() {
-      // Previamente validado, se debe construir el payload
+    // Registro de cita en el servidor
+    $('#btn_registrar_cita').on('click', function() {
       const payload = {
-        id_empleado: Number($('#cbo_empleado').val())
-        , id_sucursal: Number($('#cbo_sucursal').val())
-        , fecha_pedido: $('#txt_fecha_de_pedido').val()
-        , id_deposito: Number($('#cbo_deposito').val())
-        , detalle_pedido: obtieneDetalleProductos()
-      }
-      console.log(payload);
-      fetch(`/api/v1/gestionar-compras/registrar-pedido-compras/pedidos`, {
+        id_medico: Number($('#cbo_medico').val()),
+        id_sucursal: Number($('#cbo_sucursal').val()),
+        fecha_cita: $('#txt_fecha_de_cita').val(),
+        id_especialidad: Number($('#cbo_especialidad').val()),
+        detalles: obtieneDetalleCitas()
+      };
+      
+      // Registrar cita en el backend
+      fetch(`/api/v1/agendar-cita`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }, body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
       .then(resp => resp.json())
       .then(data => {
-        if(data && !data.error && data.success) {
-          Swal.fire("Bien", "Pedido Creado.", "success");
+        if (data.success) {
+          Swal.fire("Éxito", "Cita agendada correctamente.", "success");
         } else {
-          Swal.fire(data.error);
+          Swal.fire("Error", "Ocurrió un error al agendar la cita.", "error");
         }
-      }).catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Error al crear el pedido.", "error");
+      })
+      .catch(err => {
+        console.error('Error al registrar la cita:', err);
+        Swal.fire("Error", "Error al registrar la cita.", "error");
       });
     });
 
-    // Regresa al index de pedidos
-    $('#btn_salir_operacion').on('click', function() {
-      location.replace("{{ url_for('pdcmod.pedidos_index') }}");
+    // Cancelar operación
+    $('#btn_salir_agendamiento').on('click', function() {
+      location.replace("{{ url_for('agendamiento.index') }}");
     });
   }
+
   $(function() {
     addEvents();
   });

@@ -232,29 +232,7 @@ Citas
       <h1>Agenda Médica</h1>
       <p>Bienvenido</p>
   </div>
-  <div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5>#</h5>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5>#</h5>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5>#</h5>
-            </div>
-        </div>
-    </div>
-  </div>
+  
   <div class="row my-4">
     <div class="col-md-4">
         <a href="#" class="btn btn-info btn-block" id="btnAgregar">Registrar Agenda Médica</a>
@@ -263,7 +241,7 @@ Citas
         <a href="{{ url_for('medico.medicoIndex') }}" class="btn btn-primary btn-block">Registrar Nuevo Médico</a>
     </div>
     <div class="col-md-4">
-        <a href="/registrar-paciente" class="btn btn-warning btn-block">-</a>
+        <a href="{{ url_for('medico.medicoIndex') }}" class="btn btn-warning btn-block">Consultar Médico</a>
     </div>
   </div>
   
@@ -352,6 +330,305 @@ Citas
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Disponibilidad del Médico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 8px 0 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .checkbox-group, .time-blocks {
+            margin-bottom: 20px;
+        }
+        .checkbox-group label {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .time-blocks input {
+            width: 45%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Formulario de Disponibilidad del Médico</h1>
+
+    <form action="#" method="POST">
+        <!-- Días de la semana disponibles -->
+        <div class="checkbox-group">
+            <label>Días de la semana disponibles:</label>
+            <label><input type="checkbox" name="dias" value="lunes"> Lunes</label>
+            <label><input type="checkbox" name="dias" value="martes"> Martes</label>
+            <label><input type="checkbox" name="dias" value="miercoles"> Miércoles</label>
+            <label><input type="checkbox" name="dias" value="jueves"> Jueves</label>
+            <label><input type="checkbox" name="dias" value="viernes"> Viernes</label>
+            <label><input type="checkbox" name="dias" value="sabado"> Sábado</label>
+            <label><input type="checkbox" name="dias" value="domingo"> Domingo</label>
+        </div>
+
+        <!-- Horarios de disponibilidad -->
+        <label for="hora_inicio">Hora de inicio:</label>
+        <input type="time" id="hora_inicio" name="hora_inicio" required>
+
+        <label for="hora_fin">Hora de finalización:</label>
+        <input type="time" id="hora_fin" name="hora_fin" required>
+
+        <label for="hora_inicio_tarde">Hora de inicio (Tarde):</label>
+        <input type="time" id="hora_inicio_tarde" name="hora_inicio_tarde">
+
+        <label for="hora_fin_tarde">Hora de finalización (Tarde):</label>
+        <input type="time" id="hora_fin_tarde" name="hora_fin_tarde">
+
+        <!-- Bloques de tiempo de consulta -->
+        <div class="time-blocks">
+            <label for="bloques">Bloques de tiempo para consulta (intervalos de 30 minutos):</label>
+            <input type="time" id="bloque1" name="bloque1">
+            <input type="time" id="bloque2" name="bloque2">
+            <input type="time" id="bloque3" name="bloque3">
+            <!-- Añadir más bloques si necesario -->
+        </div>
+
+        <!-- Tiempo para descanso o almuerzo -->
+        <label for="almuerzo_inicio">Hora de almuerzo / descanso (inicio):</label>
+        <input type="time" id="almuerzo_inicio" name="almuerzo_inicio">
+
+        <label for="almuerzo_fin">Hora de almuerzo / descanso (fin):</label>
+        <input type="time" id="almuerzo_fin" name="almuerzo_fin">
+
+        <!-- Turnos especiales -->
+        <label for="dias_especiales">Días especiales o cambios en horarios:</label>
+        <textarea id="dias_especiales" name="dias_especiales" rows="4" placeholder="Especifique días con horarios especiales o ausencias aquí..."></textarea>
+
+        <button type="submit" class="btn-submit">Guardar Disponibilidad</button>
+    </form>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Disponibilidad del Médico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 8px 0 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .time-blocks label {
+            display: block;
+            margin-top: 10px;
+        }
+        .time-blocks .block {
+            margin-bottom: 10px;
+        }
+        .checkbox-group, .time-blocks {
+            margin-bottom: 20px;
+        }
+        .checkbox-group label {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Formulario de Disponibilidad del Médico</h1>
+
+    <form action="#" method="POST">
+        <!-- Días de la semana disponibles -->
+        <div class="checkbox-group">
+            <label>Días de la semana disponibles:</label>
+            <label><input type="checkbox" name="dias" value="lunes"> Lunes</label>
+            <label><input type="checkbox" name="dias" value="martes"> Martes</label>
+            <label><input type="checkbox" name="dias" value="miercoles"> Miércoles</label>
+            <label><input type="checkbox" name="dias" value="jueves"> Jueves</label>
+            <label><input type="checkbox" name="dias" value="viernes"> Viernes</label>
+            <label><input type="checkbox" name="dias" value="sabado"> Sábado</label>
+            <label><input type="checkbox" name="dias" value="domingo"> Domingo</label>
+        </div>
+
+        <!-- Bloques de tiempo de consulta -->
+        <div class="time-blocks">
+            <label for="bloques">Bloques de tiempo para consulta (intervalos de 30 minutos):</label>
+
+            <div class="block">
+                <label>Bloque 1 - Inicio:</label>
+                <input type="time" name="bloque1_inicio" required>
+                <label>Bloque 1 - Fin:</label>
+                <input type="time" name="bloque1_fin" required>
+            </div>
+
+            <div class="block">
+                <label>Bloque 2 - Inicio:</label>
+                <input type="time" name="bloque2_inicio">
+                <label>Bloque 2 - Fin:</label>
+                <input type="time" name="bloque2_fin">
+            </div>
+
+            <div class="block">
+                <label>Bloque 3 - Inicio:</label>
+                <input type="time" name="bloque3_inicio">
+                <label>Bloque 3 - Fin:</label>
+                <input type="time" name="bloque3_fin">
+            </div>
+
+            <!-- Añadir más bloques si es necesario -->
+        </div>
+
+        <!-- Hora de descanso o almuerzo -->
+        <label for="almuerzo_inicio">Hora de almuerzo / descanso (inicio):</label>
+        <input type="time" id="almuerzo_inicio" name="almuerzo_inicio">
+
+        <label for="almuerzo_fin">Hora de almuerzo / descanso (fin):</label>
+        <input type="time" id="almuerzo_fin" name="almuerzo_fin">
+
+        <!-- Turnos especiales -->
+        <label for="dias_especiales">Días especiales o cambios en horarios:</label>
+        <textarea id="dias_especiales" name="dias_especiales" rows="4" placeholder="Especifique días con horarios especiales o ausencias aquí..."></textarea>
+
+        <button type="submit" class="btn-submit">Guardar Disponibilidad</button>
+    </form>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
 
 {% endblock %}
 
@@ -518,3 +795,20 @@ Citas
   });
 </script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

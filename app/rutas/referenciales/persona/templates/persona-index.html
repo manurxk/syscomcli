@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
-Persona
+Personas
 {% endblock %}
 
 {% block contenido %}
@@ -11,22 +11,24 @@ Persona
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Apellido</th> <!-- Agregado campo 'apellido' -->
-              <th>Fecha de Nacimiento</th>
-              <th>N° C.I.</th>
-              <th>Sexo</th>
+              <th>Nombre:</th>
+              <th>Apellido:</th>
+              <th>Cédula:</th>
+              <th>Género:</th>
+              <th>Estado civil:</th>
+              <th>Teléfono de emergencia</th>
+              <th>Ciudad:</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
-      </table>
+        </table>
       </div>
     </div>
     <!-- /tarjeta -->
@@ -35,11 +37,10 @@ Persona
     <div class="modal" id="modalFormulario">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
           <!-- Modal Header -->
           <div class="modal-header">
             <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
           </div>
 
           <!-- Modal body -->
@@ -47,262 +48,394 @@ Persona
             <div class="form-group">
               <input type="hidden" id="txtIdPersona">
               <label for="txtNombre">Nombre:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el nombre de la persona" id="txtNombre">
-
+              <input type="text" class="form-control" placeholder="Ingrese el nombre" id="txtNombre">
               <label for="txtApellido">Apellido:</label>
               <input type="text" class="form-control" placeholder="Ingrese el apellido" id="txtApellido">
-
-              <label for="txtFechaNacimiento">Fecha de nacimiento:</label>
-              <input type="date" class="form-control" placeholder="Ingresar fecha de nacimiento" id="txtFechaNacimiento">
-
               <label for="txtCedula">Cédula:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el C.I de la persona" id="txtCedula">
-
-              <label for="txtSexo">Sexo:</label>
-              <input type="text" class="form-control" placeholder="Ingresar 'F'Femenino , 'M' Masculino , 'I' Indistinto " id="txtSexo">
-
+              <input type="text" class="form-control" placeholder="Ingrese la cédula" id="txtCedula">
+              <input type="hidden" id="id_genero">
+              <label for="txtGenero">Género:</label>
+              <input type="text" class="form-control" placeholder="Selecione el género" id="txtGenero" readonly>
+              <input type="hidden" id="id_estado_civil">
+              <label for="txtEstado_civil">Estado civil:</label>
+              <input type="text" class="form-control" placeholder="Selecione el estado civil" id="txtEstado_civil" readonly>
+              <label for="txtTelefono">Teléfono de emergencia:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el teléfono de emergencia" id="txtTelefono">
+              <input type="hidden" id="id_ciudad">
+              <label for="txtCiudad">Ciudad de localidad:</label>
+              <input type="text" class="form-control" placeholder="Selecione la ciudad" id="txtCiudad" readonly>
             </div>
           </div>
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-success" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-        </div>
-
+          </div>
         </div>
       </div>
     </div>
 
+    <div class="modal" id="modalBuscarGenero">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalGeneroTitle">Seleccionar género</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped" id="tblGenero">
+                <thead>
+                  <tr>
+                    <th>Género</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="modalBuscarEstado_civil">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalEstado_civilTitle">Seleccionar estado civil</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped" id="tblEstado_civil">
+                <thead>
+                  <tr>
+                    <th>Estado civil</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="modalBuscarCiudad">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalCiudadTitle">Seleccionar ciudad</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped" id="tblCiudad">
+                <thead>
+                  <tr>
+                    <th>Ciudad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div class="row mt-4 d-none" id="rowAlerta">
       <div class="col col-md-12">
-          <div class="alert alert-success">
-              <strong>Registro Exitoso!</strong>
-              <div class="row" id="mostrarAlerta"></div>
-          </div>
+        <div class="alert alert-success">
+          <strong>Registro Exitoso!</strong>
+          <div class="row" id="mostrarAlerta"></div>
+        </div>
       </div>
-  </div>
-  
-  <!-- Librerías de jQuery y jQuery UI -->
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-  
-  <script>
-    $(function() {
-      // Corrección en el ID del campo fecha de nacimiento
-      $("#txtFechaNacimiento").datepicker({
-        dateFormat: "yy-mm-dd",
-        changeMonth: true,
-        changeYear: true,
-        yearRange: "1900:2024"
-      });
-    });
-  </script>
-  
-  {% endblock %}
-  
-  {% block js %}
-  <script>
-    const initDatatable = () => {
-      $('#tbl').DataTable({
-        language: {
-          url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-        },
-        ajax:'/api/v1/personas',
-        columns: [
-      { data: 'nombre' },
-      { data: 'apellido' },
-      { 
-          data: function(row) {
-              // Validar que la fecha no sea nula
-              if (row.fechanacimiento) {
-                  const fecha = new Date(row.fechanacimiento); 
-                  const dia = fecha.getUTCDate().toString().padStart(2, '0');
-                  const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
-                  const anio = fecha.getUTCFullYear();
-                  return `${dia}/${mes}/${anio}`;
-              } else {
-                  return "Fecha no disponible";
-              }
-          }
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      { data: 'cedula' },
-      { data: 'sexo' },
-      { data: function(row) {
-          return `
-              <button type="button" name="btn_editar" class="btn btn-info" data-id_persona="${row.id_persona}">Editar</button>
-              <button type="button" name="btn_eliminar" class="btn btn-warning" data-id_persona="${row.id_persona}">Eliminar</button>`;
+      ajax:'/api/v1/personas',
+      columns: [
+        { data: 'nombre' },
+        { data: 'apellido' },
+        { data: 'cedula' },
+        { data: 'genero' },
+        { data: 'estado_civil' },
+        { data: 'telefono_emergencia' },
+        { data: 'ciudad' },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
           }
+        }
+      ]
+    });
+  }
+
+  const initDatatableg= () => {
+    $('#tblGenero').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax:'/api/v1/generos',
+      columns: [
+        { data: 'descripcion' },
+        { data: function(row) {
+            return `<button type="button" name="btn_seleccionar_genero" class="fa fa-chek" data-id="${row.id_genero}" data-genero="${row.descripcion}">Selecionar</button>`;
+          }
+        }
+      ]
+    });
+    $('#tblGenero').on('click', 'button[name="btn_seleccionar_genero"]', function () {
+      const idGenero = $(this).data('id');
+      const genero = $(this).data('genero');
+      $('#txtGenero').val(genero);
+      $('#id_genero').val(idGenero);
+      $('#modalBuscarGenero').modal('hide');
+    });
+  }
+
+  const buscarGenero = () => {
+    $('#txtGenero').on('click', function () {
+      $('#modalGeneroTitle').text("Seleccionar Género");
+      $('#modalBuscarGenero').modal();
+    });
+  }
+
+  const initDatatablee= () => {
+    $('#tblEstado_civil').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax:'/api/v1/estado_civiles',
+      columns: [
+        { data: 'descripcion' },
+        { data: function(row) {
+            return `<button type="button" name="btn_seleccionar_estado_civil" class="fa fa-chek" data-id="${row.id_estado_civil}" data-estado_civil="${row.descripcion}">Selecionar</button>`;
+          }
+        }
+      ]
+    });
+    $('#tblEstado_civil').on('click', 'button[name="btn_seleccionar_estado_civil"]', function () {
+      const idEstado_civil = $(this).data('id');
+      const estado_civil = $(this).data('estado_civil');
+      $('#txtEstado_civil').val(estado_civil);
+      $('#id_estado_civil').val(idEstado_civil);
+      $('#modalBuscarEstado_civil').modal('hide');
+    });
+  }
+
+  const buscarEstado_civil = () => {
+    $('#txtEstado_civil').on('click', function () {
+      $('#modalEstado_civilTitle').text("Seleccionar Estado_civil");
+      $('#modalBuscarEstado_civil').modal();
+    });
+  }
+
+  const initDatatablec= () => {
+    $('#tblCiudad').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax:'/api/v1/ciudades',
+      columns: [
+        { data: 'descripcion' },
+        { data: function(row) {
+            return `<button type="button" name="btn_seleccionar_ciudad" class="fa fa-chek" data-id="${row.id_ciudad}" data-ciudad="${row.descripcion}">Selecionar</button>`;
+          }
+        }
+      ]
+    });
+    $('#tblCiudad').on('click', 'button[name="btn_seleccionar_ciudad"]', function () {
+      const idCiudad = $(this).data('id');
+      const ciudad = $(this).data('ciudad');
+      $('#txtCiudad').val(ciudad);
+      $('#id_ciudad').val(idCiudad);
+      $('#modalBuscarCiudad').modal('hide');
+    });
+  }
+
+  const buscarCiudad = () => {
+    $('#txtCiudad').on('click', function () {
+      $('#modalCiudadTitle').text("Seleccionar Ciudad");
+      $('#modalBuscarCiudad').modal();
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar Persona");
+      $('#txtIdPersona').val("");
+      $('#txtNombre').val("");
+      $('#txtApellido').val("");
+      $('#txtCedula').val("");
+      $('#txtGenero').val("");
+      $('#txtEstado_civil').val("");
+      $('#txtTelefono').val("");
+      $('#txtCiudad').val("");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idPersona = $('#txtIdPersona').val();
+      const nuevoNombre = $('#txtNombre').val();
+      const nuevoApellido = $('#txtApellido').val();
+      const nuevaCedula = $('#txtCedula').val();
+      const id_genero = $('#id_genero').val();
+      const id_estado_civil = $('#id_estado_civil').val();
+      const nuevoTelefono = $('#txtTelefono').val();
+      const id_ciudad = $('#id_ciudad').val();
+      const tabla = $('#tbl').DataTable();
+
+      if(idPersona) {
+        // update
+        fetch(`/api/v1/personas/${idPersona}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Actualizado", "La persona ha sido actualizada correctamente.", "success");
+          } else {
+            Swal.fire(data.error);
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al actualizar la persona.", "error");
+        });
+      } else {
+        // insert
+        fetch(`/api/v1/personas`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Agregado", "La persona ha sido agregada correctamente.", "success");
+          } else {
+            Swal.fire(data.error);
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al guardar la persona.", "error");
+        });
       }
-  ]
-      });
-    }
-  
-    const mostrarAlerta = (mensaje) => {
-      $('#mostrarAlerta').text(mensaje); // Establecer el mensaje
-      $('#rowAlerta').removeClass('d-none'); // Mostrar la alerta
-      setTimeout(() => {
-        $('#rowAlerta').addClass('d-none'); // Ocultar la alerta después de 3 segundos
-      }, 3000);
-    }
-  
-    const agregar = () => {
-      $('#btnAgregar').on('click', function(){
-        $('#modalTitle').text("Agregar Persona");
-        $('#txtIdPersona').val("");
-        $('#txtNombre').val("");
-        $('#txtApellido').val("");
-        $('#txtFechaNacimiento').val("");
-        $('#txtCedula').val("");
-        $('#txtSexo').val("");
-        $('#modalFormulario').modal();
-      });
-    }
-  
-    const guardar = () => {
-      $('#btnGuardar').on('click', function() {
-        const id_persona = $('#txtIdPersona').val();
-        const nuevoNombre = $('#txtNombre').val();
-        const nuevoApellido = $('#txtApellido').val();
-        const nuevoFechaNacimiento = $('#txtFechaNacimiento').val();
-        const nuevaCedula = $('#txtCedula').val();
-        const nuevoSexo = $('#txtSexo').val();
-        const tabla = $('#tbl').DataTable();
-        
-        if(id_persona) {
-          // update
-          fetch(`/api/v1/personas/${id_persona}`, {
-            method: 'PUT',
+      $('#modalFormulario').modal("hide");
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      Swal.fire({
+        title: "¿Deseas editar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $('#modalTitle').text("Editar Persona");
+
+          const idPersona = $(this).data('id');
+          $('#txtIdPersona').val(idPersona);
+
+          // Obtener los datos de la persona del backend
+          fetch(`/api/v1/personas/${idPersona}`, {
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json'
-            }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, fechanacimiento: nuevoFechaNacimiento, cedula: nuevaCedula, sexo: nuevoSexo })
+            }
           })
           .then(resp => resp.json())
           .then(data => {
-            if(data && !data.error && data.success) {
-              tabla.ajax.reload(null, false);
-              Swal.fire("Actualizado", "La persona ha sido actualizada correctamente.", "success");
-              mostrarAlerta("Persona actualizada con éxito.");
-            } else {
-              Swal.fire({ title: data.error, icon: 'error' });
-            }
-          }).catch(err => {
-            console.error(err);
-            Swal.fire("Error", "Ocurrió un error al actualizar a la persona.", "error");
-          });
-        } else {
-          // insert
-          fetch(`/api/v1/personas`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, fechanacimiento: nuevoFechaNacimiento, cedula: nuevaCedula, sexo: nuevoSexo })
-          })
-          .then(resp => resp.json())
-          .then(data => {
-            if(data && !data.error && data.success) {
-              tabla.ajax.reload(null, false);
-              Swal.fire("Agregado", "La persona ha sido agregada correctamente.", "success");
-              mostrarAlerta("Persona agregada con éxito.");
-            } else {
-              Swal.fire({ title: data.error, icon: 'error' });
-            }
-          }).catch(err => {
-            console.error(err);
-            Swal.fire("Error", "Ocurrió un error al guardar persona.", "error");
+            $('#txtNombre').val(data.data.nombre);
+            $('#txtApellido').val(data.data.apellido);
+            $('#txtCedula').val(data.data.cedula);
+            $('#id_genero').val(data.data.id_genero);
+            $('#txtGenero').val(data.data.genero);
+            $('#id_estado_civil').val(data.data.id_estado_civil);
+            $('#txtEstado_civil').val(data.data.estado_civil);
+            $('#txtTelefono').val(data.data.telefono_emergencia);
+            $('#txtCiudad').val(data.data.ciudad);
+            $('#id_ciudad').val(data.data.id_ciudad);
+            $('#modalFormulario').modal();
           });
         }
-        $('#modalFormulario').modal("hide");
       });
-    }
-  
-    const editar = () => {
-      $('#tbl').on('click', 'button[name="btn_editar"]',function(){
-        Swal.fire({
-          title: "¿Deseas editar este registro?",
-          showCancelButton: true,
-          confirmButtonText: "Si",
-          cancelButtonText: `No`
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $('#modalTitle').text("Editar Persona");
-  
-            const id_persona = $(this).data('id_persona'); // Corrección en data attribute
-            $('#txtIdPersona').val(id_persona);
-  
-            fetch(`/api/v1/personas/${id_persona}`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            })
-            .then(resp => resp.json())
-            .then(data => {
-              $('#txtNombre').val(data.data.nombre);
-              $('#txtApellido').val(data.data.apellido);
-  
-              // Convertimos la fecha al formato YYYY-MM-DD
-              const fechaNacimiento = new Date(data.data.fechanacimiento);
-              const fechaFormateada = fechaNacimiento.toISOString().split('T')[0];
-              $('#txtFechaNacimiento').val(fechaFormateada); // Cargar la fecha en el formato correcto
-  
-              $('#txtCedula').val(data.data.cedula);
-              $('#txtSexo').val(data.data.sexo);
-              $('#modalFormulario').modal();
-            });
-          }
-        });
-      });
-    }
-  
-  
-    const eliminar = () => {
-      $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-        const id_persona = $(this).data('id_persona');
-        Swal.fire({
-          title: "¿Estás seguro de eliminar este registro?",
-          showCancelButton: true,
-          confirmButtonText: "Si",
-          cancelButtonText: `No`
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`/api/v1/personas/${id_persona}`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            })
-            .then(resp => resp.json())
-            .then(data => {
-              if (data && data.success) {
-                $('#tbl').DataTable().ajax.reload(null, false);
-                Swal.fire("Eliminado", "Registro eliminado correctamente", "success");
-                mostrarAlerta("Persona eliminada con éxito.");
-              } else {
-                Swal.fire({ title: data.error, icon: 'error' });
-              }
-            }).catch(err => {
-              console.error(err);
-              Swal.fire("Error", "Ocurrió un error al eliminar persona", "error");
-            });
-          }
-        });
-      });
-    }
-  
-    // Validación del campo de cédula para que solo acepte números
-    $('#txtCedula').on('input', function() {
-      this.value = this.value.replace(/[^0-9]/g, '');  // Solo permite números
     });
-  
-    $(document).ready(function() {
-      initDatatable();
-      agregar();
-      guardar();
-      editar();
-      eliminar();
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+      const idPersona = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/personas/${idPersona}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const fila =$(this).closest('tr');
+              const tabla = $('#tbl').DataTable();
+              tabla.row(fila).remove().draw();
+              Swal.fire("Eliminado", "La persona ha sido eliminada correctamente.", "success");
+            } else {
+              Swal.fire(data.error);
+            }
+          }).catch(err => {
+            Swal.fire("Error", "Ocurrió un error al eliminar la persona.", "error");
+          });
+        }
+      });
     });
-  </script>
-  {% endblock %}
-    
+  }
+
+  const addEvents = () => {
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+    buscarGenero(); //iniciar todas las funciones de seleccionar
+    buscarEstado_civil();
+    buscarCiudad();
+  }
+
+  $(function() {
+    initDatatable();
+    initDatatableg();
+    initDatatablec();
+    initDatatablee();
+    addEvents();
+  }); 
+</script> 
+{% endblock %}

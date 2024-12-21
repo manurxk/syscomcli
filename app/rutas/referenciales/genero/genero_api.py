@@ -1,61 +1,60 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.estado_civil.Estado_civilDao import Estado_civilDao
+from app.dao.referenciales.genero.GeneroDao import GeneroDao
 
-estapi = Blueprint('estapi', __name__)
+genapi = Blueprint('genapi', __name__)
 
-# Trae todos los estado_civiles
-@estapi.route('/estado_civiles', methods=['GET'])
-def getEstado_civiles():
-    estdao = Estado_civilDao()
+# Trae todas las ciudades
+@genapi.route('/generos', methods=['GET'])
+def getGeneros():
+    gendao = GeneroDao()
 
     try:
-        estado_civiles = estdao.getEstado_civiles()
+        generos = gendao.getGeneros()
 
         return jsonify({
             'success': True,
-            'data': estado_civiles,
+            'data': generos,
             'error': None
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todos los estado_civiles: {str(e)}")
+        app.logger.error(f"Error al obtener todos los géneros: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Trae un estado_civil por ID
-@estapi.route('/estado_civiles/<int:estado_civil_id>', methods=['GET'])
-def getEstado_civil(estado_civil_id):
-    estdao = Estado_civilDao()
+@genapi.route('/generos/<int:genero_id>', methods=['GET'])
+def getGenero(genero_id):
+    gendao = GeneroDao()
 
     try:
-        estado_civil = estdao.getEstado_civilById(estado_civil_id)
+        genero = gendao.getGeneroById(genero_id)
 
-        if estado_civil:
+        if genero:
             return jsonify({
                 'success': True,
-                'data': estado_civil,
+                'data': genero,
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el estado_civil con el ID proporcionado.'
+                'error': 'No se encontró el género con el ID proporcionado.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al obtener estado_civil: {str(e)}")
+        app.logger.error(f"Error al obtener género: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega un nuevo estado_civil
-@estapi.route('/estado_civiles', methods=['POST'])
-def addestado_civil():
+# Agrega una nueva ciudad
+@genapi.route('/generos', methods=['POST'])
+def addGenero():
     data = request.get_json()
-    estdao = Estado_civilDao()
+    gendao = GeneroDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['descripcion']
@@ -70,27 +69,26 @@ def addestado_civil():
 
     try:
         descripcion = data['descripcion'].upper()
-        estado_civil_id = estdao.guardarEstado_civil(descripcion)
-        if estado_civil_id is not None:
+        genero_id = gendao.guardarGenero(descripcion)
+        if genero_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id_estado_civil': estado_civil_id, 'descripcion': descripcion},
+                'data': {'id': genero_id, 'descripcion': descripcion},
                 'error': None
             }), 201
         else:
-            return jsonify({ 'success': False, 'error': 'No se pudo guardar el estado_civil. Consulte con el administrador.' }), 500
+            return jsonify({ 'success': False, 'error': 'No se pudo guardar el género. Consulte con el administrador.' }), 500
     except Exception as e:
-        app.logger.error(f"Error al agregar estado_civil: {str(e)}")
+        app.logger.error(f"Error al agregar género: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Actualiza un estado_civil
-@estapi.route('/estado_civiles/<int:estado_civil_id>', methods=['PUT'])
-def updateEstado_civil(estado_civil_id):
+@genapi.route('/generos/<int:genero_id>', methods=['PUT'])
+def updateGenero(genero_id):
     data = request.get_json()
-    estdao = Estado_civilDao()
+    gendao = GeneroDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['descripcion']
@@ -104,45 +102,44 @@ def updateEstado_civil(estado_civil_id):
                             }), 400
     descripcion = data['descripcion']
     try:
-        if estdao.updateEstado_civil(estado_civil_id, descripcion.upper()):
+        if gendao.updateGenero(genero_id, descripcion.upper()):
             return jsonify({
                 'success': True,
-                'data': {'id_estado_civil': estado_civil_id, 'descripcion': descripcion},
+                'data': {'id': genero_id, 'descripcion': descripcion},
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el estado_civil con el ID proporcionado o no se pudo actualizar.'
+                'error': 'No se encontró el género con el ID proporcionado o no se pudo actualizar.'
             }), 404
     except Exception as e:
-        app.logger.error(f"Error al actualizar estado_civil: {str(e)}")
+        app.logger.error(f"Error al actualizar género: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Elimina un estado_civil
-@estapi.route('/estado_civiles/<int:estado_civil_id>', methods=['DELETE'])
-def deleteEstado_civil(estado_civil_id):
-    estdao = Estado_civilDao()
+@genapi.route('/generos/<int:genero_id>', methods=['DELETE'])
+def deleteGenero(genero_id):
+    gendao = GeneroDao()
 
     try:
-        # Usar el retorno de eliminarEstado_civil para determinar el éxito
-        if estdao.deleteEstado_civil(estado_civil_id):
+        # Usar el retorno de eliminarCiudad para determinar el éxito
+        if gendao.deleteGenero(genero_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'estado_civil con ID {estado_civil_id} eliminada correctamente.',
+                'mensaje': f'género con ID {genero_id} eliminada correctamente.',
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el estado_civil con el ID proporcionado o no se pudo eliminar.'
+                'error': 'No se encontró el género con el ID proporcionado o no se pudo eliminar.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al eliminar estado_civil: {str(e)}")
+        app.logger.error(f"Error al eliminar género: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'

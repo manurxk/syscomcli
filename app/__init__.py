@@ -9,9 +9,8 @@ from app.rutas.referenciales.ciudad.ciudad_routes import ciumod #ciudad
 from app.rutas.referenciales.paises.pais_routes import paimod   #pais
 from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod  #nacionalidad
 from app.rutas.referenciales.ocupacion.ocupacion_routes import ocupmod  #ocupacion
-from app.rutas.referenciales.estado_civil.estado_civil_routes import estacivmod  #estado civil
 from app.rutas.referenciales.estado_cita.estado_cita_routes import estacitmod  #estado de la cita
-from app.rutas.referenciales.persona.persona_routes import persmod  #persona
+from app.rutas.referenciales.persona.persona_routes import persona_mod  #persona
 from app.rutas.referenciales.especialidad.especialidad_routes import especimod  #especialidad
 from app.rutas.referenciales.dia.dia_routes import diamod  #dia
 from app.rutas.referenciales.duracion_consulta.duracion_consulta_routes import duraconsumod  #duracion de la consulta
@@ -34,6 +33,25 @@ from app.rutas.administracion.consulta.consulta_routes import consumod
 
 
 
+from app.rutas.referenciales.estado_civil.estado_civil_routes import estmod
+from app.rutas.referenciales.genero.genero_routes import genmod
+
+modulo0 = '/referenciales'
+app.register_blueprint(estmod, url_prefix=f'{modulo0}/estado_civil')
+
+from app.rutas.referenciales.estado_civil.estado_civil_api import estapi
+
+
+modulo0 = '/referenciales'
+app.register_blueprint(genmod, url_prefix=f'{modulo0}/genero')
+
+from app.rutas.referenciales.genero.genero_api import genapi
+
+
+
+
+
+
 
 # registrar referenciales
 modulo0 = '/referenciales'
@@ -43,9 +61,9 @@ app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad') #ciudad
 app.register_blueprint(paimod, url_prefix=f'{modulo0}/paises') #pais
 app.register_blueprint(naciomod, url_prefix=f'{modulo0}/nacionalidad')  #nacionalidad
 app.register_blueprint(ocupmod, url_prefix=f'{modulo0}/ocupacion')  #ocupacion
-app.register_blueprint(estacivmod, url_prefix=f'{modulo0}/estadocivil')  #estado civil
+
 app.register_blueprint(estacitmod, url_prefix=f'{modulo0}/estadocita')  #estado de la cita
-app.register_blueprint(persmod, url_prefix=f'{modulo0}/persona') #persona
+app.register_blueprint(persona_mod, url_prefix=f'{modulo0}/persona') #persona
 app.register_blueprint(especimod, url_prefix=f'{modulo0}/especialidad') #especialidad
 app.register_blueprint(diamod, url_prefix=f'{modulo0}/dia') #dia
 app.register_blueprint(duraconsumod, url_prefix=f'{modulo0}/duracionconsulta') #duracion de la consulta
@@ -77,12 +95,10 @@ from app.rutas.referenciales.paises.pais_api import paisapi
 from app.rutas.referenciales.nacionalidad.nacionalidad_api import nacioapi
 #nacionalidad
 from app.rutas.referenciales.ocupacion.ocupacion_api import ocupapi
-#estado civil
-from app.rutas.referenciales.estado_civil.estado_civil_api import estacivapi
 #estado de la cita
 from app.rutas.referenciales.estado_cita.estado_cita_api import estacitapi
 #persona
-from app.rutas.referenciales.persona.persona_api import persapi
+from app.rutas.referenciales.persona.persona_api import personaapi
 #especialidad
 from app.rutas.referenciales.especialidad.especialidad_api import especiapi
 #dia
@@ -120,9 +136,6 @@ app.register_blueprint(nacioapi, url_prefix=apiversion1)
 apiversion1 = '/api/v1'
 app.register_blueprint(ocupapi, url_prefix=apiversion1)
 
-#Estado civil
-apiversion1 = '/api/v1'
-app.register_blueprint(estacivapi, url_prefix=apiversion1)
 
 #Estado de la cita
 apiversion1 = '/api/v1'
@@ -130,7 +143,7 @@ app.register_blueprint(estacitapi, url_prefix=apiversion1)
 
 #persona
 apiversion1 = '/api/v1'
-app.register_blueprint(persapi, url_prefix=apiversion1)
+app.register_blueprint(personaapi, url_prefix=apiversion1)
 
 #especialidad
 apiversion1 = '/api/v1'
@@ -166,6 +179,11 @@ app.register_blueprint(citaapi, url_prefix=version1)
 
 
 
+
+app.register_blueprint(estapi, url_prefix=version1)
+
+
+app.register_blueprint(genapi, url_prefix=version1)
 
 
 
