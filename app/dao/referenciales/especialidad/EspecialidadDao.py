@@ -1,22 +1,19 @@
-# Data access object - DAO
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
 class EspecialidadDao:
 
     def getEspecialidades(self):
-
         especialidadSQL = """
         SELECT id_especialidad, descripcion
         FROM especialidades
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
             cur.execute(especialidadSQL)
-            especialidades = cur.fetchall() # trae datos de la bd
+            especialidades = cur.fetchall()
 
             # Transformar los datos en una lista de diccionarios
             return [{'id_especialidad': especialidad[0], 'descripcion': especialidad[1]} for especialidad in especialidades]
@@ -29,26 +26,24 @@ class EspecialidadDao:
             cur.close()
             con.close()
 
-    def getEspecialidadById(self, id):
-
+    def getEspecialidadById(self, id_especialidad):
         especialidadSQL = """
         SELECT id_especialidad, descripcion
         FROM especialidades WHERE id_especialidad=%s
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(especialidadSQL, (id,))
-            especialidadEncontrada = cur.fetchone() # Obtener una sola fila
+            cur.execute(especialidadSQL, (id_especialidad,))
+            especialidadEncontrada = cur.fetchone()
             if especialidadEncontrada:
                 return {
-                        "id_especialidad": especialidadEncontrada[0],
-                        "descripcion": especialidadEncontrada[1]
-                    }  # Retornar los datos de la ciudad
+                    "id_especialidad": especialidadEncontrada[0],
+                    "descripcion": especialidadEncontrada[1]
+                }
             else:
-                return None # Retornar None si no se encuentra la especialidad
+                return None
         except Exception as e:
             app.logger.error(f"Error al obtener especialidad: {str(e)}")
             return None
@@ -58,7 +53,6 @@ class EspecialidadDao:
             con.close()
 
     def guardarEspecialidad(self, descripcion):
-
         insertEspecialidadSQL = """
         INSERT INTO especialidades(descripcion) VALUES(%s) RETURNING id_especialidad
         """
@@ -67,26 +61,22 @@ class EspecialidadDao:
         con = conexion.getConexion()
         cur = con.cursor()
 
-        # Ejecucion exitosa
         try:
             cur.execute(insertEspecialidadSQL, (descripcion,))
-            ciudad_id = cur.fetchone()[0]
-            con.commit() # se confirma la insercion
-            return ciudad_id
+            especialidad_id = cur.fetchone()[0]
+            con.commit()
+            return especialidad_id
 
-        # Si algo fallo entra aqui
         except Exception as e:
             app.logger.error(f"Error al insertar especialidad: {str(e)}")
-            con.rollback() # retroceder si hubo error
+            con.rollback()
             return False
 
-        # Siempre se va ejecutar
         finally:
             cur.close()
             con.close()
 
-    def updateEspecialidad(self, id, descripcion):
-
+    def updateEspecialidad(self, id_especialidad, descripcion):
         updateEspecialidadSQL = """
         UPDATE especialidades
         SET descripcion=%s
@@ -98,11 +88,11 @@ class EspecialidadDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updateEspecialidadSQL, (descripcion, id,))
-            filas_afectadas = cur.rowcount # Obtener el número de filas afectadas
+            cur.execute(updateEspecialidadSQL, (descripcion, id_especialidad))
+            filas_afectadas = cur.rowcount
             con.commit()
 
-            return filas_afectadas > 0 # Retornar True si se actualizó al menos una fila
+            return filas_afectadas > 0
 
         except Exception as e:
             app.logger.error(f"Error al actualizar especialidad: {str(e)}")
@@ -113,9 +103,8 @@ class EspecialidadDao:
             cur.close()
             con.close()
 
-    def deleteEspecialidad(self, id):
-
-        updateEspecialidadSQL = """
+    def deleteEspecialidad(self, id_especialidad):
+        deleteEspecialidadSQL = """
         DELETE FROM especialidades
         WHERE id_especialidad=%s
         """
@@ -125,11 +114,11 @@ class EspecialidadDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updateEspecialidadSQL, (id,))
+            cur.execute(deleteEspecialidadSQL, (id_especialidad,))
             rows_affected = cur.rowcount
             con.commit()
 
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
+            return rows_affected > 0
 
         except Exception as e:
             app.logger.error(f"Error al eliminar especialidad: {str(e)}")

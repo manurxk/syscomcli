@@ -129,7 +129,7 @@ def deleteCiudad(ciudad_id):
         if ciudao.deleteCiudad(ciudad_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'Ciudad con ID {ciudad_id} eliminada correctamente.',
+                'mensaje': f'ciudad con ID {ciudad_id} eliminada correctamente.',
                 'error': None
             }), 200
         else:

@@ -176,8 +176,13 @@ Personas
         { data: 'telefono_emergencia' },
         { data: 'ciudad' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">
+    <i class="fa fa-edit"></i>
+</button>
+<button type="button" name="btn_eliminar" class="btn btn-warning" data-id="${row.id}">
+    <i class="fa fa-trash"></i>
+</button>
+`;
           }
         }
       ]

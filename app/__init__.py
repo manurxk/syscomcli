@@ -11,13 +11,14 @@ from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod  #
 from app.rutas.referenciales.ocupacion.ocupacion_routes import ocupmod  #ocupacion
 from app.rutas.referenciales.estado_cita.estado_cita_routes import estacitmod  #estado de la cita
 from app.rutas.referenciales.persona.persona_routes import persona_mod  #persona
-from app.rutas.referenciales.especialidad.especialidad_routes import especimod  #especialidad
+from app.rutas.referenciales.especialidad.especialidad_routes import espmod
 from app.rutas.referenciales.dia.dia_routes import diamod  #dia
 from app.rutas.referenciales.duracion_consulta.duracion_consulta_routes import duraconsumod  #duracion de la consulta
 from app.rutas.referenciales.instrumento.instrumento_routes import instmod  #instrumento utilizado
 from app.rutas.referenciales.turno.turno_routes import turmod  #turno
 from app.rutas.referenciales.tratamiento.tratamiento_routes import tratmod  #tratamiento
 from app.rutas.referenciales.diagnostico.diagnostico_routes import diagmod  #diagnostico
+from app.rutas.referenciales.estado_laboral.estado_laboral_routes import estado_laboralmod
 
 # Importar rutas de inicio
 from app.rutas.seguridad.login.login_routes import loginmod
@@ -61,10 +62,10 @@ app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad') #ciudad
 app.register_blueprint(paimod, url_prefix=f'{modulo0}/paises') #pais
 app.register_blueprint(naciomod, url_prefix=f'{modulo0}/nacionalidad')  #nacionalidad
 app.register_blueprint(ocupmod, url_prefix=f'{modulo0}/ocupacion')  #ocupacion
-
+app.register_blueprint(estado_laboralmod, url_prefix=f'{modulo0}/estado_laboral')
 app.register_blueprint(estacitmod, url_prefix=f'{modulo0}/estadocita')  #estado de la cita
 app.register_blueprint(persona_mod, url_prefix=f'{modulo0}/persona') #persona
-app.register_blueprint(especimod, url_prefix=f'{modulo0}/especialidad') #especialidad
+app.register_blueprint(espmod, url_prefix=f'{modulo0}/especialidad')
 app.register_blueprint(diamod, url_prefix=f'{modulo0}/dia') #dia
 app.register_blueprint(duraconsumod, url_prefix=f'{modulo0}/duracionconsulta') #duracion de la consulta
 app.register_blueprint(instmod, url_prefix=f'{modulo0}/instrumento') #instrumento utilizado
@@ -100,7 +101,7 @@ from app.rutas.referenciales.estado_cita.estado_cita_api import estacitapi
 #persona
 from app.rutas.referenciales.persona.persona_api import personaapi
 #especialidad
-from app.rutas.referenciales.especialidad.especialidad_api import especiapi
+from app.rutas.referenciales.especialidad.especialidad_api import espapi
 #dia
 from app.rutas.referenciales.dia.dia_api import diaapi
 #duracion de la consulta
@@ -116,7 +117,7 @@ from app.rutas.referenciales.diagnostico.diagnostico_api import diagapi
 #cita
 from app.rutas.administracion.cita.cita_api import citaapi
 
-
+from app.rutas.referenciales.estado_laboral.estado_laboral_api import estado_laboralapi
 
 
 # APIS v1
@@ -147,7 +148,7 @@ app.register_blueprint(personaapi, url_prefix=apiversion1)
 
 #especialidad
 apiversion1 = '/api/v1'
-app.register_blueprint(especiapi, url_prefix=apiversion1)
+app.register_blueprint(espapi, url_prefix=apiversion1)
 
 #dia
 apiversion1 = '/api/v1'
@@ -177,7 +178,8 @@ app.register_blueprint(diagapi, url_prefix=apiversion1)
 version1 = '/api/v1'
 app.register_blueprint(citaapi, url_prefix=version1)
 
-
+version1 = '/api/v1'
+app.register_blueprint(estado_laboralapi, url_prefix=version1)
 
 
 app.register_blueprint(estapi, url_prefix=version1)
