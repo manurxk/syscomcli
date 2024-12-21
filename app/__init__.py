@@ -21,20 +21,16 @@ from app.rutas.referenciales.tratamiento.tratamiento_routes import tratmod  #tra
 from app.rutas.referenciales.diagnostico.diagnostico_routes import diagmod  #diagnostico
 
 # Importar rutas de inicio
-from app.rutas.login.login_routes import loginmod
-from app.rutas.login.vista_routes import vistamod
+from app.rutas.seguridad.login.login_routes import loginmod
+from app.rutas.seguridad.login.vista_routes import vistamod
 
 #importacion de Administrativa
 from app.rutas.administracion.agenda.agenda_routes import agemod   # Agendamiento
 from app.rutas.administracion.cita.cita_routes import citamod   # Cita
 from app.rutas.administracion.paciente.paciente_routes import paciemod
 from app.rutas.administracion.medico.medico_routes import medimod
-from app.rutas.administracion.vistaAGENDAR.vistaAGENDAR_routes import vistagendamod
 from app.rutas.administracion.consulta.consulta_routes import consumod
 
-
-
-from app.rutas.administracion.medico.medico_routes import medimod
 
 
 
@@ -64,7 +60,6 @@ app.register_blueprint(agemod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(citamod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(paciemod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(medimod, url_prefix=f'{modulo0}/cita')  # cita
-app.register_blueprint(vistagendamod, url_prefix=f'{modulo0}/cita')  # cita
 app.register_blueprint(consumod, url_prefix=f'{modulo0}/cita')  # cita
 
 
