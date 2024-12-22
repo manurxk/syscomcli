@@ -35,18 +35,12 @@ from app.rutas.administracion.consulta.consulta_routes import consumod
 
 
 from app.rutas.referenciales.estado_civil.estado_civil_routes import estmod
-from app.rutas.referenciales.genero.genero_routes import genmod
+
 
 modulo0 = '/referenciales'
 app.register_blueprint(estmod, url_prefix=f'{modulo0}/estado_civil')
 
-from app.rutas.referenciales.estado_civil.estado_civil_api import estapi
 
-
-modulo0 = '/referenciales'
-app.register_blueprint(genmod, url_prefix=f'{modulo0}/genero')
-
-from app.rutas.referenciales.genero.genero_api import genapi
 
 
 
@@ -101,6 +95,8 @@ from app.rutas.referenciales.estado_cita.estado_cita_api import estacitapi
 #persona
 from app.rutas.referenciales.persona.persona_api import personaapi
 #especialidad
+from app.rutas.referenciales.estado_civil.estado_civil_api import estapi
+
 from app.rutas.referenciales.especialidad.especialidad_api import espapi
 #dia
 from app.rutas.referenciales.dia.dia_api import diaapi
@@ -116,6 +112,8 @@ from app.rutas.referenciales.tratamiento.tratamiento_api import tratapi
 from app.rutas.referenciales.diagnostico.diagnostico_api import diagapi
 #cita
 from app.rutas.administracion.cita.cita_api import citaapi
+
+from app.rutas.administracion.medico.medico_api import medapi
 
 from app.rutas.referenciales.estado_laboral.estado_laboral_api import estado_laboralapi
 
@@ -141,6 +139,11 @@ app.register_blueprint(ocupapi, url_prefix=apiversion1)
 #Estado de la cita
 apiversion1 = '/api/v1'
 app.register_blueprint(estacitapi, url_prefix=apiversion1)
+
+
+#Estado de la cita
+apiversion1 = '/api/v1'
+app.register_blueprint(estapi, url_prefix=apiversion1)
 
 #persona
 apiversion1 = '/api/v1'
@@ -182,10 +185,11 @@ version1 = '/api/v1'
 app.register_blueprint(estado_laboralapi, url_prefix=version1)
 
 
-app.register_blueprint(estapi, url_prefix=version1)
 
 
-app.register_blueprint(genapi, url_prefix=version1)
+app.register_blueprint(medapi, url_prefix=version1)
+
+
 
 
 

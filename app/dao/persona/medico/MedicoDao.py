@@ -1,3 +1,4 @@
+# Data access object - DAO
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
@@ -6,43 +7,42 @@ class MedicoDao:
     def getMedicos(self):
         medicoSQL = """
         SELECT
-            m.id, m.nombre, m.apellido, m.documento_identidad, m.registro_profesional, m.especialidad, 
-            m.telefono, m.correo, m.ocupacion, m.sexo, m.estado_civil, c.descripcion AS ciudad, b.descripcion AS barrio, p.descripcion AS pais,
-            m.direccion, m.fecha_nacimiento, m.fecha_registro, m.contacto_emergencia, m.numero_emergencia
-        FROM medicos m
-        JOIN ciudades c ON m.id_ciudad = c.id
-        JOIN barrios b ON m.id_barrio = b.id
-        JOIN paises p ON m.id_pais = p.id
+            m.id_medico,
+            m.nombre,
+            m.apellido,
+            m.cedula,
+            m.sexo,
+            m.telefono,
+            m.correo,
+            m.matricula,
+            es.descripcion AS especialidad,
+            TO_CHAR(m.fecha_nacimiento, 'YYYY/MM/DD') AS fecha_nacimiento, -- Formatea la fecha
+            e.descripcion AS estado_civil,
+            m.direccion,
+            c.descripcion AS ciudad
+        FROM 
+            medicos m
+        INNER JOIN 
+            estado_civiles e ON m.id_estado_civil = e.id_estado_civil
+        INNER JOIN 
+            ciudades c ON m.id_ciudad = c.id_ciudad
+        INNER JOIN 
+            especialidades es ON m.id_especialidad = es.id_especialidad;
+
         """
+        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
             cur.execute(medicoSQL)
-            medicos = cur.fetchall()
+            medicos = cur.fetchall()  # trae datos de la bd
 
-            # Retorna los datos en forma de lista de diccionarios
+            # Transformar los datos en una lista de diccionarios
             return [{
-                'id': medico[0],
-                'nombre': medico[1],
-                'apellido': medico[2],
-                'documento_identidad': medico[3],
-                'registro_profesional': medico[4],
-                'especialidad': medico[5],
-                'telefono': medico[6],
-                'correo': medico[7],
-                'ocupacion': medico[8],
-                'sexo': medico[9],
-                'estado_civil': medico[10],
-                'ciudad': medico[11],
-                'barrio': medico[12],
-                'pais': medico[13],
-                'direccion': medico[14],
-                'fecha_nacimiento': medico[15],
-                'fecha_registro': medico[16],
-                'contacto_emergencia': medico[17],
-                'numero_emergencia': medico[18],
-            } for medico in medicos]
+                    'id_medico': medico[0], 'nombre': medico[1], 'apellido': medico[2], 'cedula': medico[3], 'sexo': medico[4],
+                    'telefono': medico[5], 'correo': medico[6], 'matricula': medico[7],'especialidad': medico[8],
+                    'fecha_nacimiento': medico[9], 'estado_civil': medico[10], 'direccion': medico[11], 'ciudad': medico[12]} for medico in medicos]
 
         except Exception as e:
             app.logger.error(f"Error al obtener todos los médicos: {str(e)}")
@@ -52,75 +52,75 @@ class MedicoDao:
             cur.close()
             con.close()
 
-    def getMedicoById(self, id_medico):
+    def getMedicoById(self, id):
         medicoSQL = """
-        SELECT
-            m.id, m.nombre, m.apellido, m.documento_identidad, m.registro_profesional, m.especialidad, 
-            m.telefono, m.correo, m.ocupacion, m.sexo, m.estado_civil, c.descripcion AS ciudad, b.descripcion AS barrio, p.descripcion AS pais,
-            m.direccion, m.fecha_nacimiento, m.fecha_registro, m.contacto_emergencia, m.numero_emergencia
-        FROM medicos m
-        JOIN ciudades c ON m.id_ciudad = c.id
-        JOIN barrios b ON m.id_barrio = b.id
-        JOIN paises p ON m.id_pais = p.id
-        WHERE m.id = %s
+         SELECT
+            m.id_medico,
+            m.nombre,
+            m.apellido,
+            m.cedula,
+            m.sexo,
+            m.telefono,
+            m.correo,
+            m.matricula,
+            es.descripcion AS especialidad,
+            TO_CHAR(m.fecha_nacimiento, 'YYYY/MM/DD') AS fecha_nacimiento, -- Formatea la fecha
+            e.descripcion AS estado_civil,
+            m.direccion,
+            c.descripcion AS ciudad
+        FROM 
+            medicos m
+        INNER JOIN 
+            estado_civiles e ON m.id_estado_civil = e.id_estado_civil
+        INNER JOIN 
+            ciudades c ON m.id_ciudad = c.id_ciudad
+        INNER JOIN 
+            especialidades es ON m.id_especialidad = es.id_especialidad %s; 
         """
+        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(medicoSQL, (id_medico,))
-            medico = cur.fetchone()
-            if medico:
+            cur.execute(medicoSQL, (id,))
+            medicoEncontrado = cur.fetchone()  # Obtener una sola fila
+            if medicoEncontrado:
                 return {
-                    'id': medico[0],
-                    'nombre': medico[1],
-                    'apellido': medico[2],
-                    'documento_identidad': medico[3],
-                    'registro_profesional': medico[4],
-                    'especialidad': medico[5],
-                    'telefono': medico[6],
-                    'correo': medico[7],
-                    'ocupacion': medico[8],
-                    'sexo': medico[9],
-                    'estado_civil': medico[10],
-                    'ciudad': medico[11],
-                    'barrio': medico[12],
-                    'pais': medico[13],
-                    'direccion': medico[14],
-                    'fecha_nacimiento': medico[15],
-                    'fecha_registro': medico[16],
-                    'contacto_emergencia': medico[17],
-                    'numero_emergencia': medico[18],
+                    "id_medico": medicoEncontrado[0],
+                    "nombre": medicoEncontrado[1],
+                    "apellido": medicoEncontrado[2],
+                    "cedula": medicoEncontrado[3],
+                    "sexo": medicoEncontrado[4],
+                    "telefono": medicoEncontrado[5],
+                    "correo": medicoEncontrado[6],
+                    "matricula": medicoEncontrado[7],
+                    "especialidad": medicoEncontrado[8],
+                    "fecha_nacimiento": medicoEncontrado[9],
+                    "estado_civil": medicoEncontrado[10],
+                    "direccion": medicoEncontrado[11],
+                    "ciudad": medicoEncontrado[12]
                 }
             else:
-                return None
-
+                return None  # Retornar None si no se encuentra el médico
         except Exception as e:
-            app.logger.error(f"Error al obtener médico por ID: {str(e)}")
+            app.logger.error(f"Error al obtener médico: {str(e)}")
             return None
 
         finally:
             cur.close()
             con.close()
 
-    def guardarMedico(self, nombre, apellido, documento_identidad, registro_profesional, especialidad, telefono, correo, 
-                      ocupacion, sexo, estado_civil, id_ciudad, id_barrio, id_pais, direccion, fecha_nacimiento, 
-                      fecha_registro, contacto_emergencia, numero_emergencia):
+    def guardarMedico(self, id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad):
         insertMedicoSQL = """
-        INSERT INTO medicos (nombre, apellido, documento_identidad, registro_profesional, especialidad, telefono, correo, 
-                             ocupacion, sexo, estado_civil, id_ciudad, id_barrio, id_pais, direccion, fecha_nacimiento, 
-                             fecha_registro, contacto_emergencia, numero_emergencia) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
-        RETURNING id
+        INSERT INTO medicos(id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, id_especialidad, fecha_nacimiento, id_estado_civil, direccion, id_ciudad) 
+        VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_medico
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(insertMedicoSQL, (nombre, apellido, documento_identidad, registro_profesional, especialidad, telefono, 
-                                          correo, ocupacion, sexo, estado_civil, id_ciudad, id_barrio, id_pais, direccion, 
-                                          fecha_nacimiento, fecha_registro, contacto_emergencia, numero_emergencia))
+            cur.execute(insertMedicoSQL, (id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad))
             medico_id = cur.fetchone()[0]
             con.commit()
             return medico_id
@@ -134,22 +134,23 @@ class MedicoDao:
             cur.close()
             con.close()
 
-    def updateMedico(self, id_medico, **kwargs):
-        campos = ", ".join([f"{key} = %s" for key in kwargs])
-        updateMedicoSQL = f"""
+    def updateMedico(self, id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad):
+        updateMedicoSQL = """
         UPDATE medicos
-        SET {campos}
-        WHERE id = %s
+        SET nombre=%s, apellido=%s, cedula=%s, sexo=%s, telefono=%s, correo=%s, matricula=%s, 
+            id_especialidad=%s, fecha_nacimiento=%s, id_estado_civil=%s, direccion=%s, id_ciudad=%s
+        WHERE id_medico=%s
         """
+
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            valores = list(kwargs.values()) + [id_medico]
-            cur.execute(updateMedicoSQL, tuple(valores))
+            cur.execute(updateMedicoSQL, (nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad, id_medico))
+            filas_afectadas = cur.rowcount  # Obtener el número de filas afectadas
             con.commit()
-            return cur.rowcount > 0
+            return filas_afectadas > 0  # Retornar True si se actualizó al menos una fila
 
         except Exception as e:
             app.logger.error(f"Error al actualizar médico: {str(e)}")
@@ -160,19 +161,22 @@ class MedicoDao:
             cur.close()
             con.close()
 
-    def deleteMedico(self, id_medico):
+    def deleteMedico(self, id):
         deleteMedicoSQL = """
         DELETE FROM medicos
-        WHERE id = %s
+        WHERE id_medico=%s
         """
+
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(deleteMedicoSQL, (id_medico,))
+            cur.execute(deleteMedicoSQL, (id,))
+            rows_affected = cur.rowcount
             con.commit()
-            return cur.rowcount > 0
+
+            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
 
         except Exception as e:
             app.logger.error(f"Error al eliminar médico: {str(e)}")
