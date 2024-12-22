@@ -3,6 +3,7 @@ from app.dao.persona.medico.MedicoDao import MedicoDao
 from app.dao.referenciales.estado_civil import Estado_civilDao
 from app.dao.referenciales.especialidad.EspecialidadDao import EspecialidadDao
 from app.dao.referenciales.ciudad.CiudadDao import CiudadDao
+import re
  
 medapi = Blueprint('medapi', __name__)
 
@@ -68,6 +69,8 @@ def addMedico():
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
             return jsonify({'success': False, 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'}), 400
 
+
+
     # Verificar existencia de la especialidad, estado_civil y ciudad
     try:
         estado_civil_dao = Estado_civilDao()
@@ -125,7 +128,12 @@ def addMedico():
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
-
+def validar_telefono(telefono):
+    # Validación para formato de teléfono internacional (Ej: +595 987 654321)
+    patron = r'^\+(\d{1,4})\s?\(?(\d{1,4})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})$'
+    if re.match(patron, telefono):
+        return True  # Teléfono válido
+    return False  # Teléfono inválido
 
 
 

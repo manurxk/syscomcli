@@ -40,17 +40,6 @@ Medico
     </div>
     <!-- /tarjeta -->
 
-
-
-
-
-
-
-
-
-
-
-
  <!-- El formulario -->
  <div class="modal" id="modalFormulario">
   <div class="modal-dialog modal-dialog-centered">
@@ -94,8 +83,11 @@ Medico
 
               <label for="txtEspecialidad">Especialidad:</label>
               <div class="input-group">
-                <input type="text" class="form-control" id="txtEspecialidadNombre" placeholder="Seleccione una especialidad" readonly>
-                <input type="hidden" id="txtEspecialidad">
+                <!-- Campo de estado civil -->
+                  <input type="hidden" id="id_especialidad" name="id_especialidad" />
+                  <input type="text" id="txtEspecialidad" name="txtEspecialidad" readonly />
+
+          
                 <div class="input-group-append">
                   <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalBuscarEspecialidad">Buscar</button>
                 </div>
@@ -106,8 +98,8 @@ Medico
 
               <label for="txtEstadoCivil">Estado Civil:</label>
               <div class="input-group">
-                <input type="text" class="form-control" id="txtEstadoCivilNombre" placeholder="Seleccione un estado civil" readonly>
-                <input type="hidden" id="txtEstadoCivil">
+                <input type="hidden" id="id_estado_civil" name="id_estado_civil"/>
+                <input type="text" id="txtEstadoCivil" name="txtEstadoCivil" readonly/>
                 <div class="input-group-append">
                   <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalBuscarEstadoCivil">Buscar</button>
                 </div>
@@ -118,8 +110,11 @@ Medico
 
               <label for="txtCiudad">Ciudad:</label>
               <div class="input-group">
-                <input type="text" class="form-control" id="txtCiudadNombre" placeholder="Seleccione una ciudad" readonly>
-                <input type="hidden" id="txtCiudad">
+                
+                <input type="hidden" id="id_ciudad" name="id_ciudad" />
+                <input type="text" id="txtCiudad" name="txtCiudad" readonly />
+
+          
                 <div class="input-group-append">
                   <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalBuscarCiudad">Buscar</button>
                 </div>
@@ -161,7 +156,7 @@ Medico
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table class="table table-striped" id="tblEstadoCivil">
+                    <table class="table table-striped" id="tblEstado_civil">
                       <thead>
                         <tr>
                           <th>Estado Civil</th>
@@ -175,6 +170,7 @@ Medico
               </div>
             </div>
           </div>
+          
 
           <div class="modal" id="modalBuscarCiudad">
             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -250,22 +246,8 @@ Medico
 
 
 
-
-
-
-
 {% block js %}
 <script>
-  $(document).ready(function() {
-    $("#btnAgregar").click(function() {
-      // Abre el modal de formulario
-      $("#modalFormulario").modal('show');
-      // Puedes también hacer otras inicializaciones, como limpiar campos
-      $("#modalTitle").text('Agregar Persona'); // Establece un título
-      $("#txtIdMedico").val(''); // Limpia el campo de ID si es un formulario nuevo
-    });
-  });
-  
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
@@ -273,10 +255,6 @@ Medico
       },
       ajax: {
         url: '/api/v1/medicos',
-        error: function(xhr, error, thrown) {
-          console.error('Error en la solicitud Ajax:', error);
-          alert('Hubo un problema al cargar los datos.');
-        }
       },
       columns: [
         { data: 'nombre' },
@@ -303,8 +281,7 @@ Medico
       },
         { data: 'estado_civil' },
         { data: 'direccion' },
-        { data: 'ciudad' },
-        {
+        { data: 'ciudad' },{
           data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
                     <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
@@ -314,49 +291,109 @@ Medico
     });
   }
 
-  const inicializarSeleccionModal = (tableId, modalId, inputId, ajaxUrl, dataAttr) => {
-    $(`#${tableId}`).DataTable({
+
+
+  
+  const initDatatablep = () => {
+    $('#tblEspecialidad').DataTable({
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax: ajaxUrl,
+      ajax: '/api/v1/especialidades',
       columns: [
         { data: 'descripcion' },
-        { 
-          data: function(row) {
-            return `<button type="button" class="btn btn-primary" 
-                            data-id="${row[dataAttr.id]}" 
-                            data-value="${row[dataAttr.value]}">Seleccionar</button>`;
+        { data: function(row) {
+            return `<button type="button" name="btn_seleccionar_especialidad" class="fa fa-check" data-id="${row.id_especialidad}" data-especialidad="${row.descripcion}">Seleccionar</button>`;
           }
         }
       ]
     });
   
-    $(`#${tableId}`).on('click', 'button', function () {
-      const id = $(this).data('id');
-      const value = $(this).data('value');
-      $(`#${inputId}`).val(value);
-      $(`#hidden_${inputId}`).val(id);
-      $(`#${modalId}`).modal('hide');
+    $('#tblEspecialidad').on('click', 'button[name="btn_seleccionar_especialidad"]', function () {
+      const id_especialidad = $(this).data('id');
+      const especialidad = $(this).data('especialidad');
+      $('#txtEspecialidad').val(especialidad);
+      $('#id_especialidad').val(id_especialidad); // Corregido aquí
+      $('#modalBuscarEspecialidad').modal('hide');
+    });
+  }
+  
+  const buscarEspecialidad = () => {
+    $('#txtEspecialidad').on('click', function () {
+      $('#modalEspecialidadTitle').text("Seleccionar Especialidad");
+      $('#modalBuscarEspecialidad').modal();
+    });
+  }
+  
+  const initDatatablee= () => {
+    $('#tblEstado_civil').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax:'/api/v1/estado_civiles',
+      columns: [
+        { data: 'descripcion' },
+        { data: function(row) {
+            return `<button type="button" name="btn_seleccionar_estado_civil" class="fa fa-check" data-id="${row.id_estado_civil}" data-estado_civil="${row.descripcion}">Selecionar</button>`;
+          }
+        }
+      ]
+    });
+    $('#tblEstado_civil').on('click', 'button[name="btn_seleccionar_estado_civil"]', function () {
+      const idEstado_civil = $(this).data('id');
+      const estado_civil = $(this).data('estado_civil');
+      $('#txtEstado_civil').val(estado_civil);
+      $('#id_estado_civil').val(idEstado_civil);
+      $('#modalBuscarEstado_civil').modal('hide');
+    });
+  }
+
+  const buscarEstado_civil = () => {
+    $('#txtEstado_civil').on('click', function () {
+      $('#modalEstado_civilTitle').text("Seleccionar Estado_civil");
+      $('#modalBuscarEstado_civil').modal();
+    });
+  }
+
+  const initDatatablec = () => {
+    $('#tblCiudad').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/ciudades',
+      columns: [
+        { data: 'descripcion' },
+        { 
+          data: function(row) {
+            return `<button type="button" name="btn_seleccionar_ciudad" class="fa fa-check" data-id="${row.id_ciudad}" data-ciudad="${row.descripcion}">Seleccionar</button>`;
+          }
+        }
+      ]
     });
   
-    $(`#${inputId}`).on('click', function () {
-      $(`#${modalId}`).modal();
+    // Al seleccionar la ciudad, se coloca el valor en el campo correspondiente y se cierra el modal
+    $('#tblCiudad').on('click', 'button[name="btn_seleccionar_ciudad"]', function () {
+      const idCiudad = $(this).data('id');
+      const ciudad = $(this).data('ciudad');
+      $('#txtCiudad').val(ciudad); // Asigna el nombre de la ciudad al campo de texto
+      $('#id_ciudad').val(idCiudad); // Asigna el ID de la ciudad al campo oculto
+      $('#modalBuscarCiudad').modal('hide'); // Cierra el modal
     });
-  };
+  }
   
-  // Uso en inicialización
-  $(function() {
-    inicializarSeleccionModal('tblCiudad', 'modalBuscarCiudad', 'txtCiudad', '/api/v1/ciudades', { id: 'id_ciudad', value: 'descripcion' });
-    inicializarSeleccionModal('tblEstado_civil', 'modalBuscarEstadoCivil', 'txtEstadoCivil', '/api/v1/estado_civiles', { id: 'id_estado_civil', value: 'descripcion' });
-    inicializarSeleccionModal('tblEspecialidad', 'modalBuscarEspecialidad', 'txtEspecialidad', '/api/v1/especialidades', { id: 'id_especialidad', value: 'descripcion' });
-  });
+  const buscarCiudad = () => {
+    $('#txtCiudad').on('click', function () {
+      $('#modalCiudadTitle').text("Seleccionar Ciudad"); // Título del modal
+      $('#modalBuscarCiudad').modal(); // Muestra el modal
+    });
+  }
+  
   
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      $('#modalTitle').text("Agregar Persona");
-      $('#txtIdPersona').val(""); 
+      $('#modalTitle').text("Agregar Medico");
+      $('#txtIdMedico').val(""); 
       $('#txtNombre').val(""); // Campo de nombre
       $('#txtApellido').val(""); // Campo de apellido
       $('#txtCedula').val(""); // Campo de cédula
@@ -365,16 +402,10 @@ Medico
       $('#txtCorreo').val(""); // Campo de correo
       $('#txtMatricula').val(""); // Campo de matrícula
       $('#txtEspecialidad').val(""); // Campo de especialidad (oculto)
-      $('#txtEspecialidadNombre').val(""); // Campo de especialidad (mostrado)
       $('#txtFecha_Nacimiento').val(""); // Campo de fecha de nacimiento
       $('#txtEstadoCivil').val(""); // Campo de estado civil (oculto)
-      $('#txtEstadoCivilNombre').val(""); // Campo de estado civil (mostrado)
       $('#txtDireccion').val(""); // Campo de dirección
       $('#txtCiudad').val(""); // Campo de ciudad (oculto)
-      $('#txtCiudadNombre').val(""); // Campo de ciudad (mostrado)
-
-      
-      
       $('#modalFormulario').modal(); // Mostrar modal para agregar
     });
   }
@@ -389,39 +420,27 @@ Medico
       const nuevoTelefono = $('#txtTelefono').val();
       const nuevoCorreo = $('#txtCorreo').val();
       const nuevaMatricula = $('#txtMatricula').val();
-      const nuevoIdEspecialidad = $('#id_especialidad').val();
+      const id_especialidad = $('#id_especialidad').val();
       const nuevoFecha_Nacimiento = $('#txtFecha_Nacimiento').val();
-      const nuevoIdEstadoCivil = $('#id_estado_civil').val();
+      const id_estado_civil = $('#id_estado_civil').val();
       const nuevaDireccion = $('#txtDireccion').val();
-      const nuevoIdCiudad = $('#id_ciudad').val();
+      const id_ciudad = $('#id_ciudad').val();
       const tabla = $('#tbl').DataTable();
-
-      if(idMedico) {
-        // update
-        fetch(`/api/v1/medicos/${idMedico}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({
-            nombre: nuevoNombre,
-            apellido: nuevoApellido,
-            cedula: nuevaCedula,
-            sexo: nuevoSexo,
-            telefono: nuevoTelefono,
-            correo: nuevoCorreo,
-            matricula: nuevaMatricula,
-            id_especialidad: nuevoIdEspecialidad,  // Asegúrate de tener los nombres bien definidos
-            fecha_Nacimiento: nuevoFecha_Nacimiento,
-            id_estado_civil: nuevoIdEstadoCivil,  // Cambiar el nombre para mantener consistencia
-            direccion: nuevaDireccion,
-            id_ciudad: nuevoIdCiudad  // Igual aquí
-         })   
-         })
-        .then(resp => resp.json())
+  
+      // Validaciones de los campos
+      if (idMedico) {
+      // update
+      fetch(`/api/v1/personas/${idMedico}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, fecha_Nacimiento: nuevoFecha_Nacimiento, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
+      })
+      .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "La persona ha sido actualizada correctamente.", "success");
+            Swal.fire("Actualizado", "El médico ha sido actualizado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
@@ -435,24 +454,13 @@ Medico
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          }, body: JSON.stringify({ nombre: nuevoNombre,
-            apellido: nuevoApellido,
-            cedula: nuevaCedula,
-            sexo: nuevoSexo,
-            telefono: nuevoTelefono,
-            correo: nuevoCorreo,
-            matricula: nuevaMatricula,
-            id_especialidad: nuevoIdEspecialidad,  // Asegúrate de tener los nombres bien definidos
-            fecha_Nacimiento: nuevoFecha_Nacimiento,
-            id_estado_civil: nuevoIdEstadoCivil,  // Cambiar el nombre para mantener consistencia
-            direccion: nuevaDireccion,
-            id_ciudad: nuevoIdCiudad })
+          }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, fecha_Nacimiento: nuevoFecha_Nacimiento, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Agregado", "El medico ha sido agregada correctamente.", "success");
+            Swal.fire("Agregado", "El médico ha sido agregado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
@@ -463,7 +471,27 @@ Medico
       }
       $('#modalFormulario').modal("hide");
     });
-  }
+  } 
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]',function(){
@@ -479,7 +507,7 @@ Medico
           const idMedico = $(this).data('id');
           $('#txtIdMedico').val(idMedico);
 
-          // Obtener los datos de la persona del backend
+          // Obtener los datos del medico del backend
           fetch(`/api/v1/medicos/${idMedico}`, {
             method: 'GET',
             headers: {
@@ -503,11 +531,6 @@ Medico
             $('#txtDireccion').val(data.data.direccion);
             $('#txtCiudad').val(data.data.ciudad);
             $('#id_ciudad').val(data.data.id_ciudad);
-           
-            
-            
-        
-
             $('#modalFormulario').modal();
           });
         }
@@ -554,7 +577,7 @@ Medico
     guardar();
     editar();
     eliminar();
-    buscarEspecialidad(); //iniciar todas las funciones de seleccionar
+    buscarEspecialidad();
     buscarEstado_civil();
     buscarCiudad();
   }
@@ -562,8 +585,8 @@ Medico
   $(function() {
     initDatatable();
     initDatatablep();
-    initDatatablec();
     initDatatablee();
+    initDatatablec();
     addEvents();
   }); 
 </script> 
