@@ -96,12 +96,12 @@ Medico
               <label for="txtFecha_Nacimiento">Fecha de nacimiento:</label>
               <input type="date" class="form-control" placeholder="Ingresar fecha de nacimiento" id="txtFecha_Nacimiento">
 
-              <label for="txtEstadoCivil">Estado Civil:</label>
+              <label for="txtEstado_civil">Estado Civil:</label>
               <div class="input-group">
                 <input type="hidden" id="id_estado_civil" name="id_estado_civil"/>
-                <input type="text" id="txtEstadoCivil" name="txtEstadoCivil" readonly/>
+                <input type="text" id="txtEstado_civil" name="txtEstado_Civil" readonly/>
                 <div class="input-group-append">
-                  <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalBuscarEstadoCivil">Buscar</button>
+                  <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalBuscarEstado_civil">Buscar</button>
                 </div>
               </div>
 
@@ -113,8 +113,6 @@ Medico
                 
                 <input type="hidden" id="id_ciudad" name="id_ciudad" />
                 <input type="text" id="txtCiudad" name="txtCiudad" readonly />
-
-          
                 <div class="input-group-append">
                   <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalBuscarCiudad">Buscar</button>
                 </div>
@@ -147,11 +145,11 @@ Medico
             </div>
           </div>
 
-          <div class="modal" id="modalBuscarEstadoCivil">
+          <div class="modal" id="modalBuscarEstado_civil">
             <div class="modal-dialog modal-dialog-centered modal-lg">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h4 class="modal-title" id="modalEstadoCivilTitle">Seleccionar estado civil</h4>
+                  <h4 class="modal-title" id="modalEstado_  civilTitle">Seleccionar estado civil</h4>
                   <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="card-body">
@@ -295,36 +293,54 @@ Medico
 
   
   const initDatatablep = () => {
-    $('#tblEspecialidad').DataTable({
-      language: {
-        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-      },
-      ajax: '/api/v1/especialidades',
-      columns: [
-        { data: 'descripcion' },
-        { data: function(row) {
-            return `<button type="button" name="btn_seleccionar_especialidad" class="fa fa-check" data-id="${row.id_especialidad}" data-especialidad="${row.descripcion}">Seleccionar</button>`;
-          }
+  $('#tblEspecialidad').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: '/api/v1/especialidades',
+    columns: [
+      { data: 'descripcion' },
+      { data: function(row) {
+          return `<button type="button" name="btn_seleccionar_especialidad" class="fa fa-check" data-id="${row.id_especialidad}" data-especialidad="${row.descripcion}">Seleccionar</button>`;
         }
-      ]
-    });
-  
-    $('#tblEspecialidad').on('click', 'button[name="btn_seleccionar_especialidad"]', function () {
-      const id_especialidad = $(this).data('id');
-      const especialidad = $(this).data('especialidad');
-      $('#txtEspecialidad').val(especialidad);
-      $('#id_especialidad').val(id_especialidad); // Corregido aquí
-      $('#modalBuscarEspecialidad').modal('hide');
-    });
-  }
-  
-  const buscarEspecialidad = () => {
-    $('#txtEspecialidad').on('click', function () {
-      $('#modalEspecialidadTitle').text("Seleccionar Especialidad");
-      $('#modalBuscarEspecialidad').modal();
-    });
-  }
-  
+      }
+    ]
+  });
+
+  $('#tblEspecialidad').on('click', 'button[name="btn_seleccionar_especialidad"]', function () {
+    const id_especialidad = $(this).data('id');
+    const especialidad = $(this).data('especialidad');
+    $('#txtEspecialidad').val(especialidad);
+    $('#id_especialidad').val(id_especialidad); // Corregido aquí
+    $('#modalBuscarEspecialidad').modal('hide');
+  });
+}
+
+const buscarEspecialidad = () => {
+  $('#txtEspecialidad').on('click', function () {
+    $('#modalEspecialidadTitle').text("Seleccionar Especialidad");
+    $('#modalBuscarEspecialidad').modal();
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const initDatatablee= () => {
     $('#tblEstado_civil').DataTable({
       language: {
@@ -340,10 +356,10 @@ Medico
       ]
     });
     $('#tblEstado_civil').on('click', 'button[name="btn_seleccionar_estado_civil"]', function () {
-      const idEstado_civil = $(this).data('id');
+      const idestado_civil = $(this).data('id');
       const estado_civil = $(this).data('estado_civil');
       $('#txtEstado_civil').val(estado_civil);
-      $('#id_estado_civil').val(idEstado_civil);
+      $('#id_estado_civil').val(idestado_civil);
       $('#modalBuscarEstado_civil').modal('hide');
     });
   }
@@ -355,6 +371,12 @@ Medico
     });
   }
 
+
+
+
+
+
+  
   const initDatatablec = () => {
     $('#tblCiudad').DataTable({
       language: {
