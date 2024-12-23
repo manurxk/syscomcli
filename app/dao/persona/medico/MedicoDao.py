@@ -110,18 +110,19 @@ class MedicoDao:
             cur.close()
             con.close()
 
-    def guardarMedico(self, id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad):
+    def guardarMedico(self, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad):
         insertMedicoSQL = """
-        INSERT INTO medicos(id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, id_especialidad, fecha_nacimiento, id_estado_civil, direccion, id_ciudad) 
-        VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_medico
+        INSERT INTO medicos(nombre, apellido, cedula, sexo, telefono, correo, matricula, id_especialidad, fecha_nacimiento, id_estado_civil, direccion, id_ciudad) 
+        VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_medico
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(insertMedicoSQL, (id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad))
-            medico_id = cur.fetchone()[0]
+            # Aquí no pasas 'id_medico', ya que es generado automáticamente por la base de datos
+            cur.execute(insertMedicoSQL, (nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad))
+            medico_id = cur.fetchone()[0]  # Obtener el id_medico generado automáticamente
             con.commit()
             return medico_id
 
@@ -133,6 +134,7 @@ class MedicoDao:
         finally:
             cur.close()
             con.close()
+
 
     def updateMedico(self, id_medico, nombre, apellido, cedula, sexo, telefono, correo, matricula, especialidad, fecha_nacimiento, estado_civil, direccion, ciudad):
         updateMedicoSQL = """
@@ -173,16 +175,14 @@ class MedicoDao:
 
         try:
             cur.execute(deleteMedicoSQL, (id,))
-            rows_affected = cur.rowcount
+            rows_affected = cur.rowcount  # Obtener cuántas filas fueron afectadas
             con.commit()
 
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
-
+            return rows_affected > 0  # Retorna True si al menos una fila fue eliminada
         except Exception as e:
             app.logger.error(f"Error al eliminar médico: {str(e)}")
-            con.rollback()
-            return False
-
+            con.rollback()  # En caso de error, hacer rollback
+            return False  # Retorna False si ocurre un error
         finally:
             cur.close()
             con.close()

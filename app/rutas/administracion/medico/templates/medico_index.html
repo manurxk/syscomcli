@@ -65,15 +65,11 @@ Medico
               <input type="text" class="form-control" placeholder="Ingrese el N° de C.I. del médico" id="txtCedula">
 
               <label for="txtSexo">Sexo:</label>
-              <select class="form-control" id="txtSexo">
-                <option value="" disabled selected>Seleccione el sexo</option>
-                <option value="Masculino">Masculino</option>
-                <option value="Femenino">Femenino</option>
-                <option value="Otro">Otro</option>
-              </select>
+              <input type="text" class="form-control" placeholder="Ingrese el sexo" id="txtSexo">
 
               <label for="txtTelefono">Teléfono:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el teléfono del médico" id="txtTelefono">
+              <input type="text" class="form-control" placeholder="Ingrese el teléfono del médico" id="txtTelefono" required>
+              
 
               <label for="txtCorreo">Correo:</label>
               <input type="email" class="form-control" placeholder="Ingrese el correo electrónico del médico" id="txtCorreo">
@@ -93,8 +89,10 @@ Medico
                 </div>
               </div>
 
-              <label for="txtFecha_Nacimiento">Fecha de nacimiento:</label>
-              <input type="date" class="form-control" placeholder="Ingresar fecha de nacimiento" id="txtFecha_Nacimiento">
+              <label for="txtFecha_Nacimiento">Fecha de Nacimiento:</label>
+              <input type="date" class="form-control" placeholder="Ingresar fecha de nacimiento" id="txtFecha_Nacimiento" required>
+              
+              
 
               <label for="txtEstado_civil">Estado Civil:</label>
               <div class="input-group">
@@ -220,7 +218,7 @@ Medico
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script>
   $("#txtFecha_Nacimiento").datepicker({
-    dateFormat: "yy-mm-dd",
+    dateFormat: "yyyy-mm-dd",
     changeMonth: true,
     changeYear: true,
     yearRange: "1900:2024",
@@ -281,8 +279,12 @@ Medico
         { data: 'direccion' },
         { data: 'ciudad' },{
           data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
+         // Generando el HTML con el ID del médico correcto en el botón eliminar
+         console.log(row.id);  // Verifica que el id esté presente antes de usarlo
+         return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
+                 <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
+         
+
           }
         }
       ]
@@ -424,7 +426,7 @@ const buscarEspecialidad = () => {
       $('#txtCorreo').val(""); // Campo de correo
       $('#txtMatricula').val(""); // Campo de matrícula
       $('#txtEspecialidad').val(""); // Campo de especialidad (oculto)
-      $('#txtFecha_Nacimiento').val(""); // Campo de fecha de nacimiento
+      $('#txtFecha_Nacimiento').val("");
       $('#txtEstadoCivil').val(""); // Campo de estado civil (oculto)
       $('#txtDireccion').val(""); // Campo de dirección
       $('#txtCiudad').val(""); // Campo de ciudad (oculto)
@@ -456,7 +458,7 @@ const buscarEspecialidad = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
-        }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, fecha_Nacimiento: nuevoFecha_Nacimiento, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
+        }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, Fecha_Nacimiento: nuevoFecha_Nacimiento, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
       })
       .then(resp => resp.json())
         .then(data => {
@@ -472,11 +474,27 @@ const buscarEspecialidad = () => {
         });
       } else {
         // insert
+
+
+        const fecha_nacimiento = new Date(document.getElementById('txtFecha_Nacimiento').value);
+        const hoy = new Date();
+        
+        if (fecha_nacimiento > hoy) {
+            alert('La Fecha de Nacimiento no puede ser una fecha futura.');
+            return;
+        }
+        
+        const edad = hoy.getFullYear() - fecha_nacimiento.getFullYear();
+        if (edad < 18) {
+            alert('El médico debe ser mayor de 18 años.');
+            return;
+        }
+        
         fetch(`/api/v1/medicos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, fecha_Nacimiento: nuevoFecha_Nacimiento, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
+          }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, fecha_nacimiento: nuevoFecha_Nacimiento, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
         })
         .then(resp => resp.json())
         .then(data => {
@@ -495,21 +513,6 @@ const buscarEspecialidad = () => {
     });
   } 
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -547,7 +550,8 @@ const buscarEspecialidad = () => {
             $('#txtMatricula').val(data.data.matricula);
             $('#id_especialidad').val(data.data.id_especialidad);
             $('#txtEspecialidad').val(data.data.especialidad);
-            $('#txtFecha_Nacimiento').val(data.data.fecha_Nacimiento);
+            $('#txtFecha_Nacimiento').val(''); // Limpiar al abrir el modal
+            $('#txtFecha_Nacimiento').val(data.data.fecha_nacimiento); // Cargar fecha existente al editar            
             $('#id_estado_civil').val(data.data.id_estado_civil);
             $('#txtEstado_civil').val(data.data.estado_civil);
             $('#txtDireccion').val(data.data.direccion);
@@ -561,6 +565,18 @@ const buscarEspecialidad = () => {
   }
 
   const eliminar = () => {
+
+
+    
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function() {
+      const idMedico = $(this).data('id');
+      console.log("ID del médico:", idMedico);  // Verifica que el id sea correcto
+      if (!idMedico) {
+          console.log('El ID del médico no es válido.');
+          return;
+      }
+      // Restante del código...
+  });
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
       const idMedico = $(this).data('id');
       Swal.fire({
@@ -582,17 +598,20 @@ const buscarEspecialidad = () => {
               const fila =$(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "El medico ha sido eliminada correctamente.", "success");
+              Swal.fire("Eliminado", "El medico ha sido eliminado correctamente.", "success");
             } else {
               Swal.fire(data.error);
             }
           }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error al eliminar medico.", "error");
+            Swal.fire("Error", "Ocurrió un error al eliminar la medico.", "error");
           });
         }
       });
     });
   }
+
+
+  
 
   const addEvents = () => {
     agregar();
