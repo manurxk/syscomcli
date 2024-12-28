@@ -54,7 +54,7 @@ class MedicoDao:
 
     def getMedicoById(self, id):
         medicoSQL = """
-         SELECT
+        SELECT
             m.id_medico,
             m.nombre,
             m.apellido,
@@ -75,37 +75,38 @@ class MedicoDao:
         INNER JOIN 
             ciudades c ON m.id_ciudad = c.id_ciudad
         INNER JOIN 
-            especialidades es ON m.id_especialidad = es.id_especialidad %s; 
+            especialidades es ON m.id_especialidad = es.id_especialidad
+        WHERE 
+            m.id_medico = %s;
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
             cur.execute(medicoSQL, (id,))
-            medicoEncontrado = cur.fetchone()  # Obtener una sola fila
-            if medicoEncontrado:
+            medico = cur.fetchone()  # Traer un solo registro
+
+            if medico:
                 return {
-                    "id_medico": medicoEncontrado[0],
-                    "nombre": medicoEncontrado[1],
-                    "apellido": medicoEncontrado[2],
-                    "cedula": medicoEncontrado[3],
-                    "sexo": medicoEncontrado[4],
-                    "telefono": medicoEncontrado[5],
-                    "correo": medicoEncontrado[6],
-                    "matricula": medicoEncontrado[7],
-                    "especialidad": medicoEncontrado[8],
-                    "fecha_nacimiento": medicoEncontrado[9],
-                    "estado_civil": medicoEncontrado[10],
-                    "direccion": medicoEncontrado[11],
-                    "ciudad": medicoEncontrado[12]
+                    'id_medico': medico[0],
+                    'nombre': medico[1],
+                    'apellido': medico[2],
+                    'cedula': medico[3],
+                    'sexo': medico[4],
+                    'telefono': medico[5],
+                    'correo': medico[6],
+                    'matricula': medico[7],
+                    'especialidad': medico[8],
+                    'fecha_nacimiento': medico[9],
+                    'estado_civil': medico[10],
+                    'direccion': medico[11],
+                    'ciudad': medico[12]
                 }
             else:
-                return None  # Retornar None si no se encuentra el médico
+                return None
         except Exception as e:
             app.logger.error(f"Error al obtener médico: {str(e)}")
             return None
-
         finally:
             cur.close()
             con.close()

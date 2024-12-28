@@ -277,12 +277,11 @@ Medico
       },
         { data: 'estado_civil' },
         { data: 'direccion' },
-        { data: 'ciudad' },{
-          data: function(row) {
-         // Generando el HTML con el ID del médico correcto en el botón eliminar
-         console.log(row.id);  // Verifica que el id esté presente antes de usarlo
-         return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
-                 <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
+        { data: 'ciudad' },
+        { data: function(row) {
+      
+         return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id_medico}">Editar</button>
+                 <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_medico}">Eliminar</button>`;
          
 
           }

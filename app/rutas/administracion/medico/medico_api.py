@@ -28,7 +28,7 @@ def getMedico(medico_id):
     medicodao = MedicoDao()
 
     try:
-        medico = medicodao.getMedicosById(medico_id)
+        medico = medicodao.getMedicoById(medico_id)
 
         if medico:
             return jsonify({
@@ -48,7 +48,6 @@ def getMedico(medico_id):
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega un nuevo médico
 # Agrega un nuevo médico
 @medapi.route('/medicos', methods=['POST'])
 def addMedico():
@@ -116,8 +115,6 @@ def addMedico():
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
-
-
 
 # Actualiza un médico
 @medapi.route('/medicos/<int:medico_id>', methods=['PUT'])
