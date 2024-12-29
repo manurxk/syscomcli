@@ -1,8 +1,22 @@
+from datetime import timedelta
 from flask import Flask
-from flask import render_template
-
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
+
+# creamos el token
+csrf = CSRFProtect()
+csrf.init_app(app)
+
+# inicializar el secret key
+app.secret_key = b'_5#y2L"F6Q7z\n\xec]/'
+
+# Establecer duración de la sesión, 15 minutos
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
+
+from app.rutas.seguridad.login_routes import logmod
+app.register_blueprint(logmod)
+
 
 # importar referenciales
 from app.rutas.referenciales.ciudad.ciudad_routes import ciumod #ciudad
@@ -21,8 +35,8 @@ from app.rutas.referenciales.diagnostico.diagnostico_routes import diagmod  #dia
 from app.rutas.referenciales.estado_laboral.estado_laboral_routes import estado_laboralmod
 
 # Importar rutas de inicio
-from app.rutas.seguridad.login.login_routes import loginmod
-from app.rutas.seguridad.login.vista_routes import vistamod
+
+
 
 #importacion de Administrativa
 from app.rutas.administracion.agenda.agenda_routes import agemod   # Agendamiento
@@ -50,8 +64,6 @@ app.register_blueprint(estmod, url_prefix=f'{modulo0}/estado_civil')
 
 # registrar referenciales
 modulo0 = '/referenciales'
-app.register_blueprint(loginmod, url_prefix=f'{modulo0}/login') 
-app.register_blueprint(vistamod, url_prefix=f'{modulo0}/login') 
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad') #ciudad
 app.register_blueprint(paimod, url_prefix=f'{modulo0}/paises') #pais
 app.register_blueprint(naciomod, url_prefix=f'{modulo0}/nacionalidad')  #nacionalidad
@@ -190,18 +202,11 @@ app.register_blueprint(estado_laboralapi, url_prefix=version1)
 app.register_blueprint(medapi, url_prefix=version1)
 
 
+from app.rutas.seguridad.vista_routes import vistamod
+app.register_blueprint(vistamod, url_prefix='/vista')
 
 
 
-
-
-@app.route('/login')
-def login():
-    return render_template('login-index.html')
-
-@app.route('/vista')
-def vista():
-    return render_template('vista-index.html')
 
 
 

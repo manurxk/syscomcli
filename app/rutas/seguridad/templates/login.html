@@ -1,85 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-
-    <title>Login</title>
-
-    <!-- Custom fonts for this template-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
-
-    <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
 
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            background-repeat: repeat;
+            background-size: auto;
+            background-color: #f4f6f9;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .login-container {
+            display: flex;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            height: 600px;
+        }
+
+        .login-form, .login-welcome {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .login-welcome {
+            background-color: #007d55;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 0 20px 20px 0;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #007d55;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #005f43;
+        }
+
+        .extra-links {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .extra-links a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .extra-links a:hover {
+            text-decoration: underline;
+        }
+
+        .login-welcome h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .login-welcome p {
+            font-size: 16px;
+        }
+
+        footer {
+            background-color: white;
+            padding: 10px 0;
+            text-align: center;
+            width: 100%;
+            border-top: 1px solid #eaeaea;
+        }
+
+        footer span {
+            color: #555;
+        }
+
+        .topbar-divider {
+            height: 1px;
+            margin: 20px 0;
+        }
+
+        .alert {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
-<body class="bg-gradient-primary">
+<body>
 
     <div class="container">
+        <div class="login-container">
+            <div class="login-form">
+                <h2>Iniciar Sesión</h2>
 
-        <!-- Outer Row -->
-        <div class="row justify-content-center">
-
-            <div class="col-xl-10 col-lg-12 col-md-9">
-
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <!-- Nested Row within Card Body -->
-                        <div class="row">
-                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
-                            <div class="col-lg-6">
-                                <div class="p-5">
-                                    <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Welcome Back Aipo!</h1>
-                                    </div>
-                                    <form class="user" method="post" action="{{ url_for('login.login') }}">
-                                        <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" />
-                                        <div class="form-group">
-                                            <input type="text" class="form-control form-control-user"
-                                                name="usuario_nombre"
-                                                aria-describedby="usuario_nombre"
-                                                placeholder="Ingrese un usuario" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="password" class="form-control form-control-user"
-                                                name="usuario_clave"
-                                                placeholder="Password" required>
-                                        </div>
-
-                                        <button type="submit" class="btn btn-primary btn-user btn-block">Eike</button>
-                                        <hr>
-                                    </form>
-                                    <hr>
-                                </div>
-                            </div>
+                <!-- Mostrar mensajes flash -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="alert alert-warning">
+                            {% for category, message in messages %}
+                                <strong>{{ category.capitalize() }}:</strong> {{ message }} <br>
+                            {% endfor %}
                         </div>
-                    </div>
-                </div>
+                    {% endif %}
+                {% endwith %}
 
+                <form method="post" action="{{ url_for('login.login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <div class="form-group">
+                        <input type="text" class="form-control form-control-user" name="usuario_nombre" placeholder="Ingrese un usuario" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control form-control-user" name="usuario_clave" placeholder="Contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-user btn-block">INGRESAR</button>
+                </form>
+
+                <div class="extra-links">
+                    <a href="registro.html">¿No tienes cuenta? Regístrate aquí</a>
+                </div>
             </div>
 
+            <div class="login-welcome">
+                <h3>¡Bienvenido de nuevo!</h3>
+                <p>Tu plataforma de gestión y control al alcance de tu mano. Ingresa para comenzar a disfrutar de todas nuestras funcionalidades.</p>
+            </div>
         </div>
-
     </div>
 
-    <!-- Bootstrap core JavaScript-->
+    <footer>
+        <div class="copyright text-center my-auto">
+            <span>Copyright &copy; manurxk</span>
+        </div>
+    </footer>
+
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-
-    <!-- Core plugin JavaScript-->
     <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-
-    <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
 
 </body>
