@@ -36,11 +36,11 @@
         <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('vista.vistaIndex') }}">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#">
                 <div class="sidebar-brand-icon rotate-n-15">
-                    <i class="fas fa-laugh-wink"></i>
+                    <i class="#"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3"> Consultorio
+                <div class="sidebar-brand-text mx-3"> &Psi; Consultorio
                     
                     <sup></sup>
                 
@@ -52,9 +52,22 @@
 
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('vista.vistaIndex') }}">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Inicio</span></a>
+                <a class="nav-link" href="{{ url_for('login.inicio') }}"><i class="fas fa-fw  fas fa-home"></i><span>Inicio</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('cita.citaIndex') }}"><i class="fas fa-fw fa-notes-medical"></i><span>Citas</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('especialidad.especialidadIndex') }}"><i class="fas fa-fw fa-brain"></i><span>Especialidades</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('especialista.especialistaIndex') }}"><i class="fas fa-fw fa-user-md"></i><span>Especialista</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('paciente.pacienteIndex') }}"><i class="fas fa-fw fa-user-injured"></i><span>Pacientes</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('horario.horarioIndex') }}"><i class="fas fa-fw fa-clock"></i><span>Horarios</span></a>
             </li>
 
             <!-- Divider -->
@@ -79,8 +92,11 @@
                 data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
             
+           
                     <a class="collapse-item" href="{{ url_for('cita.citaIndex') }}">Gestionar Citas</a>
                     <a class="collapse-item" href="{{ url_for('agenda.agendaIndex') }}">Gestión de Agenda</a>
+
+                    
 
                     
                 </div>
@@ -99,32 +115,19 @@
                     <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
                     <a class="collapse-item" href="{{ url_for('ocupacion.ocupacionIndex') }}">Ocupación</a>
                     <a class="collapse-item" href="{{ url_for('estado_civil.estado_civilIndex') }}">Estado Civil</a>
-                    <a class="collapse-item" href="{{ url_for('estadocita.estadocitaIndex') }}">Estado de la Cita</a> 
-                    <a class="collapse-item" href="{{ url_for('persona.personaIndex') }}">Persona</a>
-                    <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">Especialidad</a>   
+                  
                     <a class="collapse-item" href="{{ url_for('dia.diaIndex') }}">Dia</a>
-                    <a class="collapse-item" href="{{ url_for('duracionconsulta.duracionconsultaIndex') }}">Duración de la Consulta</a>  
+       
                     <a class="collapse-item" href="{{ url_for('instrumento.instrumentoIndex') }}">Instrumento Utilizado (test)</a>
-                    <a class="collapse-item" href="{{ url_for('turno.turnoIndex') }}">Turno</a>   
+        
                     <a class="collapse-item" href="{{ url_for('tratamiento.tratamientoIndex') }}">Tratamiento</a>
                     <a class="collapse-item" href="{{ url_for('diagnostico.diagnosticoIndex') }}">Diagnóstico</a>      
-                </div>
+               </div>
             </div>
         </li>
 
 
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseNew"
-                aria-expanded="true" aria-controls="collapseNew">
-                <i class="fas fa-fw fa-folder"></i>
-                <span>Gestionar Compra</span>
-            </a>
-            <div id="collapseNew" class="collapse" aria-labelledby="headingNew" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="{{ url_for('pdcmod.pedidos_index') }}">Registrar pedido de compras</a>   
-                </div>
-            </div>
-        </li>
+
         
 
 
@@ -167,7 +170,7 @@
 
 
 
-                    <form method="GET" action="{{ url_for('buscar') }}" class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                    <form method="GET" action="#" class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
                         <div class="input-group">
                             <input type="text" class="form-control bg-light border-0 small" placeholder="Buscar..." aria-label="Search" aria-describedby="basic-addon2" name="termino">
                             <div class="input-group-append">
@@ -425,7 +428,7 @@
                             <!-- Dropdown - User primaryrmation -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ url_for('perfil') }}">
+                                <a class="dropdown-item" href="#">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Perfil
                                 </a>
@@ -502,7 +505,7 @@ aria-hidden="true">
         <div class="modal-body">Seleccione "Cerrar sesión" a continuación si está listo para finalizar su sesión actual.</div>
         <div class="modal-footer">
             <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
-            <a class="btn btn-primary" href="{{ url_for('login') }}">Cerrar sesión</a> <!-- Enlace dinámico -->
+            <a class="btn btn-primary" href="#">Cerrar sesión</a> <!-- Enlace dinámico -->
         </div>
     </div>
 </div>
