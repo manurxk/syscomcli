@@ -1,27 +1,15 @@
 from flask import Blueprint, request, jsonify, current_app as app
 from app.dao.referenciales.cita.CitaDao import CitaDao
-import datetime
 
-citaapi = Blueprint('citaapi', __name__)
+cita_api = Blueprint('cita_api', __name__)
 
 # Trae todas las citas
-@citaapi.route('/citas', methods=['GET'])
+@cita_api.route('/citas', methods=['GET'])
 def getCitas():
     citadao = CitaDao()
 
     try:
         citas = citadao.getCitas()
-
-        # Transformar fechas y horas a cadenas si es necesario
-        for cita in citas:
-            # Verificar si la fecha es un objeto de fecha o fecha y hora
-            if isinstance(cita['fecha'], (datetime.date, datetime.datetime)):
-                # Convertir la fecha a formato de cadena (YYYY-MM-DD)
-                cita['fecha'] = cita['fecha'].strftime('%Y-%m-%d')
-            # Verificar si la hora es un objeto de hora
-            if isinstance(cita['hora'], datetime.time):
-                # Convertir la hora a formato de cadena (HH:MM)
-                cita['hora'] = cita['hora'].strftime('%H:%M')
 
         return jsonify({
             'success': True,
@@ -36,8 +24,8 @@ def getCitas():
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Obtiene una cita por ID
-@citaapi.route('/citas/<int:cita_id>', methods=['GET'])
+# Trae una cita por ID
+@cita_api.route('/citas/<int:cita_id>', methods=['GET'])
 def getCita(cita_id):
     citadao = CitaDao()
 
@@ -45,14 +33,6 @@ def getCita(cita_id):
         cita = citadao.getCitaById(cita_id)
 
         if cita:
-            # Transformar fecha y hora a cadenas si es necesario
-            if isinstance(cita['fecha'], (datetime.date, datetime.datetime)):
-                # Convertir la fecha a formato de cadena (YYYY-MM-DD)
-                cita['fecha'] = cita['fecha'].strftime('%Y-%m-%d')
-            if isinstance(cita['hora'], datetime.time):
-                # Convertir la hora a formato de cadena (HH:MM)
-                cita['hora'] = cita['hora'].strftime('%H:%M')
-
             return jsonify({
                 'success': True,
                 'data': cita,
@@ -72,50 +52,40 @@ def getCita(cita_id):
         }), 500
 
 # Agrega una nueva cita
-@citaapi.route('/citas', methods=['POST'])
+@cita_api.route('/citas', methods=['POST'])
 def addCita():
     data = request.get_json()
     citadao = CitaDao()
 
-    campos_requeridos = ['nombrepaciente', 'motivoconsulta', 'medico', 'fecha', 'hora']
+    campos_requeridos = ['id_persona','id_especialidad','id_dia','id_turno','hora_inicio', 'hora_fin','id_sala_atencion']
 
-    # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
-        if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
+        if campo not in data or data[campo] is None or len(str(data[campo]).strip()) == 0:
             return jsonify({
                 'success': False,
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
     try:
-        # Convertir los valores a mayúsculas
-        nombrepaciente = data['nombrepaciente'].upper()
-        motivoconsulta = data['motivoconsulta'].upper()
-        medico = data['medico'].upper()
-        fecha = data['fecha']
-        hora = data['hora']
-        
-        cita_id = citadao.guardarCita(nombrepaciente, motivoconsulta, medico, fecha, hora)
+        id_persona = data['id_persona']
+        id_especialidad = data['id_especialidad']
+        id_dia = data['id_dia']
+        id_turno = data['id_turno']
+        hora_inicio = data['hora_inicio']
+        hora_fin = data['hora_fin']
+        id_sala_atencion = data['id_sala_atencion']
 
+        cita_id = citadao.guardarCita(id_persona,id_especialidad,id_dia,id_turno,hora_inicio, hora_fin,id_sala_atencion)
         if cita_id is not None:
             return jsonify({
                 'success': True,
-                'data': {
-                    'id': cita_id,
-                    'nombrepaciente': nombrepaciente,
-                    'motivoconsulta': motivoconsulta,
-                    'medico': medico,
-                    'fecha': fecha,
-                    'hora': hora
-                },
+                'data': {'id_cita': cita_id, 'id_persona': id_persona, 'id_especialidad': id_especialidad, 
+                        'id_dia': id_dia, 'id_turno': id_turno, 'hora_inicio': hora_inicio, 
+                        'hora_fin': hora_fin,'id_sala_atencion': id_sala_atencion},
                 'error': None
             }), 201
         else:
-            return jsonify({
-                'success': False,
-                'error': 'No se pudo guardar la cita. Consulte con el administrador.'
-            }), 500
-
+            return jsonify({'success': False, 'error': 'No se pudo guardar la cita. Consulte con el administrador.'}), 500
     except Exception as e:
         app.logger.error(f"Error al agregar cita: {str(e)}")
         return jsonify({
@@ -124,38 +94,34 @@ def addCita():
         }), 500
 
 # Actualiza una cita
-@citaapi.route('/citas/<int:cita_id>', methods=['PUT'])
+@cita_api.route('/citas/<int:cita_id>', methods=['PUT'])
 def updateCita(cita_id):
     data = request.get_json()
     citadao = CitaDao()
 
-    campos_requeridos = ['nombrepaciente', 'motivoconsulta', 'medico', 'fecha', 'hora']
+    campos_requeridos = ['id_persona','id_especialidad','id_dia','id_turno','hora_inicio', 'hora_fin','id_sala_atencion']
 
     for campo in campos_requeridos:
-        if campo not in data or not data[campo]:
+        if campo not in data or data[campo] is None or len(str(data[campo]).strip()) == 0:
             return jsonify({
                 'success': False,
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
-    nombrepaciente = data['nombrepaciente'].upper()
-    motivoconsulta = data['motivoconsulta'].upper()
-    medico = data['medico'].upper()
-    fecha = data['fecha']
-    hora = data['hora']
-
+        id_persona = data['id_persona']
+        id_especialidad = data['id_especialidad']
+        id_dia = data['id_dia']
+        id_turno = data['id_turno']
+        hora_inicio = data['hora_inicio']
+        hora_fin = data['hora_fin']
+        id_sala_atencion = data['id_sala_atencion']
     try:
-        if citadao.updateCita(cita_id, nombrepaciente, motivoconsulta, medico, fecha, hora):
+        if citadao.updateCita(cita_id, id_persona, id_especialidad, id_dia, id_turno, hora_inicio, hora_fin, id_sala_atencion):
             return jsonify({
                 'success': True,
-                'data': {
-                    'id': cita_id,
-                    'nombrepaciente': nombrepaciente,
-                    'motivoconsulta': motivoconsulta,
-                    'medico': medico,
-                    'fecha': fecha,
-                    'hora': hora
-                },
+                'data': {'id_cita': cita_id, 'id_persona': id_persona, 'id_especialidad': id_especialidad, 
+                        'id_dia': id_dia, 'id_turno': id_turno, 'hora_inicio': hora_inicio, 
+                        'hora_fin': hora_fin,'id_sala_atencion': id_sala_atencion},
                 'error': None
             }), 200
         else:
@@ -171,7 +137,7 @@ def updateCita(cita_id):
         }), 500
 
 # Elimina una cita
-@citaapi.route('/citas/<int:cita_id>', methods=['DELETE'])
+@cita_api.route('/citas/<int:cita_id>', methods=['DELETE'])
 def deleteCita(cita_id):
     citadao = CitaDao()
 
