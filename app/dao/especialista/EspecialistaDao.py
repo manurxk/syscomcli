@@ -86,20 +86,19 @@ class EspecialistaDao:
             if especialistaEncontrada:
                 return {
                     'id_especialista': especialistaEncontrada[0],
-                    'nombre': especialistaEncontrada[1],
-                    'apellido': especialistaEncontrada[2],
-                    'cedula': especialistaEncontrada[3],
+                    'nombre': especialistaEncontrada[1], 
+                    'apellido': especialistaEncontrada[2], 
+                    'cedula': especialistaEncontrada[3], 
                     'sexo': especialistaEncontrada[4],
-                    'fecha_nacimiento': especialistaEncontrada[5],
-                    'telefono': especialistaEncontrada[6],
+                    'fecha_nacimiento': especialistaEncontrada[5], 
+                    'telefono': especialistaEncontrada[6], 
                     'correo': especialistaEncontrada[7],
                     'matricula': especialistaEncontrada[8],
                     'especialidad': especialistaEncontrada[9],
-                    'especialidad': especialistaEncontrada[10],
-                    'direccion': especialistaEncontrada[11],
+                    'estado_civil': especialistaEncontrada[10], 
+                    'direccion': especialistaEncontrada[11], 
                     'ciudad': especialistaEncontrada[12]
-             
-                }
+                    }
             else:
                 return None
         except Exception as e:
@@ -136,11 +135,23 @@ class EspecialistaDao:
 
     
 
-    def updateEspecialista(self, id_especialista, nombre, apellido, cedula, sexo, fecha_nacimiento, telefono, correo, matricula, especialidad, estado_civil, direccion, ciudad):
+
+
+
+
+
+
+
+
+
+
+
+
+    def updateEspecialista(self, id_especialista, nombre, apellido, cedula, sexo, fecha_nacimiento, telefono, correo, matricula, id_especialidad, id_estado_civil, direccion, id_ciudad):
         updateEspecialistaSQL = """
         UPDATE especialistas
         SET nombre=%s, apellido=%s, cedula=%s, sexo=%s, fecha_nacimiento=%s, telefono=%s, correo=%s, matricula=%s, 
-            id_especialidad=%s,  id_estado_civil=%s, direccion=%s, id_ciudad=%s
+            id_especialidad=%s, id_estado_civil=%s, direccion=%s, id_ciudad=%s
         WHERE id_especialista=%s
         """
 
@@ -149,10 +160,10 @@ class EspecialistaDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updateEspecialistaSQL, (nombre, apellido, cedula, sexo, fecha_nacimiento, telefono, correo, matricula, especialidad, estado_civil, direccion, ciudad, id_especialista))
-            filas_afectadas = cur.rowcount  
+            cur.execute(updateEspecialistaSQL, (nombre, apellido, cedula, sexo, fecha_nacimiento, telefono, correo, matricula, id_especialidad, id_estado_civil, direccion, id_ciudad, id_especialista))
+            filas_afectadas = cur.rowcount  # Número de filas modificadas
             con.commit()
-            return filas_afectadas > 0  
+            return filas_afectadas > 0  # Retorna True si al menos un registro fue actualizado
 
         except Exception as e:
             app.logger.error(f"Error al actualizar especialista: {str(e)}")
@@ -162,6 +173,19 @@ class EspecialistaDao:
         finally:
             cur.close()
             con.close()
+
+
+
+
+
+
+
+
+
+
+
+
+            
 
     def deleteEspecialista(self, id_especialista):
         deleteEspecialistaSQL = """
@@ -186,3 +210,10 @@ class EspecialistaDao:
         finally:
             cur.close()
             con.close()
+
+
+
+
+
+
+

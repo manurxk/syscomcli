@@ -422,7 +422,7 @@ const buscarCiudad = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
-        }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, Fecha_Nacimiento: nuevoFecha_Nacimiento, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
+        }, body: JSON.stringify({nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, sexo: nuevoSexo, fecha_nacimiento: nuevoFecha_Nacimiento, telefono: nuevoTelefono, correo: nuevoCorreo, matricula: nuevaMatricula, id_especialidad: id_especialidad, id_estado_civil: id_estado_civil, direccion: nuevaDireccion, id_ciudad: id_ciudad})
       })
       .then(resp => resp.json())
         .then(data => {
