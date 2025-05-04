@@ -127,40 +127,64 @@ def updateEspecialista(especialista_id):
         return jsonify({'success': False, 'error': 'No se enviaron datos para actualizar.'}), 400
 
     # Lista de campos requeridos
-    campos_requeridos = ['nombre', 'apellido', 'cedula', 'sexo', 'fecha_nacimiento', 'telefono', 'correo', 'matricula',
-                         'id_especialidad', 'id_estado_civil', 'direccion', 'id_ciudad']
+    campos_requeridos = [
+        'nombre', 'apellido', 'cedula', 'sexo', 'fecha_nacimiento', 'telefono', 'correo',
+        'matricula', 'id_especialidad', 'id_estado_civil', 'direccion', 'id_ciudad'
+    ]
 
     # Validar que todos los campos estén presentes y no vacíos
     for campo in campos_requeridos:
-        if campo not in data or not str(data[campo]).strip():
+        if campo not in data or (isinstance(data[campo], str) and not data[campo].strip()):
             return jsonify({'success': False, 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'}), 400
 
     try:
         # Convertir valores a mayúsculas o limpiar espacios
         especialista_data = {
             'id': especialista_id,
-            'nombre': data['nombre'].strip().upper(),
-            'apellido': data['apellido'].strip().upper(),
-            'cedula': data['cedula'].strip(),
-            'sexo': data['sexo'].strip().upper(),
-            'fecha_nacimiento': data['fecha_nacimiento'].strip(),
-            'telefono': data['telefono'].strip(),
-            'correo': data['correo'].strip(),
-            'matricula': data['matricula'].strip(),
-            'id_especialidad': int(data['id_especialidad']),
-            'id_estado_civil': int(data['id_estado_civil']),
-            'direccion': data['direccion'].strip().upper(),
-            'id_ciudad': int(data['id_ciudad'])
+            'nombre': data.get('nombre', '').strip().upper(),
+            'apellido': data.get('apellido', '').strip().upper(),
+            'cedula': data.get('cedula', '').strip(),
+            'sexo': data.get('sexo', '').strip().upper(),
+            'fecha_nacimiento': data.get('fecha_nacimiento', '').strip(),
+            'telefono': data.get('telefono', '').strip(),
+            'correo': data.get('correo', '').strip(),
+            'matricula': data.get('matricula', '').strip(),
+            'id_especialidad': int(data.get('id_especialidad', 0)) if data.get('id_especialidad') else None,
+            'id_estado_civil': int(data.get('id_estado_civil', 0)) if data.get('id_estado_civil') else None,
+            'direccion': data.get('direccion', '').strip().upper(),
+            'id_ciudad': int(data.get('id_ciudad', 0)) if data.get('id_ciudad') else None
         }
 
+        # Validar que los campos numéricos sean valores válidos
+        for campo in ['id_especialidad', 'id_estado_civil', 'id_ciudad']:
+            if especialista_data[campo] is None:
+                return jsonify({'success': False, 'error': f'El campo {campo} debe ser un número válido.'}), 400
+
         # Llamar a la función de actualización en el DAO
-        resultado = especialistaDao.updateEspecialista(especialista_data)
+        resultado = especialistaDao.updateEspecialista(
+            especialista_data['nombre'],
+            especialista_data['apellido'],
+            especialista_data['cedula'],
+            especialista_data['sexo'],
+            especialista_data['fecha_nacimiento'],
+            especialista_data['telefono'],
+            especialista_data['correo'],
+            especialista_data['matricula'],
+            especialista_data['id_especialidad'],
+            especialista_data['id_estado_civil'],
+            especialista_data['direccion'],
+            especialista_data['id_ciudad']
+        )
+
 
         if resultado:
             return jsonify({'success': True, 'data': especialista_data, 'message': 'Especialista actualizado correctamente'}), 200
         else:
             return jsonify({'success': False, 'error': 'No se pudo actualizar el especialista. Puede que no exista.'}), 404
 
+    except ValueError as ve:
+        app.logger.error(f"Error de conversión de datos: {str(ve)}")
+        return jsonify({'success': False, 'error': 'Error en los datos enviados. Verifique los formatos.'}), 400
     except Exception as e:
         app.logger.error(f"Error al actualizar el especialista: {str(e)}")
         return jsonify({'success': False, 'error': 'Ocurrió un error interno. Consulte con el administrador.'}), 500
