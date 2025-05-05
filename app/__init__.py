@@ -1,22 +1,27 @@
 from datetime import timedelta
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 
-# creamos el token
+# Protección CSRF
 csrf = CSRFProtect()
 csrf.init_app(app)
 
-# inicializar el secret key
+# Clave secreta
 app.secret_key = b'_5#y2L"F6Q7z\n\xec]/'
 
-# Establecer duración de la sesión, 15 minutos
+# Tiempo de sesión: 15 minutos
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
 
-# importar modulo de seguridad
+# Importar y registrar blueprint
 from app.rutas.seguridad.login_routes import logmod
 app.register_blueprint(logmod)
+
+# Redirigir '/' a '/login'
+@app.route('/')
+def raiz():
+    return redirect(url_for('login.login'))
 
 # importar referenciales
 from app.rutas.referenciales.ciudad.ciudad_routes import ciumod

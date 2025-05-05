@@ -51,11 +51,19 @@ def logout():
     flash('Sesión cerrada', 'warning')
     return redirect(url_for('login.login'))  # Redirigir al formulario de login
 
-@logmod.route('/')
+# @logmod.route('/')
+# def inicio():
+#     if 'usuario_nombre' in session:
+#         # Si el usuario está autenticado, redirigir a la página principal
+#         return render_template('inicio.html')
+#     else:
+#         # Si no está autenticado, redirigir al login
+#         return redirect(url_for('login.login'))
+    
+@logmod.route('/inicio')
 def inicio():
     if 'usuario_nombre' in session:
-        # Si el usuario está autenticado, redirigir a la página principal
         return render_template('inicio.html')
     else:
-        # Si no está autenticado, redirigir al login
         return redirect(url_for('login.login'))
+
