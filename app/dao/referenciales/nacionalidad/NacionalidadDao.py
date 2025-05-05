@@ -1,4 +1,3 @@
-# Data access object - DAO
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
@@ -7,24 +6,20 @@ class NacionalidadDao:
     def getNacionalidades(self):
 
         nacionalidadSQL = """
-        SELECT id_nacionalidad, descripcion
+        SELECT id, descripcion 
         FROM nacionalidades
         """
+
         # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
             cur.execute(nacionalidadSQL)
-            nacionalidades = cur.fetchall() # trae datos de la bd
-
-            # Transformar los datos en una lista de diccionarios
-            return [{'id_nacionalidad': nacionalidad[0], 'descripcion': nacionalidad[1]} for nacionalidad in nacionalidades]
-
-        except Exception as e:
-            app.logger.error(f"Error al obtener todas las nacionalidades: {str(e)}")
-            return []
-
+            lista_nacionalidades = cur.fetchall()
+            return [ { "id": item[0], "descripcion": item[1] } for item in lista_nacionalidades]
+        except con.Error as e:
+             app.logger.info(e)
         finally:
             cur.close()
             con.close()
@@ -32,8 +27,8 @@ class NacionalidadDao:
     def getNacionalidadById(self, id):
 
         nacionalidadSQL = """
-        SELECT id_nacionalidad, descripcion
-        FROM nacionalidades WHERE id_nacionalidad=%s
+        SELECT id, descripcion
+        FROM nacionalidades WHERE id=%s
         """
         # objeto conexion
         conexion = Conexion()
@@ -41,102 +36,100 @@ class NacionalidadDao:
         cur = con.cursor()
         try:
             cur.execute(nacionalidadSQL, (id,))
-            nacionalidadEncontrada = cur.fetchone() # Obtener una sola fila
-            if nacionalidadEncontrada:
-                return {
-                        "id_nacionalidad": nacionalidadEncontrada[0],
-                        "descripcion": nacionalidadEncontrada[1]
-                    }  # Retornar los datos de nacionalidad
-            else:
-                return None # Retornar None si no se encuentra la nacionalidad
-        except Exception as e:
-            app.logger.error(f"Error al obtener nacionalidad: {str(e)}")
-            return None
-
+            # trae datos de la bd
+            nacionalidadEncontrada = cur.fetchone()
+            # retorno los datos
+            return {
+                    "id": nacionalidadEncontrada[0],
+                    "descripcion": nacionalidadEncontrada[1]
+                }
+        except con.Error as e:
+            app.logger.info(e)
         finally:
             cur.close()
             con.close()
-
-    def guardarNacionalidad(self, descripcion):
-
-        insertNacionalidadSQL = """
-        INSERT INTO nacionalidades(descripcion) VALUES(%s) RETURNING id_nacionalidad
+        
+    def guardarNacionalidad(self, descripcion):   
+        nacionalidadSQL = """
+        INSERT INTO nacionalidades(descripcion) VALUES(%s)
         """
 
         conexion = Conexion()
         con = conexion.getConexion()
-        cur = con.cursor()
+        cur = con.cursor()        
 
-        # Ejecucion exitosa
         try:
-            cur.execute(insertNacionalidadSQL, (descripcion,))
-            nacionalidad_id = cur.fetchone()[0]
-            con.commit() # se confirma la insercion
-            return nacionalidad_id
+            cur.execute(nacionalidadSQL, (descripcion,))
 
-        # Si algo fallo entra aqui
-        except Exception as e:
-            app.logger.error(f"Error al insertar nacionalidad: {str(e)}")
-            con.rollback() # retroceder si hubo error
-            return False
+            con.commit()   
+            return True
 
-        # Siempre se va ejecutar
+        except con.Error as e:
+            app.logger.info(e)
+
         finally:
             cur.close()
             con.close()
-
+            return False
+        
     def updateNacionalidad(self, id, descripcion):
 
-        updateNacionalidadSQL = """
-        UPDATE nacionalidades
-        SET descripcion=%s
-        WHERE id_nacionalidad=%s
-        """
+            updateNacionalidadSQL = """
+            UPDATE nacionalidades
+            SET descripcion=%s
+            WHERE id=%s
+            """
 
-        conexion = Conexion()
-        con = conexion.getConexion()
-        cur = con.cursor()
+            conexion = Conexion()
+            con = conexion.getConexion()
+            cur = con.cursor()
 
-        try:
-            cur.execute(updateNacionalidadSQL, (descripcion, id,))
-            filas_afectadas = cur.rowcount # Obtener el número de filas afectadas
-            con.commit()
+            # Ejecucion exitosa
+            try:
+                cur.execute(updateNacionalidadSQL, (descripcion, id,))
+                # se confirma la insercion
+                con.commit()
 
-            return filas_afectadas > 0 # Retornar True si se actualizó al menos una fila
+                return True
 
-        except Exception as e:
-            app.logger.error(f"Error al actualizar nacionalidad: {str(e)}")
-            con.rollback()
-            return False
+            # Si algo fallo entra aqui
+            except con.Error as e:
+                app.logger.info(e)
 
-        finally:
-            cur.close()
-            con.close()
+            # Siempre se va ejecutar
+            finally:
+                cur.close()
+                con.close()
+
+            return False        
+
 
     def deleteNacionalidad(self, id):
 
-        updateNacionalidadSQL = """
-        DELETE FROM nacionalidades
-        WHERE id_nacionalidad=%s
-        """
+            updateNacionalidadSQL = """
+            DELETE FROM nacionalidades
+            WHERE id=%s
+            """
 
-        conexion = Conexion()
-        con = conexion.getConexion()
-        cur = con.cursor()
+            conexion = Conexion()
+            con = conexion.getConexion()
+            cur = con.cursor()
 
-        try:
-            cur.execute(updateNacionalidadSQL, (id,))
-            rows_affected = cur.rowcount
-            con.commit()
+            # Ejecucion exitosa
+            try:
+                cur.execute(updateNacionalidadSQL, (id,))
+                # se confirma la insercion
+                con.commit()
 
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
+                return True
 
-        except Exception as e:
-            app.logger.error(f"Error al eliminar nacionalidad: {str(e)}")
-            con.rollback()
+            # Si algo fallo entra aqui
+            except con.Error as e:
+                app.logger.info(e)
+
+            # Siempre se va ejecutar
+            finally:
+                cur.close()
+                con.close()
+
             return False
-
-        finally:
-            cur.close()
-            con.close()
-            

@@ -1,96 +1,108 @@
-
-# Data access object - DAO
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
+import psycopg2
+from datetime import datetime
 
 class PersonaDao:
 
     def getPersonas(self):
         personaSQL = """
-        SELECT id_persona, nombre, apellido, fechanacimiento, cedula, sexo
-        FROM persona
+        SELECT id_persona, nombres, apellidos, ci, to_char(fechanac, 'DD/MM/YYYY HH24:MI:SS') AS fechanac, sexo
+        FROM personas
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
             cur.execute(personaSQL)
-            personas = cur.fetchall()  # trae datos de la bd
-
-            # Transformar los datos en una lista de diccionarios
-            return [{'id_persona': persona[0], 'nombre': persona[1], 'apellido': persona[2], 'fechanacimiento': persona[3], 'cedula': persona[4], 'sexo': persona[5]} for persona in personas]
-
-        except Exception as e:
-            app.logger.error(f"Error al obtener todas las personas: {str(e)}")
-            return []
-
+            lista_personas = cur.fetchall()
+            lista_ordenada = []
+            for item in lista_personas:
+                lista_ordenada.append({
+                    "id_persona": item[0],
+                    "nombres": item[1],
+                    "apellidos": item[2],
+                    "ci": item[3],
+                    "fechanac": item[4],
+                    "sexo": item[5]
+                })
+            return lista_ordenada
+        except psycopg2.DatabaseError as e:
+            app.logger.error("Error al obtener personas: %s", e)
         finally:
             cur.close()
             con.close()
 
-    def getPersonaById(self, id):
+    def getPersonaById(self, id_persona):
         personaSQL = """
-        SELECT id_persona, nombre, apellido, fechanacimiento, cedula, sexo
-        FROM persona WHERE id_persona=%s
+        SELECT id_persona, nombres, apellidos, ci, fechanac, sexo
+        FROM personas WHERE id_persona=%s
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(personaSQL, (id,))
-            personaEncontrada = cur.fetchone()  # Obtener una sola fila
+            cur.execute(personaSQL, (id_persona,))
+            personaEncontrada = cur.fetchone()
             if personaEncontrada:
                 return {
                     "id_persona": personaEncontrada[0],
-                    "nombre": personaEncontrada[1],
-                    "apellido": personaEncontrada[2],
-                    "fechanacimiento": personaEncontrada[3],
-                    "cedula": personaEncontrada[4],
+                    "nombres": personaEncontrada[1],
+                    "apellidos": personaEncontrada[2],
+                    "ci": personaEncontrada[3],
+                    "fechanac": personaEncontrada[4],
                     "sexo": personaEncontrada[5]
-                }  # Retornar los datos de persona
-            else:
-                return None  # Retornar None si no se encuentra la persona
-        except Exception as e:
-            app.logger.error(f"Error al obtener persona: {str(e)}")
+                }
             return None
-
+        except psycopg2.DatabaseError as e:
+            app.logger.error("Error al obtener persona por ID: %s", e)
         finally:
             cur.close()
             con.close()
 
-    def guardarPersona(self, nombre, apellido, fechanacimiento, cedula, sexo):
+    def guardarPersona(self, nombres, apellidos, ci, fechanac, sexo):
+        # Validación de datos antes de insertar
+        if not (nombres and apellidos and ci and fechanac and sexo):
+            app.logger.error("Faltan datos requeridos para insertar persona.")
+            return False
+
         insertPersonaSQL = """
-        INSERT INTO persona(nombre, apellido, fechanacimiento, cedula, sexo) VALUES(%s, %s, %s, %s, %s) RETURNING id_persona
+        INSERT INTO public.personas(nombres, apellidos, ci, fechanac, sexo)
+        VALUES (%s, %s, %s, %s, %s);
         """
 
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
-        # Ejecucion exitosa
+        # Convertir fechanac a formato datetime
         try:
-            cur.execute(insertPersonaSQL, (nombre, apellido, fechanacimiento, cedula, sexo))
-            persona_id = cur.fetchone()[0]
-            con.commit()  # se confirma la insercion
-            return persona_id
-
-        # Si algo fallo entra aqui
-        except Exception as e:
-            app.logger.error(f"Error al insertar persona: {str(e)}")
-            con.rollback()  # retroceder si hubo error
+            fecha_nac = datetime.strptime(fechanac, '%d/%m/%Y')
+        except ValueError as e:
+            app.logger.error(f"Error en el formato de fecha: {e}")
             return False
 
-        # Siempre se va ejecutar
+        try:
+            cur.execute(insertPersonaSQL, (nombres, apellidos, ci, fecha_nac, sexo))
+            con.commit()
+            return True
+        except psycopg2.DatabaseError as e:
+            app.logger.error("Error al insertar persona: %s", e)
         finally:
             cur.close()
             con.close()
 
-    def updatePersona(self, id, nombre, apellido, fechanacimiento, cedula, sexo):
+        return False
+
+    def updatePersona(self, id_persona, nombres, apellidos, ci, fechanac, sexo):
+        # Validación de datos antes de actualizar
+        if not (nombres and apellidos and ci and fechanac and sexo):
+            app.logger.error("Faltan datos requeridos para actualizar persona.")
+            return False
+
         updatePersonaSQL = """
-        UPDATE persona
-        SET nombre=%s, apellido=%s, fechanacimiento=%s, cedula=%s, sexo=%s
+        UPDATE personas
+        SET nombres=%s, apellidos=%s, ci=%s, fechanac=%s, sexo=%s
         WHERE id_persona=%s
         """
 
@@ -98,25 +110,29 @@ class PersonaDao:
         con = conexion.getConexion()
         cur = con.cursor()
 
+        # Convertir fechanac a formato datetime
         try:
-            cur.execute(updatePersonaSQL, (nombre, apellido, fechanacimiento, cedula, sexo, id))
-            filas_afectadas = cur.rowcount  # Obtener el número de filas afectadas
-            con.commit()
-
-            return filas_afectadas > 0  # Retornar True si se actualizó al menos una fila
-
-        except Exception as e:
-            app.logger.error(f"Error al actualizar persona: {str(e)}")
-            con.rollback()
+            fecha_nac = datetime.strptime(fechanac, '%d/%m/%Y')
+        except ValueError as e:
+            app.logger.error(f"Error en el formato de fecha: {e}")
             return False
 
+        try:
+            cur.execute(updatePersonaSQL, (nombres, apellidos, ci, fecha_nac, sexo, id_persona))
+            con.commit()
+            app.logger.info("Persona actualizada correctamente.")
+            return True
+        except psycopg2.DatabaseError as e:
+            app.logger.error("Error al actualizar persona: %s", e)
         finally:
             cur.close()
             con.close()
 
-    def deletePersona(self, id):
+        return False
+
+    def deletePersona(self, id_persona):
         deletePersonaSQL = """
-        DELETE FROM persona
+        DELETE FROM personas
         WHERE id_persona=%s
         """
 
@@ -125,17 +141,14 @@ class PersonaDao:
         cur = con.cursor()
 
         try:
-            cur.execute(deletePersonaSQL, (id,))
-            rows_affected = cur.rowcount
+            cur.execute(deletePersonaSQL, (id_persona,))
             con.commit()
-
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
-
-        except Exception as e:
-            app.logger.error(f"Error al eliminar persona: {str(e)}")
-            con.rollback()
-            return False
-
+            app.logger.info("Persona eliminada correctamente.")
+            return True
+        except psycopg2.DatabaseError as e:
+            app.logger.error("Error al eliminar persona: %s", e)
         finally:
             cur.close()
             con.close()
+
+        return False
