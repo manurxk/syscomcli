@@ -1,0 +1,15 @@
+CREATE TABLE personas (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    cedula VARCHAR(10) NOT NULL UNIQUE,
+    fechanac DATE NOT NULL,
+    CONSTRAINT chk_cedula CHECK (cedula ~ '^[0-9]+$') -- Verifica que la cédula solo contenga números
+);
+
+
+CREATE TABLE dias (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(20) NOT NULL,
+    CONSTRAINT chk_dias CHECK (descripcion IN ('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'))
+);

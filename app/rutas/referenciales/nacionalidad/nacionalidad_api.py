@@ -1,15 +1,15 @@
 from flask import Blueprint, request, jsonify, current_app as app
 from app.dao.referenciales.nacionalidad.NacionalidadDao import NacionalidadDao
 
-nacapi = Blueprint('nacapi', __name__)
+nacioapi = Blueprint('nacioapi', __name__)
 
-# Trae todas las ciudadess
-@nacapi.route('/nacionalidades', methods=['GET'])
+# Trae todas las nacionalidades
+@nacioapi.route('/nacionalidades', methods=['GET'])
 def getNacionalidades():
-    nacdao = NacionalidadDao()
+    nacionalidaddao = NacionalidadDao()
 
     try:
-        nacionalidades = nacdao.getNacionalidades()
+        nacionalidades = nacionalidaddao.getNacionalidades()
 
         return jsonify({
             'success': True,
@@ -18,18 +18,18 @@ def getNacionalidades():
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todas las Nacionalidades: {str(e)}")
+        app.logger.error(f"Error al obtener todas las nacionalidades: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-@nacapi.route('/nacionalidades/<int:nacionalidad_id>', methods=['GET'])
+@nacioapi.route('/nacionalidades/<int:nacionalidad_id>', methods=['GET'])
 def getNacionalidad(nacionalidad_id):
-    nacdao = NacionalidadDao()
+    nacionalidaddao = NacionalidadDao()
 
     try:
-        nacionalidad = nacdao.getNacionalidadById(nacionalidad_id)
+        nacionalidad = nacionalidaddao.getNacionalidadById(nacionalidad_id)
 
         if nacionalidad:
             return jsonify({
@@ -50,11 +50,11 @@ def getNacionalidad(nacionalidad_id):
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega una nueva ciudad
-@nacapi.route('/nacionalidades', methods=['POST'])
+# Agrega una nueva nacionalidad
+@nacioapi.route('/nacionalidades', methods=['POST'])
 def addNacionalidad():
     data = request.get_json()
-    nacdao = NacionalidadDao()
+    nacionalidaddao = NacionalidadDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['descripcion']
@@ -69,7 +69,7 @@ def addNacionalidad():
 
     try:
         descripcion = data['descripcion'].upper()
-        nacionalidad_id = nacdao.guardarNacionalidad(descripcion)
+        nacionalidad_id = nacionalidaddao.guardarNacionalidad(descripcion)
         if nacionalidad_id is not None:
             return jsonify({
                 'success': True,
@@ -85,10 +85,10 @@ def addNacionalidad():
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-@nacapi.route('/nacionalidades/<int:nacionalidad_id>', methods=['PUT'])
+@nacioapi.route('/nacionalidades/<int:nacionalidad_id>', methods=['PUT'])
 def updateNacionalidad(nacionalidad_id):
     data = request.get_json()
-    nacdao = NacionalidadDao()
+    nacionalidaddao = NacionalidadDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['descripcion']
@@ -102,7 +102,7 @@ def updateNacionalidad(nacionalidad_id):
                             }), 400
     descripcion = data['descripcion']
     try:
-        if nacdao.updateNacionalidad(nacionalidad_id, descripcion.upper()):
+        if nacionalidaddao.updateNacionalidad(nacionalidad_id, descripcion.upper()):
             return jsonify({
                 'success': True,
                 'data': {'id': nacionalidad_id, 'descripcion': descripcion},
@@ -120,13 +120,13 @@ def updateNacionalidad(nacionalidad_id):
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-@nacapi.route('/nacionalidades/<int:nacionalidad_id>', methods=['DELETE'])
+@nacioapi.route('/nacionalidades/<int:nacionalidad_id>', methods=['DELETE'])
 def deleteNacionalidad(nacionalidad_id):
-    nacdao = NacionalidadDao()
+    nacionalidaddao = NacionalidadDao()
 
     try:
-        # Usar el retorno de eliminar nacionalidad para determinar el éxito
-        if nacdao.deleteNacionalidad(nacionalidad_id):
+        # Usar el retorno de eliminarNacionalidad para determinar el éxito
+        if nacionalidaddao.deleteNacionalidad(nacionalidad_id):
             return jsonify({
                 'success': True,
                 'mensaje': f'Nacionalidad con ID {nacionalidad_id} eliminada correctamente.',

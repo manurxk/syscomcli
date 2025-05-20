@@ -5,458 +5,247 @@ Inicio
 {% endblock %}
 
 {% block contenido %}
-<style>
-    /* Estilos generales para el cuerpo */
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f0f2f5;
-    }
 
-    /* Estilos para el banner de bienvenida */
-    .welcome-banner {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #2bbe7c;
-        color: white;
-        padding: 20px;
-        border-radius: 15px;
-        margin: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Estilos para el texto del banner */
-    .welcome-text {
-        max-width: 50%;
-    }
-
-    .welcome-text h1 {
-        font-size: 2.5em;
-        margin: 0;
-    }
-
-    .welcome-text p {
-        font-size: 1.2em;
-        margin: 10px 0;
-    }
-
-    /* Estilos para los botones */
-    button {
-        background-color: #0f9976;
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        text-align: center;
-        text-decoration: none;
-        font-size: 1em;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background-color: #0f9976;
-    }
-
-    /* Estilo para la imagen del banner */
-    .welcome-image {
-        width: 150px;
-        height: 150px;
-        background-image: url('https://www.flaticon.com/svg/static/icons/svg/2907/2907259.svg'); /* Reemplazar por URL o imagen local */
-        background-size: contain;
-        background-repeat: no-repeat;
-    }
-
-    /* Estilos para el contenedor de los botones */
-    .button-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        margin: 20px;
-    }
-
-    /* Estilo base para los botones grandes */
-    .large-button {
-        flex: 1 0 30%;
-        max-width: 30%;
-        margin: 10px;
-        padding: 50px;
-        background-color: transparent;
-        color: #0f0f0f;
-        border: 2px solid #2bbe7c;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 30px;
-        cursor: pointer;
-        transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
-        border-radius: 5px;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Efecto hover para los botones */
-    .large-button:hover {
-        background-color: #2bbe7c;
-        color: white;
-        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.4);
-    }
-
-    /* Estilos responsivos */
-    @media (max-width: 768px) {
-        .large-button {
-            flex: 1 0 45%;
-            max-width: 45%;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .large-button {
-            flex: 1 0 100%;
-            max-width: 100%;
-        }
-    }
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            font-size: 36px;
-            color: #2c3e50;
-        }
-        .header p {
-            font-size: 18px;
-            color: #7f8c8d;
-        }
-        .info-box {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .info-box div {
-            padding: 20px;
-            background-color: #ecf0f1;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            flex: 1;
-            margin: 0 10px;
-            text-align: center;
-        }
-        .info-box div h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .status-indicator {
-            font-size: 20px;
-            color: #16a085;
-        }
-        .status-indicator.closed {
-            color: #e74c3c;
-        }
-        /* Contenedor general del horario */
-.horario {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 40px;
-    gap: 15px;
-    padding: 10px;
-  }
-  
-  /* Cada bloque de hora */
-  .hora {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #f4f6f5;
-    border: 1px solid #d1d1d1;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    padding: 12px 16px;
-    min-width: 80px;
-    position: relative;
-    transition: transform 0.2s, background-color 0.3s;
-    cursor: default;
-  }
-  
-  .hora:hover {
-    transform: translateY(-3px);
-  }
-  
-  /* Texto dentro de la hora */
-  .hora span {
-    font-size: 15px;
-    font-weight: 500;
-    margin: 3px 0;
-    color: #333;
-  }
-  
-  /* Estados de disponibilidad */
-  .hora.open {
-    background-color: #27ae60;
-    color: white;
-    border: none;
-  }
-  
-  .hora.closed {
-    background-color: #c0392b;
-    color: white;
-    border: none;
-  }
-  
-  /* Línea decorativa opcional */
-  .line {
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    width: 3px;
-    height: 100%;
-    background-color: #dcdcdc;
-    transform: translateX(-50%);
-    z-index: -1;
-  }
-  
-    </style>
 </head>
+<style>
+  body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .container {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 40px 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    max-width: 1200px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  .card {
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn {
+    border-radius: 20px;
+    font-weight: bold;
+  }
+
+  .text-xs {
+    font-size: 0.75rem;
+  }
+
+  .h5 {
+    font-size: 1.25rem;
+  }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f5;
+    }
+
+    header {
+      background-color: #2e3b3e;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    nav a {
+      color: white;
+      margin-left: 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 30px;
+      gap: 20px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 370px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h2 {
+      color: #2e3b3e;
+    }
+
+    .card p {
+      color: #555;
+      font-size: 14px;
+    }
+
+    .card button {
+      margin-top: 15px;
+      background-color: #2479e1;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .card button:hover {
+      background-color: #1a5eb8;
+    }
+
+    .open {
+      color: green;
+      font-weight: bold;
+    }
+
+    .closed {
+      color: red;
+      font-weight: bold;
+    }
+
+</style>
+
 <body>
 
-    <div class="container">
-        <!-- Header Section -->
-        <div class="header">
-            <h1>Consultorio Clinico "Salud Total"</h1>
-            <p>Bienvenido al sistema de gestión del consultorio</p>
-        </div>
+<div class="container">
 
-        <!-- Información General -->
-        <div class="info-box">
-            <!-- Estado del Consultorio -->
-            <div>
-                <h2>Estado</h2>
-                <p id="estado" class="status-indicator">Cargando...</p>
+
+
+  
+    <!-- Encabezado -->
+    <div class="header text-center my-4">
+        <img src="{{ url_for('static', filename='img/cin.avif') }}" alt="Logo CIN" style="max-height: 120px;">
+        <h1 class="mt-3 font-weight-bold">CLÍNICA INTEGRAL NEUROPSICOLÓGICA</h1>
+        <p class="lead">Bienvenido al sistema de gestión del consultorio</p>
+    </div>
+<div style="display: flex; gap: 1rem;">
+  <div class="card mb-4 py-3 border-bottom-primary" style="flex: 1;">
+    <div class="card-body">
+      <h5 class="card-title">Gestión Integral de Pacientes</h5>
+    </div>
+  </div>
+
+  <div class="card mb-4 py-3 border-bottom-success" style="flex: 1;">
+    <div class="card-body">
+      <h5 class="card-title">Agenda Médica Inteligente</h5>
+     
+    </div>
+  </div>
+
+  <div class="card mb-4 py-3 border-bottom-warning" style="flex: 1;">
+    <div class="card-body">
+      <h5 class="card-title">Seguridad y Confidencialidad</h5>
+     
+    </div>
+  </div>
+</div>
+
+</head>
+
+  
+    <div class="row text-center mb-4">
+      <div class="col-md-4">
+        <div class="alert alert-info shadow-sm">Pacientes hoy: <strong>12</strong></div>
+      </div>
+      <div class="col-md-4">
+        <div class="alert alert-warning shadow-sm">Citas pendientes: <strong>5</strong></div>
+      </div>
+      <div class="col-md-4">
+        <div class="alert alert-success shadow-sm">Último acceso: <strong>18/05/2025</strong></div>
+      </div>
+    </div>
+
+ 
+    <div class="row g-4 mt-4 justify-content-center">
+
+      <!-- Módulo Agendamiento -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card border-left-primary shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">📅 Agendamiento</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">Gestionar Citas</div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+              </div>
             </div>
-            <!-- Nombre del Consultorio -->
-            <div>
-                <h2>Consultorio Médico</h2>
-                <p>Consultorio "Salud Total"</p>
+            <div class="mt-3 text-center">
+              <button class="btn btn-sm btn-primary" onclick="location.href='agendamiento.html'">Ir al módulo</button>
             </div>
-            <!-- Horarios de Atención -->
-            <div>
-                <h2>Horario de Atención</h2>
-               <!-- <div class="hora open" id="hora1">
-                    <span>09:00 - 13:00</span>
-                    <div class="line"></div>
-                </div>
-                <div class="hora closed" id="hora2">
-                    <span>13:00 - 14:00</span>
-                    <div class="line"></div>
-                </div>
-                <div class="hora open" id="hora3">
-                    <span>14:00 - 19:00</span>
-                    <div class="line"></div>-->
-                
-            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Módulo Consultorio -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card border-left-success shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">🏥 Consultorio</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">Ficha Médica</div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-notes-medical fa-2x text-gray-300"></i>
+              </div>
+            </div>
+            <div class="mt-3 text-center">
+              <button class="btn btn-sm btn-success" onclick="location.href='consultorio.html'">Ir al módulo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Módulo Facturación -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card border-left-warning shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">💳 Facturación</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">Pagos y Cobros</div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-file-invoice-dollar fa-2x text-gray-300"></i>
+              </div>
+            </div>
+            <div class="mt-3 text-center">
+              <button class="btn btn-sm btn-warning" onclick="location.href='facturacion.html'">Ir al módulo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
 
 
-    
-    <script>
-        // Hora actual para determinar si está abierta o cerrada
-        const horaActual = new Date().getHours();
-        
-        // Definimos los periodos de atención (en horas)
-        const periodo1 = { inicio: 9, fin: 13 }; // 09:00 - 13:00
-        const periodo2 = { inicio: 13, fin: 14 }; // 13:00 - 14:00
-        const periodo3 = { inicio: 14, fin: 19 }; // 14:00 - 19:00
-
-        // Función para actualizar el estado del consultorio
-        function actualizarEstado() {
-            let estado = "Cerrado"; // Por defecto, el consultorio está cerrado
-            
-            // Compara la hora actual con los periodos
-            if (horaActual >= periodo1.inicio && horaActual < periodo1.fin) {
-                document.getElementById('hora1').classList.add('open');
-                document.getElementById('hora1').classList.remove('closed');
-                estado = "Abierto";
-            } else {
-                document.getElementById('hora1').classList.add('closed');
-                document.getElementById('hora1').classList.remove('open');
-            }
-
-            if (horaActual >= periodo2.inicio && horaActual < periodo2.fin) {
-                document.getElementById('hora2').classList.add('open');
-                document.getElementById('hora2').classList.remove('closed');
-                estado = "Abierto";
-            } else {
-                document.getElementById('hora2').classList.add('closed');
-                document.getElementById('hora2').classList.remove('open');
-            }
-
-            if (horaActual >= periodo3.inicio && horaActual < periodo3.fin) {
-                document.getElementById('hora3').classList.add('open');
-                document.getElementById('hora3').classList.remove('closed');
-                estado = "Abierto";
-            } else {
-                document.getElementById('hora3').classList.add('closed');
-                document.getElementById('hora3').classList.remove('open');
-            }
-
-            // Actualizamos el estado en el área correspondiente
-            const estadoElemento = document.getElementById('estado');
-            if (estado === "Abierto") {
-                estadoElemento.textContent = "Abierto";
-                estadoElemento.classList.remove('closed');
-                estadoElemento.classList.add('open');
-            } else {
-                estadoElemento.textContent = "Cerrado";
-                estadoElemento.classList.remove('open');
-                estadoElemento.classList.add('closed');
-            }
-        }
-
-        // Llamamos la función al cargar la página
-        actualizarEstado();
-    </script>
-
-    <div class="container">
-        <section class="dashboard">
-            <div class="card">
-              <h2>Agendamiento</h2>
-              <p></p>
-              <button onclick="location.href='agendamiento.html'">Ir al módulo</button>
-            </div>
-        
-            <div class="card">
-              <h2>🏥 Consultorio</h2>
-              <p></p>
-              <button onclick="location.href='consultorio.html'">Ir al módulo</button>
-            </div>
-        
-            <div class="card">
-              <h2>💳 Facturación</h2>
-              <p></p>
-              <button onclick="location.href='facturacion.html'">Ir al módulo</button>
-            </div>
-          </section>
-          <section class="dashboard">
-            <div class="card">
-              <h2>Agendamiento</h2>
-              <p></p>
-              <button onclick="location.href='agendamiento.html'">Ir al módulo</button>
-            </div>
-        
-            <div class="card">
-              <h2>🏥 Consultorio</h2>
-              <p></p>
-              <button onclick="location.href='consultorio.html'">Ir al módulo</button>
-            </div>
-        
-            <div class="card">
-              <h2>💳 Facturación</h2>
-              <p></p>
-              <button onclick="location.href='facturacion.html'">Ir al módulo</button>
-            </div>
-          </section>
-    
-
-      <style>
-        body {
-          margin: 0;
-          font-family: 'Segoe UI', sans-serif;
-          background-color: #f4f6f5;
-        }
-    
-        header {
-          background-color: #2e3b3e;
-          color: white;
-          padding: 15px 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-    
-        header h1 {
-          margin: 0;
-          font-size: 20px;
-        }
-    
-        nav a {
-          color: white;
-          margin-left: 15px;
-          text-decoration: none;
-          font-weight: bold;
-        }
-    
-        .dashboard {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          padding: 30px;
-          gap: 20px;
-        }
-    
-        .card {
-          background-color: white;
-          border-radius: 12px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          width: 350px;
-          padding: 20px;
-          text-align: center;
-          transition: transform 0.2s;
-        }
-    
-        .card:hover {
-          transform: translateY(-5px);
-        }
-    
-        .card h2 {
-          color: #2e3b3e;
-        }
-    
-        .card p {
-          color: #555;
-          font-size: 14px;
-        }
-    
-        .card button {
-          margin-top: 15px;
-          background-color: #2479e1;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 6px;
-          cursor: pointer;
-        }
-    
-        .card button:hover {
-          background-color: #2479e1;
-        }
-    
-
-      </style>
-   
-    
-
-
-
-
-
 
 
 
@@ -469,14 +258,6 @@ Inicio
     
 
 
-<script>
-    function ponerFechaActual() {
-        // Obtener la fecha actual en formato YYYY-MM-DD
-        let hoy = new Date().toISOString().split('T')[0];
-        // Asignar la fecha al input
-        document.getElementById('fecha').value = hoy;
-    }
-</script>
 
 <!-- Llamada a la función para poner la fecha actual cuando se carga la página -->
 <body onload="ponerFechaActual()">
