@@ -4,7 +4,7 @@ from app.dao.gestionar_compras.registrar_pedido_compras.pedido_de_compras_dao \
     import PedidoDeComprasDao
 from app.dao.gestionar_compras.registrar_pedido_compras.dto.pedido_de_compras_dto\
     import PedidoDeComprasDto, PedidoDeCompraDetalleDto, EstadoPedidoCompra
-from app.dao.referenciales.sucursal.SurcursalDao import SucursalDao
+from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
 
 pdcapi = Blueprint('pdcapi', __name__)
 

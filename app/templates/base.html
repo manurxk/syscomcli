@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/icono.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/cin.avif') }}">
 
     <title>{% block titulo %}{% endblock %}</title>
 
@@ -33,14 +33,14 @@
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('login.inicio') }}">
                 <div class="sidebar-brand-icon rotate">
-                    <img src="{{ url_for('static', filename='img/icono.png') }}" alt="Descripción de la imagen" width="50">
+                    <img src="{{ url_for('static', filename='img/cin.avif') }}" alt="Descripción de la imagen" width="50">
                 </div>
-                <div class="sidebar-brand-text mx-3">SYSCONCLI<sup>&reg</sup></div>
+                <div class="sidebar-brand-text mx-3">SYSCONCLI CIN<sup>&reg</sup></div>
             </a>
 
             <!-- Divider -->
@@ -54,103 +54,137 @@
             <!-- Divider -->
             <hr class="sidebar-divider">
 
-            <!-- Heading -->
-            
+
+        <!-- Gestión -->
+        <div class="sidebar-heading">Gestión</div>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('persona.personaIndex') }}">
+                <i class="fas fa-user-injured"></i>
+                <span>Personas</span></a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('paciente.pacienteIndex') }}">
+                <i class="fas fa-user-injured"></i>
+                <span>Pacientes</span></a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('medico.medicoIndex') }}">
+                <i class="fas fa-user-md"></i>
+                <span>Profesionales</span></a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="agenda.html">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Agenda Médica</span></a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="consultas.html">
+                <i class="fas fa-notes-medical"></i>
+                <span>Consultas</span></a>
+        </li>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider">
+
+        <!-- Administración -->
+        <div class="sidebar-heading">Administración</div>
+
+        <li class="nav-item">
+            <a class="nav-link" href="reportes.html">
+                <i class="fas fa-file-medical-alt"></i>
+                <span>Reportes</span></a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('usuario.usuario') }}">
+                <i class="fas fa-users-cog"></i>
+                <span>Usuarios</span></a>
+        </li>
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+               <!-- Modulos -->
+        <div class="sidebar-heading">Módulos</div>
  <!-- Nav Item - Pages Collapse Menu -->
              <!-- Nav Item - Utilities Collapse Menu -->
-             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
-                    aria-expanded="true" aria-controls="collapseUtilities">
-                    <i class="fas fa-fw fa-notes-medical""></i>
-                    <span class="text-wrap">Agenda Medica</span>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAgendamiento"
+                    aria-expanded="true" aria-controls="collapseAgendamiento">
+                   <i class="fas fa-calendar"></i>
+                    <span class="text-wrap">Agendamiento</span>
                 </a>
-                <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
+                <div id="collapseAgendamiento" class="collapse" aria-labelledby="headingAgendamiento"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                
-               
                         <a class="collapse-item" href="#">Gestionar Citas</a>
                         <a class="collapse-item" href="#">Gestión de Agenda</a>
-    
-                        
-    
-                        
                     </div>
                 </div>
             </li>
-              <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseConsultorio"
+                    aria-expanded="true" aria-controls="collapseConsultorio">
+                    	<i class="fas fa-brain"></i>
+                    <span class="text-wrap">Consultorio</span>
+                </a>
+                <div id="collapseConsultorio" class="collapse" aria-labelledby="headingConsultorio"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-3 collapse-inner rounded">
+                        <a class="collapse-item" href="#">Gestionar Citas</a>
+                        <a class="collapse-item" href="#">Gestión de Agenda</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
+                    aria-expanded="true" aria-controls="collapseVentas">
+                   	<i class="fas fa-chart-line"></i>
+                    <span class="text-wrap">Ventas</span>
+                </a>
+                <div id="collapseVentas" class="collapse" aria-labelledby="headingVentas"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-4 collapse-inner rounded">
+                        <a class="collapse-item" href="#">Gestionar Citas</a>
+                        <a class="collapse-item" href="#">Gestión de Agenda</a>
+                    </div>
+                </div>
+            </li>
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReferenciales"
+                    aria-expanded="true" aria-controls="collapseReferenciales">
                     <i class="fas fa-fw fa-cog"></i>
                     <span>Referenciales</span>
                 </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                <div id="collapseReferenciales" class="collapse" aria-labelledby="headingReferenciales"
+                    data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="#">Ciudad</a>
                         <a class="collapse-item" href="#">Pais</a>
-                        <a class="collapse-item" href="#">Nacionalidad</a>
+                        <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
                         <a class="collapse-item" href="#">Ocupación</a>
                         <a class="collapse-item" href="#">Estado Civil</a>
-                      
+                        <a class="collapse-item" href="{{ url_for('persona.personaIndex') }}">Persona</a>
                         <a class="collapse-item" href="#">Dia</a>
-           
                         <a class="collapse-item" href="#">Instrumento Utilizado (test)</a>
-            
                         <a class="collapse-item" href="#">Tratamiento</a>
                         <a class="collapse-item" href="#">Diagnóstico</a>      
-                   </div>
-                </div>
-            </li>
-    
-
-
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-            <!-- Nav Item - Pages Collapse Menu -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
-                    <i class="fas fa-desktop"></i>
-                    <span>Referenciales</span>
-                </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ url_for('ciudad.ciudadIndex') }}">Ciudad</a>
-                        <a class="collapse-item" href="{{ url_for('pais.paisIndex') }}">Pais</a>
-                        <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
-                        <a class="collapse-item" href="{{ url_for('producto.productoIndex') }}">Producto</a>
-                        <a class="collapse-item" href="{{ url_for('persona.personaIndex') }}">Personas</a>
-                        <a class="collapse-item" href="{{ url_for('proveedor.proveedorIndex') }}">Proveedores</a>
-                        <a class="collapse-item" href="{{ url_for('cliente.clienteIndex') }}">Clientes</a>
-                        <a class="collapse-item" href="{{ url_for('sucursal.sucursalIndex') }}">Sucursales</a>
-                        <a class="collapse-item" href="{{ url_for('deposito.depositoIndex') }}">Depositos</a>
-                        <a class="collapse-item" href="{{ url_for('estado_civil.estado_civilIndex') }}">Estado Civil</a>
-                        <a class="collapse-item" href="{{ url_for('sexo.sexoIndex') }}">Sexo</a>
-                        <a class="collapse-item" href="{{ url_for('marca.marcaIndex') }}">Marcas</a>
                     </div>
                 </div>
             </li>
-            <div class="sidebar-heading">
-                MODULO DE VENTA
-            
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
-                    aria-expanded="true" aria-controls="collapseUtilities">
-                    <i class="fas fa-fw fa-desktop"></i>
-                    <span class="text-wrap">CAJA</span>
-                </a>
-                <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-warning py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ url_for('apertura.aperturaIndex') }}">Apertura</a>
-                    </div>
-                </div>
+
+                
 
 
 
-            <!-- Divider -->
-            <hr class="sidebar-divider">
 
 
             <!-- Sidebar Toggler (Sidebar) -->
@@ -175,8 +209,25 @@
                         <i class="fa fa-bars"></i>
                     </button>
 
-                    <!-- Topbar Search -->
-                   
+                                        <!-- Buscador Mejorado -->
+                        <form method="GET" action="{{ url_for('buscar') }}" class="d-flex align-items-center my-2 my-md-0 w-100" style="max-width: 400px; margin-left: 0;">
+                        <div class="input-group shadow-sm rounded-pill border" style="border-color: #343a40;">
+                            <input 
+                            type="text" 
+                            class="form-control border-0 bg-white rounded-start-pill px-1" 
+                            placeholder="Buscar..." 
+                            aria-label="Buscar" 
+                            name="termino" 
+                            required
+                            style="outline: none;"
+                            >
+                            <button class="btn btn-outline-primary rounded-end-pill px-6" type="submit">
+                            <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        </form>
+
+
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">

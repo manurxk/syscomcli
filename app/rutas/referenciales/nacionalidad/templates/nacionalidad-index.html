@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+    
 {% block titulo %}
 Nacionalidades
 {% endblock %}
@@ -11,24 +11,25 @@ Nacionalidades
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Descripción</th>
+              <th>Nacionalidades</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
-        </table>
+      </table>
       </div>
     </div>
     <!-- /tarjeta -->
 
     <!-- El formulario -->
     <div class="modal" id="modalFormulario">
+      <!-- La clase modal-dialog-centered centra el modal -->
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
@@ -42,8 +43,8 @@ Nacionalidades
           <div class="modal-body">
             <div class="form-group">
               <input type="hidden" id="txtIdNacionalidad">
-              <label for="txtDescripcion">Descripción:</label>
-              <input type="text" class="form-control" placeholder="Ingrese su nacionalidad" id="txtDescripcion">
+              <label for="txtDescripcion">Nacionalidad:</label>
+              <input type="text" class="form-control" placeholder="Ingrese la nacionalidad" id="txtDescripcion">
             </div>
           </div>
 
@@ -71,8 +72,6 @@ Nacionalidades
 {% block js %}
 <script>
 
-  const CSRFToken = "{{ csrf_token() }}" || null;
-
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
@@ -82,8 +81,8 @@ Nacionalidades
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-info" data-id_nacionalidad="${row.id_nacionalidad}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id_nacionalidad="${row.id_nacionalidad}">Eliminar</button>`
           }
         }
       ]
@@ -92,7 +91,9 @@ Nacionalidades
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      $('#modalTitle').text("Agregar Nacionalidad");
+      // Setear un título a modal
+      $('#modalTitle').text("Agregar la nacionalidad");
+      // inicia ventana modal
       $('#txtIdNacionalidad').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
@@ -101,49 +102,45 @@ Nacionalidades
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const IdNacionalidad = $('#txtIdNacionalidad').val();
+      const id_nacionalidad = $('#txtIdNacionalidad').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
-      if(IdNacionalidad) {
-        // Actualizar Nacionalidad
-        fetch(`/api/v1/nacionalidades/${IdNacionalidad}`, {
+      if(id_nacionalidad) {
+        // update
+        fetch(`/api/v1/nacionalidades/${id_nacionalidad}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': CSRFToken
-          },
-          body: JSON.stringify({ descripcion: nuevaDescripcion })
+            'Content-Type': 'application/json'
+          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
         })
         .then(resp => resp.json())
         .then(data => {
-          if (data && !data.error && data.success) {
+          if(data && !data.error && data.success) {
             tabla.ajax.reload();
             Swal.fire("Actualizado", "La nacionalidad ha sido actualizada correctamente.", "success");
           } else {
-            Swal.fire(data.error || "Error desconocido.");
+            Swal.fire(data.error);
           }
         }).catch(err => {
           console.error(err);
           Swal.fire("Error", "Ocurrió un error al actualizar la nacionalidad.", "error");
         });
       } else {
-        // Insertar Nacionalidad
+        // insert
         fetch(`/api/v1/nacionalidades`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': CSRFToken
-          },
-          body: JSON.stringify({ descripcion: nuevaDescripcion })
+            'Content-Type': 'application/json'
+          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
         })
         .then(resp => resp.json())
         .then(data => {
-          if (data && !data.error && data.success) {
+          if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Agregado", "La nacionalidad ha sido agregada correctamente.", "success");
+            Swal.fire("Actualizado", "La nacionalidad ha sido agregada correctamente.", "success");
           } else {
-            Swal.fire(data.error || "Error desconocido.");
+            Swal.fire(data.error);
           }
         }).catch(err => {
           console.error(err);
@@ -157,19 +154,22 @@ Nacionalidades
 
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas editar este registro?",
         showCancelButton: true,
-        confirmButtonText: "Sí",
-        cancelButtonText: "No"
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          $('#modalTitle').text("Editar Nacionalidad");
+          //Swal.fire("Saved!", "", "success");
+          $('#modalTitle').text("Editar nacionalidad");
 
-          const IdNacionalidad = $(this).data('id');
-          $('#txtIdNacionalidad').val(IdNacionalidad);
+          const id_nacionalidad = $(this).data('id_nacionalidad');
+          $('#txtIdNacionalidad').val(id_nacionalidad);
 
-          fetch(`/api/v1/nacionalidades/${IdNacionalidad}`, {
+          // Necesitamos obtener la descripción del backend
+          fetch(`/api/v1/nacionalidades/${id_nacionalidad}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
@@ -177,12 +177,8 @@ Nacionalidades
           })
           .then(resp => resp.json())
           .then(data => {
-            if (data && data.data) {
-              $('#txtDescripcion').val(data.data.descripcion);
-              $('#modalFormulario').modal();
-            } else {
-              Swal.fire("Error", "Nacionalidad no encontrada.", "error");
-            }
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#modalFormulario').modal();
           });
         }
       });
@@ -191,37 +187,38 @@ Nacionalidades
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const IdNacionalidad = $(this).data('id');
+      const id_nacionalidad = $(this).data('id_nacionalidad');
+      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
-        confirmButtonText: "Sí",
-        cancelButtonText: "No"
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/nacionalidades/${IdNacionalidad}`, {
+          fetch(`/api/v1/nacionalidades/${id_nacionalidad}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': CSRFToken
+              'Content-Type': 'application/json'
             }
           })
           .then(resp => resp.json())
           .then(data => {
-            if (data && data.success) {
-              const fila = $(this).closest('tr');
+            if(data && !data.error && data.success) {
+              // Para borrar la fila del datatable(cliente)
+              const fila =$(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", "success");
+              Swal.fire("Eliminado", "", data.success);
             } else {
-              Swal.fire(data.error || "Error desconocido.");
+              Swal.fire(data.error);
             }
           }).catch(err => {
-            console.error(err);
             Swal.fire("Error", "Ocurrió un error al eliminar la nacionalidad.", "error");
           });
         }
       });
+
     });
   }
 

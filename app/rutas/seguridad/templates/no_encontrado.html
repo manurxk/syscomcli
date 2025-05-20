@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Inicio
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container mt-4">
+    {% if resultados %}
+        <h5 class="mb-3">Resultados para "{{ termino }}":</h5>
+        <div class="list-group">
+            {% for item in resultados %}
+                <div class="list-group-item">
+                    {{ item.nombre }} <!-- o el campo que tengas -->
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> No se encontraron resultados para <strong>"{{ termino }}"</strong>.
+        </div>
+    {% endif %}
+</div>
+
+
+<!-- Llamada a la función para poner la fecha actual cuando se carga la página -->
+<body onload="ponerFechaActual()">
+{% endblock %}
+
+{% block js %}
+<!-- Aquí irían los scripts adicionales -->
+{% endblock %}

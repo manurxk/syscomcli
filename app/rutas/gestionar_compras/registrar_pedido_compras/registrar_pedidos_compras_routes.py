@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
-from app.dao.referenciales.sucursal.SurcursalDao import SucursalDao
+from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
 from app.dao.referenciales.empleado.empleado_dao import EmpleadoDao
-from app.dao.referenciales.producto.ProductoDao import ProductoDao
+from app.dao.referenciales.producto.producto_dao import ProductoDao
 
 pdcmod = Blueprint('pdcmod', __name__, template_folder='templates')
 
