@@ -1,63 +1,64 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.modulos.modulo_agendamiento.ref.hora.HoraDao import HoraDao
+from app.dao.modulos.modulo_agendamiento.ref.sala_atencion.Sala_atencionDao import Sala_atencionDao
 
-horapi = Blueprint('horapi', __name__)
+salapi = Blueprint('salapi', __name__)
 
-# Trae todas las ciudades
-@horapi.route('/horas', methods=['GET'])
-def getHoras():
-    hordao = HoraDao()
+# Trae todas las salas de atención
+@salapi.route('/sala_atenciones', methods=['GET'])
+def getSala_atenciones():
+    saldao = Sala_atencionDao()
 
     try:
-        horas = hordao.getHoras()
+        sala_atenciones = saldao.getSala_atenciones()
 
         return jsonify({
             'success': True,
-            'data': horas,
+            'data': sala_atenciones,
             'error': None
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todos los días: {str(e)}")
+        app.logger.error(f"Error al obtener todas las salas de atención: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-@horapi.route('/horas/<int:hora_id>', methods=['GET'])
-def getHora(hora_id):
-    hordao = HoraDao()
+# Trae una sala de atención por ID
+@salapi.route('/sala_atenciones/<int:sala_atencion_id>', methods=['GET'])
+def getSala_atencion(sala_atencion_id):
+    saldao = Sala_atencionDao()
 
     try:
-        hora = hordao.getHoraById(hora_id)
+        sala_atencion = saldao.getSala_atencionById(sala_atencion_id)
 
-        if hora:
+        if sala_atencion:
             return jsonify({
                 'success': True,
-                'data': hora,
+                'data': sala_atencion,
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el hora con el ID proporcionado.'
+                'error': 'No se encontró la sala de atención con el ID proporcionado.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al obtener horas: {str(e)}")
+        app.logger.error(f"Error al obtener sala de atención: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega una nueva ciudad
-@horapi.route('/horas', methods=['POST'])
-def addHora():
+# Agrega una nueva sala de atención
+@salapi.route('/sala_atenciones', methods=['POST'])
+def addSala_atencion():
     data = request.get_json()
-    hordao = HoraDao()
+    saldao = Sala_atencionDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['descripcion']
+    campos_requeridos = ['nombre']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -68,30 +69,34 @@ def addHora():
                             }), 400
 
     try:
-        descripcion = data['descripcion'].upper()
-        hora_id = hordao.guardarHora(descripcion)
-        if hora_id is not None:
+        nombre = data['nombre'].upper()
+        sala_atencion_id = saldao.guardarSala_atencion(nombre)
+        if sala_atencion_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id': hora_id, 'descripcion': descripcion},
+                'data': {'id_sala_atencion': sala_atencion_id, 'nombre': nombre},
                 'error': None
             }), 201
         else:
-            return jsonify({ 'success': False, 'error': 'No se pudo guardar el día. Consulte con el administrador.' }), 500
+            return jsonify({
+                'success': False,
+                'error': 'No se pudo guardar la sala de atención. Consulte con el administrador.'
+            }), 500
     except Exception as e:
-        app.logger.error(f"Error al agregar día: {str(e)}")
+        app.logger.error(f"Error al agregar sala de atención: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-@horapi.route('/horas/<int:hora_id>', methods=['PUT'])
-def updateHora(hora_id):
+# Actualiza una sala de atención
+@salapi.route('/sala_atenciones/<int:sala_atencion_id>', methods=['PUT'])
+def updateSala_atencion(sala_atencion_id):
     data = request.get_json()
-    hordao = HoraDao()
+    saldao = Sala_atencionDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['descripcion']
+    campos_requeridos = ['nombre']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -100,46 +105,47 @@ def updateHora(hora_id):
                             'success': False,
                             'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
                             }), 400
-    descripcion = data['descripcion']
+    nombre = data['nombre']
     try:
-        if hordao.updateHora(hora_id, descripcion.upper()):
+        if saldao.updateSala_atencion(sala_atencion_id, nombre.upper()):
             return jsonify({
                 'success': True,
-                'data': {'id':hora_id, 'descripcion': descripcion},
+                'data': {'id_sala_atencion': sala_atencion_id, 'nombre': nombre},
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró al hora con el ID proporcionado o no se pudo actualizar.'
+                'error': 'No se encontró la sala de atención con el ID proporcionado o no se pudo actualizar.'
             }), 404
     except Exception as e:
-        app.logger.error(f"Error al actualizar hora: {str(e)}")
+        app.logger.error(f"Error al actualizar sala de atención: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-@horapi.route('/horas/<int:hora_id>', methods=['DELETE'])
-def deleteHora(hora_id):
-    hordao = HoraDao()
+# Elimina una sala de atención
+@salapi.route('/sala_atenciones/<int:sala_atencion_id>', methods=['DELETE'])
+def deleteSala_atencion(sala_atencion_id):
+    saldao = Sala_atencionDao()
 
     try:
-        # Usar el retorno de eliminarCiudad para determinar el éxito
-        if hordao.deleteHora(hora_id):
+        # Usar el retorno de eliminarSala_atencion para determinar el éxito
+        if saldao.deleteSala_atencion(sala_atencion_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'dia con ID {hora_id} eliminada correctamente.',
+                'mensaje': f'sala de atención con ID {sala_atencion_id} eliminada correctamente.',
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró al hora con el ID proporcionado o no se pudo eliminar.'
+                'error': 'No se encontró la sala de atención con el ID proporcionado o no se pudo eliminar.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al eliminar hora: {str(e)}")
+        app.logger.error(f"Error al eliminar sala de atención: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'

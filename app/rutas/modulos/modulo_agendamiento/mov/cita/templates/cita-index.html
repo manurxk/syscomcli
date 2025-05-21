@@ -8,33 +8,36 @@ Citas
 <div class="container mt-4">
     <h3>Listar Citas</h3>
 
-    <!-- tarjeta -->
-    <div class="card">
-      <div class="card-header">
-        <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
-      </div>
-      <div class="card-body">
-        <table class="table table-striped" id="tbl">
-          <thead>
-            <tr>
-              <th>Nombre del medico :</th>
-              <th>Apellido </th>
-              <th>Especialidad:</th>
-              <th>Turno:</th>
-              <th>Nombre del paciente:</th>
-              <th>Apellido del paciente:</th>
-              <th>Cédula:</th>
-              <th>Hora:</th>
-              <th>Observacion:</th>
-              <th>Estado de la cita:</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+<!-- tarjeta -->
+<div class="card">
+  <div class="card-header">
+    <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
+  </div>
+  <div class="card-body">
+    <!-- Scroll horizontal para la tabla -->
+    <div style="overflow-x: auto;">
+      <table class="table table-striped" id="tbl">
+        <thead>
+          <tr>
+            <th>Nombre del medico</th>
+            <th>Apellido</th>
+            <th>Especialidad</th>
+            <th>Turno</th>
+            <th>Nombre del paciente</th>
+            <th>Apellido del paciente</th>
+            <th>Cédula</th>
+            <th>Hora</th>
+            <th>Observacion</th>
+            <th>Estado de la cita</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
-    <!-- /tarjeta -->
+  </div>
+</div>
+<!-- /tarjeta -->
 
     <!-- El formulario -->
     <div class="modal" id="modalFormulario">

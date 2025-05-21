@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.agenda_medica.Agenda_medicaDao import Agenda_medicaDao
+from app.dao.modulos.modulo_agendamiento.mov.agenda_medica.Agenda_medicaDao import Agenda_medicaDao
 
 agenda_medica_api = Blueprint('agenda_medica_api', __name__)
 

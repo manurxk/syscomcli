@@ -6,12 +6,40 @@ class CitaDao:
 
     def getCitas(self):
         citaSQL = """
-       SELECT 
-            c.id_cita, pm.nombre, pm.apellido, e.descripcion, t.descripcion, p.nombre, p.apellido, p.cedula, h.dis_horas, c.observacion, es.descripcion
-                FROM  citas c, agenda_medicas a, personas pm, medicos m, especialidades e, turnos t, personas p, pacientes pa, disponibilidad_horaria h, estado_citas es
-                where c.id_agenda_medica=a.id_agenda_medica and a.id_medico=m.id_medico and m.id_persona=pm.id_persona 
-				and a.id_especialidad=e.id_especialidad and a.id_turno=t.id_turno and c.id_paciente=pa.id_paciente and pa.id_persona=p.id_persona 
-				and c.id_estado_cita=es.id_estado_cita and c.id_hora=h.id_disponibilidad_horaria
+            SELECT 
+                    c.id_cita, 
+                    pm.nombre, 
+                    pm.apellido, 
+                    e.descripcion, 
+                    t.descripcion, 
+                    p.nombre, 
+                    p.apellido, 
+                    p.cedula, 
+                    h.descripcion,            -- id de la tabla horas
+                    c.observacion, 
+                    es.descripcion
+                FROM 
+                    citas c, 
+                    agenda_medicas a, 
+                    personas pm, 
+                    medicos m, 
+                    especialidades e, 
+                    turnos t, 
+                    personas p, 
+                    pacientes pa, 
+                    horas h,                 -- cambio de disponibilidad_horaria a horas
+                    estado_citas es
+                WHERE 
+                    c.id_agenda_medica = a.id_agenda_medica 
+                    AND a.id_medico = m.id_medico 
+                    AND m.id_persona = pm.id_persona 
+                    AND a.id_especialidad = e.id_especialidad 
+                    AND a.id_turno = t.id_turno 
+                    AND c.id_paciente = pa.id_paciente 
+                    AND pa.id_persona = p.id_persona 
+                    AND c.id_estado_cita = es.id_estado_cita 
+                    AND c.id = h.id; 
+
             """
         conexion = Conexion()
         con = conexion.getConexion()

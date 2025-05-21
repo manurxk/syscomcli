@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.turno.TurnoDao import TurnoDao
+from app.dao.modulos.modulo_agendamiento.ref.turno.TurnoDao import TurnoDao
 
 turapi = Blueprint('turapi', __name__)
 
