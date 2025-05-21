@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.especialidad.EspecialidadDao import EspecialidadDao
+from app.dao.modulos.modulo_agendamiento.ref.especialidad.EspecialidadDao import EspecialidadDao
 
 espapi = Blueprint('espapi', __name__)
 

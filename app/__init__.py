@@ -23,131 +23,131 @@ app.register_blueprint(logmod)
 def raiz():
     return redirect(url_for('login.login'))
 
-# importar referenciales
+# Definir prefijos por módulo
+modulo0 = '/referenciales'
+modulo1 = '/gestionar-compras'
+modulo2 = '/gestionar-personas'
+modulo3 = '/modulo-agendamiento/referenciales'
+modulo4 = '/modulo-agendamiento/movimientos'
+
+
+# Importar Referenciales
+
 from app.rutas.referenciales.ciudad.ciudad_routes import ciumod
 from app.rutas.referenciales.pais.pais_routes import paismod
-from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod  #nacionalidad
-from app.rutas.referenciales.producto.producto_routes import promod
-#from app.rutas.referenciales.persona.persona_routes import persmod  #persona
-from app.rutas.referenciales.proveedor.proveedor_routes import provmod
-from app.rutas.referenciales.cliente.cliente_routes import climod
-from app.rutas.referenciales.sucursal.sucursal_routes import sucmod
-from app.rutas.referenciales.deposito.deposito_routes import depomod
-#from app.rutas.referenciales.estado_civil.estado_civil_routes import estacivmod  #estado civil
-from app.rutas.referenciales.sexo.sexo_routes import sexomod
-from app.rutas.referenciales.marca.marca_routes import marcmod
+from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod
 from app.rutas.referenciales.apertura.apertura_routes import apermod
+from app.rutas.referenciales.estado_civil.estado_civil_routes import estmod
+from app.rutas.referenciales.genero.genero_routes import genmod
 
 
+# Importar Gestionar Personas
 
 from app.rutas.gestionar_personas.persona.persona_routes import persona_mod
 from app.rutas.gestionar_personas.medico.medico_routes import medicomod
 from app.rutas.gestionar_personas.paciente.paciente_routes import pacientemod
-
-from app.rutas.referenciales.estado_civil.estado_civil_routes import estmod
-from app.rutas.referenciales.genero.genero_routes import genmod
 from app.rutas.gestionar_personas.usuario.usuario_routes import usumod
 
 
+# Importar Módulo Agendamiento - Referenciales
+from app.rutas.modulos.modulo_agendamiento.ref.dia.dia_routes import diamod
+from app.rutas.modulos.modulo_agendamiento.ref.turno.turno_routes import turmod
+from app.rutas.modulos.modulo_agendamiento.ref.sala_atencion.sala_atencion_routes import salmod
+from app.rutas.modulos.modulo_agendamiento.ref.especialidad.especialidad_routes import espmod
+from app.rutas.modulos.modulo_agendamiento.ref.estado_laboral.estado_laboral_routes import estado_laboralmod
+from app.rutas.modulos.modulo_agendamiento.ref.hora.hora_routes import hormod
+from app.rutas.modulos.modulo_agendamiento.ref.estado_cita.estado_cita_routes import estdmod
+
+
+# Importar Módulo Agendamiento - Movimientos
+
 from app.rutas.modulos.modulo_agendamiento.mov.agenda_medica.agenda_medica_routes import agendamedmod
+from app.rutas.modulos.modulo_agendamiento.mov.cita.cita_routes import citamod
+from app.rutas.modulos.modulo_agendamiento.mov.ficha.ficha_routes import fichamod
+
+
+# Importar Gestionar Compras
+
+from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes import pdcmod
 
 
 
-# importar gestionar compras
-from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes  import pdcmod
+# Registrar Referenciales
 
-# registrar referenciales
-modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
-
 app.register_blueprint(paismod, url_prefix=f'{modulo0}/pais')
-
-app.register_blueprint(naciomod, url_prefix=f'{modulo0}/nacionalidad')  #nacionalidad
-
-app.register_blueprint(promod, url_prefix=f'{modulo0}/producto')
-
-#app.register_blueprint(persmod, url_prefix=f'{modulo0}/persona') #persona
-
-app.register_blueprint(provmod, url_prefix=f'{modulo0}/proveedor')
-
-app.register_blueprint(climod, url_prefix=f'{modulo0}/cliente')
-
-app.register_blueprint(sucmod, url_prefix=f'{modulo0}/sucursal')
-
-app.register_blueprint(depomod, url_prefix=f'{modulo0}/deposito')
-
-#app.register_blueprint(estacivmod, url_prefix=f'{modulo0}/estadocivil')  #estado civil
-
-app.register_blueprint(sexomod, url_prefix=f'{modulo0}/sexo')
-
-app.register_blueprint(marcmod, url_prefix=f'{modulo0}/marca')
-
+app.register_blueprint(naciomod, url_prefix=f'{modulo0}/nacionalidad')
 app.register_blueprint(apermod, url_prefix=f'{modulo0}/apertura')
-
-
-app.register_blueprint(persona_mod, url_prefix=f'{modulo0}/persona')
-
-app.register_blueprint(medicomod, url_prefix=f'{modulo0}/medico')
-
-app.register_blueprint(pacientemod, url_prefix=f'{modulo0}/paciente')
-
 app.register_blueprint(estmod, url_prefix=f'{modulo0}/estado_civil')
-
 app.register_blueprint(genmod, url_prefix=f'{modulo0}/genero')
 
 
-app.register_blueprint(usumod, url_prefix=f'{modulo0}/usuaruio')
+# Registrar Gestionar Personas
 
-app.register_blueprint(agendamedmod, url_prefix=f'{modulo0}/agenda_medica')
+app.register_blueprint(persona_mod, url_prefix=f'{modulo2}/persona')
+app.register_blueprint(medicomod, url_prefix=f'{modulo2}/medico')
+app.register_blueprint(pacientemod, url_prefix=f'{modulo2}/paciente')
+app.register_blueprint(usumod, url_prefix=f'{modulo2}/usuario')
 
 
-# registro de modulos - gestionar compras
-modulo1 = '/gestionar-compras'
+# Registrar Módulo Agendamiento - Referenciales
+app.register_blueprint(diamod, url_prefix=f'{modulo3}/dia')
+app.register_blueprint(turmod, url_prefix=f'{modulo3}/turno')
+app.register_blueprint(salmod, url_prefix=f'{modulo3}/sala-atencion')
+app.register_blueprint(espmod, url_prefix=f'{modulo3}/especialidad')
+app.register_blueprint(estado_laboralmod, url_prefix=f'{modulo3}/estado-laboral')
+app.register_blueprint(estdmod, url_prefix=f'{modulo3}/estado-cita')
+app.register_blueprint(hormod, url_prefix=f'{modulo3}/hora')
+
+
+# Registrar Módulo Agendamiento - Movimientos
+
+app.register_blueprint(agendamedmod, url_prefix=f'{modulo4}/agenda-medica')
+app.register_blueprint(citamod, url_prefix=f'{modulo4}/cita')
+app.register_blueprint(fichamod, url_prefix=f'{modulo4}/ficha')
+
+
+# Registrar Gestionar Compras
+
 app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
+
+
+
+
+
 
 # APIS v1
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
 from app.rutas.referenciales.apertura.apertura_api import aperapi
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
-
 from app.rutas.referenciales.pais.pais_api import paiapi
-
 from app.rutas.referenciales.nacionalidad.nacionalidad_api import nacioapi
-
-from app.rutas.referenciales.producto.producto_api import proapi
-
-#from app.rutas.referenciales.persona.persona_api import persapi
-
-from app.rutas.referenciales.proveedor.proveedor_api import provapi
-
-from app.rutas.referenciales.cliente.cliente_api import cliapi
-
-from app.rutas.referenciales.sucursal.sucursal_api import sucapi
-
-from app.rutas.referenciales.deposito.deposito_api import depoapi
-
-#from app.rutas.referenciales.estado_civil.estado_civil_api import estacivapi
-
-from app.rutas.referenciales.sexo.sexo_api import sexoapi
-
-from app.rutas.referenciales.marca.marca_api import marcaapi
-
-
-from app.rutas.gestionar_personas.persona.persona_api import personaapi
-
-from app.rutas.gestionar_personas.medico.medico_api import medicoapi
-
-from app.rutas.gestionar_personas.paciente.paciente_api import pacienteapi
-
-
 from app.rutas.referenciales.genero.genero_api import genapi
-
 from app.rutas.referenciales.estado_civil.estado_civil_api import estapi
 
+
+# APIS Personas
+from app.rutas.gestionar_personas.persona.persona_api import personaapi
+from app.rutas.gestionar_personas.medico.medico_api import medicoapi
+from app.rutas.gestionar_personas.paciente.paciente_api import pacienteapi
 from app.rutas.gestionar_personas.usuario.usuario_api import usuarioapi
 
+
+# APIS  Modulo Agendamiento REF
+from app.rutas.modulos.modulo_agendamiento.ref.dia.dia_api import diaapi
+from app.rutas.modulos.modulo_agendamiento.ref.turno.turno_api import turapi
+from app.rutas.modulos.modulo_agendamiento.ref.sala_atencion.sala_atencion_api import salapi
+from app.rutas.modulos.modulo_agendamiento.ref.especialidad.especialidad_api import espapi
+from app.rutas.modulos.modulo_agendamiento.ref.estado_laboral.estado_laboral_api import estado_laboralapi
+from app.rutas.modulos.modulo_agendamiento.ref.hora.hora_api import horapi
+from app.rutas.modulos.modulo_agendamiento.ref.estado_cita.estado_cita_api import estadoapi
+
+# APIS  Modulo Agendamiento MOV
 from app.rutas.modulos.modulo_agendamiento.mov.agenda_medica.agenda_medica_api import agenda_medica_api
 
+from app.rutas.modulos.modulo_agendamiento.mov.cita.cita_api import cita_api
+
+from app.rutas.modulos.modulo_agendamiento.mov.ficha.ficha_api import fichaapi
 
 #pedido de compra
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api import pdcapi
@@ -160,22 +160,6 @@ app.register_blueprint(ciuapi, url_prefix=apiversion1)
 app.register_blueprint(paiapi, url_prefix=apiversion1)
 
 app.register_blueprint(nacioapi, url_prefix=apiversion1)
-
-app.register_blueprint(proapi, url_prefix=apiversion1)
-
-#app.register_blueprint(persapi, url_prefix=apiversion1)
-
-app.register_blueprint(provapi, url_prefix=apiversion1)
-
-app.register_blueprint(cliapi, url_prefix=apiversion1)
-
-app.register_blueprint(depoapi, url_prefix=apiversion1)
-
-#app.register_blueprint(estacivapi, url_prefix=apiversion1)
-
-app.register_blueprint(sexoapi, url_prefix=apiversion1)
-
-app.register_blueprint(marcaapi, url_prefix=apiversion1)
 
 app.register_blueprint(aperapi, url_prefix=apiversion1)
 
@@ -194,6 +178,19 @@ app.register_blueprint(usuarioapi, url_prefix=apiversion1)
 app.register_blueprint(agenda_medica_api, url_prefix=apiversion1)
 
 
+
+
+app.register_blueprint(diaapi, url_prefix=apiversion1)
+
+app.register_blueprint(salapi, url_prefix=apiversion1)
+app.register_blueprint(espapi, url_prefix=apiversion1)
+app.register_blueprint(estado_laboralapi, url_prefix=apiversion1)
+
+app.register_blueprint(cita_api, url_prefix=apiversion1)
+app.register_blueprint(estadoapi, url_prefix=apiversion1)
+app.register_blueprint(horapi, url_prefix=apiversion1)
+app.register_blueprint(fichaapi, url_prefix=apiversion1)
+
 # Gestionar compras API
 apiversion1 = '/api/v1'
 app.register_blueprint(pdcapi, url_prefix=f'{apiversion1}/{modulo1}/registrar-pedido-compras')
@@ -208,6 +205,9 @@ app.register_blueprint(sucapi, url_prefix=apiversion1)
 
 
 
+
+version1 = '/api/v1'
+app.register_blueprint(turapi, url_prefix=version1)
 
 
 

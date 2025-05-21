@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.ficha.FichaDao import FichaDao
+from app.dao.modulos.modulo_agendamiento.mov.ficha.FichaDao import FichaDao
 
 fichaapi = Blueprint('fichaapi', __name__)
 
