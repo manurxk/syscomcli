@@ -24,8 +24,7 @@ Pacientes
               <th>Ci:</th>
               <th>Télefono:</th>
               <th>Fecha de nacimiento:</th>
-              <th>Peso en kg:</th>
-              <th>Altura cm:</th>
+         
               <th>Acciones</th>
             </tr>
           </thead>
@@ -54,10 +53,7 @@ Pacientes
               <input type="text" class="form-control" placeholder="clik para asignar un paciente" id="txtPersona">
               <label for="txtFecha_nacimiento">Fecha de nacimiento:</label>
               <input type="date" class="form-control" placeholder="Ingrese la fecha de nacimiento" id="txtFecha_nacimiento">
-              <label for="txtPeso">Peso (kg):</label>
-              <input type="number"  class="form-control" placeholder="Ingrese el peso en kg" id="txtPeso">
-              <label for="txtAltura">Altura (cm):</label>
-              <input type="number" class="form-control" placeholder="Ingrese la altura en cm" id="txtAltura">
+       
             </div>
           </div>
 
@@ -122,14 +118,7 @@ Pacientes
         { data: 'cedula' },
         { data: 'telefono_emergencia' },
         { data: 'fecha_nacimiento' },
-        { data: 'peso', render: function(data, type, row) {
-          return type === 'display' ? data.toString() : data;
-        }
-      },
-      { data: 'altura', render: function(data, type, row) {
-          return type === 'display' ? data.toString() : data;
-        }
-      },
+      
         { data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-success btn-sm" data-id="${row.id_paciente}" title="Editar"><i class="fas fa-edit"></i></button>
             <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id_paciente}" title="Eliminar">
