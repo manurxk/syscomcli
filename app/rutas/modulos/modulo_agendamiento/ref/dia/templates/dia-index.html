@@ -11,13 +11,13 @@ Días
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Días:</th>
+              <th>Días</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -25,40 +25,39 @@ Días
       </table>
       </div>
     </div>
- <!-- /tarjeta -->
+    <!-- /tarjeta -->
 
- <!-- El formulario -->
- <div class="modal" id="modalFormulario">
-  <!-- La clase modal-dialog-centered centra el modal -->
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-    
-      <!-- Modal Header -->
-      <div class="modal-header">
-        <h4 class="modal-title" id="modalTitle"></h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
+    <!-- El formulario -->
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
-      <!-- Modal body -->
-      <div class="modal-body">
-        <div class="form-group">
-          <input type="hidden" id="id_dia">
-          <label for="txtDescripcion">Día correspondiente:</label>
-          <input type="text" class="form-control" placeholder="Ingrese el Día correspondiente" id="txtDescripcion">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <div class="form-group">
+              <input type="hidden" id="txtIdDia">
+              <label for="txtDescripcion">Día:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el día" id="txtDescripcion">
+            </div>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+
         </div>
       </div>
-
-      <!-- Modal footer -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-        <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-      </div>
-
     </div>
-   </div>
- </div>
-    
- <div class="row mt-4 d-none" id="rowAlerta">
+
+    <div class="row mt-4 d-none" id="rowAlerta">
         <div class="col col-md-12">
             <div class="alert alert-success">
                 <strong>Registro Exitoso!</strong>
@@ -70,19 +69,20 @@ Días
 {% endblock %}
 
 {% block js %}
-<script> 
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
 
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax:'/api/v1/dias',      
+      ajax:'/api/v1/dias',
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_dia}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_dia}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-info" data-id_dia="${row.id_dia}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id_dia="${row.id_dia}">Eliminar</button>`
           }
         }
       ]
@@ -91,10 +91,8 @@ Días
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      // Setear un título a modal
-      $('#modalTitle').text("Agregar día");
-      // inicia ventana modal
-      $('#txtIdaDia').val("");
+      $('#modalTitle').text("Agregar Día");
+      $('#txtIdDia').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
     });
@@ -102,17 +100,18 @@ Días
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const id_dia = $('#id_dia').val();
+      const idDia = $('#txtIdDia').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
-      if(id_dia) {
+      if(idDia) {
         // update
-        fetch(`/api/v1/dias/${id_dia}`, {
+        fetch(`/api/v1/dias/${idDia}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            , 'X-CSRFToken': CSRFToken
+          }, body: JSON.stringify({ descripcion: nuevaDescripcion, idDia: idDia})
         })
         .then(resp => resp.json())
         .then(data => {
@@ -132,13 +131,14 @@ Días
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            , 'X-CSRFToken': CSRFToken
+          }, body: JSON.stringify({ descripcion: nuevaDescripcion, idDia: idDia})
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "El día a sido agregado correctamente.", "success");
+            Swal.fire("Agregado", "El día ha sido agregado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
@@ -154,7 +154,6 @@ Días
 
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]',function(){
-      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas editar este registro?",
         showCancelButton: true,
@@ -162,21 +161,21 @@ Días
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          //Swal.fire("Saved!", "", "success");
-          $('#modalTitle').text("Editar un Día");
+          $('#modalTitle').text("Editar Día");
 
-          const id_dia = $(this).data('id');
-          $('#id_dia').val(id_dia);
+          const idDia = $(this).data('id_dia');
+          $('#txtIdDia').val(idDia);
 
-          // Necesitamos obtener la descripción del backend
-          fetch(`/api/v1/dias/${id_dia}`, {
+          fetch(`/api/v1/dias/${idDia}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
+              , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
+            $('#txtIdDia').val(data.data.id_dia);
             $('#txtDescripcion').val(data.data.descripcion);
             $('#modalFormulario').modal();
           });
@@ -187,8 +186,7 @@ Días
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const id_dia = $(this).data('id');
-      // Mostrar mensaje de confirmación usando sweetalert
+      const idDia = $(this).data('id_dia');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
@@ -196,16 +194,16 @@ Días
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/dias/${id_dia}`, {
+          fetch(`/api/v1/dias/${idDia}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
+              , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
             if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
               const fila =$(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
@@ -214,7 +212,7 @@ Días
               Swal.fire(data.error);
             }
           }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error al eliminar Día.", "error");
+            Swal.fire("Error", "Ocurrió un error al eliminar el día.", "error");
           });
         }
       });
@@ -232,6 +230,6 @@ Días
   $(function() {
     initDatatable();
     addEvents();
-  }); 
-</script> 
+  });
+</script>
 {% endblock %}

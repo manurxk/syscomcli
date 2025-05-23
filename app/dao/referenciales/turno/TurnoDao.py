@@ -29,7 +29,7 @@ class TurnoDao:
             cur.close()
             con.close()
 
-    def getTurnoById(self, id):
+    def getTurnoById(self, id_turno):
 
         turnoSQL = """
         SELECT id_turno, descripcion
@@ -40,7 +40,7 @@ class TurnoDao:
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(turnoSQL, (id,))
+            cur.execute(turnoSQL, (id_turno,))
             turnoEncontrado = cur.fetchone() # Obtener una sola fila
             if turnoEncontrado:
                 return {
@@ -60,7 +60,7 @@ class TurnoDao:
     def guardarTurno(self, descripcion):
 
         insertTurnoSQL = """
-        INSERT INTO turnos(descripcion) VALUES(%s) RETURNING id_turno
+        INSERT INTO turno(descripcion) VALUES(%s) RETURNING id_turno
         """
 
         conexion = Conexion()
@@ -85,10 +85,10 @@ class TurnoDao:
             cur.close()
             con.close()
 
-    def updateTurno(self, id, descripcion):
+    def updateTurno(self, id_turno, descripcion):
 
         updateTurnoSQL = """
-        UPDATE turnos
+        UPDATE turno
         SET descripcion=%s
         WHERE id_turno=%s
         """
@@ -98,7 +98,7 @@ class TurnoDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updateTurnoSQL, (descripcion, id,))
+            cur.execute(updateTurnoSQL, (descripcion, id_turno,))
             filas_afectadas = cur.rowcount # Obtener el número de filas afectadas
             con.commit()
 
@@ -113,10 +113,10 @@ class TurnoDao:
             cur.close()
             con.close()
 
-    def deleteTurno(self, id):
+    def deleteTurno(self, id_turno):
 
         updateTurnoSQL = """
-        DELETE FROM turnos
+        DELETE FROM turno
         WHERE id_turno=%s
         """
 
@@ -125,7 +125,7 @@ class TurnoDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updateTurnoSQL, (id,))
+            cur.execute(updateTurnoSQL, (id_turno,))
             rows_affected = cur.rowcount
             con.commit()
 

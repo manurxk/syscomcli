@@ -1,4 +1,5 @@
-from flask import Blueprint,render_template
+
+from flask import Blueprint, render_template
 
 diamod = Blueprint('dia', __name__, template_folder='templates')
 

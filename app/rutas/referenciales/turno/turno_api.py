@@ -44,7 +44,7 @@ def getTurno(turno_id):
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el turno con el ID proporcionado.'
+                'error': 'El turno seleccionado actualmente esta en uso.'
             }), 404
 
     except Exception as e:
@@ -78,7 +78,7 @@ def addTurno():
         if descripcion not in TURNOS_VALIDOS:
             return jsonify({
                 'success': False,
-                'error': 'Turno inválido. Solo se permiten Turnos de Mañana, Tarde y Noche.'
+                'error': 'Turno inválido. Solo se permiten Turnos de Mañana, Tarde, Noche.'
             }), 400
 
 
@@ -86,7 +86,7 @@ def addTurno():
         if turno_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id': turno_id, 'descripcion': descripcion},
+                'data': {'id_turno': turno_id, 'descripcion': descripcion},
                 'error': None
             }), 201
         else:
@@ -119,14 +119,14 @@ def updateTurno(turno_id):
     if descripcion not in TURNOS_VALIDOS:
             return jsonify({
                 'success': False,
-                'error': 'Turno inválido. Solo se permiten Turnos de Mañana, Tarde y Noche.'
+                'error': 'Turno inválido. Solo se permiten Turnos de "Mañana", "Tarde", "Noche", "Mañana, Tarde y Noche", "Mañana y Tarde", "Tarde y Noche".'
             }), 400
 
     try:
         if turnodao.updateTurno(turno_id, descripcion.upper()):
             return jsonify({
                 'success': True,
-                'data': {'id': turno_id, 'descripcion': descripcion},
+                'data': {'id_turno': turno_id, 'descripcion': descripcion},
                 'error': None
             }), 200
         else:
@@ -156,7 +156,7 @@ def deleteTurno(turno_id):
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el turno con el ID proporcionado o no se pudo eliminar.'
+                'error': 'El turno seleccionado actualmente esta en uso.'
             }), 404
 
     except Exception as e:
