@@ -66,6 +66,12 @@
 
 
         <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('paciente.pacienteIndex') }}">
+                <i class="fas fa-user-md"></i>
+                <span>Pacientes</span></a>
+        </li>
+
+        <li class="nav-item">
             <a class="nav-link" href="{{ url_for('medico.medicoIndex') }}">
                 <i class="fas fa-user-md"></i>
                 <span>Profesionales</span></a>
@@ -100,11 +106,11 @@
                 <i class="fas fa-users-cog"></i>
                 <span>Usuarios</span></a>
         </li>
-            <!-- Divider -->
+             <!--    Divider
             <hr class="sidebar-divider">
-               <!-- Modulos -->
+           Modulos 
         <div class="sidebar-heading">Módulos</div>
- <!-- Nav Item - Pages Collapse Menu -->
+ Nav Item - Pages Collapse Menu -->
              <!-- Nav Item - Utilities Collapse Menu -->
             
             
@@ -186,20 +192,15 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                   
                         <a class="collapse-item" href="{{ url_for('turno.turnoIndex') }}">Turnos</a>
-                        <a class="collapse-item" href="{{ url_for('dia.diaIndex') }}">Días laborales</a>
-                        <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">especialidad</a>
-                        <a class="collapse-item" href="{{ url_for('sala_atencion.sala_atencionIndex') }}">sala_atencion</a>
+                        <a class="collapse-item" href="{{ url_for('dia.diaIndex') }}">Días</a>
+                        <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">Especialidad</a>
+                        <a class="collapse-item" href="{{ url_for('sala_atencion.sala_atencionIndex') }}">sala</a>
                         <a class="collapse-item" href="{{ url_for('hora.horaIndex') }}">Horario de atención</a>
-                    
+                      <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
 
                         <!-- <a class="collapse-item" href="#">Ciudad</a>
                         <a class="collapse-item" href="#">Pais</a>
-                        <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
-                        <a class="collapse-item" href="#">Ocupación</a>
-                        <a class="collapse-item" href="#">Estado Civil</a>
-                        <a class="collapse-item" href="{{ url_for('persona.personaIndex') }}">Persona</a>
-                        <a class="collapse-item" href="#">Dia</a>
-                        <a class="collapse-item" href="#">Instrumento Utilizado (test)</a>
+                      
                         <a class="collapse-item" href="#">Tratamiento</a>
                         <a class="collapse-item" href="#">Diagnóstico</a>       -->
                     </div>

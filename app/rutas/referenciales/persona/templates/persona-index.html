@@ -11,7 +11,7 @@ Personas
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -69,7 +69,7 @@ Personas
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-success" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
         </div>
@@ -176,8 +176,8 @@ Personas
         { data: 'telefono_emergencia' },
         { data: 'ciudad' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`;
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;;
           }
         }
       ]
@@ -306,7 +306,8 @@ Personas
         fetch(`/api/v1/personas/${idPersona}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+             'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
         })
         .then(resp => resp.json())
@@ -326,7 +327,8 @@ Personas
         fetch(`/api/v1/personas`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+             'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
         })
         .then(resp => resp.json())
@@ -364,7 +366,8 @@ Personas
           fetch(`/api/v1/personas/${idPersona}`, {
             method: 'GET',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -399,7 +402,8 @@ Personas
           fetch(`/api/v1/personas/${idPersona}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())

@@ -11,7 +11,7 @@ Turnos
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -49,7 +49,7 @@ Turnos
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
 
@@ -81,8 +81,8 @@ Turnos
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-info" data-id_turno="${row.id_turno}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id_turno="${row.id_turno}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id_turno="${row.id_turno}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger btn-sg" data-id_turno="${row.id_turno}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }
       ]
@@ -109,7 +109,8 @@ Turnos
         fetch(`/api/v1/turnos/${idTurno}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion, idTurno: idTurno})
         })
@@ -130,7 +131,8 @@ Turnos
         fetch(`/api/v1/turnos`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion, idTurno: idTurno})
         })
@@ -169,7 +171,8 @@ Turnos
           fetch(`/api/v1/turnos/${idTurno}`, {
             method: 'GET',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
               , 'X-CSRFToken': CSRFToken
             }
           })
@@ -197,7 +200,8 @@ Turnos
           fetch(`/api/v1/turnos/${idTurno}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
               , 'X-CSRFToken': CSRFToken
             }
           })

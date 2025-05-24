@@ -11,7 +11,7 @@ Productos
   <!-- tarjeta -->
   <div class="card">
     <div class="card-header">
-      <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
     </div>
     <div class="card-body">
       <table class="table table-striped" id="tbl">
@@ -58,7 +58,7 @@ Productos
 
         <!-- pie -->
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
           <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
         </div>
 
@@ -87,7 +87,7 @@ Productos
         {
           data: function (row) {
             return `
-              <button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
+              <button type="button" name="btn_editar" class="btn btn-outline-success btn-sg btn-sm" data-id="${row.id}"title="Editar"><i class="fas fa-edit"></i></button>
               <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>
             `;
           }
@@ -132,7 +132,8 @@ Productos
 
       fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {  'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken },
         body: JSON.stringify(productoData)
       })
       .then(resp => resp.json())
@@ -193,7 +194,8 @@ Productos
         if (result.isConfirmed) {
           fetch(`/api/v1/productos/${idProducto}`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {  'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken }
           })
           .then(resp => resp.json())
           .then(data => {

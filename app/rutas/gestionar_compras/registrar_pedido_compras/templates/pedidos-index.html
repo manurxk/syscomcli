@@ -54,8 +54,8 @@ Listar Pedido de Compras
         { data: 'empleado' },
         { data: 'estado' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_pedido_compra}">Modificar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_pedido_compra}">Anular</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_pedido_compra}">Modificar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id_pedido_compra}">Anular</button>`
           }
         }
       ]
@@ -79,7 +79,8 @@ Listar Pedido de Compras
         fetch(`/api/v1/ciudades/${idCiudad}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+             'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion})
         })
         .then(resp => resp.json())
@@ -99,7 +100,8 @@ Listar Pedido de Compras
         fetch(`/api/v1/ciudades`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+             'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion})
         })
         .then(resp => resp.json())
@@ -140,7 +142,8 @@ Listar Pedido de Compras
           fetch(`/api/v1/ciudades/${idCiudad}`, {
             method: 'GET',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -167,7 +170,8 @@ Listar Pedido de Compras
           fetch(`/api/v1/ciudades/${idCiudad}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())

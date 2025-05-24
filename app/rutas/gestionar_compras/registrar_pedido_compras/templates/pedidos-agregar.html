@@ -168,7 +168,8 @@ Formulario Pedido de Compras
       if(id_sucursal) {
         fetch(`/api/v1/sucursal-depositos/${Number(id_sucursal)}`, {
           method: 'GET',
-          headers: {'Content-Type': 'application/json'}
+          headers: { 'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken}
         })
         .then(resp => {
           if(!resp.ok) {
@@ -248,7 +249,8 @@ Formulario Pedido de Compras
       fetch(`/api/v1/gestionar-compras/registrar-pedido-compras/pedidos`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+           'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
         }, body: JSON.stringify(payload)
       })
       .then(resp => resp.json())

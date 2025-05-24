@@ -80,7 +80,7 @@ Nuevo turno
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
 
@@ -176,7 +176,8 @@ const guardar = () => {
       fetch(`/api/v1/aperturas/${idApertura}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+           'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken,
           'X-CSRFToken': CSRFToken
         },
         body: JSON.stringify({
@@ -202,7 +203,8 @@ const guardar = () => {
       fetch(`/api/v1/aperturas`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+           'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken,
           'X-CSRFToken': CSRFToken
         },
         body: JSON.stringify({
@@ -247,7 +249,8 @@ const anular = () => {
         fetch(`/api/v1/aperturas/anular/${idApertura}`, {
           method: 'PATCH',
           headers: {
-            'Content-Type': 'application/json',
+             'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken,
             'X-CSRFToken': CSRFToken
           },
         })

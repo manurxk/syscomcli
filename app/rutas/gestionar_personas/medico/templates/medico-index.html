@@ -15,7 +15,7 @@ Médicos
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -58,7 +58,7 @@ Médicos
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-success" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
         </div>
@@ -103,6 +103,9 @@ Médicos
 
 {% block js %}
 <script>
+  
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
@@ -114,13 +117,8 @@ Médicos
         { data: 'apellido' },
         { data: 'matricula' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-success btn-sm" data-id="${row.id_medico}" title="Editar">
-  <i class="bi bi-pencil-fill"></i>
-</button>
-<button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id_medico}" title="Eliminar">
-  <i class="bi bi-trash-fill"></i>
-</button>
-`;
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_medico}" title="Editar"><i class="bi bi-pencil-fill"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger btn-sg" data-id="${row.id_medico}" title="Eliminar"><i class="bi bi-trash-fill"></i></button>`;
           }
         }
       ]
@@ -182,7 +180,9 @@ Médicos
         fetch(`/api/v1/medicos/${idMedico}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ id_persona: id_persona, matricula: nuevoMatricula})
         })
         .then(resp => resp.json())
@@ -202,7 +202,9 @@ Médicos
         fetch(`/api/v1/medicos`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ id_persona: id_persona, matricula: nuevoMatricula})
         })
         .then(resp => resp.json())
@@ -240,7 +242,9 @@ Médicos
           fetch(`/api/v1/medicos/${idMedico}`, {
             method: 'GET',
             headers: {
-              'Content-Type': 'application/json'
+             'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -269,7 +273,9 @@ Médicos
           fetch(`/api/v1/medicos/${idMedico}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())

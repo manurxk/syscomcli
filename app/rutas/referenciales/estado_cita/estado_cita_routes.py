@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 
-estacitmod = Blueprint('estadocita', __name__, template_folder='templates')
+estdmod = Blueprint('estado_cita', __name__, template_folder='templates')
 
-@estacitmod.route('/estadocita-index')
-def estadocitaIndex():
-    return render_template('estadocita-index.html')
+@estdmod.route('/estado_cita-index')
+def estado_citaIndex():
+    return render_template('estado_cita-index.html')

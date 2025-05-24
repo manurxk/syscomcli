@@ -11,7 +11,7 @@ Agenda Médica
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -71,7 +71,7 @@ Agenda Médica
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-success" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
         </div>
@@ -236,6 +236,9 @@ Agenda Médica
 
 {% block js %}
 <script> 
+
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
@@ -251,8 +254,8 @@ Agenda Médica
         { data: 'sala_atencion' },
         { data: 'estado_laboral' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-success" data-id="${row.id_agenda_medica}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_agenda_medica}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_agenda_medica}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id_agenda_medica}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }
       ]
@@ -269,7 +272,7 @@ Agenda Médica
         { data: 'nombre' },
         { data: 'apellido' },
         { data: function(row) {
-            return `<button type="button" name="btn_seleccionar_persona" class="btn btn-success" data-id="${row.id_medico}" data-nombre="${row.nombre}" data-apellido="${row.apellido}"><i class="fa fa-check"></i>Selecionar</button>`;
+            return `<button type="button" name="btn_seleccionar_medico" class="btn btn-success" data-id="${row.id_medico}" data-nombre="${row.nombre}" data-apellido="${row.apellido}"><i class="fa fa-check"></i>Selecionar</button>`;
           }
         }
       ]
@@ -471,7 +474,9 @@ Agenda Médica
         fetch(`/api/v1/agenda_medicas/${idAgenda_medica}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({id_medico: id_medico, id_especialidad: id_especialidad, id_turno: id_turno, id_dia: id_dia, id_sala_atencion: id_sala_atencion, id_estado_laboral: id_estado_laboral})
         })
         .then(resp => resp.json())
@@ -491,7 +496,9 @@ Agenda Médica
         fetch(`/api/v1/agenda_medicas`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({id_medico: id_medico, id_especialidad: id_especialidad, id_dia: id_dia, id_turno: id_turno, id_sala_atencion: id_sala_atencion, id_estado_laboral: id_estado_laboral})
         })
         .then(resp => resp.json())
@@ -527,7 +534,9 @@ Agenda Médica
           fetch(`/api/v1/agenda_medicas/${idAgenda_medica}`, {
             method: 'GET',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -565,7 +574,9 @@ Agenda Médica
           fetch(`/api/v1/agenda_medicas/${idAgenda_medica}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
+            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())

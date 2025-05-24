@@ -11,7 +11,7 @@ Ciudades
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -50,7 +50,7 @@ Ciudades
 
           <!-- Modal footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
 
@@ -82,8 +82,8 @@ Ciudades
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-info" data-id_ciudad="${row.id_ciudad}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id_ciudad="${row.id_ciudad}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg data-id_ciudad="${row.id_ciudad}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id_ciudad="${row.id_ciudad}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }
       ]
@@ -112,7 +112,8 @@ Ciudades
         fetch(`/api/v1/ciudades/${id_ciudad}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion})
         })
@@ -133,7 +134,8 @@ Ciudades
         fetch(`/api/v1/ciudades`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
             , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({descripcion: nuevaDescripcion})
         })
@@ -174,7 +176,8 @@ Ciudades
                 fetch(`/api/v1/ciudades/${id_ciudad}`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                         'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
                     }
                 })
                 .then(resp => resp.json())
@@ -201,7 +204,8 @@ Ciudades
           fetch(`/api/v1/ciudades/${id_ciudad}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+               'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken
               , 'X-CSRFToken': CSRFToken
             }
           })

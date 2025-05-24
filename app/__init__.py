@@ -24,7 +24,7 @@ def raiz():
     return redirect(url_for('login.login'))
 
 # importar referenciales
-from app.rutas.referenciales.ciudad.ciudad_routes import ciumod
+from app.rutas.modulos.modulo_agendamiento.ref.ciudad.ciudad_routes import ciumod
 from app.rutas.referenciales.pais.pais_routes import paismod
 from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod
 from app.rutas.referenciales.apertura.apertura_routes import apermod
@@ -55,7 +55,7 @@ from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_comp
 # registrar referenciales
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
-from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
+from app.rutas.modulos.modulo_agendamiento.ref.ciudad.ciudad_api import ciuapi
 
 app.register_blueprint(paismod, url_prefix=f'{modulo0}/pais')
 from app.rutas.referenciales.pais.pais_api import paiapi

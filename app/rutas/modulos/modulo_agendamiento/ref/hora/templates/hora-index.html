@@ -11,7 +11,7 @@ Hora de atención
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -50,7 +50,7 @@ Hora de atención
 
       <!-- Modal footer -->
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
         <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
       </div>
 
@@ -71,6 +71,7 @@ Hora de atención
 
 {% block js %}
 <script> 
+  const CSRFToken = "{{ csrf_token() }}" || null;
 
   const initDatatable = () => {
     $('#tbl').DataTable({
@@ -81,8 +82,8 @@ Hora de atención
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }
       ]
@@ -91,10 +92,8 @@ Hora de atención
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      // Setear un título a modal
       $('#modalTitle').text("Agregar Hora");
-      // inicia ventana modal
-      $('#txtIdaHora').val("");
+      $('#txtIdHora').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
     });
@@ -106,132 +105,90 @@ Hora de atención
       const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
-      if(idHora) {
-        // update
-        fetch(`/api/v1/horas/${idHora}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
-        })
-        .then(resp => resp.json())
-        .then(data => {
-          if(data && !data.error && data.success) {
-            tabla.ajax.reload();
-            Swal.fire("Actualizado", "La Hora ha sido actualizado correctamente.", "success");
-          } else {
-            Swal.fire(data.error);
-          }
-        }).catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al actualizar la Hora.", "error");
-        });
-      } else {
-        // insert
-        fetch(`/api/v1/horas`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
-        })
-        .then(resp => resp.json())
-        .then(data => {
-          if(data && !data.error && data.success) {
-            tabla.ajax.reload();
-            Swal.fire("Actualizado", "La Hora a sido agregado correctamente.", "success");
-          } else {
-            Swal.fire(data.error);
-          }
-        }).catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al guardar la Hora.", "error");
-        });
-      }
+      const url = idHora ? `/api/v1/horas/${idHora}` : `/api/v1/horas`;
+      const method = idHora ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+           'Content-Type': 'application/json'
+            , 'X-CSRFToken': CSRFToken,
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify({ descripcion: nuevaDescripcion })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          tabla.ajax.reload();
+          Swal.fire("Éxito", idHora ? "La hora ha sido actualizada." : "La hora ha sido agregada.", "success");
+        } else {
+          Swal.fire("Error", data.error || "Ocurrió un error.", "error");
+        }
+      }).catch(err => {
+        Swal.fire("Error", "Ocurrió un error al guardar.", "error");
+      });
+
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal("hide");
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
-      // Mostrar mensaje de confirmación usando sweetalert
-      Swal.fire({
-        title: "¿Deseas editar este registro?",
-        showCancelButton: true,
-        confirmButtonText: "Si",
-        cancelButtonText: `No`
-      }).then((result) => {
-        if (result.isConfirmed) {
-          //Swal.fire("Saved!", "", "success");
-          $('#modalTitle').text("Editar un Día");
-
-          const idHora = $(this).data('id');
-          $('#txtIdHora').val(idHora);
-
-          // Necesitamos obtener la descripción del backend
-          fetch(`/api/v1/horas/${idHora}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          .then(resp => resp.json())
-          .then(data => {
-            $('#txtDescripcion').val(data.data.descripcion);
-            $('#modalFormulario').modal();
-          });
-        }
-      });
+    $('#tbl tbody').on('click', 'button[name="btn_editar"]', function() {
+      const id = $(this).data('id');
+      fetch(`/api/v1/horas/${id}`)
+        .then(resp => resp.json())
+        .then(data => {
+          $('#txtIdHora').val(data.id);
+          $('#txtDescripcion').val(data.descripcion);
+          $('#modalTitle').text("Editar Hora");
+          $('#modalFormulario').modal();
+        });
     });
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const idHora = $(this).data('id');
-      // Mostrar mensaje de confirmación usando sweetalert
+    $('#tbl tbody').on('click', 'button[name="btn_eliminar"]', function() {
+      const id = $(this).data('id');
+
       Swal.fire({
-        title: "¿Deseas eliminar este registro?",
+        title: '¿Estás seguro?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: "Si",
-        cancelButtonText: `No`
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/horas/${idHora}`, {
+          fetch(`/api/v1/horas/${id}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+              'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
             if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
-              const fila =$(this).closest('tr');
-              const tabla = $('#tbl').DataTable();
-              tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", data.success);
+              $('#tbl').DataTable().ajax.reload();
+              Swal.fire("Eliminado", "La hora ha sido eliminada.", "success");
             } else {
-              Swal.fire(data.error);
+              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
             }
           }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error al eliminar Hora.", "error");
+            Swal.fire("Error", "Ocurrió un error al eliminar.", "error");
           });
         }
       });
-
     });
-  }
-
-  const addEvents = () => {
-    agregar();
-    guardar();
-    editar();
-    eliminar();
   }
 
   $(function() {
     initDatatable();
-    addEvents();
-  }); 
-</script> 
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  });
+</script>
 {% endblock %}
