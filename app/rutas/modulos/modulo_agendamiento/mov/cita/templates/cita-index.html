@@ -10,21 +10,25 @@ Citas
 
 <!-- tarjeta -->
 <div class="card">
-  <div class="card-header">
-      <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
-  </div>
+ <div class="card-header d-flex justify-content-between align-items-center">
+        <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
+        <div>
+          <button type="button" class="btn btn-outline-success" id="btnExportExcel">Exportar Excel</button>
+          <button type="button" class="btn btn-outline-danger" id="btnExportPDF">Exportar PDF</button>
+        </div>
+      </div>
   <div class="card-body">
     <!-- Scroll horizontal para la tabla -->
     <div style="overflow-x: auto;">
       <table class="table table-striped" id="tbl">
         <thead>
           <tr>
-            <th>Nombre del medico</th>
+            <th>Especialista</th>
             <th>Apellido</th>
             <th>Especialidad</th>
             <th>Turno</th>
-            <th>Nombre del paciente</th>
-            <th>Apellido del paciente</th>
+            <th>Paciente</th>
+            <th>Apellido</th>
             <th>Cédula</th>
             <th>Fecha de la Cita:</th>
             <th>Hora</th>
@@ -380,6 +384,68 @@ Citas
 
 
 
+ const exportarExcel = () => {
+  $('#btnExportExcel').on('click', () => {
+    fetch('/api/v1/citas/export/excel', {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': CSRFToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Error al descargar el archivo Excel');
+      return response.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'citas.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(error => {
+      console.error(error);
+      Swal.fire("Error", "No se pudo descargar el archivo Excel.", "error");
+    });
+  });
+};
+
+  const exportarPDF = () => {
+    $('#btnExportPDF').on('click', () => {
+      fetch('/api/v1/citas/export/pdf', {
+        method: 'GET',
+        headers: {
+          'X-CSRFToken': CSRFToken
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Error al descargar el archivo PDF');
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'citas.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        console.error(error);
+        Swal.fire("Error", "No se pudo descargar el archivo PDF.", "error");
+      });
+    });
+  };
+
+
+
+
+
 
 
 
@@ -583,6 +649,8 @@ const editar = () => {
     buscarPaciente();
     buscarHora();
     buscarEstado_cita();
+    exportarExcel();
+    exportarPDF();
   }
 
   $(function() {

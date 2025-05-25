@@ -3,6 +3,7 @@ import io
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from app.dao.gestionar_personas.persona.PersonaDao import PersonaDao
 
@@ -12,7 +13,7 @@ personaapi = Blueprint('personaapi', __name__)
 
 def export_pdf(data, columns, filename='personas.pdf'):
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
     table_data = [columns] + data
 
     table = Table(table_data)

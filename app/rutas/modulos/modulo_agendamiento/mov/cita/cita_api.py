@@ -1,7 +1,61 @@
-from flask import Blueprint, request, jsonify, current_app as app
+from flask import Blueprint, request, jsonify, current_app as app, make_response
+import io
+import pandas as pd
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib import colors
 from app.dao.modulos.modulo_agendamiento.mov.cita.CitaDao import CitaDao
 
 cita_api = Blueprint('cita_api', __name__)
+
+
+
+
+
+def export_pdf(data, columns, filename='citas.pdf'):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+    table_data = [columns] + data
+
+    table = Table(table_data)
+    style = TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.gray),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+    ])
+    table.setStyle(style)
+
+    elements = [table]
+    doc.build(elements)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    return response
+
+def export_excel(data, columns, filename='citas.xlsx'):
+    df = pd.DataFrame(data, columns=columns)
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='citas')
+    excel_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(excel_data)
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    return response
+
+# --- Rutas existentes ---
+
+
+
+
+
 
 # Trae todas las citas
 @cita_api.route('/citas', methods=['GET'])
