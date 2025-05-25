@@ -7,11 +7,14 @@ Personas
 {% block contenido %}
 <div class="container mt-4">
     <h3>Listar Personas</h3>
-
     <!-- tarjeta -->
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
+        <div>
+          <button type="button" class="btn btn-outline-success" id="btnExportExcel">Exportar Excel</button>
+          <button type="button" class="btn btn-outline-danger" id="btnExportPDF">Exportar PDF</button>
+        </div>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -33,6 +36,7 @@ Personas
       </div>
     </div>
     <!-- /tarjeta -->
+
 
     <!-- El formulario -->
     <div class="modal" id="modalFormulario">
@@ -305,6 +309,78 @@ Personas
 
 
 
+  const exportarExcel = () => {
+  $('#btnExportExcel').on('click', () => {
+    fetch('/api/v1/personas/export/excel', {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': CSRFToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Error al descargar el archivo Excel');
+      return response.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'personas.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(error => {
+      console.error(error);
+      Swal.fire("Error", "No se pudo descargar el archivo Excel.", "error");
+    });
+  });
+};
+
+  const exportarPDF = () => {
+    $('#btnExportPDF').on('click', () => {
+      fetch('/api/v1/personas/export/pdf', {
+        method: 'GET',
+        headers: {
+          'X-CSRFToken': CSRFToken
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Error al descargar el archivo PDF');
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'personas.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        console.error(error);
+        Swal.fire("Error", "No se pudo descargar el archivo PDF.", "error");
+      });
+    });
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -468,22 +544,25 @@ Personas
     });
   }
 
-  const addEvents = () => {
-    agregar();
-    guardar();
-    editar();
-    eliminar();
-    buscarGenero();
-    buscarEstado_civil();
-    buscarCiudad();
-  }
+ const addEvents = () => {
+  agregar();
+  guardar();
+  editar();
+  eliminar();
+  buscarGenero();
+  buscarEstado_civil();
+  buscarCiudad();
+  exportarExcel();
+  exportarPDF();
+}
 
-  $(function() {
-    initDatatable();
-    initDatatableg();
-    initDatatablec();
-    initDatatablee();
-    addEvents();
-  }); 
+$(function() {
+  initDatatable();
+  initDatatableg();
+  initDatatablec();
+  initDatatablee();
+  addEvents();
+});
+
 </script> 
 {% endblock %}
