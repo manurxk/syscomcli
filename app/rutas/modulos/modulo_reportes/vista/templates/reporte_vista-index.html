@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Reportes
+{% endblock %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel de Reportes - Agendamiento y Ventas</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+  <div class="max-w-7xl mx-auto p-6">
+
+    <!-- Encabezado -->
+    <header class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-blue-900">Panel de Reportes</h1>
+      <div class="text-blue-700 text-right">
+        <p id="fechaActual" class="capitalize"></p>
+        <p id="horaActual"></p>
+      </div>
+    </header>
+
+    <!-- Filtros -->
+    <section class="bg-white p-6 rounded-lg shadow mb-8">
+      <h2 class="text-xl font-semibold text-blue-800 mb-4">Filtros de Reporte</h2>
+      <form id="formFiltros" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div>
+          <label for="fechaInicio" class="block text-sm font-medium mb-1">Fecha Inicio</label>
+          <input type="date" id="fechaInicio" name="fechaInicio" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label for="fechaFin" class="block text-sm font-medium mb-1">Fecha Fin</label>
+          <input type="date" id="fechaFin" name="fechaFin" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label for="tipoReporte" class="block text-sm font-medium mb-1">Tipo de Reporte</label>
+          <select id="tipoReporte" name="tipoReporte" class="w-full p-2 border rounded">
+            <option value="ambos">Ambos</option>
+            <option value="agendamiento">Agendamiento Médico</option>
+            <option value="ventas">Ventas / Facturación</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800 transition">Generar Reporte</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Reportes -->
+    <section id="reportes" class="space-y-12">
+
+      <!-- Reporte Agendamiento Médico -->
+      <div id="reporteAgendamiento" class="hidden bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-semibold text-blue-900 mb-6">Reporte de Agendamiento Médico</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Total citas</p>
+            <p class="text-3xl font-bold text-blue-900" id="totalCitas">0</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Confirmadas</p>
+            <p class="text-3xl font-bold text-blue-900" id="citasConfirmadas">0</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Pendientes</p>
+            <p class="text-3xl font-bold text-blue-900" id="citasPendientes">0</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Canceladas</p>
+            <p class="text-3xl font-bold text-blue-900" id="citasCanceladas">0</p>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-blue-800 mb-2">Ranking de Profesionales</h3>
+          <ul id="rankingProfesionales" class="list-disc list-inside text-blue-700"></ul>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-blue-800 mb-2">Promedio de pacientes por día</h3>
+          <p id="promedioPacientes" class="text-blue-900 font-bold text-xl">0</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-blue-800 mb-4">Detalle de citas</h3>
+          <table class="w-full text-left border-collapse border border-gray-300">
+            <thead class="bg-blue-100">
+              <tr>
+                <th class="border border-gray-300 p-2">Fecha</th>
+                <th class="border border-gray-300 p-2">Paciente</th>
+                <th class="border border-gray-300 p-2">Profesional</th>
+                <th class="border border-gray-300 p-2">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tablaCitasDetalle" class="text-blue-900">
+              <tr><td colspan="4" class="p-4 text-center text-gray-500">No hay datos para mostrar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reporte Ventas y Facturación -->
+      <div id="reporteVentas" class="hidden bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-semibold text-blue-900 mb-6">Reporte de Ventas y Facturación</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Total facturado</p>
+            <p class="text-3xl font-bold text-blue-900" id="totalFacturado">Gs. 0</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Ventas en efectivo</p>
+            <p class="text-3xl font-bold text-blue-900" id="ventasEfectivo">Gs. 0</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Ventas con tarjeta</p>
+            <p class="text-3xl font-bold text-blue-900" id="ventasTarjeta">Gs. 0</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded shadow text-center">
+            <p class="text-sm text-blue-700">Ventas transferencia</p>
+            <p class="text-3xl font-bold text-blue-900" id="ventasTransferencia">Gs. 0</p>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-blue-800 mb-2">Productos más vendidos</h3>
+          <ul id="productosMasVendidos" class="list-disc list-inside text-blue-700"></ul>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-blue-800 mb-2">Clientes frecuentes</h3>
+          <ul id="clientesFrecuentes" class="list-disc list-inside text-blue-700"></ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-blue-800 mb-4">Detalle de ventas</h3>
+          <table class="w-full text-left border-collapse border border-gray-300">
+            <thead class="bg-blue-100">
+              <tr>
+                <th class="border border-gray-300 p-2">Factura</th>
+                <th class="border border-gray-300 p-2">Cliente</th>
+                <th class="border border-gray-300 p-2">Total</th>
+                <th class="border border-gray-300 p-2">Fecha</th>
+                <th class="border border-gray-300 p-2">Forma de pago</th>
+              </tr>
+            </thead>
+            <tbody id="tablaVentasDetalle" class="text-blue-900">
+              <tr><td colspan="5" class="p-4 text-center text-gray-500">No hay datos para mostrar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Gráficos -->
+    <section id="graficos" class="hidden mt-12 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-2xl font-semibold text-blue-900 mb-6">Gráficos</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div>
+          <h3 class="text-blue-800 font-semibold mb-2">Ventas por día</h3>
+          <canvas id="graficoVentas" height="200"></canvas>
+        </div>
+
+        <div>
+          <h3 class="text-blue-800 font-semibold mb-2">Distribución formas de pago</h3>
+          <canvas id="graficoFormasPago" height="200"></canvas>
+        </div>
+
+        <div>
+          <h3 class="text-blue-800 font-semibold mb-2">Agendamientos por semana</h3>
+          <canvas id="graficoAgendamientos" height="200"></canvas>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Fecha y hora actual
+    function actualizarFechaHora() {
+      const fecha = new Date();
+      const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      document.getElementById('fechaActual').textContent = fecha.toLocaleDateString('es-ES', opcionesFecha);
+      document.getElementById('horaActual').textContent = fecha.toLocaleTimeString('es-ES', opcionesHora);
+    }
+    setInterval(actualizarFechaHora, 1000);
+    actualizarFechaHora();
+
+    // Función para simular carga de datos de ejemplo (a reemplazar con datos reales)
+    function cargarDatosEjemplo() {
+      // Agendamiento
+      document.getElementById('totalCitas').textContent = 120;
+      document.getElementById('citasConfirmadas').textContent = 80;
+      document.getElementById('citasPendientes').textContent = 25;
+      document.getElementById('citasCanceladas').textContent = 15;
+
+      const rankingProfs = ['Dra. Ana Pérez - 40 citas', 'Dr. Juan Gómez - 35 citas', 'Dra. Carla Díaz - 30 citas'];
+      const ulRanking = document.getElementById('rankingProfesionales');
+      ulRanking.innerHTML = '';
+      rankingProfs.forEach(prof => {
+        const li = document.createElement('li');
+        li.textContent = prof;
+        ulRanking.appendChild(li);
+      });
+
+      document.getElementById('promedioPacientes').textContent = '15';
+
+      const citasDetalle = [
+        { fecha: '2025-05-01', paciente: 'Carlos Ruiz', profesional: 'Dra. Ana Pérez', estado: 'Confirmada' },
+        { fecha: '2025-05-02', paciente: 'María López', profesional: 'Dr. Juan Gómez', estado: 'Pendiente' },
+        { fecha: '2025-05-03', paciente: 'Luis Fernández', profesional: 'Dra. Carla Díaz', estado: 'Cancelada' },
+      ];
+      const tbodyCitas = document.getElementById('tablaCitasDetalle');
+      tbodyCitas.innerHTML = '';
+      citasDetalle.forEach(cita => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border border-gray-300 p-2">${cita.fecha}</td>
+          <td class="border border-gray-300 p-2">${cita.paciente}</td>
+          <td class="border border-gray-300 p-2">${cita.profesional}</td>
+          <td class="border border-gray-300 p-2">${cita.estado}</td>
+        `;
+        tbodyCitas.appendChild(tr);
+      });
+
+      // Ventas
+      document.getElementById('totalFacturado').textContent = 'Gs. 15,000,000';
+      document.getElementById('ventasEfectivo').textContent = 'Gs. 7,000,000';
+      document.getElementById('ventasTarjeta').textContent = 'Gs. 6,000,000';
+      document.getElementById('ventasTransferencia').textContent = 'Gs. 2,000,000';
+
+      const productosVendidos = ['Producto A - 150 unidades', 'Producto B - 120 unidades', 'Producto C - 90 unidades'];
+      const ulProductos = document.getElementById('productosMasVendidos');
+      ulProductos.innerHTML = '';
+      productosVendidos.forEach(prod => {
+        const li = document.createElement('li');
+        li.textContent = prod;
+        ulProductos.appendChild(li);
+      });
+
+      const clientes = ['Cliente 1 - 20 compras', 'Cliente 2 - 15 compras', 'Cliente 3 - 10 compras'];
+      const ulClientes = document.getElementById('clientesFrecuentes');
+      ulClientes.innerHTML = '';
+      clientes.forEach(cliente => {
+        const li = document.createElement('li');
+        li.textContent = cliente;
+        ulClientes.appendChild(li);
+      });
+
+      const ventasDetalle = [
+        { factura: 'F001', cliente: 'Cliente 1', total: 'Gs. 1,000,000', fecha: '2025-05-01', pago: 'Efectivo' },
+        { factura: 'F002', cliente: 'Cliente 2', total: 'Gs. 2,000,000', fecha: '2025-05-02', pago: 'Tarjeta' },
+        { factura: 'F003', cliente: 'Cliente 3', total: 'Gs. 500,000', fecha: '2025-05-03', pago: 'Transferencia' },
+      ];
+      const tbodyVentas = document.getElementById('tablaVentasDetalle');
+      tbodyVentas.innerHTML = '';
+      ventasDetalle.forEach(venta => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border border-gray-300 p-2">${venta.factura}</td>
+          <td class="border border-gray-300 p-2">${venta.cliente}</td>
+          <td class="border border-gray-300 p-2">${venta.total}</td>
+          <td class="border border-gray-300 p-2">${venta.fecha}</td>
+          <td class="border border-gray-300 p-2">${venta.pago}</td>
+        `;
+        tbodyVentas.appendChild(tr);
+      });
+    }
+
+    // Mostrar reportes según selección
+    document.getElementById('formFiltros').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const tipo = this.tipoReporte.value;
+      const reporteAgend = document.getElementById('reporteAgendamiento');
+      const reporteVentas = document.getElementById('reporteVentas');
+      const graficos = document.getElementById('graficos');
+
+      if(tipo === 'ambos') {
+        reporteAgend.classList.remove('hidden');
+        reporteVentas.classList.remove('hidden');
+        graficos.classList.remove('hidden');
+      } else if(tipo === 'agendamiento') {
+        reporteAgend.classList.remove('hidden');
+        reporteVentas.classList.add('hidden');
+        graficos.classList.remove('hidden');
+      } else if(tipo === 'ventas') {
+        reporteAgend.classList.add('hidden');
+        reporteVentas.classList.remove('hidden');
+        graficos.classList.remove('hidden');
+      }
+      
+      cargarDatosEjemplo();
+      cargarGraficos();
+    });
+
+    // Gráficos con Chart.js (datos de ejemplo)
+    function cargarGraficos() {
+      // Ventas por día (barras)
+      const ctxVentas = document.getElementById('graficoVentas').getContext('2d');
+      if(window.graficoVentas) window.graficoVentas.destroy();
+      window.graficoVentas = new Chart(ctxVentas, {
+        type: 'bar',
+        data: {
+          labels: ['01-May', '02-May', '03-May', '04-May', '05-May'],
+          datasets: [{
+            label: 'Ventas (Gs.)',
+            data: [3000000, 2500000, 3500000, 4000000, 3000000],
+            backgroundColor: 'rgba(37, 99, 235, 0.7)'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+
+      // Formas de pago (pie)
+      const ctxPago = document.getElementById('graficoFormasPago').getContext('2d');
+      if(window.graficoFormasPago) window.graficoFormasPago.destroy();
+      window.graficoFormasPago = new Chart(ctxPago, {
+        type: 'doughnut',
+        data: {
+          labels: ['Efectivo', 'Tarjeta', 'Transferencia'],
+          datasets: [{
+            label: 'Formas de Pago',
+            data: [7000000, 6000000, 2000000],
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.7)', // verde
+              'rgba(59, 130, 246, 0.7)', // azul
+              'rgba(234, 179, 8, 0.7)'   // amarillo
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // Agendamientos por semana (línea)
+      const ctxAgend = document.getElementById('graficoAgendamientos').getContext('2d');
+      if(window.graficoAgendamientos) window.graficoAgendamientos.destroy();
+      window.graficoAgendamientos = new Chart(ctxAgend, {
+        type: 'line',
+        data: {
+          labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+          datasets: [{
+            label: 'Agendamientos',
+            data: [40, 55, 50, 65],
+            borderColor: 'rgba(37, 99, 235, 0.8)',
+            backgroundColor: 'rgba(37, 99, 235, 0.3)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+
+{% endblock %}
+
+{% block js %}
+
+{% endblock %}

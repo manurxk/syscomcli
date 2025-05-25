@@ -3,7 +3,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -15,26 +14,26 @@
 
     <!-- CSS de iconos y fuentes-->
     <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <!-- Tailwind CSS (en el head, ya importado) -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <!-- CSS principal-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
-
     <!-- CSS de Datatables -->
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
-
 </head>
 
 <body id="page-top">
-
     <!-- Page Wrapper -->
     <div id="wrapper">
-
+        
+        
+        
+        
+        
         <!-- Sidebar -->
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-
+           
             <!-- Sidebar - Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('login.inicio') }}">
                 <div class="sidebar-brand-icon rotate">
@@ -96,7 +95,7 @@
         <div class="sidebar-heading">Administración</div>
 
         <li class="nav-item">
-            <a class="nav-link" href="reportes.html">
+           <a class="nav-link" href="{{ url_for('reporte_vista.reporte_index')}}">
                 <i class="fas fa-file-medical-alt"></i>
                 <span>Reportes</span></a>
         </li>
@@ -112,13 +111,6 @@
         <div class="sidebar-heading">Módulos</div>
  Nav Item - Pages Collapse Menu -->
              <!-- Nav Item - Utilities Collapse Menu -->
-            
-            
-            
-            
-            
-            
-            
             
              <!-- <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAgendamiento"
@@ -164,20 +156,7 @@
                     </div>
                 </div>
             </li> -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
+    
             <!-- Divider -->
             <hr class="sidebar-divider">
 
@@ -196,22 +175,11 @@
                         <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">Especialidad</a>
                         <a class="collapse-item" href="{{ url_for('sala_atencion.sala_atencionIndex') }}">sala</a>
                         <a class="collapse-item" href="{{ url_for('hora.horaIndex') }}">Horario de atención</a>
-                      <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
+                        <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
 
-                        <!-- <a class="collapse-item" href="#">Ciudad</a>
-                        <a class="collapse-item" href="#">Pais</a>
-                      
-                        <a class="collapse-item" href="#">Tratamiento</a>
-                        <a class="collapse-item" href="#">Diagnóstico</a>       -->
                     </div>
                 </div>
             </li>
-
-                
-
-
-
-
 
             <!-- Sidebar Toggler (Sidebar) -->
             <div class="text-center d-none d-md-inline">
@@ -220,6 +188,14 @@
 
         </ul>
         <!-- End of Sidebar -->
+
+
+
+
+
+
+
+
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -231,6 +207,7 @@
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
                     <!-- Sidebar Toggle (Topbar) -->
+                  
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -255,41 +232,25 @@
 
 
 
+
+                    <!-- Topbar Navbar -->
+                   <ul class="navbar-nav ml-auto">
+                        <!-- Nav Item - Messages -->
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow flex items-center space-x-2">
+                            <div class="text-blue-700 text-left flex space-x-2">
+                                <p id="fechaActual" class="capitalize m-0"></p>
+                                <p id="horaActual" class="m-0"></p>
+                            </div>
+                        </li>
+                    </ul>
+
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
 
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-                        <li class="nav-item dropdown no-arrow d-sm-none">
-                            <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-search fa-fw"></i>
-                            </a>
-                            <!-- Dropdown - Messages -->
-                            <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                                aria-labelledby="searchDropdown">
-                                <form class="form-inline mr-auto w-100 navbar-search">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control bg-light border-0 small"
-                                            placeholder="Search for..." aria-label="Search"
-                                            aria-describedby="basic-addon2">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="button">
-                                                <i class="fas fa-search fa-sm"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </li>
-                           
-                           
-                        </li>
-
                         <!-- Nav Item - Messages -->
-                      
-
                         <div class="topbar-divider d-none d-sm-block"></div>
-
                         <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
@@ -381,12 +342,25 @@
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
 
-     <!-- Librerias para usar Datatables -->
-     <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
-     <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <!-- Librerias para usar Datatables -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
 
-     <!-- Libreria para mensajes emergentes -->
-     <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
+    <!-- Libreria para mensajes emergentes -->
+    <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
+
+
+    <script>
+    function actualizarFechaHora() {
+        const fecha = new Date();
+        const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        document.getElementById('fechaActual').textContent = fecha.toLocaleDateString('es-ES', opcionesFecha);
+        document.getElementById('horaActual').textContent = fecha.toLocaleTimeString('es-ES', opcionesHora);
+    }
+    setInterval(actualizarFechaHora, 1000);
+    actualizarFechaHora();
+    </script>
 
     {# Este bloque pertenece a nuestros scripts de js #}
     {% block js %}

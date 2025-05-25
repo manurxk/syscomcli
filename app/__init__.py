@@ -177,6 +177,31 @@ app.register_blueprint(sucapi, url_prefix=apiversion1)
 
 
 
+
+
+
+from app.rutas.modulos.modulo_agendamiento.vista.agendamiento_vista_routes import bp_agendamiento_vista
+app.register_blueprint(bp_agendamiento_vista)
+
+
+from app.rutas.modulos.modulo_consultorio.vista.consultorio_vista_routes import bp_consultorio_vista
+from app.rutas.modulos.modulo_ventas.vista.ventas_vista_routes import bp_ventas_vista
+
+app.register_blueprint(bp_consultorio_vista)
+app.register_blueprint(bp_ventas_vista)
+
+
+
+from app.rutas.modulos.modulo_reportes.vista.reporte_vista_routes import bp_reporte_vista
+app.register_blueprint(bp_reporte_vista)
+
+
+
+
+
+
+
+
 from flask import render_template, request, redirect, url_for
 
 @app.route('/buscar', methods=['GET'])

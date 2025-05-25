@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Agendamiento
+{% endblock %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio - Agendamiento Médico</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-green-100 font-sans">
+  <div class="max-w-7xl mx-auto p-4">
+    <!-- Título y bienvenida -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-green-800">Sistema de Agendamiento Médico</h1>
+        <p class="text-green-700">Bienvenido</p>
+      </div>
+      <div class="text-right text-green-700">
+        <p><span id="fecha"></span></p>
+        <p><span id="hora"></span></p>
+      </div>
+    </div>
+
+    <!-- Panel de acciones -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Registrar agenda médica</button>
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Reservar cita</button>
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Consultar agenda</button>
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Confirmar / Cancelar cita</button>
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Historial de citas</button>
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Recordatorios</button>
+      <button class="bg-white p-4 rounded-2xl shadow hover:shadow-md text-green-800 font-semibold">Documentos de ficha médica</button>
+    </div>
+
+    <!-- Buscadores rápidos -->
+    <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <input type="text" placeholder="Buscar paciente..." class="p-2 rounded-lg border border-green-300">
+      <input type="text" placeholder="Buscar profesional..." class="p-2 rounded-lg border border-green-300">
+      <input type="date" class="p-2 rounded-lg border border-green-300">
+    </div>
+
+    <!-- Accesos secundarios -->
+    <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <button class="bg-gray-100 p-4 rounded-xl shadow text-green-700">Gestionar pacientes</button>
+      <button class="bg-gray-100 p-4 rounded-xl shadow text-green-700">Gestionar profesionales</button>
+      <button class="bg-gray-100 p-4 rounded-xl shadow text-green-700">Reportes</button>
+    </div>
+  </div>
+
+  <!-- Script para mostrar fecha y hora -->
+  <script>
+    function actualizarFechaHora() {
+      const fecha = new Date();
+      const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const opcionesHora = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      document.getElementById('fecha').textContent = fecha.toLocaleDateString('es-ES', opcionesFecha);
+      document.getElementById('hora').textContent = fecha.toLocaleTimeString('es-ES', opcionesHora);
+    }
+    setInterval(actualizarFechaHora, 1000);
+    actualizarFechaHora();
+  </script>
+</body>
+</html>
+
+{% endblock %}
+
+{% block js %}
+   
+{% endblock %}
