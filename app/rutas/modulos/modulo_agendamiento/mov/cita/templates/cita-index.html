@@ -135,6 +135,7 @@ Citas
         </div>
       </div>
     </div>
+    
    <div class="modal" id="modalBuscarHora">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -343,19 +344,6 @@ Citas
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   const initDatatablees= () => {
     $('#tblEstado_cita').DataTable({
       language: {
@@ -482,47 +470,74 @@ Citas
 };
 
 
-  const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
-      Swal.fire({
-        title: "¿Deseas editar este registro?",
-        showCancelButton: true,
-        confirmButtonText: "Si",
-        cancelButtonText: `No`
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $('#modalTitle').text("Editar Cita");
+const editar = () => {
+  $('#tbl').on('click', 'button[name="btn_editar"]', function () {
+    Swal.fire({
+      title: "¿Deseas editar este registro?",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+      cancelButtonText: "No"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $('#modalTitle').text("Editar Cita");
 
-          const idCita = $(this).data('id');
-          $('#txtIdCita').val(idCita);
+        const idCita = $(this).data('id');
+        $('#txtIdCita').val(idCita);
 
-          // Obtener los datos de la cita del backend
-          fetch(`/api/v1/citas/${idCita}`, {
-            method: 'GET',
-            headers: {
-               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            }
-          })
+        fetch(`/api/v1/citas/${idCita}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken // asegurate que esta variable exista si usás CSRF
+          }
+        })
           .then(resp => resp.json())
           .then(data => {
-            $('#txtIdCita').val(data.data.id_cita);
-            $('#txtAgenda_medica').val(data.data.nombre+" "+data.data.apellido+" "+data.data.especialidad+" "+data.data.turno);
-            $('#id_agenda_medica').val(data.data.id_agenda_medica);
-            $('#txtPaciente').val(data.data.nombre+" "+data.data.apellido +" "+data.data.cedula);
-            $('#id_paciente').val(data.data.id_paciente);
-            $('#txtFecha_cita').val(data.data.fecha_cita);
-            
-            $('#txHora').val(data.data.hora);
-            $('#txid_hora').val(data.data.id_hora);
-            $('#txtEstado_cita').val(data.data.estado_cita);
-            $('#txid_estado_cita').val(data.data.id_estado_cita);
-            $('#modalFormulario').modal();
+              if (data && data.data) {
+                  const cita = data.data;
+                  $('#txtIdCita').val(cita.id_cita);
+                  $('#txtAgenda_medica').val(
+                      cita.nombre_medico + " " +
+                      cita.apellido_medico + " " +
+                      cita.especialidad + " " +
+                      cita.turno
+                  );
+                  $('#id_agenda_medica').val(cita.id_agenda_medica);
+                  $('#txtPaciente').val(
+                      cita.nombre_paciente + " " +
+                      cita.apellido_paciente + " " +
+                      cita.cedula
+                  );
+                  $('#id_paciente').val(cita.id_paciente);
+
+                  const fechaCita = new Date(cita.fecha_cita);
+                  const fechaFormateada = fechaCita.toISOString().split('T')[0];
+                  $('#txtFecha_cita').val(fechaFormateada);
+
+                  $('#txtHora').val(cita.hora);
+                  $('#id_hora').val(cita.id_hora);
+                  $('#txtEstado_cita').val(cita.estado_cita);
+                  $('#id_estado_cita').val(cita.id_estado_cita);
+
+
+                  $('#txtObservacion').val(cita.observacion);  // Si tienes un campo para observación
+
+                  $('#modalFormulario').modal('show');
+              } else {
+                  Swal.fire("Error", "No se pudo cargar la cita.", "error");
+              }
+          })
+
+
+          .catch(error => { 
+            console.error("Error al obtener la cita:", error);
+            Swal.fire("Error", "No se pudo obtener la cita del servidor.", "error");
           });
-        }
-      });
+      }
     });
-  }
+  });
+};
+
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
