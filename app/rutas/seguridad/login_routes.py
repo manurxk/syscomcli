@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, request, redirect, url_for, flash, current_app as app
 from werkzeug.security import check_password_hash
-from app.dao.referenciales.usuario.login_dao import LoginDao
+from app.dao.gestionar_personas.usuario.login_dao import LoginDao
 
 logmod = Blueprint('login', __name__, template_folder='templates')
 

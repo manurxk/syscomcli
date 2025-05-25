@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.dia.DiaDao import DiaDao
+from app.dao.modulos.modulo_agendamiento.ref.dia.DiaDao import DiaDao
 
 diaapi = Blueprint('diaapi', __name__)
 

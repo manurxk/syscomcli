@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.hora.HoraDao import HoraDao
+from app.modulos.modulo_agendamiento.ref.hora.HoraDao import HoraDao
 
 horapi = Blueprint('horapi', __name__)
 

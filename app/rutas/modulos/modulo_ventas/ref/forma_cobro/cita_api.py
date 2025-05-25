@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.cita.CitaDao import CitaDao
+from app.modulos.modulo_agendamiento.ref.cita.CitaDao import CitaDao
 
 cita_api = Blueprint('cita_api', __name__)
 

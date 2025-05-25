@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.sala_atencion.Sala_atencionDao import Sala_atencionDao
+from app.modulos.modulo_agendamiento.ref.sala_atencion.Sala_atencionDao import Sala_atencionDao
 
 salapi = Blueprint('salapi', __name__)
 

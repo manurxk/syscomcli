@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.ciudad.CiudadDao import CiudadDao
+from app.modulos.modulo_agendamiento.ref.ciudad.CiudadDao import CiudadDao
 
 ciuapi = Blueprint('ciuapi', __name__)
 
