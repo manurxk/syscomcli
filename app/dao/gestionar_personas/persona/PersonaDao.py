@@ -6,7 +6,7 @@ class PersonaDao:
     def getPersonas(self):
         personaSQL = """
       SELECT
-        p.id_persona, p.nombre, p.apellido, p.cedula, g.descripcion, e.descripcion, p.telefono_emergencia, c.descripcion 
+        p.id_persona, p.nombre, p.apellido, p.cedula, p.fecha_nacimiento, g.descripcion, e.descripcion, p.telefono_emergencia, c.descripcion 
             FROM personas p, generos g, estado_civiles e, ciudades c
             where p.id_genero=g.id_genero and p.id_estado_civil=e.id_estado_civil and p.id_ciudad=c.id_ciudad
         """
@@ -19,7 +19,7 @@ class PersonaDao:
 
             # Transformar los datos en una lista de diccionarios con los nuevos campos
             return [{
-                'id': persona[0], 'nombre': persona[1], 'apellido': persona[2], 'cedula': persona[3], 'genero': persona[4], 'estado_civil': persona[5], 'telefono_emergencia': persona[6],'ciudad': persona[7]} for persona in personas]
+                'id': persona[0], 'nombre': persona[1], 'apellido': persona[2], 'cedula': persona[3],  'fecha_nacimiento': persona[4].strftime('%d/%m/%Y'), 'genero': persona[5], 'estado_civil': persona[6], 'telefono_emergencia': persona[7],'ciudad': persona[8]} for persona in personas]
 
         except Exception as e:
             app.logger.error(f"Error al obtener todas las personas: {str(e)}")
@@ -32,7 +32,7 @@ class PersonaDao:
     def getPersonasById(self, id_persona):
         personaSQL = """
          SELECT
-            p.id_persona, p.nombre, p.apellido, p.cedula, g.descripcion, e.descripcion, p.telefono_emergencia, c.descripcion, g.id_genero, e.id_estado_civil, c. id_ciudad 
+            p.id_persona, p.nombre, p.apellido, p.cedula, p.fecha_nacimiento, g.descripcion, e.descripcion, p.telefono_emergencia, c.descripcion, g.id_genero, e.id_estado_civil, c. id_ciudad 
             FROM personas p, generos g, estado_civiles e, ciudades c
             where p.id_genero=g.id_genero and p.id_estado_civil=e.id_estado_civil and p.id_ciudad=c.id_ciudad and p.id_persona=%s
         """
@@ -48,13 +48,14 @@ class PersonaDao:
                     "nombre": personaEncontrada[1],
                     "apellido": personaEncontrada[2],
                     "cedula": personaEncontrada[3],
-                    "genero": personaEncontrada[4],
-                    "estado_civil": personaEncontrada[5],
-                    "telefono_emergencia": personaEncontrada[6],
-                    "ciudad": personaEncontrada[7],
-                    "id_genero": personaEncontrada[8],
-                    "id_estado_civil": personaEncontrada[9],
-                     "id_ciudad": personaEncontrada[10]
+                    "fecha_nacimiento": personaEncontrada[4],
+                    "genero": personaEncontrada[5],
+                    "estado_civil": personaEncontrada[6],
+                    "telefono_emergencia": personaEncontrada[7],
+                    "ciudad": personaEncontrada[8],
+                    "id_genero": personaEncontrada[9],
+                    "id_estado_civil": personaEncontrada[10],
+                     "id_ciudad": personaEncontrada[11]
                 }
             else:
                 return None
@@ -66,16 +67,16 @@ class PersonaDao:
             cur.close()
             con.close()
 
-    def guardarPersona(self, nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad):
+    def guardarPersona(self, nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad):
         insertPersonaSQL = """
-        INSERT INTO personas(nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad) VALUES(%s, %s, %s,%s, %s, %s, %s) RETURNING id_persona
+        INSERT INTO personas(nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_persona
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(insertPersonaSQL, (nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad))
+            cur.execute(insertPersonaSQL, (nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad))
             persona_id = cur.fetchone()[0]
             con.commit()
             return persona_id
@@ -89,10 +90,10 @@ class PersonaDao:
             cur.close()
             con.close()
 
-    def updatePersona(self, id_persona, nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad):
+    def updatePersona(self, id_persona, nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad):
         updatePersonaSQL = """
         UPDATE personas
-        SET nombre=%s, apellido=%s, cedula=%s, id_genero=%s, id_estado_civil=%s, telefono_emergencia=%s, id_ciudad=%s
+        SET nombre=%s, apellido=%s, cedula=%s, fecha_nacimiento = %s, id_genero=%s, id_estado_civil=%s, telefono_emergencia=%s, id_ciudad=%s
         WHERE id_persona=%s
         """
         conexion = Conexion()
@@ -100,7 +101,7 @@ class PersonaDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updatePersonaSQL, (nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad,id_persona))
+            cur.execute(updatePersonaSQL, (nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad,id_persona))
             filas_afectadas = cur.rowcount
             con.commit()
             return filas_afectadas > 0

@@ -20,6 +20,7 @@ Personas
               <th>Nombre:</th>
               <th>Apellido:</th>
               <th>Cédula:</th>
+              <th>Fecha de nacimiento:</th>
               <th>Sexo:</th>
               <th>Estado civil:</th>
               <th>Teléfono de emergencia</th>
@@ -53,6 +54,8 @@ Personas
               <input type="text" class="form-control" placeholder="Ingrese el apellido" id="txtApellido">
               <label for="txtCedula">Cédula:</label>
               <input type="text" class="form-control" placeholder="Ingrese la cédula" id="txtCedula">
+              <label for="txtFecha_nacimiento">Fecha de nacimiento:</label>
+              <input type="date" class="form-control" placeholder="Ingrese la fecha de nacimiento" id="txtFecha_nacimiento">
               <input type="hidden" id="id_genero">
               <label for="txtGenero">Sexo:</label>
               <input type="text" class="form-control" placeholder="Selecione el sexo" id="txtGenero">
@@ -174,13 +177,14 @@ Personas
         { data: 'nombre' },
         { data: 'apellido' },
         { data: 'cedula' },
+        { data: 'fecha_nacimiento' },
         { data: 'genero' },
         { data: 'estado_civil' },
         { data: 'telefono_emergencia' },
         { data: 'ciudad' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg data-id="${row.id}" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger btn-sg" data-id="${row.id}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+       return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id}" title="Editar"><i class="fas fa-edit"></i></button>
+        <button type="button" name="btn_eliminar" class="btn btn-outline-danger btn-sg" data-id="${row.id}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }
       ]
@@ -247,6 +251,21 @@ Personas
     });
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const initDatatablec= () => {
     $('#tblCiudad').DataTable({
       language: {
@@ -277,6 +296,18 @@ Personas
     });
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
       $('#modalTitle').text("Agregar Persona");
@@ -284,6 +315,7 @@ Personas
       $('#txtNombre').val("");
       $('#txtApellido').val("");
       $('#txtCedula').val("");
+      $('#txtFecha_nacimiento').val("");
       $('#txtGenero').val("");
       $('#txtEstado_civil').val("");
       $('#txtTelefono').val("");
@@ -298,6 +330,7 @@ Personas
       const nuevoNombre = $('#txtNombre').val();
       const nuevoApellido = $('#txtApellido').val();
       const nuevaCedula = $('#txtCedula').val();
+      const nuevaFecha_nacimiento = $('#txtFecha_nacimiento').val();
       const id_genero = $('#id_genero').val();
       const id_estado_civil = $('#id_estado_civil').val();
       const nuevoTelefono = $('#txtTelefono').val();
@@ -310,9 +343,8 @@ Personas
           method: 'PUT',
           headers: {
               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
-          }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
+           , 'X-CSRFToken': CSRFToken
+          }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, fecha_nacimiento: nuevaFecha_nacimiento, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
         })
         .then(resp => resp.json())
         .then(data => {
@@ -332,9 +364,8 @@ Personas
           method: 'POST',
           headers: {
              'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
-          }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
+           , 'X-CSRFToken': CSRFToken
+          }, body: JSON.stringify({ nombre: nuevoNombre, apellido: nuevoApellido, cedula: nuevaCedula, fecha_nacimiento: nuevaFecha_nacimiento, id_genero: id_genero, id_estado_civil: id_estado_civil, telefono_emergencia: nuevoTelefono, id_ciudad: id_ciudad})
         })
         .then(resp => resp.json())
         .then(data => {
@@ -380,6 +411,14 @@ Personas
             $('#txtNombre').val(data.data.nombre);
             $('#txtApellido').val(data.data.apellido);
             $('#txtCedula').val(data.data.cedula);
+         
+
+
+            // Convertimos la fecha al formato YYYY-MM-DD
+            const fechaNacimiento = new Date(data.data.fecha_nacimiento);
+            const fechaFormateada = fechaNacimiento.toISOString().split('T')[0];
+            $('#txtFecha_nacimiento').val(fechaFormateada); // Cargar la fecha en el formato correcto
+            
             $('#id_genero').val(data.data.id_genero);
             $('#txtGenero').val(data.data.genero);
             $('#id_estado_civil').val(data.data.id_estado_civil);
@@ -409,7 +448,6 @@ Personas
             headers: {
               'Content-Type': 'application/json'
             , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -435,7 +473,7 @@ Personas
     guardar();
     editar();
     eliminar();
-    buscarGenero(); //iniciar todas las funciones de seleccionar
+    buscarGenero();
     buscarEstado_civil();
     buscarCiudad();
   }

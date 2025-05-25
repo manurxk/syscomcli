@@ -110,8 +110,7 @@ Turnos
           method: 'PUT',
           headers: {
               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion, idTurno: idTurno})
         })
         .then(resp => resp.json())
@@ -132,8 +131,7 @@ Turnos
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ descripcion: nuevaDescripcion, idTurno: idTurno})
         })
         .then(resp => resp.json())

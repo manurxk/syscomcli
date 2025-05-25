@@ -475,8 +475,7 @@ Agenda Médica
           method: 'PUT',
           headers: {
               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({id_medico: id_medico, id_especialidad: id_especialidad, id_turno: id_turno, id_dia: id_dia, id_sala_atencion: id_sala_atencion, id_estado_laboral: id_estado_laboral})
         })
         .then(resp => resp.json())
@@ -497,8 +496,7 @@ Agenda Médica
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({id_medico: id_medico, id_especialidad: id_especialidad, id_dia: id_dia, id_turno: id_turno, id_sala_atencion: id_sala_atencion, id_estado_laboral: id_estado_laboral})
         })
         .then(resp => resp.json())
@@ -535,8 +533,7 @@ Agenda Médica
             method: 'GET',
             headers: {
                'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -575,8 +572,7 @@ Agenda Médica
             method: 'DELETE',
             headers: {
                'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())

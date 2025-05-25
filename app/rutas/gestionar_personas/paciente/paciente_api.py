@@ -58,7 +58,7 @@ def addPaciente():
     pacientedao = PacienteDao()
 
     # Validar que el JSON tenga las propiedades necesarias
-    campos_requeridos = ['id_persona','fecha_nacimiento','peso','altura']
+    campos_requeridos = ['id_persona','fecha_registro']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -71,16 +71,15 @@ def addPaciente():
     try:
         #print("hola")
         id_persona = data['id_persona']
-        fecha_nacimiento = data['fecha_nacimiento']  # Formato esperado: YYYY-MM-DD
-        peso = data['peso']
-        altura = data['altura']
+        fecha_registro = data['fecha_registro']  # Formato esperado: YYYY-MM-DD
+      
 
-        paciente_id = pacientedao.guardarPaciente(id_persona,fecha_nacimiento,peso,altura)
+        paciente_id = pacientedao.guardarPaciente(id_persona,fecha_registro)
         if paciente_id is not None:
             #print("gggg")
             return jsonify({
                 'success': True,
-                'data': {'id_paciente': paciente_id, 'id_persona': id_persona, 'fecha_nacimiento': fecha_nacimiento, 'peso': peso, 'altura': altura},
+                'data': {'id_paciente': paciente_id, 'id_persona': id_persona, 'fecha_registro': fecha_registro},
                 'error': None
             }), 201
         else:
@@ -102,7 +101,7 @@ def updatePaciente(paciente_id):
     pacientedao = PacienteDao()
 
     # Validar que el JSON tenga las propiedades necesarias
-    campos_requeridos = ['id_persona','fecha_nacimiento','peso','altura' ]
+    campos_requeridos = ['id_persona','fecha_registro' ]
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -114,14 +113,14 @@ def updatePaciente(paciente_id):
 
     try:
         id_persona = data['id_persona']
-        fecha_nacimiento = data['fecha_nacimiento']  # Formato esperado: YYYY-MM-DD
+        fecha_registro = data['fecha_registro']  # Formato esperado: YYYY-MM-DD
         peso = data['peso']
-        altura = data['altura']
 
-        if pacientedao.updatePaciente(paciente_id, id_persona, fecha_nacimiento, peso, altura):
+
+        if pacientedao.updatePaciente(paciente_id, id_persona, fecha_registro):
             return jsonify({
                 'success': True,
-                'data': {'id_paciente': paciente_id, 'id_paciente': paciente_id,'id_persona': id_persona, 'fecha_nacimiento': fecha_nacimiento, 'peso': peso, 'altura': altura},
+                'data': {'id_paciente': paciente_id, 'id_paciente': paciente_id,'id_persona': id_persona, 'fecha_registro': fecha_registro},
                 'error': None
             }), 200
         else:

@@ -57,7 +57,7 @@ def addCita():
     data = request.get_json()
     citadao = CitaDao()
 
-    campos_requeridos = ['id_agenda_medica', 'id_paciente', 'observacion', 'id_estado_cita', 'id_hora']
+    campos_requeridos = ['id_agenda_medica', 'id_paciente', 'fecha_cita', 'id_hora', 'observacion', 'id_estado_cita']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(str(data[campo]).strip()) == 0:
@@ -69,15 +69,17 @@ def addCita():
     try:
         id_agenda_medica = data['id_agenda_medica']
         id_paciente = data['id_paciente']
+        fecha_cita = data['fecha_cita']  # Formato esperado: YYYY-MM-DD
+        id_hora = data['id_hora']
         observacion = data['observacion']
         id_estado_cita = data['id_estado_cita']
-        id_hora = data['id_hora']
+        
 
-        cita_id = citadao.guardarCita(id_agenda_medica, id_paciente, observacion, id_estado_cita, id_hora)
+        cita_id = citadao.guardarCita(id_agenda_medica, id_paciente, fecha_cita, id_hora, observacion, id_estado_cita)
         if cita_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id_cita': cita_id,'id_agenda_medica':id_agenda_medica, 'id_paciente':id_paciente, 'observacion':observacion, 'id_estado_cita':id_estado_cita, 'id_hora':id_hora},
+                'data': {'id_cita': cita_id,'id_agenda_medica':id_agenda_medica, 'id_paciente':id_paciente, 'fecha_cita': fecha_cita, 'id_hora':id_hora, 'observacion':observacion, 'id_estado_cita':id_estado_cita},
                 'error': None
             }), 201
         else:
@@ -95,7 +97,7 @@ def updateCita(cita_id):
     data = request.get_json()
     citadao = CitaDao()
 
-    campos_requeridos = ['id_agenda_medica', 'id_paciente', 'observacion', 'id_estado_cita', 'id_hora']
+    campos_requeridos = ['id_agenda_medica', 'id_paciente', 'fecha_cita', 'id_hora', 'observacion', 'id_estado_cita']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(str(data[campo]).strip()) == 0:
@@ -107,14 +109,16 @@ def updateCita(cita_id):
     try:
         id_agenda_medica = data['id_agenda_medica']
         id_paciente = data['id_paciente']
+        fecha_cita = data['fecha_cita']  # Formato esperado: YYYY-MM-DD
+        id_hora = data['id_hora']
         observacion = data['observacion']
         id_estado_cita = data['id_estado_cita']
-        id_hora = data['id_hora']
+       
 
-        if citadao.updateCita(cita_id,id_agenda_medica, id_paciente, observacion, id_estado_cita, id_hora):
+        if citadao.updateCita(cita_id,id_agenda_medica, id_paciente, fecha_cita, id_hora, observacion, id_estado_cita):
             return jsonify({
                 'success': True,
-                'data': {'id_cita': cita_id,'id_agenda_medica':id_agenda_medica, 'id_paciente':id_paciente, 'observacion':observacion, 'id_estado_cita':id_estado_cita, 'id_hora':id_hora},
+                'data': {'id_cita': cita_id,'id_agenda_medica':id_agenda_medica, 'id_paciente':id_paciente, 'fecha_cita': fecha_cita, 'id_hora':id_hora, 'observacion':observacion, 'id_estado_cita':id_estado_cita},
                 'error': None
             }), 200
         else:

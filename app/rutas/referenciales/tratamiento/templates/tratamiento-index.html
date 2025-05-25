@@ -81,7 +81,7 @@ Tratamientos
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg data-id="${row.id_tratamiento}"title="Editar"><i class="fas fa-edit"></i></button>
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_tratamiento}"title="Editar"><i class="fas fa-edit"></i></button>
                     <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id_tratamiento}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }

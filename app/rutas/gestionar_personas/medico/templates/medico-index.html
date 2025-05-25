@@ -181,8 +181,7 @@ Médicos
           method: 'PUT',
           headers: {
               'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ id_persona: id_persona, matricula: nuevoMatricula})
         })
         .then(resp => resp.json())
@@ -203,8 +202,7 @@ Médicos
           method: 'POST',
           headers: {
                'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
           }, body: JSON.stringify({ id_persona: id_persona, matricula: nuevoMatricula})
         })
         .then(resp => resp.json())
@@ -243,8 +241,7 @@ Médicos
             method: 'GET',
             headers: {
              'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
@@ -274,8 +271,7 @@ Médicos
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())

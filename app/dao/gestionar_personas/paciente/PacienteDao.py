@@ -11,9 +11,7 @@ class PacienteDao:
             , p.apellido
             , p.cedula
             , p.telefono_emergencia
-            , pa.fecha_nacimiento
-            , pa.peso
-            , pa.altura
+            , pa.fecha_registro
         FROM 
             pacientes pa, personas p
         WHERE 
@@ -34,10 +32,7 @@ class PacienteDao:
                         ,'apellido': paciente[2]
                         ,'cedula': paciente[3]
                         ,'telefono_emergencia': paciente[4]
-                        ,'fecha_nacimiento': paciente[5].strftime('%d/%m/%Y')
-                        ,'peso': paciente[6]
-                        ,'altura': paciente[7]
-                    } 
+                        ,'fecha_registro': paciente[5].strftime('%d/%m/%Y')                    } 
                     for paciente in pacientes
                 ]
 
@@ -52,7 +47,7 @@ class PacienteDao:
     def getPacienteById(self, id_paciente):
         pacienteSQL = """
          SELECT 
-            pa.id_paciente,p.nombre, p.apellido, p.cedula, p.telefono_emergencia, pa.fecha_nacimiento, pa.peso, pa.altura, p.id_persona
+            pa.id_paciente,p.nombre, p.apellido, p.cedula, p.telefono_emergencia, pa.fecha_registro, p.id_persona
             FROM pacientes pa, personas p
             WHERE pa.id_persona=p.id_persona and pa.id_paciente = %s
         """
@@ -69,10 +64,8 @@ class PacienteDao:
                     "apellido": pacienteEncontrado[2],
                     "cedula": pacienteEncontrado[3],
                     "telefono_emergencia": pacienteEncontrado[4],
-                    "fecha_nacimiento": pacienteEncontrado[5],
-                    "peso": pacienteEncontrado[6],
-                    "altura": pacienteEncontrado[7],
-                    "id_persona": pacienteEncontrado[8]
+                    "fecha_registro": pacienteEncontrado[5],
+                    "id_persona": pacienteEncontrado[6]
                 }
             else:
                 return None
@@ -84,17 +77,17 @@ class PacienteDao:
             cur.close()
             con.close()
 
-    def guardarPaciente(self,id_persona,fecha_nacimiento,peso,altura,):
+    def guardarPaciente(self,id_persona,fecha_registro,):
         insertPacienteSQL = """
-        INSERT INTO pacientes(fecha_nacimiento,peso,altura,id_persona) 
-        VALUES(%s, %s, %s, %s) RETURNING id_paciente 
+        INSERT INTO pacientes(fecha_registro,id_persona) 
+        VALUES(%s, %s) RETURNING id_paciente 
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(insertPacienteSQL, (fecha_nacimiento, peso,altura,id_persona))
+            cur.execute(insertPacienteSQL, (fecha_registro,id_persona))
             id_paciente = cur.fetchone()[0]
             con.commit()
             return id_paciente
@@ -108,10 +101,10 @@ class PacienteDao:
             cur.close()
             con.close()
 
-    def updatePaciente(self,id_paciente,id_persona,fecha_nacimiento,peso,altura):
+    def updatePaciente(self,id_paciente,id_persona,fecha_registro):
         updatePacienteSQL = """
         UPDATE pacientes
-        SET id_persona = %s, fecha_nacimiento = %s, peso = %s, altura = %s
+        SET id_persona = %s, fecha_registro = %s
         WHERE id_paciente = %s
         """
         conexion = Conexion()
@@ -119,7 +112,7 @@ class PacienteDao:
         cur = con.cursor()
 
         try:
-            cur.execute(updatePacienteSQL, (id_persona,fecha_nacimiento,peso,altura,id_paciente))
+            cur.execute(updatePacienteSQL, (id_persona,fecha_registro,id_paciente))
             filas_afectadas = cur.rowcount
             con.commit()
             return filas_afectadas > 0

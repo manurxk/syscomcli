@@ -57,7 +57,7 @@ def addPersona():
     personadao = PersonaDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['nombre', 'apellido', 'cedula','id_genero', 'id_estado_civil', 'telefono_emergencia', 'id_ciudad']
+    campos_requeridos = ['nombre', 'apellido', 'cedula','fecha_nacimiento','id_genero', 'id_estado_civil', 'telefono_emergencia', 'id_ciudad']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -71,17 +71,18 @@ def addPersona():
         nombre = data['nombre'].upper()
         apellido = data['apellido'].upper()
         cedula = data['cedula'].strip()
+        fecha_nacimiento = data['fecha_nacimiento']  # Formato esperado: YYYY-MM-DD
         id_genero = data['id_genero']
         id_estado_civil = data['id_estado_civil']
         telefono_emergencia = data['telefono_emergencia'].strip()
         id_ciudad = data['id_ciudad']
 
-        persona_id = personadao.guardarPersona(nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad)
+        persona_id = personadao.guardarPersona(nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad)
         #print(persona_id)
         if persona_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id': persona_id, 'nombre': nombre, 'apellido': apellido, 'cedula': cedula, 'id_genero': id_genero, 'id_estado_civil': id_estado_civil, 'telefono_emergencia': telefono_emergencia, 'id_ciudad':id_ciudad},
+                'data': {'id': persona_id, 'nombre': nombre, 'apellido': apellido, 'cedula': cedula, 'fecha_nacimiento': fecha_nacimiento, 'id_genero': id_genero, 'id_estado_civil': id_estado_civil, 'telefono_emergencia': telefono_emergencia, 'id_ciudad':id_ciudad},
                 'error': None
             }), 201
         else:
@@ -99,7 +100,7 @@ def updatePersona(persona_id):
     personadao = PersonaDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['nombre', 'apellido', 'cedula','id_genero', 'id_estado_civil', 'telefono_emergencia', 'id_ciudad' ]
+    campos_requeridos = ['nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'id_genero', 'id_estado_civil', 'telefono_emergencia', 'id_ciudad' ]
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -113,15 +114,16 @@ def updatePersona(persona_id):
         nombre = data['nombre'].upper()
         apellido = data['apellido'].upper()
         cedula = data['cedula'].strip()
+        fecha_nacimiento = data['fecha_nacimiento']  # Formato esperado: YYYY-MM-DD
         id_genero = data['id_genero']
         id_estado_civil = data['id_estado_civil']
         telefono_emergencia = data['telefono_emergencia'].strip()
         id_ciudad = data['id_ciudad']
 
-        if personadao.updatePersona(persona_id, nombre, apellido, cedula, id_genero, id_estado_civil, telefono_emergencia, id_ciudad):
+        if personadao.updatePersona(persona_id, nombre, apellido, cedula, fecha_nacimiento, id_genero, id_estado_civil, telefono_emergencia, id_ciudad):
             return jsonify({
                 'success': True,
-                'data': {'id': persona_id, 'nombre': nombre, 'apellido': apellido, 'cedula': cedula,'id_genero': id_genero, 'id_estado_civil': id_estado_civil, 'telefono_emergencia': telefono_emergencia, 'id_ciudad':id_ciudad},
+                'data': {'id': persona_id, 'nombre': nombre, 'apellido': apellido, 'cedula': cedula, 'fecha_nacimiento': fecha_nacimiento, 'id_genero': id_genero, 'id_estado_civil': id_estado_civil, 'telefono_emergencia': telefono_emergencia, 'id_ciudad':id_ciudad},
                 'error': None
             }), 200
         else:

@@ -21,9 +21,7 @@ Pacientes
               <th>Apellido:</th>
               <th>Ci:</th>
               <th>Télefono:</th>
-              <th>Fecha de nacimiento:</th>
-              <th>Peso en kg:</th>
-              <th>Altura cm:</th>
+              <th>Fecha de registro:</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -50,12 +48,8 @@ Pacientes
               <input type="hidden" id="id_persona">
               <label for="txtPersona">Paciente:</label>
               <input type="text" class="form-control" placeholder="clik para asignar un paciente" id="txtPersona">
-              <label for="txtFecha_nacimiento">Fecha de nacimiento:</label>
-              <input type="date" class="form-control" placeholder="Ingrese la fecha de nacimiento" id="txtFecha_nacimiento">
-              <label for="txtPeso">Peso (kg):</label>
-              <input type="number"  class="form-control" placeholder="Ingrese el peso en kg" id="txtPeso">
-              <label for="txtAltura">Altura (cm):</label>
-              <input type="number" class="form-control" placeholder="Ingrese la altura en cm" id="txtAltura">
+              <label for="txtFecha_registro">Fecha de registro:</label>
+              <input type="date" class="form-control" placeholder="Ingrese la fecha de registro" id="txtFecha_registro">
             </div>
           </div>
 
@@ -124,15 +118,7 @@ Pacientes
         { data: 'apellido' },
         { data: 'cedula' },
         { data: 'telefono_emergencia' },
-        { data: 'fecha_nacimiento' },
-        { data: 'peso', render: function(data, type, row) {
-          return type === 'display' ? data.toString() : data;
-        }
-      },
-      { data: 'altura', render: function(data, type, row) {
-          return type === 'display' ? data.toString() : data;
-        }
-      },
+        { data: 'fecha_registro' },
         { data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_paciente}"title="Editar"><i class="fas fa-edit"></i></button>
                     <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id_paciente}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;;
@@ -184,9 +170,7 @@ Pacientes
       $('#txtIdPaciente').val("");
       $('#id_persona').val("");
       $('#txtPersona').val("");
-      $('#txtFecha_nacimiento').val("");
-      $('#txtPeso').val("");
-      $('#txtAltura').val("");
+      $('#txtFecha_registro').val("");
       $('#modalFormulario').modal();
     });
   }
@@ -195,9 +179,7 @@ Pacientes
     $('#btnGuardar').on('click', function() {
       const idPaciente = $('#txtIdPaciente').val();
       const id_persona = $('#id_persona').val();
-      const nuevaFecha_nacimiento = $('#txtFecha_nacimiento').val();
-      const nuevoPeso = $('#txtPeso').val();
-      const nuevaAltura = $('#txtAltura').val();
+      const nuevaFecha_registro = $('#txtFecha_registro').val();
       const tabla = $('#tbl').DataTable();
       //debugger;
 
@@ -208,9 +190,8 @@ Pacientes
           headers: {
                'Content-Type': 'application/json'
             , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
             
-          }, body: JSON.stringify({ id_persona: id_persona, fecha_nacimiento: nuevaFecha_nacimiento, peso: nuevoPeso, altura: nuevaAltura})
+          }, body: JSON.stringify({ id_persona: id_persona, fecha_registro: nuevaFecha_registro})
         })
         .then(resp => resp.json())
         .then(data => {
@@ -231,8 +212,7 @@ Pacientes
           headers: {
                'Content-Type': 'application/json'
             , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
-          }, body: JSON.stringify({ id_persona: id_persona, fecha_nacimiento: nuevaFecha_nacimiento, peso: nuevoPeso, altura: nuevaAltura})
+          }, body: JSON.stringify({ id_persona: id_persona, fecha_registro: nuevaFecha_registro})
         })
         .then(resp => resp.json())
         .then(data => {
@@ -272,7 +252,7 @@ Pacientes
             headers: {
              'Content-Type': 'application/json'
             , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+     
             }
           })
           .then(resp => resp.json())
@@ -280,9 +260,12 @@ Pacientes
             $('#txtIdPaciente').val(data.data.id_paciente);
             $('#txtPersona').val(data.data.nombre+" "+data.data.apellido+" "+data.data.cedula+" "+data.data.telefono_emergencia);
             $('#id_persona').val(data.data.id_persona);
-            $('#txtFecha_nacimiento').val(data.data.fecha_nacimiento);
-            $('#txtPeso').val(data.data.peso);
-            $('#txtAltura').val(data.data.altura);
+            $('#txtFecha_registro').val(data.data.fecha_registro);
+
+ // Convertimos la fecha al formato YYYY-MM-DD
+            const fechaRegistro = new Date(data.data.fecha_registro);
+            const fechaFormateada = fechaRegistro.toISOString().split('T')[0];
+            $('#txtFecha_registro').val(fechaFormateada); // Cargar la fecha en el formato correcto
             $('#modalFormulario').modal();
           });
         }
@@ -304,8 +287,7 @@ Pacientes
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
-            , 'X-CSRFToken': CSRFToken
-            , 'X-CSRFToken': CSRFToken
+           , 'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
