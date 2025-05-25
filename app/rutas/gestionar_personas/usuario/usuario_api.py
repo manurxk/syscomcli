@@ -57,7 +57,7 @@ def addUsuario():
     usuariodao = UsuarioDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['nickname', 'clave']
+    campos_requeridos = ['usu_nick', 'clave']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -68,14 +68,14 @@ def addUsuario():
                             }), 400
 
     try:
-        nickname = data['nickname']
+        usu_nick = data['usu_nick']
         clave = data['clave']
         estado = data['estado']
-        usuario_id = usuariodao.guardarUsuario(nickname, clave, estado)
+        usuario_id = usuariodao.guardarUsuario(usu_nick, clave, estado)
         if usuario_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id_usuario': usuario_id, 'nickname': nickname, 'clave': clave, 'estado': estado},
+                'data': {'usu_id': usuario_id, 'usu_nick': usu_nick, 'clave': clave, 'estado': estado},
                 'error': None
             }), 201
         else:
@@ -93,7 +93,7 @@ def updateUsuario(usuario_id):
     usuariodao = UsuarioDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['nickname', 'clave']
+    campos_requeridos = ['usu_nick', 'clave']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -102,15 +102,15 @@ def updateUsuario(usuario_id):
                             'success': False,
                             'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
                             }), 400
-    nickname = data['nickname']
+    usu_nick = data['usu_nick']
     clave = data['clave']
     estado = data['estado']
     
     try:
-        if usuariodao.updateUsuario(usuario_id, nickname, clave, estado):
+        if usuariodao.updateUsuario(usuario_id, usu_nick, clave, estado):
             return jsonify({
                 'success': True,
-                'data': {'id_usuario': usuario_id, 'nickname': nickname, 'clave': clave, 'estado': estado},
+                'data': {'usu_id': usuario_id, 'usu_nick': usu_nick, 'clave': clave, 'estado': estado},
                 'error': None
             }), 200
         else:

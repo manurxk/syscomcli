@@ -6,7 +6,7 @@ class UsuarioDao:
 
     def getUsuarios(self):
         usuariosSQL = """
-        SELECT id_usuario, nickname, clave, estado
+        SELECT usu_id, usu_nick, usu_clave, usu_estado
         FROM usuarios
         """
         conexion = Conexion()
@@ -17,7 +17,7 @@ class UsuarioDao:
             usuarios = cur.fetchall()  # Trae datos de la BD
 
             # Transformar los datos en una lista de diccionarios
-            return [{'id_usuario': usuario[0], 'nickname': usuario[1], 'clave': usuario[2], 'estado': usuario[3]} for usuario in usuarios]
+            return [{'usu_id}': usuario[0], 'usu_nick': usuario[1], 'clave': usuario[2], 'estado': usuario[3]} for usuario in usuarios]
 
         except Exception as e:
             app.logger.error(f"Error al obtener todos los usuarios: {str(e)}")
@@ -27,21 +27,21 @@ class UsuarioDao:
             cur.close()
             con.close()
 
-    def getUsuarioById(self, id_usuario):
+    def getUsuarioById(self, usu_id):
         usuarioSQL = """
-        SELECT id_usuario, nickname, clave, estado
-        FROM usuarios WHERE id_usuario=%s
+        SELECT usu_id, usu_nick, clave, estado
+        FROM usuarios WHERE usu_id=%s
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(usuarioSQL, (id_usuario,))
+            cur.execute(usuarioSQL, (usu_id,))
             usuarioEncontrado = cur.fetchone()  # Obtener una sola fila
             if usuarioEncontrado:
                 return {
-                    "id_usuario": usuarioEncontrado[0],
-                    "nickname": usuarioEncontrado[1],
+                    "usu_id": usuarioEncontrado[0],
+                    "usu_nick": usuarioEncontrado[1],
                     "clave": usuarioEncontrado[2],
                     "estado": usuarioEncontrado[3]
                 }  # Retornar los datos del usuario
@@ -55,18 +55,18 @@ class UsuarioDao:
             cur.close()
             con.close()
 
-    def guardarUsuario(self, nickname, clave, estado):
-        print(nickname, clave, estado)
+    def guardarUsuario(self, usu_nick, clave, estado):
+        print(usu_nick, clave, estado)
         insertUsuarioSQL = """
-        INSERT INTO usuarios(nickname, clave, estado) 
-        VALUES(%s, %s, %s) RETURNING id_usuario
+        INSERT INTO usuarios(usu_nick, clave, estado) 
+        VALUES(%s, %s, %s) RETURNING usu_id
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(insertUsuarioSQL, (nickname, clave, estado))
+            cur.execute(insertUsuarioSQL, (usu_nick, clave, estado))
             usuario_id = cur.fetchone()[0]
             con.commit()  # Confirmar la inserción
             return usuario_id
@@ -80,18 +80,18 @@ class UsuarioDao:
             cur.close()
             con.close()
 
-    def updateUsuario(self, id_usuario, nickname, clave, estado):
+    def updateUsuario(self, usu_id, usu_nick, clave, estado):
         updateUsuarioSQL = """
         UPDATE usuarios
-        SET nickname=%s, clave=%s, estado=%s
-        WHERE id_usuario=%s
+        SET usu_nick=%s, clave=%s, estado=%s
+        WHERE usu_id=%s
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(updateUsuarioSQL, (nickname, clave, estado, id_usuario))
+            cur.execute(updateUsuarioSQL, (usu_nick, clave, estado, usu_id))
             filas_afectadas = cur.rowcount  # Número de filas afectadas
             con.commit()
             return filas_afectadas > 0  # Retornar True si se actualizó al menos una fila
@@ -105,17 +105,17 @@ class UsuarioDao:
             cur.close()
             con.close()
 
-    def deleteUsuario(self, id_usuario):
+    def deleteUsuario(self, usu_id):
         deleteUsuarioSQL = """
         DELETE FROM usuarios
-        WHERE id_usuario=%s
+        WHERE usu_id=%s
         """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
         try:
-            cur.execute(deleteUsuarioSQL, (id_usuario,))
+            cur.execute(deleteUsuarioSQL, (usu_id,))
             rows_affected = cur.rowcount
             con.commit()
             return rows_affected > 0  # Retornar True si se eliminó al menos una fila

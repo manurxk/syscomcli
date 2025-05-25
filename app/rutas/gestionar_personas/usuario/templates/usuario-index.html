@@ -43,9 +43,9 @@ Usuarios
       <!-- Modal body -->
       <div class="modal-body">
         <div class="form-group">
-          <input type="hidden" id="id_usuario">
-          <label for="txtNickname">Usuario:</label>
-          <input type="text" class="form-control" placeholder="Ingrese el nickname" id="txtNickname">
+          <input type="hidden" id="usu_id">
+          <label for="txtusu_nick">Usuario:</label>
+          <input type="text" class="form-control" placeholder="Ingrese el usu_nick" id="txtusu_nick">
 
           <label for="txtClave">Clave:</label>
           <input type="password" class="form-control" placeholder="Ingrese la clave" id="txtClave">
@@ -89,11 +89,11 @@ Usuarios
       },
       ajax:'/api/v1/usuarios',      
       columns: [
-        { data: 'nickname' },
+        { data: 'usu_nick' },
         { data: 'estado' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_usuario}"title="Editar"><i class="fas fa-edit"></i></button>
-                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id_usuario}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.usu_id}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.usu_id}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
           }
         }
       ]
@@ -105,8 +105,8 @@ Usuarios
       // Setear un título a modal
       $('#modalTitle').text("Agregar Usuario");
       // inicia ventana modal
-      $('#id_usuario').val("");
-      $('#txtNickname').val("");
+      $('#usu_id').val("");
+      $('#txtusu_nick').val("");
       $('#txtClave').val("");
       $('#txtEstado').val("activo");
       $('#modalFormulario').modal();
@@ -115,20 +115,20 @@ Usuarios
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const id_usuario = $('#id_usuario').val();
-      const nickname = $('#txtNickname').val();
+      const usu_id = $('#usu_id').val();
+      const usu_nick = $('#txtusu_nick').val();
       const clave = $('#txtClave').val();
       const estado = $('#txtEstado').val() === 'activo' ? true : false;
       const tabla = $('#tbl').DataTable();
 
-      if(id_usuario) {
+      if(usu_id) {
         // update
-        fetch(`/api/v1/usuarios/${id_usuario}`, {
+        fetch(`/api/v1/usuarios/${usu_id}`, {
           method: 'PUT',
           headers: {
              'Content-Type': 'application/json'
             , 'X-CSRFToken': CSRFToken
-          }, body: JSON.stringify({ nickname, clave, estado })
+          }, body: JSON.stringify({ usu_nick, clave, estado })
         })
         .then(resp => resp.json())
         .then(data => {
@@ -150,7 +150,7 @@ Usuarios
           headers: {
              'Content-Type': 'application/json'
             , 'X-CSRFToken': CSRFToken
-          }, body: JSON.stringify({ nickname, clave, estado })
+          }, body: JSON.stringify({ usu_nick, clave, estado })
         })
         .then(resp => resp.json())
         .then(data => {
@@ -165,7 +165,7 @@ Usuarios
           Swal.fire("Error", "Ocurrió un error al guardar el usuario.", "error");
         });
       }
-      $('#txtNickname').val("");
+      $('#txtusu_nick').val("");
       $('#txtClave').val("");
       $('#txtEstado').val("activo");
       $('#modalFormulario').modal("hide");
@@ -184,11 +184,11 @@ Usuarios
         if (result.isConfirmed) {
           $('#modalTitle').text("Editar Usuario");
 
-          const id_usuario = $(this).data('id');
-          $('#id_usuario').val(id_usuario);
+          const usu_id = $(this).data('id');
+          $('#usu_id').val(usu_id);
 
           // Obtener los datos del usuario
-          fetch(`/api/v1/usuarios/${id_usuario}`, {
+          fetch(`/api/v1/usuarios/${usu_id}`, {
             method: 'GET',
             headers: {
                'Content-Type': 'application/json'
@@ -197,7 +197,7 @@ Usuarios
           })
           .then(resp => resp.json())
           .then(data => {
-            $('#txtNickname').val(data.data.nickname);
+            $('#txtusu_nick').val(data.data.usu_nick);
             $('#txtClave').val(data.data.clave);
             $('#txtEstado').val(data.data.estado);
             $('#modalFormulario').modal();
@@ -209,7 +209,7 @@ Usuarios
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const id_usuario = $(this).data('id');
+      const usu_id = $(this).data('id');
       // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -218,7 +218,7 @@ Usuarios
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/usuarios/${id_usuario}`, {
+          fetch(`/api/v1/usuarios/${usu_id}`, {
             method: 'DELETE',
             headers: {
                'Content-Type': 'application/json'
