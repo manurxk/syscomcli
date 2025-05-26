@@ -210,3 +210,76 @@ def deleteCita(cita_id):
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
+    
+
+
+
+
+
+
+
+
+
+
+# --- NUEVAS RUTAS PARA EXPORTACIÓN ---
+
+@cita_api.route('/citas/export/pdf', methods=['GET'])
+def export_citas_pdf():
+    citadao = CitaDao()
+    try:
+        citas = citadao.getCitas()  # Método que debe devolver lista de dicts con los campos indicados
+        if len(citas) == 0:
+            return jsonify({'success': False, 'error': 'No hay datos para exportar'}), 404
+
+        columns = ['Nombre Médico', 'Apellido Médico', 'Especialidad', 'Turno', 'Nombre Paciente', 'Apellido Paciente', 'Cédula', 'Fecha Cita', 'Hora', 'Observación', 'Estado']
+        rows = []
+        for c in citas:
+            rows.append([
+                c.get('nombrem'),
+                c.get('apellidom'),
+                c.get('especialidad'),
+                c.get('turno'),
+                c.get('nombrep'),
+                c.get('apellidop'),
+                c.get('cedula'),
+                c.get('fecha_cita'),
+                c.get('hora'),
+                c.get('observacion'),
+                c.get('estado')
+            ])
+
+        return export_pdf(rows, columns)
+    except Exception as e:
+        app.logger.error(f"Error al exportar citas a PDF: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno al exportar PDF'}), 500
+
+
+@cita_api.route('/citas/export/excel', methods=['GET'])
+def export_citas_excel():
+    citadao = CitaDao()
+    try:
+        citas = citadao.getCitas()
+        if len(citas) == 0:
+            return jsonify({'success': False, 'error': 'No hay datos para exportar'}), 404
+
+        columns = ['Nombre Médico', 'Apellido Médico', 'Especialidad', 'Turno', 'Nombre Paciente', 'Apellido Paciente', 'Cédula', 'Fecha Cita', 'Hora', 'Observación', 'Estado']
+        rows = []
+        for c in citas:
+            rows.append([
+                c.get('nombrem'),
+                c.get('apellidom'),
+                c.get('especialidad'),
+                c.get('turno'),
+                c.get('nombrep'),
+                c.get('apellidop'),
+                c.get('cedula'),
+                c.get('fecha_cita'),
+                c.get('hora'),
+                c.get('observacion'),
+                c.get('estado')
+            ])
+
+        return export_excel(rows, columns)
+    except Exception as e:
+        app.logger.error(f"Error al exportar citas a Excel: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno al exportar Excel'}), 500

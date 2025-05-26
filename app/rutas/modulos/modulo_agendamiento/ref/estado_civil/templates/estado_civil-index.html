@@ -71,7 +71,7 @@ Estado civil
 
 {% block js %}
 <script> 
-
+  const CSRFToken = "{{ csrf_token() }}" || null;
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {

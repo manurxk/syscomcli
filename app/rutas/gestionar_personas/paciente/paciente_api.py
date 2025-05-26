@@ -114,7 +114,6 @@ def updatePaciente(paciente_id):
     try:
         id_persona = data['id_persona']
         fecha_registro = data['fecha_registro']  # Formato esperado: YYYY-MM-DD
-        peso = data['peso']
 
 
         if pacientedao.updatePaciente(paciente_id, id_persona, fecha_registro):

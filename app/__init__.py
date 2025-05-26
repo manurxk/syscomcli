@@ -48,7 +48,7 @@ from app.rutas.modulos.modulo_agendamiento.ref.estado_cita.estado_cita_routes im
 from app.rutas.modulos.modulo_agendamiento.mov.agenda_medica.agenda_medica_routes import agendamedmod
 from app.rutas.modulos.modulo_agendamiento.mov.cita.cita_routes import citamod
 from app.rutas.modulos.modulo_agendamiento.mov.ficha.ficha_routes import fichamod
-# importar gestionar compras
+
 
 
 # registrar referenciales
@@ -206,38 +206,27 @@ def buscar():
     # Definir las rutas posibles
     rutas = {
     'ciudad': 'ciudad.ciudadIndex',
-    'ciudades': 'ciudad.ciudadIndex',  # Agregado
+    'ciudades': 'ciudad.ciudadIndex',
     'pais': 'pais.paisIndex',
-    'paises': 'pais.paisIndex',  # Agregado
+    'paises': 'pais.paisIndex',
     'nacionalidad': 'nacionalidad.nacionalidadIndex',
-    'nacionalidades': 'nacionalidad.nacionalidadIndex',  # Agregado
-    'ocupacion': 'ocupacion.ocupacionIndex',
-    'ocupaciones': 'ocupacion.ocupacionIndex',  # Agregado
+    'nacionalidades': 'nacionalidad.nacionalidadIndex',
     'estado civil': 'estadocivil.estadocivilIndex',
-    'estados civiles': 'estadocivil.estadocivilIndex',  # Agregado
-    'sexo': 'sexo.sexoIndex',
-    'sexos': 'sexo.sexoIndex',  # Agregado
+    'estados civiles': 'estadocivil.estadocivilIndex',
     'persona': 'persona.personaIndex',
-    'personas': 'persona.personaIndex',  # Agregado
+    'personas': 'persona.personaIndex',
     'paciente': 'paciente.pacienteIndex',
     'medico': 'medico.medicoIndex',
     'cita': 'estadocita.estadocitaIndex',
-    'citas': 'estadocita.estadocitaIndex',  # Agregado
+    'citas': 'estadocita.estadocitaIndex',
     'especialidad': 'especialidad.especialidadIndex',
-    'especialidades': 'especialidad.especialidadIndex',  # Agregado
+    'especialidades': 'especialidad.especialidadIndex',
+    'dia': 'dia.diaIndex',
     'dias': 'dia.diaIndex',
-    'dia': 'dia.diaIndex',  # Agregado
-    'diagnostico': 'diagnostico.diagnosticoIndex',
-    'diagnosticos': 'diagnostico.diagnosticoIndex',  # Agregado
-    'duracion consulta': 'duracionconsulta.duracionconsultaIndex',
-    'duraciones consulta': 'duracionconsulta.duracionconsultaIndex',  # Agregado
     'turno': 'turno.turnoIndex',
-    'turnos': 'turno.turnoIndex',  # Agregado
-    'test utilizados': 'instrumento.instrumentoIndex',
-    'tests utilizados': 'instrumento.instrumentoIndex',  # Agregado
-    'tratamientos': 'tratamiento.tratamientoIndex',
-    'tratamiento': 'tratamiento.tratamientoIndex'  # Agregado
-    }
+    'turnos': 'turno.turnoIndex'
+}
+
 
     # Verificar si el término coincide con alguna clave en rutas
     if termino in rutas:

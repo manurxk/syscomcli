@@ -73,7 +73,7 @@ def addCiudad():
         if ciudad_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id_ciudad': ciudad_id, 'descripcion': descripcion},
+                'data': {'id': ciudad_id, 'descripcion': descripcion},
                 'error': None
             }), 201
         else:
@@ -105,7 +105,7 @@ def updateCiudad(ciudad_id):
         if ciudao.updateCiudad(ciudad_id, descripcion.upper()):
             return jsonify({
                 'success': True,
-                'data': {'id_ciudad': ciudad_id, 'descripcion': descripcion},
+                'data': {'id': ciudad_id, 'descripcion': descripcion},
                 'error': None
             }), 200
         else:
@@ -129,7 +129,7 @@ def deleteCiudad(ciudad_id):
         if ciudao.deleteCiudad(ciudad_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'Ciudad con ID {ciudad_id} eliminada correctamente.',
+                'mensaje': f'ciudad con ID {ciudad_id} eliminada correctamente.',
                 'error': None
             }), 200
         else:

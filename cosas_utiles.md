@@ -25,7 +25,7 @@ fecha_pedido=date(2024, 10, 16)
 from werkzeug.security import generate_password_hash
 
 # Contraseña del usuario
-password = '12345' 
+password = 'recep123' 
 
 # Generar el hash de la contraseña
 password_hash = generate_password_hash(password)

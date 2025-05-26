@@ -63,6 +63,9 @@ Géneros
 
 {% block js %}
 <script>
+
+ const CSRFToken = "{{ csrf_token() }}" || null;
+
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
@@ -106,7 +109,7 @@ Géneros
         .then(data => {
           if(data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "El Género ha sido actualizado correctamente.", "success");
+            Swal.fire("Actualizado", "El Sexo ha sido actualizado correctamente.", "success");
           } else {
             Swal.fire("Error", data.error || "Ocurrió un error.");
           }
@@ -122,7 +125,7 @@ Géneros
         .then(data => {
           if(data.success) {
             tabla.ajax.reload();
-            Swal.fire("Guardado", "El Género ha sido agregado correctamente.", "success");
+            Swal.fire("Guardado", "El sexo ha sido agregado correctamente.", "success");
           } else {
             Swal.fire("Error", data.error || "Ocurrió un error.");
           }
@@ -180,7 +183,7 @@ Géneros
             if(data.success) {
               const tabla = $('#tbl').DataTable();
               tabla.ajax.reload();
-              Swal.fire("Eliminado", "El Género ha sido eliminado correctamente.", "success");
+              Swal.fire("Eliminado", "El Sexo ha sido eliminado correctamente.", "success");
             } else {
               Swal.fire("Error", data.error || "Ocurrió un error.");
             }
