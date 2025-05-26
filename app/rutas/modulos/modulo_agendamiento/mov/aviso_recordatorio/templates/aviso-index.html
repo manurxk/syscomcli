@@ -6,195 +6,93 @@ Citas
 
 {% block contenido %}
 <div class="container mt-4">
-    <h3>Listar Citas</h3>
+  <h3>Listar Avisos Recordatorios</h3>
 
-<!-- tarjeta -->
-<div class="card">
- <div class="card-header d-flex justify-content-between align-items-center">
-        <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
-        <div>
-          <button type="button" class="btn btn-outline-success" id="btnExportExcel">Exportar Excel</button>
-          <button type="button" class="btn btn-outline-danger" id="btnExportPDF">Exportar PDF</button>
-        </div>
+  <!-- Tarjeta -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <button type="button" class="btn btn-outline-primary" id="btnAgregarAviso">Agregar</button>
+      <div>
+        <button type="button" class="btn btn-outline-success" id="btnExportExcelAviso">Exportar Excel</button>
+        <button type="button" class="btn btn-outline-danger" id="btnExportPDFAviso">Exportar PDF</button>
       </div>
-  <div class="card-body">
-    <!-- Scroll horizontal para la tabla -->
-    <div style="overflow-x: auto;">
-      <table class="table table-striped" id="tbl">
-        <thead>
-          <tr>
-            <th>Especialista</th>
-            <th>Apellido</th>
-            <th>Especialidad</th>
-            <th>Turno</th>
-            <th>Paciente</th>
-            <th>Apellido</th>
-            <th>Cédula</th>
-            <th>Fecha de la Cita:</th>
-            <th>Hora</th>
-            <th>Observacion</th>
-            <th>Estado de la cita</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    </div>
+    <div class="card-body">
+      <div style="overflow-x: auto;">
+        <table class="table table-striped" id="tblAvisos">
+          <thead>
+            <tr>
+              <th>Medio de Envío</th>
+              <th>Fecha Programada</th>
+              <th>Estado de Envío</th>
+              <th>Fecha de Envío</th>
+              <th>Mensaje</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
-<!-- /tarjeta -->
 
-    <!-- El formulario -->
-    <div class="modal" id="modalFormulario">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <!-- Modal Header -->
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
+  <!-- Modal Formulario -->
+  <div class="modal" id="modalFormularioAviso">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modalTitleAviso">Agregar Aviso</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
 
-          <!-- Modal body -->
-          <div class="modal-body">
-            <div class="form-group">
-              <input type="hidden" id="txtIdCita">
-              <input type="hidden" id="id_agenda_medica">
-              <label for="txtAgenda_medica">Médico:</label>
-              <input type="text" class="form-control" placeholder="Clik para asignar un médico" id="txtAgenda_medica"  readonly> 
-              <input type="hidden" id="id_paciente">
-              <label for="txtPaciente">Paciente:</label>
-              <input type="text" class="form-control" placeholder="Clik para selecionar un paciente"  id="txtPaciente" readonly>
-              <input type="hidden" id="id_hora">
-              <label for="txtFecha_cita">Fecha de cita:</label>
-              <input type="date" class="form-control" placeholder="Ingrese la fecha de cita" id="txtFecha_cita">
-              <label for="txtHora">Hora:</label>
-              <input type="time" class="form-control" placeholder="Clik para selecionar una hora disponible" id="txtHora"  readonly>
-              <label for="txtObservacion">Observacion:</label>
-              <input type="text" class="form-control" placeholder="Añadir una observación"  id="txtObservacion">
-              <input type="hidden" id="id_estado_cita">
-              <label for="txtEstado_cita">Estado de la cita:</label>
-              <input type="text" class="form-control" placeholder="Clik para selecionar el estado de la cita" id="txtEstado_cita" readonly>
-              </select>
-            </div>
-          </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <input type="hidden" id="id_aviso_recordatorio">
+            <label for="txtMedioEnvio">Medio de Envío:</label>
+            <select class="form-control" id="txtMedioEnvio">
+              <option value="Correo">Correo</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="SMS">SMS</option>
+              <option value="Llamada">Llamada</option>
+            </select>
 
-          <!-- Modal footer -->
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+            <label for="txtFechaProgramada">Fecha Programada:</label>
+            <input type="date" class="form-control" id="txtFechaProgramada">
+
+            <label for="txtEstadoEnvio">Estado del Envío:</label>
+            <select class="form-control" id="txtEstadoEnvio">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Enviado">Enviado</option>
+              <option value="Fallido">Fallido</option>
+            </select>
+
+            <label for="txtFechaEnvio">Fecha de Envío (si aplica):</label>
+            <input type="date" class="form-control" id="txtFechaEnvio">
+
+            <label for="txtMensaje">Mensaje:</label>
+            <textarea class="form-control" id="txtMensaje" placeholder="Escriba el mensaje del recordatorio"></textarea>
           </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-primary" id="btnGuardarAviso">Guardar</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="modal" id="modalBuscarAgenda_medica">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalAgenda_medicaTitle">Seleccionar agenda medica</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="table-responsive">
-              <table class="table table-striped table-bordered w-100" id="tblAgenda_medica">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Especialidad</th>
-                    <th>Turno</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="modal" id="modalBuscarPaciente">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalPacienteTitle">Seleccionar paciente</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="table-responsive">
-              <table class="table table-striped table-bordered w-100" id="tblPaciente">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Cédula</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-   <div class="modal" id="modalBuscarHora">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="modalHoraTitle">Seleccionar hora de la cita</h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="table-responsive">
-          <table class="table table-striped table-bordered w-100" id="tblHora">
-            <thead>
-              <tr>
-                <th>Hora de la cita</th>
-                <th>Acciones</th> <!-- Añadido -->
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+  <!-- Alerta de éxito -->
+  <div class="row mt-4 d-none" id="rowAlertaAviso">
+    <div class="col col-md-12">
+      <div class="alert alert-success">
+        <strong>Registro Exitoso!</strong>
+        <div class="row" id="mostrarAlertaAviso"></div>
       </div>
     </div>
   </div>
 </div>
 
-    
-    <div class="modal" id="modalBuscarEstado_cita">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalEstado_citaTitle">Seleccionar estado de la cita</h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="table-responsive">
-              <table class="table table-striped table-bordered w-100" id="tblEstado_cita">
-                <thead>
-                  <tr>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-
-    
-    <div class="row mt-4 d-none" id="rowAlerta">
-      <div class="col col-md-12">
-        <div class="alert alert-success">
-          <strong>Registro Exitoso!</strong>
-          <div class="row" id="mostrarAlerta"></div>
-        </div>
-      </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block js %}
@@ -221,14 +119,10 @@ Citas
         { data: 'observacion' },
         { data: 'estado' },
         { data: function(row) {
-    return `
-      <button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_cita}" title="Editar"><i class="fas fa-edit"></i></button>
-      <button type="button" name="btn_eliminar" class="btn btn-outline-danger" data-id="${row.id_cita}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-      <button type="button" name="btn_enviar_aviso" class="btn btn-outline-primary" data-id="${row.id_cita}" title="Enviar recordatorio"><i class="fas fa-bell"></i></button>
-    `;
-  }
-}
-
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.id_cita}"title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger"data-id="${row.id_cita}"title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;;
+          }
+        }
       ]
     });
   }
@@ -643,77 +537,6 @@ const editar = () => {
       });
     });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Evento para enviar aviso recordatorio al hacer clic en el botón con name="btn_enviar_aviso"
-$('#tbl').on('click', 'button[name="btn_enviar_aviso"]', function () {
-  const idCita = $(this).data('id');
-  
-  if (!idCita) {
-    Swal.fire("Error", "No se encontró el ID de la cita.", "error");
-    return;
-  }
-
-  Swal.fire({
-    title: "¿Deseas enviar un aviso recordatorio?",
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Sí, enviar",
-    cancelButtonText: "Cancelar"
-  }).then(result => {
-    if (result.isConfirmed) {
-      enviarAviso(idCita);
-    }
-  });
-});
-
-// Función para enviar el aviso mediante fetch
-function enviarAviso(idCita) {
-  fetch(`/api/v1/avisos/enviar/${idCita}`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': CSRFToken // Asegúrate que CSRFToken está definido globalmente
-    }
-  })
-  .then(resp => {
-    if (!resp.ok) {
-      throw new Error(`HTTP error! status: ${resp.status}`);
-    }
-    return resp.json();
-  })
-  .then(data => {
-    if (data.success) {
-      Swal.fire("Enviado", "El aviso fue enviado correctamente.", "success");
-    } else {
-      Swal.fire("Error", data.error || "No se pudo enviar el aviso.", "error");
-    }
-  })
-  .catch(err => {
-    console.error('Fetch error:', err);
-    Swal.fire("Error", "Ocurrió un problema al enviar el aviso.", "error");
-  });
-}
-
-
-
-
-
-
-
-
 
   const addEvents = () => {
     agregar();

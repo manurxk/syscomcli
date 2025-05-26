@@ -3,13 +3,17 @@ from app.dao.modulos.modulo_agendamiento.ref.dia.DiaDao import DiaDao
 
 diaapi = Blueprint('diaapi', __name__)
 
-# Trae todas las ciudades
+# Lista de dias validos
+DIAS_VALIDOS = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO', 'LUNES A VIERNES', 'LUNES A SÁBADO']
+
+
+# Trae todos los dias
 @diaapi.route('/dias', methods=['GET'])
 def getDias():
     diadao = DiaDao()
 
     try:
-        dias = diadao.getDia()
+        dias = diadao.getDias()
 
         return jsonify({
             'success': True,
@@ -18,7 +22,7 @@ def getDias():
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todos los días: {str(e)}")
+        app.logger.error(f"Error al obtener todos los dias: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
@@ -44,13 +48,13 @@ def getDia(dia_id):
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al obtener dias: {str(e)}")
+        app.logger.error(f"Error al obtener dia: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega una nueva ciudad
+# Agrega un nuevo dia
 @diaapi.route('/dias', methods=['POST'])
 def addDia():
     data = request.get_json()
@@ -69,17 +73,26 @@ def addDia():
 
     try:
         descripcion = data['descripcion'].upper()
+ 
+        # Validar si el DIA está en la lista de DIAS válidos
+        if descripcion not in DIAS_VALIDOS:
+            return jsonify({
+                'success': False,
+                'error': 'Día inválido. Solo se permiten días de la semana: "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes a Viernes", "Lunes a Sábados".'
+            }), 400
+
+
         dia_id = diadao.guardarDia(descripcion)
         if dia_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id': dia_id, 'descripcion': descripcion},
+                'data': {'id_dia': dia_id, 'descripcion': descripcion},
                 'error': None
             }), 201
         else:
-            return jsonify({ 'success': False, 'error': 'No se pudo guardar el día. Consulte con el administrador.' }), 500
+            return jsonify({ 'success': False, 'error': 'No se pudo guardar el dia. Consulte con el administrador.' }), 500
     except Exception as e:
-        app.logger.error(f"Error al agregar día: {str(e)}")
+        app.logger.error(f"Error al agregar dia: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
@@ -101,20 +114,28 @@ def updateDia(dia_id):
                             'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
                             }), 400
     descripcion = data['descripcion']
+
+    # Validar si el DIA está en la lista de DIAS válidos
+    if descripcion not in DIAS_VALIDOS:
+            return jsonify({
+                'success': False,
+                'error': 'Día inválido. Solo se permiten días de la semana: "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes a Viernes", "Lunes a Sábados".'
+            }), 400
+
     try:
         if diadao.updateDia(dia_id, descripcion.upper()):
             return jsonify({
                 'success': True,
-                'data': {'id':dia_id, 'descripcion': descripcion},
+                'data': {'id_dia': dia_id, 'descripcion': descripcion},
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró al día con el ID proporcionado o no se pudo actualizar.'
+                'error': 'No se encontró el dia con el ID proporcionado o no se pudo actualizar.'
             }), 404
     except Exception as e:
-        app.logger.error(f"Error al actualizar día: {str(e)}")
+        app.logger.error(f"Error al actualizar dia: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
@@ -125,21 +146,21 @@ def deleteDia(dia_id):
     diadao = DiaDao()
 
     try:
-        # Usar el retorno de eliminarCiudad para determinar el éxito
+        # Usar el retorno de eliminarDia para determinar el éxito
         if diadao.deleteDia(dia_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'dia con ID {dia_id} eliminada correctamente.',
+                'mensaje': f'Día con ID {dia_id} eliminado correctamente.',
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró al día con el ID proporcionado o no se pudo eliminar.'
+                'error': 'No se encontró el dia con el ID proporcionado o no se pudo eliminar.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al eliminar día: {str(e)}")
+        app.logger.error(f"Error al eliminar dia: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'

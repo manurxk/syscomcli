@@ -50,6 +50,11 @@ from app.rutas.modulos.modulo_agendamiento.mov.cita.cita_routes import citamod
 from app.rutas.modulos.modulo_agendamiento.mov.ficha.ficha_routes import fichamod
 
 
+# from app.rutas.modulos.modulo_agendamiento.mov.aviso_recordatorio.recordatorio_routes import avisomod
+# app.register_blueprint(avisomod)
+
+
+
 
 # registrar referenciales
 modulo0 = '/agendamiento'

@@ -29,6 +29,33 @@ class CiudadDao:
             cur.close()
             con.close()
 
+
+    def ciudadExiste(self, descripcion):
+        verificarSQL = """
+        SELECT 1 FROM ciudades WHERE UPPER(descripcion) = %s
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+
+        try:
+            cur.execute(verificarSQL, (descripcion.upper(),))
+            return cur.fetchone() is not None  # Devuelve True si ya existe
+
+        except Exception as e:
+            app.logger.error(f"Error al verificar existencia de ciudad: {str(e)}")
+            return False
+
+        finally:
+            cur.close()
+            con.close()
+
+
+
+
+
+
+    
     def getCiudadById(self, id_ciudad):
 
         ciudadSQL = """
