@@ -5,6 +5,24 @@ Este sistema se encuentra en sus primeras fases de construcción, por lo que aú
 
 Este es un sistema de agendamiento desarrollado en Python con Flask. Está pensado para consultorios psicológicos que desean organizar de forma digital sus procesos de atención y gestión de pacientes.
 
+
+## 🖼️ Capturas de pantalla
+
+### 🔐 Login del sistema
+![Login](https://github.com/user-attachments/assets/17755b04-0372-46b4-b635-56ed2dc9c4ad)
+
+### 🏠 Pantalla principal
+![Inicio](https://github.com/user-attachments/assets/d3917639-7711-4663-abe9-d5f0fe733de2)
+
+### 📅 Gestión de citas
+
+![Citas](https://github.com/user-attachments/assets/40da9fb0-d065-4a07-8d48-0e02ed8bec2e)
+![Citas](https://github.com/user-attachments/assets/457d1397-ed30-4780-af3f-a4445134021b)
+
+
+
+
+
 ## 🧩 Módulos del sistema
 
 ### 🔐 Autenticación
