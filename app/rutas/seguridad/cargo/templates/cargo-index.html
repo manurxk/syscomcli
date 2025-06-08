@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Cargos
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Cargos</h3>
+
+    <div class="card">
+      <div class="card-header">
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+      </div>
+    </div>
+
+ <!-- Modal Formulario -->
+ <div class="modal" id="modalFormulario">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h4 class="modal-title" id="modalTitle"></h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <input type="hidden" id="car_id">
+          <label for="txtcar_des">Descripción:</label>
+          <input type="text" class="form-control" placeholder="Ingrese la descripción" id="txtcar_des" autofocus>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+ </div>
+
+ <div class="row mt-4 d-none" id="rowAlerta">
+    <div class="col col-md-12">
+        <div class="alert alert-success">
+            <strong>Registro Exitoso!</strong>
+            <div class="row" id="mostrarAlerta"></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax:'/api/v1/cargos',
+      columns: [
+        { data: 'car_des' },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.car_id}" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger" data-id="${row.car_id}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', () => {
+      $('#modalTitle').text("Agregar Cargo");
+      $('#car_id').val("");
+      $('#txtcar_des').val("");
+      $('#modalFormulario').modal();
+      $('#txtcar_des').focus();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', () => {
+      const car_id = $('#car_id').val();
+      const car_des = $('#txtcar_des').val().trim();
+      const tabla = $('#tbl').DataTable();
+
+      if (!car_des) {
+        Swal.fire("Error", "La descripción es obligatoria.", "warning");
+        return;
+      }
+
+      if (car_id) {
+        // Update
+        fetch(`/api/v1/cargos/${car_id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify({ car_des })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Actualizado", "El cargo ha sido actualizado correctamente.", "success");
+          } else {
+            Swal.fire(data.error || "Error al actualizar");
+          }
+        }).catch(() => {
+          Swal.fire("Error", "Ocurrió un error al actualizar el cargo.", "error");
+        });
+      } else {
+        // Insert
+        fetch('/api/v1/cargos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify({ car_des })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Guardado", "El cargo ha sido agregado correctamente.", "success");
+          } else {
+            Swal.fire(data.error || "Error al guardar");
+          }
+        }).catch(() => {
+          Swal.fire("Error", "Ocurrió un error al guardar el cargo.", "error");
+        });
+      }
+
+      $('#modalFormulario').modal('hide');
+      $('#txtcar_des').val("");
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]', function(){
+      Swal.fire({
+        title: "¿Deseas editar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: "No"
+      }).then((result) => {
+        if(result.isConfirmed) {
+          $('#modalTitle').text("Editar Cargo");
+          const car_id = $(this).data('id');
+          $('#car_id').val(car_id);
+
+          fetch(`/api/v1/cargos/${car_id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
+          })
+          .then(res => res.json())
+          .then(data => {
+            $('#txtcar_des').val(data.data.car_des);
+            $('#modalFormulario').modal();
+            $('#txtcar_des').focus();
+          });
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){
+      const car_id = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: "No"
+      }).then((result) => {
+        if(result.isConfirmed) {
+          fetch(`/api/v1/cargos/${car_id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
+          })
+          .then(res => res.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const tabla = $('#tbl').DataTable();
+              tabla.ajax.reload();
+              Swal.fire("Eliminado", "", data.success);
+            } else {
+              Swal.fire(data.error || "Error al eliminar");
+            }
+          }).catch(() => {
+            Swal.fire("Error", "Ocurrió un error al eliminar el cargo.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  const addEvents = () => {
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  }
+
+  $(function() {
+    initDatatable();
+    addEvents();
+  });
+</script>
+{% endblock %}

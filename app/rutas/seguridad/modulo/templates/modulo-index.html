@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Módulos
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Módulos</h3>
+
+    <!-- tarjeta -->
+    <div class="card">
+      <div class="card-header">
+          <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Descripción</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+      </div>
+    </div>
+ <!-- /tarjeta -->
+
+ <!-- El formulario -->
+ <div class="modal" id="modalFormulario">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+    
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title" id="modalTitle"></h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">
+        <div class="form-group">
+          <input type="hidden" id="mod_id">
+          <label for="txtmod_des">Descripción del Módulo:</label>
+          <input type="text" class="form-control" placeholder="Ingrese la descripción" id="txtmod_des" maxlength="60" required>
+        </div>
+      </div>
+
+      <!-- Modal footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-primary" id="btnGuardar">Guardar</button>
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+   </div>
+ </div>
+    
+ <div class="row mt-4 d-none" id="rowAlerta">
+    <div class="col col-md-12">
+        <div class="alert alert-success">
+            <strong>Registro Exitoso!</strong>
+            <div class="row" id="mostrarAlerta"></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script> 
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax:'/api/v1/modulos',  // Cambia la ruta al endpoint que devuelva los módulos
+      columns: [
+        { data: 'mod_id' },
+        { data: 'mod_des' },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-outline-success btn-sg" data-id="${row.mod_id}" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button type="button" name="btn_eliminar" class="btn btn-outline-danger" data-id="${row.mod_id}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar Módulo");
+      $('#mod_id').val("");
+      $('#txtmod_des').val("");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const mod_id = $('#mod_id').val();
+      const mod_des = $('#txtmod_des').val().trim();
+      const tabla = $('#tbl').DataTable();
+
+      if (!mod_des) {
+        Swal.fire("Error", "La descripción es obligatoria.", "warning");
+        return;
+      }
+
+      if(mod_id) {
+        // update
+        fetch(`/api/v1/modulos/${mod_id}`, {
+          method: 'PUT',
+          headers: {
+             'Content-Type': 'application/json',
+             'X-CSRFToken': CSRFToken
+          }, 
+          body: JSON.stringify({ mod_des })
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Actualizado", "El módulo ha sido actualizado correctamente.", "success");
+          } else {
+            Swal.fire("Error", data.error || "Error al actualizar.");
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al actualizar el módulo.", "error");
+        });
+      } else {
+        // insert
+        fetch(`/api/v1/modulos`, {
+          method: 'POST',
+          headers: {
+             'Content-Type': 'application/json',
+             'X-CSRFToken': CSRFToken
+          }, 
+          body: JSON.stringify({ mod_des })
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Guardado", "El módulo ha sido agregado correctamente.", "success");
+          } else {
+            Swal.fire("Error", data.error || "Error al guardar.");
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al guardar el módulo.", "error");
+        });
+      }
+      $('#txtmod_des').val("");
+      $('#modalFormulario').modal("hide");
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      Swal.fire({
+        title: "¿Deseas editar este módulo?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $('#modalTitle').text("Editar Módulo");
+
+          const mod_id = $(this).data('id');
+          $('#mod_id').val(mod_id);
+
+          fetch(`/api/v1/modulos/${mod_id}`, {
+            method: 'GET',
+            headers: {
+               'Content-Type': 'application/json',
+               'X-CSRFToken': CSRFToken
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            $('#txtmod_des').val(data.data.mod_des);
+            $('#modalFormulario').modal();
+          });
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+      const mod_id = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este módulo?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/modulos/${mod_id}`, {
+            method: 'DELETE',
+            headers: {
+               'Content-Type': 'application/json',
+               'X-CSRFToken': CSRFToken
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const fila =$(this).closest('tr');
+              const tabla = $('#tbl').DataTable();
+              tabla.row(fila).remove().draw();
+              Swal.fire("Eliminado", "", data.success);
+            } else {
+              Swal.fire("Error", data.error || "Error al eliminar.");
+            }
+          }).catch(err => {
+            Swal.fire("Error", "Ocurrió un error al eliminar el módulo.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  const addEvents = () => {
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  }
+
+  $(function() {
+    initDatatable();
+    addEvents();
+  }); 
+</script> 
+{% endblock %}

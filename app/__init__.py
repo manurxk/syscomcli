@@ -35,7 +35,15 @@ from app.rutas.modulos.modulo_agendamiento.ref.turno.turno_routes import turmod
 from app.rutas.gestionar_personas.persona.persona_routes import persona_mod
 from app.rutas.gestionar_personas.medico.medico_routes import medicomod
 from app.rutas.gestionar_personas.paciente.paciente_routes import pacientemod
-from app.rutas.gestionar_personas.usuario.usuario_routes import usumod
+from app.rutas.seguridad.usuario.usuario_routes import usumod
+
+
+from app.rutas.seguridad.grupo.grupo_routes import grumod
+from app.rutas.seguridad.modulo.modulo_routes import modmod
+from app.rutas.seguridad.cargo.cargo_routes import carmod
+
+
+
 #Modulo Agendamiento REF
 
 from app.rutas.modulos.modulo_agendamiento.ref.dia.dia_routes import diamod
@@ -94,7 +102,18 @@ app.register_blueprint(pacientemod, url_prefix=f'{modulo2}/paciente')
 from app.rutas.gestionar_personas.paciente.paciente_api import pacienteapi
 
 app.register_blueprint(usumod, url_prefix=f'{modulo2}/usuario')
-from app.rutas.gestionar_personas.usuario.usuario_api import usuarioapi
+from app.rutas.seguridad.usuario.usuario_api import usuarioapi
+
+
+app.register_blueprint(carmod, url_prefix=f'{modulo2}/cargo')
+from app.rutas.seguridad.cargo.cargo_api import cargoapi
+
+app.register_blueprint(modmod, url_prefix=f'{modulo2}/modulo')
+from app.rutas.seguridad.modulo.modulo_api import moduloapi
+
+app.register_blueprint(grumod, url_prefix=f'{modulo2}/grupo')
+from app.rutas.seguridad.grupo.grupo_api import grupoapi
+
 
 
 
@@ -158,6 +177,11 @@ app.register_blueprint(usuarioapi, url_prefix=apiversion1)
 
 app.register_blueprint(agenda_medica_api, url_prefix=apiversion1)
 
+
+
+app.register_blueprint(moduloapi, url_prefix=apiversion1)
+app.register_blueprint(cargoapi, url_prefix=apiversion1)
+app.register_blueprint(grupoapi, url_prefix=apiversion1)
 
 
 
