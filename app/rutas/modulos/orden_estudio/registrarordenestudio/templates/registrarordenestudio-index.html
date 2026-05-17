@@ -1,0 +1,776 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Órdenes de Estudios
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-file-medical"></i> Órdenes de Estudios
+        </h3>
+        <button type="button" class="btn btn-primary" id="btnAgregar">
+            <i class="fas fa-plus"></i> Nueva Orden
+        </button>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Lista de Órdenes de Estudios</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered w-100" id="tblOrdenesEstudios">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Número</th>
+                            <th>Fecha</th>
+                            <th>Paciente</th>
+                            <th>Profesional</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal formulario -->
+    <div class="modal fade" id="modalFormulario" tabindex="-1" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h4 class="modal-title" id="modalTitle">Nueva Orden de Estudio</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="txtIdOrdenEstudio">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtPaciente">Paciente: <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="txtPaciente" readonly required>
+                                    <input type="hidden" id="id_paciente">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-secondary" id="btnBuscarPaciente">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtProfesional">Profesional: <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="txtProfesional" readonly required>
+                                    <input type="hidden" id="id_profesional">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-secondary" id="btnBuscarProfesional">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtConsulta">Consulta: <span class="text-danger">*</span></label>
+                                <select class="form-control" id="id_consulta" required>
+                                    <option value="">Seleccione una consulta...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtFecha">Fecha: <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="txtFecha" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtTipo">Tipo de Estudio: <span class="text-danger">*</span></label>
+                                <select class="form-control" id="txtTipo" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="LABORATORIO">Laboratorio</option>
+                                    <option value="IMAGENOLOGIA">Imagenología</option>
+                                    <option value="OTROS">Otros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtEstado">Estado:</label>
+                                <select class="form-control" id="txtEstado">
+                                    <option value="PENDIENTE">Pendiente</option>
+                                    <option value="REALIZADO">Realizado</option>
+                                    <option value="CANCELADO">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="txtIndicaciones">Indicaciones:</label>
+                        <textarea class="form-control" id="txtIndicaciones" rows="3" 
+                                  placeholder="Indicaciones específicas para la realización del estudio..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="txtObservaciones">Observaciones:</label>
+                        <textarea class="form-control" id="txtObservaciones" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnGuardar">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buscar Paciente -->
+    <div class="modal fade" id="modalBuscarPaciente" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Buscar Paciente</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered w-100" id="tblPacientes">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>HC</th>
+                                    <th>Nombre Completo</th>
+                                    <th>CI</th>
+                                    <th>Teléfono</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buscar Profesional -->
+    <div class="modal fade" id="modalBuscarProfesional" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Seleccionar Profesional</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered w-100" id="tblProfesionales">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Nombre Completo</th>
+                                    <th>Matrícula</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}" || null;
+
+// Inicializar DataTable
+const initDatatable = () => {
+    $('#tblOrdenesEstudios').DataTable({
+        language: {
+            url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+        },
+        ajax: {
+            url: '/api/v1/ordenes-estudios',
+            dataSrc: 'data'
+        },
+        columns: [
+            { data: 'orden_numero' },
+            { data: 'orden_fecha' },
+            { data: 'paciente_nombre' },
+            { data: 'profesional_nombre' },
+            { 
+                data: 'orden_tipo',
+                render: function(data) {
+                    const tipos = {
+                        'LABORATORIO': '<span class="badge badge-info">Laboratorio</span>',
+                        'IMAGENOLOGIA': '<span class="badge badge-primary">Imagenología</span>',
+                        'OTROS': '<span class="badge badge-secondary">Otros</span>'
+                    };
+                    return tipos[data] || data;
+                }
+            },
+            { 
+                data: 'orden_estado',
+                render: function(data) {
+                    const estados = {
+                        'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
+                        'REALIZADO': '<span class="badge badge-success">Realizado</span>',
+                        'CANCELADO': '<span class="badge badge-danger">Cancelado</span>'
+                    };
+                    return estados[data] || data;
+                }
+            },
+            { 
+                data: function(row) {
+                    return `
+                        <button type="button" name="btn_ver" class="btn btn-info btn-sm" data-id="${row.id_orden_estudio}" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id_orden_estudio}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id_orden_estudio}" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+        order: [[1, 'desc']] // Ordenar por fecha descendente
+    });
+}
+
+// Agregar nueva orden
+const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+        $('#modalTitle').text("Nueva Orden de Estudio");
+        $('#txtIdOrdenEstudio').val("");
+        $('#txtPaciente').val("");
+        $('#id_paciente').val("");
+        $('#txtProfesional').val("");
+        $('#id_profesional').val("");
+        $('#id_consulta').html('<option value="">Seleccione una consulta...</option>');
+        $('#txtFecha').val(new Date().toISOString().split('T')[0]);
+        $('#txtTipo').val("");
+        $('#txtEstado').val('PENDIENTE');
+        $('#txtIndicaciones').val("");
+        $('#txtObservaciones').val("");
+        $('#modalFormulario').modal('show');
+    });
+}
+
+// Guardar orden
+const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+        const idOrdenEstudio = $('#txtIdOrdenEstudio').val();
+        const idConsulta = $('#id_consulta').val();
+        const idPaciente = $('#id_paciente').val();
+        const idProfesional = $('#id_profesional').val();
+        const fecha = $('#txtFecha').val();
+        const tipo = $('#txtTipo').val();
+        const estado = $('#txtEstado').val();
+        const indicaciones = $('#txtIndicaciones').val();
+        const observaciones = $('#txtObservaciones').val();
+        
+        // Validaciones
+        if (!idPaciente) {
+            Swal.fire("Error", "Debe seleccionar un paciente.", "error");
+            return;
+        }
+        if (!idProfesional) {
+            Swal.fire("Error", "Debe seleccionar un profesional.", "error");
+            return;
+        }
+        if (!idConsulta) {
+            Swal.fire("Error", "Debe seleccionar una consulta.", "error");
+            return;
+        }
+        if (!fecha) {
+            Swal.fire("Error", "Debe ingresar una fecha.", "error");
+            return;
+        }
+        if (!tipo) {
+            Swal.fire("Error", "Debe seleccionar un tipo de estudio.", "error");
+            return;
+        }
+        
+        const payload = {
+            id_consulta: parseInt(idConsulta),
+            id_paciente: parseInt(idPaciente),
+            id_profesional: parseInt(idProfesional),
+            orden_fecha: fecha,
+            orden_tipo: tipo,
+            orden_estado: estado,
+            orden_indicaciones: indicaciones || null,
+            orden_observaciones: observaciones || null,
+            usuario_creacion: 'ADMIN'
+        };
+        
+        const tabla = $('#tblOrdenesEstudios').DataTable();
+        const url = idOrdenEstudio 
+            ? `/api/v1/ordenes-estudios/${idOrdenEstudio}`
+            : '/api/v1/ordenes-estudios';
+        const method = idOrdenEstudio ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFToken
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            if(data && !data.error && data.success) {
+                tabla.ajax.reload();
+                Swal.fire(
+                    idOrdenEstudio ? "Actualizado" : "Creado",
+                    `La orden de estudio ha sido ${idOrdenEstudio ? 'actualizada' : 'creada'} correctamente.`,
+                    "success"
+                );
+                $('#modalFormulario').modal('hide');
+            } else {
+                Swal.fire("Error", data.error || `No se pudo ${idOrdenEstudio ? 'actualizar' : 'guardar'} la orden de estudio.`, "error");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al procesar la solicitud.", "error");
+        });
+    });
+}
+
+// Editar orden
+const editar = () => {
+    $('#tblOrdenesEstudios').on('click', 'button[name="btn_editar"]', function(){
+        const idOrdenEstudio = $(this).data('id');
+        
+        fetch(`/api/v1/ordenes-estudios/${idOrdenEstudio}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            if(data && data.success && data.data) {
+                const orden = data.data;
+                $('#modalTitle').text("Editar Orden de Estudio");
+                $('#txtIdOrdenEstudio').val(orden.id_orden_estudio);
+                $('#txtPaciente').val(orden.paciente_nombre);
+                $('#id_paciente').val(orden.id_paciente);
+                $('#txtProfesional').val(orden.profesional_nombre);
+                $('#id_profesional').val(orden.id_profesional);
+                
+                // Cargar consultas del paciente y luego seleccionar la consulta actual
+                if (orden.id_paciente) {
+                    cargarConsultasPaciente(orden.id_paciente).then(() => {
+                        $('#id_consulta').val(orden.id_consulta);
+                    });
+                } else {
+                    $('#id_consulta').html('<option value="">Seleccione una consulta...</option>');
+                    $('#id_consulta').val(orden.id_consulta);
+                }
+                
+                $('#txtFecha').val(orden.orden_fecha);
+                $('#txtTipo').val(orden.orden_tipo);
+                $('#txtEstado').val(orden.orden_estado);
+                $('#txtIndicaciones').val(orden.orden_indicaciones || '');
+                $('#txtObservaciones').val(orden.orden_observaciones || '');
+                $('#modalFormulario').modal('show');
+            } else {
+                Swal.fire("Error", "No se pudo cargar la orden de estudio.", "error");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al cargar la orden de estudio.", "error");
+        });
+    });
+}
+
+// Ver detalle de la orden
+const verDetalle = () => {
+    $('#tblOrdenesEstudios').on('click', 'button[name="btn_ver"]', function(){
+        const idOrdenEstudio = $(this).data('id');
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo información de la orden de estudio',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        fetch(`/api/v1/ordenes-estudios/${idOrdenEstudio}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            if(data && data.success && data.data) {
+                const orden = data.data;
+                let detalleHtml = '';
+                
+                if(orden.detalle && orden.detalle.length > 0) {
+                    detalleHtml = '<table class="table table-sm mt-3"><thead><tr><th>Estudio</th><th>Estado</th><th>Resultado</th></tr></thead><tbody>';
+                    orden.detalle.forEach(item => {
+                        detalleHtml += `<tr>
+                            <td><strong>${item.des_estudio}</strong></td>
+                            <td>${item.estudio_estado}</td>
+                            <td>${item.estudio_resultado || '-'}</td>
+                        </tr>`;
+                    });
+                    detalleHtml += '</tbody></table>';
+                } else {
+                    detalleHtml = '<p class="text-muted">No hay estudios detallados en esta orden.</p>';
+                }
+                
+                Swal.fire({
+                    title: `Orden ${orden.orden_numero}`,
+                    html: `
+                        <div class="text-left">
+                            <p><strong>Paciente:</strong> ${orden.paciente_nombre}</p>
+                            <p><strong>Profesional:</strong> ${orden.profesional_nombre}</p>
+                            <p><strong>Fecha:</strong> ${orden.orden_fecha}</p>
+                            <p><strong>Tipo:</strong> ${orden.orden_tipo}</p>
+                            <p><strong>Estado:</strong> ${orden.orden_estado}</p>
+                            ${orden.orden_indicaciones ? `<p><strong>Indicaciones:</strong><br>${orden.orden_indicaciones}</p>` : ''}
+                            <hr>
+                            <h6>Estudios:</h6>
+                            ${detalleHtml}
+                        </div>
+                    `,
+                    width: '900px',
+                    confirmButtonText: 'Cerrar'
+                });
+            } else {
+                Swal.fire("Error", "No se pudo cargar la orden de estudio.", "error");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al cargar la orden de estudio.", "error");
+        });
+    });
+}
+
+// Eliminar orden
+const eliminar = () => {
+    $('#tblOrdenesEstudios').on('click', 'button[name="btn_eliminar"]', function(){
+        const idOrdenEstudio = $(this).data('id');
+        
+        Swal.fire({
+            title: "¿Deseas eliminar esta orden de estudio?",
+            text: "Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/v1/ordenes-estudios/${idOrdenEstudio}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRFToken
+                    }
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if(data && !data.error && data.success) {
+                        const tabla = $('#tblOrdenesEstudios').DataTable();
+                        tabla.ajax.reload();
+                        Swal.fire("Eliminado", "La orden de estudio ha sido eliminada.", "success");
+                    } else {
+                        Swal.fire("Error", data.error || "No se pudo eliminar la orden de estudio.", "error");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire("Error", "Ocurrió un error al eliminar la orden de estudio.", "error");
+                });
+            }
+        });
+    });
+}
+
+// ==========================================
+// DATATABLES DE BÚSQUEDA
+// ==========================================
+const initPacientesDatatable = () => {
+    if ($.fn.DataTable.isDataTable('#tblPacientes')) {
+        $('#tblPacientes').DataTable().destroy();
+    }
+
+    $('#tblPacientes').DataTable({
+        language: {
+            url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+        },
+        ajax: {
+            url: '/api/v1/pacientes',
+            dataSrc: function(json) {
+                return json.success ? json.data : [];
+            }
+        },
+        columns: [
+            { 
+                data: 'historia_clinica', 
+                title: 'HC',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: null,
+                title: 'Nombre Completo',
+                render: function(data, type, row) {
+                    return `${row.nombre || ''} ${row.apellido || ''}`.trim();
+                }
+            },
+            { data: 'cedula', title: 'CI' },
+            { 
+                data: 'telefono', 
+                title: 'Teléfono',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            {
+                data: function(row) {
+                    const nombreCompleto = `${row.nombre || ''} ${row.apellido || ''}`.trim();
+                    return `
+                        <button type="button" class="btn btn-success btn-sm btn-select-paciente" 
+                                data-id="${row.id_paciente}"
+                                data-nombre="${nombreCompleto}">
+                            Seleccionar
+                        </button>
+                    `;
+                },
+                title: 'Acciones',
+                orderable: false,
+                className: 'text-center'
+            }
+        ],
+        responsive: true,
+        pageLength: 8,
+        order: [[1, 'asc']]
+    });
+}
+
+const initProfesionalesDatatable = () => {
+    if ($.fn.DataTable.isDataTable('#tblProfesionales')) {
+        $('#tblProfesionales').DataTable().destroy();
+    }
+
+    $('#tblProfesionales').DataTable({
+        language: {
+            url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+        },
+        ajax: {
+            url: '/api/v1/especialistas',
+            dataSrc: function(json) {
+                return json.success ? json.data : [];
+            }
+        },
+        columns: [
+            { data: 'nombre_completo', title: 'Nombre Completo' },
+            { data: 'matricula', title: 'Matrícula' },
+            {
+                data: function(row) {
+                    return `
+                        <button type="button" class="btn btn-success btn-sm btn-select-profesional" 
+                                data-id="${row.id_especialista}"
+                                data-nombre="${row.nombre_completo}">
+                            Seleccionar
+                        </button>
+                    `;
+                },
+                title: 'Acciones',
+                orderable: false,
+                className: 'text-center'
+            }
+        ],
+        responsive: true,
+        pageLength: 8,
+        order: [[0, 'asc']]
+    });
+}
+
+// ==========================================
+// CARGAR CONSULTAS DEL PACIENTE
+// ==========================================
+const cargarConsultasPaciente = (idPaciente) => {
+    return new Promise((resolve, reject) => {
+        if (!idPaciente) {
+            $('#id_consulta').html('<option value="">Seleccione una consulta...</option>');
+            resolve();
+            return;
+        }
+
+        fetch(`/api/v1/consultas/paciente/${idPaciente}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFToken
+            }
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.success && data.data && data.data.length > 0) {
+                let html = '<option value="">Seleccione una consulta...</option>';
+                data.data.forEach(consulta => {
+                    const fecha = consulta.fecha || consulta.consulta_fecha || 'N/A';
+                    const motivo = consulta.motivo || consulta.consulta_motivo || '';
+                    const motivoCorto = motivo.length > 50 ? motivo.substring(0, 50) + '...' : motivo;
+                    html += `<option value="${consulta.id_consulta}">${fecha} - ${motivoCorto}</option>`;
+                });
+                $('#id_consulta').html(html);
+            } else {
+                $('#id_consulta').html('<option value="">No hay consultas disponibles para este paciente</option>');
+            }
+            resolve();
+        })
+        .catch(err => {
+            console.error('Error cargando consultas:', err);
+            $('#id_consulta').html('<option value="">Error al cargar consultas</option>');
+            reject(err);
+        });
+    });
+}
+
+// ==========================================
+// SELECCIÓN DE PACIENTE Y PROFESIONAL
+// ==========================================
+const seleccionarPaciente = () => {
+    $(document).on('click', '#tblPacientes .btn-select-paciente', function() {
+        const data = $(this).data();
+        
+        $('#id_paciente').val(data.id);
+        $('#txtPaciente').val(data.nombre);
+        $('#modalBuscarPaciente').modal('hide');
+        
+        // Cargar consultas del paciente
+        cargarConsultasPaciente(data.id);
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Paciente Seleccionado',
+            text: data.nombre,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+}
+
+const seleccionarProfesional = () => {
+    $(document).on('click', '#tblProfesionales .btn-select-profesional', function() {
+        const data = $(this).data();
+        
+        $('#id_profesional').val(data.id);
+        $('#txtProfesional').val(data.nombre);
+        $('#modalBuscarProfesional').modal('hide');
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Profesional Seleccionado',
+            text: data.nombre,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+}
+
+// ==========================================
+// ABRIR MODALES DE BÚSQUEDA
+// ==========================================
+const abrirBusquedaPaciente = () => {
+    $('#btnBuscarPaciente').on('click', function() {
+        $('#modalBuscarPaciente').modal('show');
+        if ($.fn.DataTable.isDataTable('#tblPacientes')) {
+            $('#tblPacientes').DataTable().ajax.reload();
+        } else {
+            initPacientesDatatable();
+        }
+    });
+}
+
+const abrirBusquedaProfesional = () => {
+    $('#btnBuscarProfesional').on('click', function() {
+        $('#modalBuscarProfesional').modal('show');
+        if ($.fn.DataTable.isDataTable('#tblProfesionales')) {
+            $('#tblProfesionales').DataTable().ajax.reload();
+        } else {
+            initProfesionalesDatatable();
+        }
+    });
+}
+
+// Inicializar eventos
+const addEvents = () => {
+    agregar();
+    guardar();
+    editar();
+    verDetalle();
+    eliminar();
+}
+
+// Inicializar cuando el documento esté listo
+$(function() {
+    initDatatable();
+    addEvents();
+    initPacientesDatatable();
+    initProfesionalesDatatable();
+    seleccionarPaciente();
+    seleccionarProfesional();
+    abrirBusquedaPaciente();
+    abrirBusquedaProfesional();
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

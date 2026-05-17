@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-
+    
 {% block titulo %}
-Estado civil
+Estados Civiles
 {% endblock %}
 
 {% block contenido %}
 <div class="container mt-4">
-    <h3>Listar estado civil</h3>
+    <h3>Listar Estados Civiles</h3>
 
     <!-- tarjeta -->
     <div class="card">
@@ -17,7 +17,8 @@ Estado civil
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Estado Civil</th>
+              <th>Descripción</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -25,40 +26,43 @@ Estado civil
       </table>
       </div>
     </div>
- <!-- /tarjeta -->
+    <!-- /tarjeta -->
 
- <!-- El formulario -->
- <div class="modal" id="modalFormulario">
-  <!-- La clase modal-dialog-centered centra el modal -->
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-    
-      <!-- Modal Header -->
-      <div class="modal-header">
-        <h4 class="modal-title" id="modalTitle"></h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
+    <!-- Modal formulario -->
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
-      <!-- Modal body -->
-      <div class="modal-body">
-        <div class="form-group">
-          <input type="hidden" id="txtIdEstado_civil">
-          <label for="txtDescripcion">Descripción:</label>
-          <input type="text" class="form-control" placeholder="Ingrese el estado civil" id="txtDescripcion">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <input type="hidden" id="txtIdEstadoCivil">
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción:</label>
+              <input type="text" class="form-control" placeholder="Ingrese un estado civil" id="txtDescripcion">
+            </div>
+            <div class="form-group">
+              <label for="chkEstado">Estado:</label><br>
+              <input type="checkbox" id="chkEstado" checked> Activo
+            </div>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+
         </div>
       </div>
-
-      <!-- Modal footer -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-        <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-      </div>
-
     </div>
-   </div>
- </div>
-    
- <div class="row mt-4 d-none" id="rowAlerta">
+
+    <div class="row mt-4 d-none" id="rowAlerta">
         <div class="col col-md-12">
             <div class="alert alert-success">
                 <strong>Registro Exitoso!</strong>
@@ -70,19 +74,25 @@ Estado civil
 {% endblock %}
 
 {% block js %}
-<script> 
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
 
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax:'/api/v1/estado_civiles',      
+      ajax:'/api/v1/estados-civiles',
       columns: [
         { data: 'descripcion' },
+        { data: 'estado', render: function(val) {
+            return val ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_estado_civil}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_estado_civil}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
           }
         }
       ]
@@ -91,36 +101,41 @@ Estado civil
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      // Setear un título a modal
-      $('#modalTitle').text("Agregar un estado civil");
-      // inicia ventana modal
-      $('#txtIdEstado_civil').val("");
+      $('#modalTitle').text("Agregar un Estado Civil");
+      $('#txtIdEstadoCivil').val("");
       $('#txtDescripcion').val("");
+      $('#chkEstado').prop("checked", true);
       $('#modalFormulario').modal();
     });
   }
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const idEstado_civil = $('#txtIdEstado_civil').val();
+      const idEstadoCivil = $('#txtIdEstadoCivil').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
+      const estado = $('#chkEstado').is(':checked');
       const tabla = $('#tbl').DataTable();
 
-      if(idEstado_civil) {
+      const payload = { descripcion: nuevaDescripcion, estado: estado };
+
+      if(idEstadoCivil) {
         // update
-        fetch(`/api/v1/estado_civiles/${idEstado_civil}`, {
+        fetch(`/api/v1/estados-civiles/${idEstadoCivil}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
             Swal.fire("Actualizado", "El estado civil ha sido actualizado correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire(data.error);
+            Swal.fire("Error", data.error || "No se pudo actualizar el estado civil.", "error");
           }
         }).catch(err => {
           console.error(err);
@@ -128,56 +143,53 @@ Estado civil
         });
       } else {
         // insert
-        fetch(`/api/v1/estado_civiles`, {
+        fetch(`/api/v1/estados-civiles`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
             Swal.fire("Agregado", "El estado civil ha sido agregado correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire(data.error);
+            Swal.fire("Error", data.error || "No se pudo guardar el estado civil.", "error");
           }
         }).catch(err => {
           console.error(err);
           Swal.fire("Error", "Ocurrió un error al guardar el estado civil.", "error");
         });
       }
-      $('#txtDescripcion').val("");
-      $('#modalFormulario').modal("hide");
     });
   }
 
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]',function(){
-      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas editar este registro?",
         showCancelButton: true,
-        confirmButtonText: "Sí",
+        confirmButtonText: "Si",
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          //Swal.fire("Saved!", "", "success");
-          $('#modalTitle').text("Editar un estado civil");
+          $('#modalTitle').text("Editar un Estado Civil");
 
-          const idEstado_civil = $(this).data('id');
-          $('#txtIdEstado_civil').val(idEstado_civil);
+          const idEstadoCivil = $(this).data('id');
+          $('#txtIdEstadoCivil').val(idEstadoCivil);
 
-          // Necesitamos obtener la descripción del backend
-          fetch(`/api/v1/estado_civiles/${idEstado_civil}`, {
+          fetch(`/api/v1/estados-civiles/${idEstadoCivil}`, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
           })
           .then(resp => resp.json())
           .then(data => {
             $('#txtDescripcion').val(data.data.descripcion);
+            $('#chkEstado').prop("checked", data.data.estado);
             $('#modalFormulario').modal();
           });
         }
@@ -187,38 +199,36 @@ Estado civil
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const idEstado_civil = $(this).data('id');
-      // Mostrar mensaje de confirmación usando sweetalert
+      const idEstadoCivil = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
-        confirmButtonText: "Sí",
+        confirmButtonText: "Si",
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/estado_civiles/${idEstado_civil}`, {
+          fetch(`/api/v1/estados-civiles/${idEstadoCivil}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
             if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
-              const fila =$(this).closest('tr');
+              const fila = $(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", data.success);
+              Swal.fire("Eliminado", "El estado civil ha sido eliminado.", "success");
             } else {
-              Swal.fire(data.error);
+              Swal.fire("Error", data.error || "No se pudo eliminar el estado civil.", "error");
             }
           }).catch(err => {
             Swal.fire("Error", "Ocurrió un error al eliminar el estado civil.", "error");
           });
         }
       });
-
     });
   }
 
@@ -232,6 +242,6 @@ Estado civil
   $(function() {
     initDatatable();
     addEvents();
-  }); 
-</script> 
+  });
+</script>
 {% endblock %}

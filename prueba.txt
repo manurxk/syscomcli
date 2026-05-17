@@ -1,0 +1,30 @@
+¡Me parece una idea excelente! Te he preparado todo para que tu proyecto de tesis tenga total independencia. He modificado el archivo docker-compose.yml tomando en cuenta todas tus directrices y los puertos que ya tienes ocupados.
+
+Aquí tienes el resumen de los cambios aplicados en tu docker-compose.yml:
+
+Nombres de Contenedores Identificables:
+
+Base de datos: syscomcli_bd
+Aplicación: syscomcli_app
+Puertos Libres de Conflictos:
+
+Base de datos (PostgreSQL): Ahora expuesta hacia tu PC en el puerto 5434 (ya que 5432 y 5433 están ocupados).
+App (Flask/Web): Ahora expuesta hacia tu PC en el puerto 5005 (evitando el 5000 y el 5001).
+Debug remoto: Lo cambié al puerto 5679 (por si el 5678 también estaba en uso).
+Total Independencia (Aislamiento de Red y Datos):
+
+Nuevo Volumen Exclusivo: Cambié el volumen de datos a tesis_syscomcli_data. De esta manera, tu base de datos de tesis arranca 100% limpia sin mezclarse con la data de clausys o cualquier otro proyecto.
+Nueva Red Aislada: Creé una red interna exclusiva llamada network-tesis. Tus contenedores de tesis solo se verán entre ellos y no habrá cruces extraños con otros contenedores que tengas corriendo en tu máquina.
+¿Cómo proceder ahora?
+Al estar todo completamente aislado e independiente, puedes levantar este entorno sin tener que detener tus otros proyectos.
+
+Solo necesitas abrir tu terminal en la carpeta dock y ejecutar:
+
+bash
+docker-compose up -d --build
+Esto va a:
+
+Crear la red y el volumen nuevos para tu tesis.
+Levantar la base de datos vacía y automáticamente restaurar el backup del 13 de Enero que colocamos en el paso anterior.
+Levantar tu aplicación, a la cual podrás acceder desde tu navegador entrando a: http://localhost:5005/
+¿Te gustaría que yo ejecute el comando para levantarlo o prefieres hacerlo desde tu terminal?

@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block titulo %}Soporte Técnico - AngaSys{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="h3 mb-3 text-gray-800">
+                    <i class="fas fa-question-circle text-primary mr-2"></i>
+                    Soporte Técnico
+                </h1>
+                <p class="text-muted">Estamos aquí para ayudarte</p>
+            </div>
+
+            <!-- Información del Sistema -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Acerca de AngaSys
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-gray-700 mb-3">
+                        <strong>AngaSys</strong> es un sistema integral de gestión diseñado específicamente 
+                        para consultorios psicológicos y neuropsicológicos. Desarrollado para la 
+                        <strong>Clínica Integral Neuropsicológica (CIN)</strong>, el sistema facilita la 
+                        administración completa de la clínica.
+                    </p>
+                    <p class="text-gray-700 mb-0">
+                        <strong>Versión:</strong> 1.0<br>
+                        <strong>Año:</strong> {{ current_year }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Funcionalidades Principales -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-cogs mr-2"></i>
+                        Funcionalidades del Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-user-injured mr-2"></i>
+                                Gestión de Pacientes
+                            </h6>
+                            <ul class="text-gray-700 small">
+                                <li>Registro de pacientes</li>
+                                <li>Historial médico completo</li>
+                                <li>Fichas médicas</li>
+                                <li>Gestión de menores y tutores</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                Agendamiento
+                            </h6>
+                            <ul class="text-gray-700 small">
+                                <li>Agenda médica</li>
+                                <li>Gestión de citas</li>
+                                <li>Calendario interactivo</li>
+                                <li>Recordatorios automáticos</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-stethoscope mr-2"></i>
+                                Consultas Médicas
+                            </h6>
+                            <ul class="text-gray-700 small">
+                                <li>Registro de consultas</li>
+                                <li>Diagnósticos</li>
+                                <li>Tratamientos y procedimientos</li>
+                                <li>Anamnesis</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-file-medical mr-2"></i>
+                                Documentos Médicos
+                            </h6>
+                            <ul class="text-gray-700 small">
+                                <li>Recetas médicas</li>
+                                <li>Órdenes de estudios</li>
+                                <li>Certificados médicos</li>
+                                <li>Presupuestos</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-cash-register mr-2"></i>
+                                Módulo de Ventas
+                            </h6>
+                            <ul class="text-gray-700 small">
+                                <li>Facturación</li>
+                                <li>Cuentas a cobrar</li>
+                                <li>Cobranzas</li>
+                                <li>Gestión de caja</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                Seguridad
+                            </h6>
+                            <ul class="text-gray-700 small">
+                                <li>Control de acceso</li>
+                                <li>Roles y permisos</li>
+                                <li>Auditoría de operaciones</li>
+                                <li>Gestión de usuarios</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canales de Soporte -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-headset mr-2"></i>
+                        Canales de Soporte
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="icon-circle bg-primary text-white mr-3">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <h6 class="font-weight-bold text-gray-800">Email de Soporte</h6>
+                                    <p class="text-gray-700 mb-2">
+                                        <a href="mailto:armanuramirez16@gmail.com" class="text-primary">
+                                            armanuramirez16@gmail.com
+                                        </a>
+                                    </p>
+                                    <p class="text-gray-600 small mb-0">
+                                        Envíanos un correo con tu consulta y te responderemos a la brevedad.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="icon-circle bg-success text-white mr-3">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <h6 class="font-weight-bold text-gray-800">Horario de Atención</h6>
+                                    <p class="text-gray-700 mb-2">
+                                        <strong>Lunes a Viernes:</strong> 9:00 - 18:00<br>
+                                        <strong>Sábados y Domingos:</strong> Cerrado
+                                    </p>
+                                    <p class="text-gray-600 small mb-0">
+                                        Nuestro equipo está disponible durante el horario laboral.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preguntas Frecuentes -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-question-circle mr-2"></i>
+                        Preguntas Frecuentes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="card mb-2">
+                            <div class="card-header" id="faq1">
+                                <h6 class="mb-0">
+                                    <button class="btn btn-link text-left w-100" type="button" 
+                                            data-toggle="collapse" data-target="#collapse1">
+                                        <i class="fas fa-chevron-right mr-2"></i>
+                                        ¿Cómo recupero mi contraseña?
+                                    </button>
+                                </h6>
+                            </div>
+                            <div id="collapse1" class="collapse" data-parent="#faqAccordion">
+                                <div class="card-body text-gray-700">
+                                    Contacta con el administrador del sistema para restablecer tu contraseña. 
+                                    El administrador puede generar una nueva contraseña temporal para tu cuenta.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-header" id="faq2">
+                                <h6 class="mb-0">
+                                    <button class="btn btn-link text-left w-100" type="button" 
+                                            data-toggle="collapse" data-target="#collapse2">
+                                        <i class="fas fa-chevron-right mr-2"></i>
+                                        ¿Cómo agendo una cita para un paciente?
+                                    </button>
+                                </h6>
+                            </div>
+                            <div id="collapse2" class="collapse" data-parent="#faqAccordion">
+                                <div class="card-body text-gray-700">
+                                    Ve al módulo de "Agendamiento" → "Agenda Médica" y selecciona "Nueva Cita". 
+                                    Completa los datos del paciente, especialista, fecha y hora. El sistema 
+                                    validará la disponibilidad automáticamente.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-header" id="faq3">
+                                <h6 class="mb-0">
+                                    <button class="btn btn-link text-left w-100" type="button" 
+                                            data-toggle="collapse" data-target="#collapse3">
+                                        <i class="fas fa-chevron-right mr-2"></i>
+                                        ¿Puedo exportar reportes del sistema?
+                                    </button>
+                                </h6>
+                            </div>
+                            <div id="collapse3" class="collapse" data-parent="#faqAccordion">
+                                <div class="card-body text-gray-700">
+                                    Sí, el sistema permite exportar información en diferentes formatos según 
+                                    el módulo. Consulta con el administrador sobre los reportes disponibles 
+                                    para tu rol.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-header" id="faq4">
+                                <h6 class="mb-0">
+                                    <button class="btn btn-link text-left w-100" type="button" 
+                                            data-toggle="collapse" data-target="#collapse4">
+                                        <i class="fas fa-chevron-right mr-2"></i>
+                                        ¿Qué hago si encuentro un error en el sistema?
+                                    </button>
+                                </h6>
+                            </div>
+                            <div id="collapse4" class="collapse" data-parent="#faqAccordion">
+                                <div class="card-body text-gray-700">
+                                    Reporta el error inmediatamente al equipo de soporte por email, incluyendo 
+                                    una descripción detallada del problema, los pasos para reproducirlo y 
+                                    capturas de pantalla si es posible.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de Contacto -->
+            <div class="card shadow mb-4">
+                <div class="card-body text-center bg-light">
+                    <h5 class="text-gray-800 mb-3">¿Necesitas ayuda adicional?</h5>
+                    <p class="text-gray-700 mb-3">
+                        No dudes en contactarnos. Estamos comprometidos con brindarte el mejor soporte.
+                    </p>
+                    <a href="{{ url_for('informacion.contacto') }}" class="btn btn-primary mr-2">
+                        <i class="fas fa-envelope mr-2"></i>Ir a Contacto
+                    </a>
+                    <a href="mailto:armanuramirez16@gmail.com" class="btn btn-outline-primary">
+                        <i class="fas fa-paper-plane mr-2"></i>Enviar Email
+                    </a>
+                </div>
+            </div>
+
+            <!-- Botón de regreso -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('login.inicio') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+</style>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

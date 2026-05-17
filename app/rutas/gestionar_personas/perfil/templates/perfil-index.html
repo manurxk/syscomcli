@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Mi Perfil
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    
+    <!-- Encabezado del Perfil -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-user-circle mr-2"></i>Mi Perfil
+        </h1>
+        <div>
+            <button class="btn btn-secondary" onclick="window.history.back()">
+                <i class="fas fa-arrow-left mr-2"></i>Volver
+            </button>
+        </div>
+    </div>
+
+    <!-- Tarjeta Principal del Perfil -->
+    <div class="row">
+        <!-- Columna Izquierda - Foto y Datos Básicos -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <!-- Foto de Perfil -->
+                    <div class="mb-4">
+                        <img id="fotoPerfil" 
+                             src="{{ url_for('static', filename='img/undraw_profile.svg') }}" 
+                             class="rounded-circle img-thumbnail" 
+                             style="width: 150px; height: 150px; object-fit: cover;"
+                             alt="Foto de perfil">
+                    </div>
+                    
+                    <!-- Nombre Completo -->
+                    <h4 class="mb-1" id="nombreCompleto">Cargando...</h4>
+                    
+                    <!-- Rol -->
+                    <p class="text-muted mb-3">
+                        <span class="badge badge-primary badge-pill px-3 py-2" id="rolUsuario">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            Cargando...
+                        </span>
+                    </p>
+                    
+                    <!-- Estado del Usuario -->
+                    <div class="mb-3">
+                        <span class="badge badge-success" id="estadoUsuario">
+                            <i class="fas fa-check-circle mr-1"></i>Activo
+                        </span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Información Rápida -->
+                    <div class="text-left">
+                        <div class="mb-2">
+                            <i class="fas fa-user text-primary mr-2"></i>
+                            <strong>Usuario:</strong>
+                            <span id="nombreUsuario" class="text-muted">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha - Información Detallada -->
+        <div class="col-lg-8 mb-4">
+            
+            <!-- Tabs de Información -->
+            <div class="card shadow-sm">
+                <div class="card-header py-3">
+                    <ul class="nav nav-tabs card-header-tabs" id="perfilTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="datos-tab" data-toggle="tab" href="#datos" role="tab">
+                                <i class="fas fa-id-card mr-1"></i>Datos Personales
+                            </a>
+                        </li>
+                        <li class="nav-item" id="tabProfesional" style="display: none;">
+                            <a class="nav-link" id="profesional-tab" data-toggle="tab" href="#profesional" role="tab">
+                                <i class="fas fa-briefcase mr-1"></i>Datos Profesionales
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="sistema-tab" data-toggle="tab" href="#sistema" role="tab">
+                                <i class="fas fa-cog mr-1"></i>Información del Sistema
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="perfilTabsContent">
+                        
+                        <!-- Tab: Datos Personales -->
+                        <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">NOMBRE COMPLETO</label>
+                                    <p id="nombrePersona" class="mb-0">Cargando...</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">CI / RUC</label>
+                                    <p id="rucPersona" class="mb-0">Cargando...</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">FECHA DE NACIMIENTO</label>
+                                    <p id="fechaNacimiento" class="mb-0">Cargando...</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">GÉNERO</label>
+                                    <p id="generoPersona" class="mb-0">Cargando...</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">ESTADO CIVIL</label>
+                                    <p id="estadoCivil" class="mb-0">Cargando...</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">CIUDAD</label>
+                                    <p id="ciudadPersona" class="mb-0">Cargando...</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">TELÉFONO</label>
+                                    <p id="telefonoPersona" class="mb-0">
+                                        <i class="fas fa-phone-alt text-primary mr-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">EMAIL</label>
+                                    <p id="emailPersona" class="mb-0">
+                                        <i class="fas fa-envelope text-success mr-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="font-weight-bold text-muted small">DIRECCIÓN</label>
+                                    <p id="direccionPersona" class="mb-0">
+                                        <i class="fas fa-map-marker-alt text-danger mr-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Datos Profesionales -->
+                        <div class="tab-pane fade" id="profesional" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">CARGO</label>
+                                    <p id="cargoFuncionario" class="mb-0">
+                                        <i class="fas fa-id-badge text-primary mr-2"></i>
+                                        <span>No especificado</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">ESPECIALIDAD</label>
+                                    <p id="especialidadFuncionario" class="mb-0">
+                                        <i class="fas fa-user-md text-success mr-2"></i>
+                                        <span>No especificado</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">MATRÍCULA PROFESIONAL</label>
+                                    <p id="matriculaFuncionario" class="mb-0">
+                                        <i class="fas fa-certificate text-warning mr-2"></i>
+                                        <span>No especificado</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Información del Sistema -->
+                        <div class="tab-pane fade" id="sistema" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">NOMBRE DE USUARIO</label>
+                                    <p id="usuarioSistema" class="mb-0">
+                                        <i class="fas fa-user text-primary mr-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-muted small">ROL / GRUPO</label>
+                                    <p id="grupoSistema" class="mb-0">
+                                        <i class="fas fa-users-cog text-success mr-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="font-weight-bold text-muted small">ESTADO DE LA CUENTA</label>
+                                    <p id="estadoCuenta" class="mb-0">Cargando...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  // ========================================
+  // CARGAR PERFIL COMPLETO
+  // ========================================
+  function cargarPerfil() {
+    $.ajax({
+      url: '/api/v1/perfil',
+      method: 'GET',
+      dataType: 'json',
+      success: function(response) {
+        console.log('Perfil recibido:', response);
+        if (response.success && response.data) {
+          mostrarDatosPerfil(response.data);
+        } else {
+          Swal.fire('Error', response.error || 'No se pudo cargar el perfil', 'error');
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('Error al cargar perfil:', error);
+        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+      }
+    });
+  }
+
+  // ========================================
+  // MOSTRAR DATOS DEL PERFIL
+  // ========================================
+  function mostrarDatosPerfil(datos) {
+    // Foto de perfil
+    const rutaFoto = datos.foto_usuario.startsWith('img/') 
+      ? "{{ url_for('static', filename='') }}" + datos.foto_usuario
+      : "{{ url_for('static', filename='uploads/perfiles/') }}" + datos.foto_usuario;
+    $('#fotoPerfil').attr('src', rutaFoto);
+    
+    // Datos del encabezado
+    $('#nombreCompleto').text(datos.nombre_completo);
+    $('#rolUsuario').html(`<i class="fas fa-shield-alt mr-1"></i>${datos.rol}`);
+    $('#nombreUsuario').text(datos.nom_usuario);
+    
+    // Estado
+    if (datos.est_usuario) {
+      $('#estadoUsuario').html('<i class="fas fa-check-circle mr-1"></i>Activo')
+                         .removeClass('badge-danger').addClass('badge-success');
+    } else {
+      $('#estadoUsuario').html('<i class="fas fa-times-circle mr-1"></i>Inactivo')
+                         .removeClass('badge-success').addClass('badge-danger');
+    }
+    
+    // Tab: Datos Personales
+    $('#nombrePersona').text(datos.nombre_completo);
+    $('#rucPersona').text(datos.ruc_persona || 'No especificado');
+    $('#fechaNacimiento').text(formatearFecha(datos.fech_nac) || 'No especificada');
+    $('#generoPersona').text(datos.genero);
+    $('#estadoCivil').text(datos.estado_civil);
+    $('#ciudadPersona').text(datos.ciudad);
+    $('#telefonoPersona span').text(datos.tel_persona || 'No especificado');
+    $('#emailPersona span').text(datos.email_persona || 'No especificado');
+    $('#direccionPersona span').text(datos.dir_persona || 'No especificada');
+    
+    // Tab: Datos Profesionales (solo si es funcionario)
+    if (datos.es_funcionario) {
+      $('#tabProfesional').show();
+      $('#cargoFuncionario span').text(datos.cargo || 'No especificado');
+      $('#especialidadFuncionario span').text(datos.especialidad || 'No especificado');
+      $('#matriculaFuncionario span').text(datos.mat_funcionario || 'No especificado');
+    }
+    
+    // Tab: Información del Sistema
+    $('#usuarioSistema span').text(datos.nom_usuario);
+    $('#grupoSistema span').text(datos.rol);
+    
+    const badgeEstado = datos.est_usuario 
+      ? '<span class="badge badge-success"><i class="fas fa-check mr-1"></i>Cuenta Activa</span>'
+      : '<span class="badge badge-danger"><i class="fas fa-times mr-1"></i>Cuenta Inactiva</span>';
+    $('#estadoCuenta').html(badgeEstado);
+  }
+
+  // ========================================
+  // FORMATEAR FECHA
+  // ========================================
+  function formatearFecha(fecha) {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    const opciones = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    };
+    return date.toLocaleDateString('es-ES', opciones);
+  }
+
+  // ========================================
+  // INICIALIZACIÓN
+  // ========================================
+  $(function() {
+    cargarPerfil();
+  });
+</script>
+{% endblock %}

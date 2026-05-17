@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Tipos de Impuestos
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Tipos de Impuestos</h3>
+    <div class="card">
+      <div class="card-header">
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Código</th>
+              <th>Porcentaje</th>
+              <th>Tipo Cálculo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="txtIdTipoImpuesto">
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="Ej: IVA, IT" id="txtDescripcion" required>
+            </div>
+            <div class="form-group">
+              <label for="txtCodigo">Código:</label>
+              <input type="text" class="form-control" placeholder="Ej: IVA, IT" id="txtCodigo" maxlength="10">
+            </div>
+            <div class="form-group">
+              <label for="txtPorcentaje">Porcentaje:</label>
+              <input type="number" class="form-control" placeholder="Ej: 10.00" id="txtPorcentaje" step="0.01" min="0" max="100" value="0">
+            </div>
+            <div class="form-group">
+              <label for="selTipoCalculo">Tipo de Cálculo:</label>
+              <select class="form-control" id="selTipoCalculo">
+                <option value="PORCENTAJE">Porcentaje</option>
+                <option value="FIJO">Fijo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
+              <select class="form-control" id="selEstado" required>
+                <option value="A">Activo</option>
+                <option value="I">Inactivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax:'/api/v1/tipos_impuestos',
+      columns: [
+        { data: 'descripcion' },
+        { data: 'codigo' },
+        { data: 'porcentaje', render: function(val) { return val + '%'; } },
+        { data: 'tipo_calculo' },
+        { data: 'estado', render: function(val) {
+            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar Tipo de Impuesto");
+      $('#txtIdTipoImpuesto').val("");
+      $('#txtDescripcion').val("");
+      $('#txtCodigo').val("");
+      $('#txtPorcentaje').val("0");
+      $('#selTipoCalculo').val("PORCENTAJE");
+      $('#selEstado').val("A");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idTipoImpuesto = $('#txtIdTipoImpuesto').val();
+      const descripcion = $('#txtDescripcion').val();
+      const codigo = $('#txtCodigo').val();
+      const porcentaje = parseFloat($('#txtPorcentaje').val()) || 0;
+      const tipoCalculo = $('#selTipoCalculo').val();
+      const estado = $('#selEstado').val();
+      const tabla = $('#tbl').DataTable();
+
+      if (!descripcion || descripcion.trim() === '') {
+        Swal.fire("Error", "La descripción es obligatoria.", "error");
+        return;
+      }
+
+      const payload = { 
+        descripcion: descripcion, 
+        codigo: codigo,
+        porcentaje: porcentaje,
+        tipo_calculo: tipoCalculo,
+        estado: estado 
+      };
+
+      const url = idTipoImpuesto ? `/api/v1/tipos_impuestos/${idTipoImpuesto}` : '/api/v1/tipos_impuestos';
+      const method = idTipoImpuesto ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          tabla.ajax.reload();
+          Swal.fire(idTipoImpuesto ? "Actualizado" : "Agregado", 
+                   `El tipo de impuesto ha sido ${idTipoImpuesto ? 'actualizado' : 'agregado'} correctamente.`, 
+                   "success");
+          $('#modalFormulario').modal("hide");
+        } else {
+          Swal.fire("Error", data.error || "No se pudo guardar el tipo de impuesto.", "error");
+        }
+      }).catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error.", "error");
+      });
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      const idTipoImpuesto = $(this).data('id');
+      $('#modalTitle').text("Editar Tipo de Impuesto");
+      $('#txtIdTipoImpuesto').val(idTipoImpuesto);
+      fetch(`/api/v1/tipos_impuestos/${idTipoImpuesto}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success && data.data) {
+          $('#txtDescripcion').val(data.data.descripcion);
+          $('#txtCodigo').val(data.data.codigo || '');
+          $('#txtPorcentaje').val(data.data.porcentaje);
+          $('#selTipoCalculo').val(data.data.tipo_calculo);
+          $('#selEstado').val(data.data.estado);
+          $('#modalFormulario').modal();
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+      const idTipoImpuesto = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/tipos_impuestos/${idTipoImpuesto}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const tabla = $('#tbl').DataTable();
+              tabla.ajax.reload();
+              Swal.fire("Eliminado", "El tipo de impuesto ha sido eliminado.", "success");
+            } else {
+              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+            }
+          }).catch(err => {
+            Swal.fire("Error", "Ocurrió un error.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  $(function() {
+    initDatatable();
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

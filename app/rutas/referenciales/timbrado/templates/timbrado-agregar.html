@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Timbrado
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-stamp"></i> Registrar Nuevo Timbrado
+        </h3>
+        <a href="{{ url_for('timbrado.timbradoIndex') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Listado
+        </a>
+    </div>
+
+    <!-- Formulario Principal -->
+    <form id="formTimbrado">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="txtIdTimbrado">
+        
+        <!-- CARD 1: Datos Básicos -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Datos Básicos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Empresa <span class="text-danger">*</span></label>
+                            <select class="form-control" id="selEmpresa" required>
+                                <option value="">Seleccione una empresa...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Número de Timbrado <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txtNumeroTimbrado" placeholder="12345678" maxlength="8" pattern="[0-9]{8}" required>
+                            <small class="form-text text-muted">Número de 8 dígitos otorgado por DNIT</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Fecha Inicio <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="txtFechaInicio" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Fecha Vencimiento <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="txtFechaVencimiento" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Estado</label><br>
+                            <input type="checkbox" id="chkEstadoActivo" checked> Activo
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: Tipo de Documento y Generación -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-invoice"></i> Tipo de Documento y Generación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Tipo de Documento <span class="text-danger">*</span></label>
+                            <select class="form-control" id="selTipoDocumento" required>
+                                <option value="factura">Factura</option>
+                                <option value="nota_credito">Nota de Crédito</option>
+                                <option value="nota_debito">Nota de Débito</option>
+                                <option value="autofactura">Autofactura</option>
+                                <option value="nota_remision">Nota de Remisión</option>
+                                <option value="comprobante_retencion">Comprobante de Retención</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Tipo de Generación <span class="text-danger">*</span></label>
+                            <select class="form-control" id="selTipoGeneracion" required>
+                                <option value="electronico">Electrónico</option>
+                                <option value="preimpreso">Preimpreso</option>
+                                <option value="autoimpreso">Autoimpreso</option>
+                                <option value="virtual">Virtual</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 3: Estado y Observaciones -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list"></i> Estado y Observaciones
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Estado del Timbrado</label>
+                            <select class="form-control" id="selEstado">
+                                <option value="activo">Activo</option>
+                                <option value="vencido">Vencido</option>
+                                <option value="dado_baja">Dado de Baja</option>
+                                <option value="suspendido">Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Observaciones</label>
+                            <textarea class="form-control" id="txtObservaciones" rows="4" placeholder="Observaciones sobre el timbrado..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <a href="{{ url_for('timbrado.timbradoIndex') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="button" class="btn btn-primary" id="btnGuardar">
+                            <i class="fas fa-save"></i> Guardar Timbrado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  // Obtener ID de timbrado desde URL si es edición
+  const urlParams = new URLSearchParams(window.location.search);
+  const idTimbradoEditar = urlParams.get('id');
+
+  // Cargar empresas en el select
+  const cargarEmpresas = () => {
+    fetch('/api/v1/empresas', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+      if(data && data.success && data.data) {
+        const select = $('#selEmpresa');
+        select.empty();
+        select.append('<option value="">Seleccione una empresa...</option>');
+        data.data.forEach(empresa => {
+          select.append(`<option value="${empresa.id}">${empresa.razon_social}${empresa.ruc_nit ? ' - RUC: ' + empresa.ruc_nit : ''}</option>`);
+        });
+      }
+    })
+    .catch(err => {
+      console.error('Error cargando empresas:', err);
+    });
+  }
+
+  // Validar que fecha vencimiento sea mayor que fecha inicio
+  const validarFechas = () => {
+    const fechaInicio = $('#txtFechaInicio').val();
+    const fechaVencimiento = $('#txtFechaVencimiento').val();
+    
+    if (fechaInicio && fechaVencimiento) {
+      const inicio = new Date(fechaInicio);
+      const vencimiento = new Date(fechaVencimiento);
+      
+      if (vencimiento < inicio) {
+        Swal.fire("Error", "La fecha de vencimiento debe ser mayor o igual a la fecha de inicio.", "error");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Cargar datos si es edición
+  const cargarDatosEdicion = () => {
+    if (idTimbradoEditar) {
+      fetch(`/api/v1/timbrados/${idTimbradoEditar}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && data.success && data.data) {
+          const timbrado = data.data;
+          
+          $('#txtIdTimbrado').val(timbrado.id);
+          $('#selEmpresa').val(timbrado.id_empresa);
+          $('#txtNumeroTimbrado').val(timbrado.numero_timbrado || '');
+          $('#txtFechaInicio').val(timbrado.fecha_inicio || '');
+          $('#txtFechaVencimiento').val(timbrado.fecha_vencimiento || '');
+          $('#selTipoDocumento').val(timbrado.tipo_documento || 'factura');
+          $('#selTipoGeneracion').val(timbrado.tipo_generacion || 'electronico');
+          $('#selEstado').val(timbrado.estado || 'activo');
+          $('#chkEstadoActivo').prop("checked", timbrado.estado_activo !== false);
+          $('#txtObservaciones').val(timbrado.observaciones || '');
+          
+          // Cambiar título
+          $('h3').html('<i class="fas fa-stamp"></i> Editar Timbrado');
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando timbrado:', err);
+      });
+    }
+  }
+
+  // Guardar timbrado
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idTimbrado = $('#txtIdTimbrado').val();
+
+      // Validaciones básicas
+      if (!$('#selEmpresa').val() || !$('#txtNumeroTimbrado').val() || !$('#txtFechaInicio').val() || !$('#txtFechaVencimiento').val()) {
+        Swal.fire("Error", "Los campos Empresa, Número de Timbrado, Fecha Inicio y Fecha Vencimiento son obligatorios.", "error");
+        return;
+      }
+
+      // Validar formato del número de timbrado (8 dígitos)
+      const numeroTimbrado = $('#txtNumeroTimbrado').val();
+      if (!/^\d{8}$/.test(numeroTimbrado)) {
+        Swal.fire("Error", "El número de timbrado debe tener exactamente 8 dígitos.", "error");
+        return;
+      }
+
+      // Validar fechas
+      if (!validarFechas()) {
+        return;
+      }
+
+      const payload = {
+        id_empresa: parseInt($('#selEmpresa').val()),
+        numero_timbrado: numeroTimbrado,
+        fecha_inicio: $('#txtFechaInicio').val(),
+        fecha_vencimiento: $('#txtFechaVencimiento').val(),
+        tipo_documento: $('#selTipoDocumento').val(),
+        tipo_generacion: $('#selTipoGeneracion').val(),
+        estado: $('#selEstado').val(),
+        est_timbrado: $('#chkEstadoActivo').is(':checked'),
+        observaciones: $('#txtObservaciones').val() || null
+      };
+
+      const url = idTimbrado ? `/api/v1/timbrados/${idTimbrado}` : '/api/v1/timbrados';
+      const method = idTimbrado ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          Swal.fire({
+            title: idTimbrado ? "Actualizado" : "Agregado",
+            text: `El timbrado ha sido ${idTimbrado ? 'actualizado' : 'agregado'} correctamente.`,
+            icon: "success",
+            confirmButtonText: "Aceptar"
+          }).then(() => {
+            window.location.href = "{{ url_for('timbrado.timbradoIndex') }}";
+          });
+        } else {
+          Swal.fire("Error", data.error || `No se pudo ${idTimbrado ? 'actualizar' : 'guardar'} el timbrado.`, "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", `Ocurrió un error al ${idTimbrado ? 'actualizar' : 'guardar'} el timbrado.`, "error");
+      });
+    });
+  }
+
+  // Validar fechas en tiempo real
+  $('#txtFechaInicio, #txtFechaVencimiento').on('change', function() {
+    validarFechas();
+  });
+
+  $(function() {
+    cargarEmpresas();
+    // Esperar un poco para que se carguen las empresas antes de cargar datos de edición
+    setTimeout(() => {
+      cargarDatosEdicion();
+    }, 300);
+    guardar();
+  });
+</script>
+{% endblock %}
+
+
+
+

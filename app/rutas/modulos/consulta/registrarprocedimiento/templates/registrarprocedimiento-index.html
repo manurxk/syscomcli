@@ -1,0 +1,870 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Procedimiento
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Registrar Procedimiento Médico</h3>
+    </div>
+    
+    <!-- Tarjeta principal -->
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Consultas Disponibles</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered w-100" id="tblConsultas">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Paciente</th>
+                            <th>HC</th>
+                            <th>Profesional</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Registrar Procedimiento -->
+<div class="modal fade" id="modalRegistrarProcedimiento" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h4 class="modal-title">Registrar Procedimiento Médico</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+                <!-- Información de la Consulta -->
+                <div class="alert alert-info border-0 mb-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Paciente</small>
+                            <strong id="infoPaciente"></strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">HC</small>
+                            <strong id="infoHC"></strong>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Profesional</small>
+                            <strong id="infoProfesional"></strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">Fecha</small>
+                            <strong id="infoFecha"></strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">Estado</small>
+                            <span id="infoEstado"></span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <small class="text-muted d-block">Motivo de Consulta</small>
+                            <strong id="infoMotivo"></strong>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formProcedimiento">
+                    <input type="hidden" id="id_consulta">
+                    <input type="hidden" id="id_paciente">
+
+                    <!-- SECCIÓN 1: INFORMACIÓN DEL PROCEDIMIENTO -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-success">Información del Procedimiento</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Tipo de Procedimiento <span class="text-danger">*</span></label>
+                                        <input type="hidden" id="id_tipo_procedimiento">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" 
+                                                   placeholder="Haga clic para buscar tipo de procedimiento" 
+                                                   id="txtTipoProcedimiento" 
+                                                   readonly 
+                                                   required>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="button" id="btnBuscarTipoProcedimiento">
+                                                    Buscar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Busque y seleccione el tipo de procedimiento</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Profesional que Realizó <span class="text-danger">*</span></label>
+                                        <input type="hidden" id="id_profesional_realizo">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" 
+                                                   placeholder="Haga clic para buscar profesional" 
+                                                   id="txtProfesionalRealizo" 
+                                                   readonly 
+                                                   required>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="button" id="btnBuscarProfesional">
+                                                    Buscar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Seleccione el profesional responsable</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Fecha y Hora del Procedimiento <span class="text-danger">*</span></label>
+                                        <input type="datetime-local" class="form-control" id="fecha_procedimiento" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="estado_procedimiento" required>
+                                            <option value="">Seleccione...</option>
+                                            <option value="PROGRAMADO">Programado</option>
+                                            <option value="EN_PROCESO">En Proceso</option>
+                                            <option value="COMPLETADO" selected>Completado</option>
+                                            <option value="CANCELADO">Cancelado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 2: DESCRIPCIÓN Y RESULTADO -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-primary">Descripción y Resultado</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Descripción del Procedimiento <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="descripcion_procedimiento" rows="5" 
+                                                  placeholder="Describa detalladamente el procedimiento realizado..." 
+                                                  required></textarea>
+                                        <small class="form-text text-muted">Detalle la técnica, materiales y pasos realizados</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Resultado del Procedimiento</label>
+                                        <textarea class="form-control" id="resultado_procedimiento" rows="5" 
+                                                  placeholder="Resultado obtenido, hallazgos, evolución..."></textarea>
+                                        <small class="form-text text-muted">Indique los hallazgos y resultado final</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group mb-0">
+                                        <label class="font-weight-semibold">Observaciones / Complicaciones</label>
+                                        <textarea class="form-control" id="observaciones" rows="2" 
+                                                  placeholder="Complicaciones, observaciones especiales, recomendaciones..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Lista de procedimientos ya registrados -->
+                <div id="listaProcedimientos" style="display: none;">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-success">Procedimientos Registrados en esta Consulta</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="contenidoProcedimientos"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardarProcedimiento">
+                    Guardar Procedimiento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Buscar Tipo de Procedimiento -->
+<div class="modal fade" id="modalBuscarTipoProcedimiento" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Buscar Tipo de Procedimiento</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered w-100" id="tblTiposProcedimiento">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Tipo de Procedimiento</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Buscar Profesional -->
+<div class="modal fade" id="modalBuscarProfesional" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Seleccionar Profesional</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered w-100" id="tblProfesionales">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Nombre Completo</th>
+                                <th>Matrícula</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos mejorados */
+#tblConsultas tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#tblConsultas tbody tr:hover {
+    background-color: #d4edda;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.card-header {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+}
+
+.form-group label {
+    margin-bottom: 0.375rem;
+    font-size: 0.9rem;
+}
+
+.form-control, .input-group-text {
+    font-size: 0.9rem;
+}
+
+.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.alert-info {
+    background-color: #e7f3ff;
+    border-left: 4px solid #2196F3;
+}
+
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
+}
+
+.procedimiento-item {
+    padding: 0.875rem;
+    border-left: 3px solid #28a745;
+    margin-bottom: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.procedimiento-item:hover {
+    background-color: #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.procedimiento-item.PROGRAMADO {
+    border-left-color: #ffc107;
+    background-color: #fff8e1;
+}
+
+.procedimiento-item.EN_PROCESO {
+    border-left-color: #17a2b8;
+    background-color: #e0f7fa;
+}
+
+.procedimiento-item.COMPLETADO {
+    border-left-color: #28a745;
+    background-color: #e8f5e9;
+}
+
+.procedimiento-item.CANCELADO {
+    border-left-color: #dc3545;
+    background-color: #ffebee;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 95%;
+        margin: 0.5rem auto;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+        max-height: 70vh;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .alert {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-body {
+        max-height: 65vh;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+    }
+    
+    .card-header h6 {
+        font-size: 0.95rem;
+    }
+}
+
+/* Scrollbar personalizado */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Validación de formularios */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-image: none;
+}
+
+.font-weight-semibold {
+    font-weight: 600;
+}
+</style>
+
+{% endblock %}
+
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}" || null;
+
+// ==========================================
+// DATATABLE DE CONSULTAS
+// ==========================================
+const initDatatable = () => {
+  $('#tblConsultas').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/consultas',
+      dataSrc: function(json) {
+        if (json.success) {
+          return json.data;
+        } else {
+          Swal.fire('Error', json.error || 'Error al cargar consultas', 'error');
+          return [];
+        }
+      },
+      error: function(xhr, error, thrown) {
+        console.error('Error en AJAX:', xhr.responseText);
+        Swal.fire('Error', 'No se pudieron cargar las consultas', 'error');
+      }
+    },
+    columns: [
+      { 
+        data: 'consulta_fecha',
+        render: function(data) {
+          return data ? data.split(' ')[0] : 'N/A';
+        }
+      },
+      { 
+        data: 'consulta_fecha',
+        render: function(data) {
+          return data ? data.split(' ')[1] : 'N/A';
+        }
+      },
+      { data: 'paciente_nombre' },
+      { data: 'historia_clinica' },
+      { data: 'profesional_nombre' },
+      { 
+        data: 'consulta_motivo',
+        render: function(data) {
+          return data.length > 50 ? data.substring(0, 50) + '...' : data;
+        }
+      },
+      { 
+        data: 'consulta_estado',
+        render: function(data) {
+          const badges = {
+            'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
+            'EN_ATENCION': '<span class="badge badge-info">En Atención</span>',
+            'FINALIZADA': '<span class="badge badge-success">Finalizada</span>'
+          };
+          return badges[data] || data;
+        },
+        className: 'text-center'
+      },
+      { 
+        data: function(row) {
+          return `
+            <button type="button" class="btn btn-success btn-sm btn-registrar-procedimiento" 
+                    data-id="${row.id_consulta}" 
+                    data-id-paciente="${row.id_paciente}"
+                    data-paciente="${row.paciente_nombre}"
+                    data-hc="${row.historia_clinica}"
+                    data-profesional="${row.profesional_nombre}"
+                    data-fecha="${row.consulta_fecha}"
+                    data-motivo="${row.consulta_motivo}"
+                    data-estado="${row.consulta_estado}"
+                    title="Registrar Procedimiento">
+              Agregar Procedimiento
+            </button>
+          `;
+        },
+        className: 'text-center',
+        orderable: false
+      }
+    ],
+    order: [[0, 'desc'], [1, 'desc']],
+    responsive: true,
+    pageLength: 10
+  });
+}
+
+// ==========================================
+// DATATABLE DE TIPOS DE PROCEDIMIENTO
+// ==========================================
+const initTiposProcedimientoDatatable = () => {
+  $('#tblTiposProcedimiento').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/tipos_procedimientos',
+      dataSrc: function(json) {
+        console.log('🔍 Respuesta tipos procedimiento:', json);
+        if (json.success) {
+          return json.data;
+        } else {
+          Swal.fire('Error', json.error || 'Error al cargar tipos', 'error');
+          return [];
+        }
+      },
+      error: function(xhr, error, thrown) {
+        console.error('❌ Error cargando tipos:', xhr.responseText);
+        Swal.fire('Error', 'No se pudieron cargar los tipos de procedimiento', 'error');
+      }
+    },
+    columns: [
+      { 
+        data: 'descripcion',
+        title: 'Tipo de Procedimiento'
+      },
+      { 
+        data: 'estado',
+        title: 'Estado',
+        render: function(data) {
+          return data === 'A' ? 
+            '<span class="badge badge-success">Activo</span>' : 
+            '<span class="badge badge-secondary">Inactivo</span>';
+        },
+        className: 'text-center'
+      },
+      { 
+        data: function(row) {
+          return `
+            <button type="button" class="btn btn-success btn-sm btn-select-tipo-procedimiento" 
+                    data-id="${row.id}"
+                    data-descripcion="${row.descripcion}">
+              Seleccionar
+            </button>
+          `;
+        },
+        orderable: false,
+        className: 'text-center'
+      }
+    ],
+    responsive: true,
+    pageLength: 8
+  });
+}
+
+// ==========================================
+// DATATABLE DE PROFESIONALES
+// ==========================================
+const initProfesionalesDatatable = () => {
+  $('#tblProfesionales').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/especialistas',
+      dataSrc: function(json) {
+        return json.success ? json.data : [];
+      }
+    },
+    columns: [
+      { data: 'nombre_completo' },
+      { data: 'matricula' },
+      { 
+        data: function(row) {
+          return `
+            <button type="button" class="btn btn-success btn-sm btn-select-profesional" 
+                    data-id="${row.id_especialista}" 
+                    data-nombre="${row.nombre_completo}">
+              Seleccionar
+            </button>
+          `;
+        },
+        orderable: false,
+        className: 'text-center'
+      }
+    ],
+    responsive: true,
+    pageLength: 8
+  });
+}
+
+// ==========================================
+// ABRIR MODAL Y PRE-CARGAR DATOS
+// ==========================================
+const registrarProcedimiento = () => {
+  $('#tblConsultas').on('click', '.btn-registrar-procedimiento', function() {
+    const data = $(this).data();
+    
+    $('#infoPaciente').text(data.paciente);
+    $('#infoHC').text(data.hc);
+    $('#infoFecha').text(data.fecha);
+    $('#infoProfesional').text(data.profesional);
+    $('#infoMotivo').text(data.motivo);
+    $('#infoEstado').html($(this).closest('tr').find('td:eq(6)').html());
+    
+    $('#id_consulta').val(data.id);
+    $('#id_paciente').val(data.idPaciente);
+    
+    const ahora = new Date();
+    const fechaHoraLocal = ahora.toISOString().slice(0, 16);
+    $('#fecha_procedimiento').val(fechaHoraLocal);
+    
+    $('#id_tipo_procedimiento').val('');
+    $('#txtTipoProcedimiento').val('').removeClass('is-invalid is-valid');
+    $('#id_profesional_realizo').val('');
+    $('#txtProfesionalRealizo').val('').removeClass('is-invalid is-valid');
+    $('#descripcion_procedimiento').val('');
+    $('#resultado_procedimiento').val('');
+    $('#observaciones').val('');
+    $('#estado_procedimiento').val('COMPLETADO');
+    
+    cargarProcedimientosExistentes(data.id);
+    
+    $('#modalRegistrarProcedimiento').modal('show');
+  });
+}
+
+// ==========================================
+// CARGAR PROCEDIMIENTOS EXISTENTES
+// ==========================================
+const cargarProcedimientosExistentes = (idConsulta) => {
+  fetch(`/api/v1/procedimientos/consulta/${idConsulta}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (data.success && data.data.length > 0) {
+      let html = '';
+      data.data.forEach(proc => {
+        html += `
+          <div class="procedimiento-item ${proc.estado}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong>${proc.tipo_procedimiento}</strong>
+                <br>
+                <small class="text-muted">
+                  Fecha: ${proc.fecha} | Profesional: ${proc.profesional}
+                </small>
+              </div>
+              <span class="badge badge-${proc.estado === 'COMPLETADO' ? 'success' : 'warning'}">${proc.estado}</span>
+            </div>
+          </div>
+        `;
+      });
+      $('#contenidoProcedimientos').html(html);
+      $('#listaProcedimientos').show();
+    } else {
+      $('#listaProcedimientos').hide();
+    }
+  })
+  .catch(err => {
+    console.error('Error cargando procedimientos:', err);
+    $('#listaProcedimientos').hide();
+  });
+}
+
+// ==========================================
+// BUSCAR Y SELECCIONAR TIPO
+// ==========================================
+const buscarTipoProcedimiento = () => {
+  $('#btnBuscarTipoProcedimiento').on('click', function() {
+    $('#modalBuscarTipoProcedimiento').modal('show');
+  });
+  
+  $('#tblTiposProcedimiento').on('click', '.btn-select-tipo-procedimiento', function() {
+    const id = $(this).data('id');
+    const descripcion = $(this).data('descripcion');
+    
+    console.log('✅ Tipo seleccionado:', { id, descripcion });
+    
+    $('#id_tipo_procedimiento').val(id);
+    $('#txtTipoProcedimiento').val(descripcion);
+    
+    $('#modalBuscarTipoProcedimiento').modal('hide');
+    
+    $('#txtTipoProcedimiento').addClass('is-valid').removeClass('is-invalid');
+    setTimeout(() => {
+      $('#txtTipoProcedimiento').removeClass('is-valid');
+    }, 2000);
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Tipo Seleccionado',
+      text: descripcion,
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
+  });
+}
+
+// ==========================================
+// BUSCAR Y SELECCIONAR PROFESIONAL
+// ==========================================
+const buscarProfesional = () => {
+  $('#btnBuscarProfesional').on('click', function() {
+    $('#modalBuscarProfesional').modal('show');
+  });
+  
+  $('#tblProfesionales').on('click', '.btn-select-profesional', function() {
+    const data = $(this).data();
+    
+    $('#id_profesional_realizo').val(data.id);
+    $('#txtProfesionalRealizo').val(data.nombre);
+    
+    $('#modalBuscarProfesional').modal('hide');
+    
+    $('#txtProfesionalRealizo').addClass('is-valid').removeClass('is-invalid');
+    setTimeout(() => {
+      $('#txtProfesionalRealizo').removeClass('is-valid');
+    }, 2000);
+  });
+}
+
+// ==========================================
+// GUARDAR PROCEDIMIENTO
+// ==========================================
+const guardarProcedimiento = () => {
+  $('#btnGuardarProcedimiento').on('click', function() {
+    // Validar campos obligatorios
+    if (!$('#id_tipo_procedimiento').val()) {
+      Swal.fire('Atención', 'Seleccione un tipo de procedimiento', 'warning');
+      $('#txtTipoProcedimiento').addClass('is-invalid');
+      return;
+    }
+    
+    if (!$('#id_profesional_realizo').val()) {
+      Swal.fire('Atención', 'Seleccione el profesional que realizó el procedimiento', 'warning');
+      $('#txtProfesionalRealizo').addClass('is-invalid');
+      return;
+    }
+    
+    if (!$('#descripcion_procedimiento').val()) {
+      Swal.fire('Atención', 'Complete la descripción del procedimiento', 'warning');
+      return;
+    }
+    
+    const dataProcedimiento = {
+      id_consulta: parseInt($('#id_consulta').val()),
+      id_paciente: parseInt($('#id_paciente').val()),
+      id_tipo_procedimiento: parseInt($('#id_tipo_procedimiento').val()),
+      des_registro_procedimiento: $('#descripcion_procedimiento').val(),
+      registro_fecha: $('#fecha_procedimiento').val(),
+      registro_resultado: $('#resultado_procedimiento').val() || null,
+      registro_observaciones: $('#observaciones').val() || null,
+      usuario_creacion: 'ADMIN'
+    };
+    
+    console.log('📤 Enviando procedimiento:', dataProcedimiento);
+    
+    const btn = $(this);
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    
+    fetch('/api/v1/registro-procedimientos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRFToken
+      },
+      body: JSON.stringify(dataProcedimiento)
+    })
+    .then(resp => {
+      if (!resp.ok) {
+        return resp.json().then(err => {
+          throw new Error(err.error || `HTTP ${resp.status}`);
+        });
+      }
+      return resp.json();
+    })
+    .then(data => {
+      btn.prop('disabled', false).html('Guardar Procedimiento');
+      
+      if (data.success) {
+        console.log('✅ Procedimiento guardado:', data);
+        
+        $('#tblConsultas').DataTable().ajax.reload();
+        $('#modalRegistrarProcedimiento').modal('hide');
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Procedimiento Registrado!',
+          text: 'El procedimiento ha sido registrado exitosamente',
+          confirmButtonText: 'Cerrar',
+          confirmButtonColor: '#28a745'
+        });
+      } else {
+        Swal.fire('Error', data.error || 'No se pudo guardar el procedimiento', 'error');
+      }
+    })
+    .catch(err => {
+      btn.prop('disabled', false).html('Guardar Procedimiento');
+      console.error('❌ Error guardando procedimiento:', err);
+      Swal.fire('Error', err.message || 'Ocurrió un error al guardar el procedimiento', 'error');
+    });
+  });
+}
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+$(document).ready(function() {
+  console.log('🚀 Inicializando módulo de procedimientos...');
+  
+  initDatatable();
+  initTiposProcedimientoDatatable();
+  initProfesionalesDatatable();
+  registrarProcedimiento();
+  buscarTipoProcedimiento();
+  buscarProfesional();
+  guardarProcedimiento();
+  
+  // Si viene con id_consulta en URL, abrir directamente
+  const urlParams = new URLSearchParams(window.location.search);
+  const idConsulta = urlParams.get('id_consulta');
+  if (idConsulta) {
+    console.log('🔗 ID de consulta en URL:', idConsulta);
+    setTimeout(() => {
+      const btn = $(`.btn-registrar-procedimiento[data-id="${idConsulta}"]`);
+      if (btn.length) {
+        btn.click();
+      } else {
+        console.warn('⚠️ No se encontró el botón para la consulta:', idConsulta);
+      }
+    }, 500);
+  }
+  
+  console.log('✅ Módulo de procedimientos inicializado');
+});
+</script>
+{% endblock %}

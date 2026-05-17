@@ -1,0 +1,1148 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Derivaciones
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0">
+                <i class="fas fa-exchange-alt"></i> Gestión de Derivaciones
+            </h3>
+            <p class="text-muted mb-0 mt-2">
+                <small>Deriva pacientes a otros especialistas y gestiona derivaciones recibidas</small>
+            </p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" id="btnNuevaDerivacion">
+                <i class="fas fa-plus"></i> Nueva Derivación
+            </button>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+    
+    <!-- Tabs para diferentes vistas -->
+    <ul class="nav nav-tabs mb-3" id="tabsDerivaciones" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-pendientes" data-toggle="tab" href="#pendientes" role="tab">
+                <i class="fas fa-clock"></i> Pendientes Recibidas
+                <span class="badge badge-warning ml-2" id="badgePendientes">0</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-enviadas" data-toggle="tab" href="#enviadas" role="tab">
+                <i class="fas fa-paper-plane"></i> Derivaciones Enviadas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-historial" data-toggle="tab" href="#historial" role="tab">
+                <i class="fas fa-history"></i> Historial Completo
+            </a>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="tabContentDerivaciones">
+        <!-- TAB: Derivaciones Pendientes Recibidas -->
+        <div class="tab-pane fade show active" id="pendientes" role="tabpanel">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i> Derivaciones Pendientes de Revisión
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered w-100" id="tblPendientes">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Urgencia</th>
+                                    <th>Fecha</th>
+                                    <th>Paciente</th>
+                                    <th>HC</th>
+                                    <th>Derivado Por</th>
+                                    <th>Motivo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB: Derivaciones Enviadas -->
+        <div class="tab-pane fade" id="enviadas" role="tabpanel">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paper-plane"></i> Derivaciones que Has Enviado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered w-100" id="tblEnviadas">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Paciente</th>
+                                    <th>HC</th>
+                                    <th>Derivado A</th>
+                                    <th>Estado</th>
+                                    <th>Motivo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB: Historial Completo -->
+        <div class="tab-pane fade" id="historial" role="tabpanel">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Historial de Derivaciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered w-100" id="tblHistorial">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Paciente</th>
+                                    <th>HC</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Estado</th>
+                                    <th>Urgencia</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Derivación -->
+<div class="modal fade" id="modalNuevaDerivacion" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h4 class="modal-title">
+                    <i class="fas fa-exchange-alt"></i> Nueva Derivación
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formDerivacion">
+                    <input type="hidden" id="id_paciente_derivacion">
+                    
+                    <!-- Selección de Paciente -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Paciente <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="txtPacienteDerivacion" 
+                                   placeholder="Buscar paciente..." readonly>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" id="btnBuscarPacienteDerivacion">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted" id="infoPacienteDerivacion"></small>
+                    </div>
+                    
+                    <!-- Tipo de Derivación -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Tipo de Derivación <span class="text-danger">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipoDerivacion" id="tipoInterno" value="interno" checked>
+                            <label class="form-check-label" for="tipoInterno">
+                                Especialista Interno
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipoDerivacion" id="tipoExterno" value="externo">
+                            <label class="form-check-label" for="tipoExterno">
+                                Especialista Externo
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Selección de Especialista Interno -->
+                    <div class="form-group" id="grupoEspecialistaInterno">
+                        <label class="font-weight-semibold">Derivar a Especialista <span class="text-danger">*</span></label>
+                        <select class="form-control" id="id_especialista_destino">
+                            <option value="">Seleccione un especialista...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Datos de Especialista Externo -->
+                    <div id="grupoEspecialistaExterno" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="externo_nombre" 
+                                           placeholder="Nombre del especialista">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Apellido</label>
+                                    <input type="text" class="form-control" id="externo_apellido" 
+                                           placeholder="Apellido del especialista">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Teléfono</label>
+                                    <input type="text" class="form-control" id="externo_telefono" 
+                                           placeholder="Número de teléfono">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Matrícula</label>
+                                    <input type="text" class="form-control" id="externo_matricula" 
+                                           placeholder="Matrícula profesional (opcional)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Urgencia -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Nivel de Urgencia <span class="text-danger">*</span></label>
+                        <select class="form-control" id="urgencia" required>
+                            <option value="BAJA">Baja</option>
+                            <option value="NORMAL" selected>Normal</option>
+                            <option value="ALTA">Alta</option>
+                            <option value="URGENTE">Urgente</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Motivo -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Motivo de Derivación <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="motivo_derivacion" rows="4" 
+                                  placeholder="Describa el motivo de la derivación..." required></textarea>
+                        <small class="form-text text-muted">Mínimo 10 caracteres</small>
+                    </div>
+                    
+                    <!-- Observaciones -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Observaciones Adicionales</label>
+                        <textarea class="form-control" id="observaciones" rows="3" 
+                                  placeholder="Información adicional que considere relevante..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardarDerivacion">
+                    <i class="fas fa-paper-plane"></i> Enviar Derivación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Detalles Derivación -->
+<div class="modal fade" id="modalVerDerivacion" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h4 class="modal-title">
+                    <i class="fas fa-info-circle"></i> Detalles de la Derivación
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="contenidoDerivacion">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-info"></i>
+                    <p class="mt-3">Cargando información...</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light" id="footerDerivacion">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Aceptar/Rechazar -->
+<div class="modal fade" id="modalResponderDerivacion" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h4 class="modal-title" id="tituloResponder">
+                    <i class="fas fa-check-circle"></i> Responder Derivación
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="id_derivacion_responder">
+                <div id="infoDerivacionResponder" class="mb-3"></div>
+                
+                <div id="contenidoRechazo" style="display: none;">
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Motivo del Rechazo <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="motivo_rechazo" rows="3" 
+                                  placeholder="Explique el motivo del rechazo..." required></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnRechazarDerivacion" style="display: none;">
+                    <i class="fas fa-times-circle"></i> Rechazar
+                </button>
+                <button type="button" class="btn btn-success" id="btnAceptarDerivacion" style="display: none;">
+                    <i class="fas fa-check-circle"></i> Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}" || null;
+
+// Estado global
+let derivacionActual = null;
+let pacientesDisponibles = [];
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+$(document).ready(function() {
+  initDatatablePendientes();
+  initDatatableEnviadas();
+  initDatatableHistorial();
+  cargarEspecialistasDisponibles();
+  
+  // Cambiar tab activa
+  $('#tabsDerivaciones a').on('shown.bs.tab', function(e) {
+    const target = $(e.target).attr('href');
+    if (target === '#pendientes') {
+      $('#tblPendientes').DataTable().ajax.reload();
+    } else if (target === '#enviadas') {
+      $('#tblEnviadas').DataTable().ajax.reload();
+    } else if (target === '#historial') {
+      $('#tblHistorial').DataTable().ajax.reload();
+    }
+  });
+});
+
+// ==========================================
+// DATATABLES
+// ==========================================
+
+const initDatatablePendientes = () => {
+  if ($.fn.DataTable.isDataTable('#tblPendientes')) {
+    $('#tblPendientes').DataTable().destroy();
+  }
+
+  $('#tblPendientes').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/derivaciones/pendientes',
+      dataSrc: function(json) {
+        if (!json.success) {
+          return [];
+        }
+        const total = json.data ? json.data.length : 0;
+        $('#badgePendientes').text(total);
+        return json.data || [];
+      }
+    },
+    columns: [
+      {
+        data: 'urgencia',
+        render: function(data) {
+          const badges = {
+            'URGENTE': '<span class="badge badge-danger">URGENTE</span>',
+            'ALTA': '<span class="badge badge-warning">ALTA</span>',
+            'NORMAL': '<span class="badge badge-info">NORMAL</span>',
+            'BAJA': '<span class="badge badge-secondary">BAJA</span>'
+          };
+          return badges[data] || data;
+        }
+      },
+      { data: 'fecha_derivacion' },
+      { data: 'paciente_nombre' },
+      { data: 'historia_clinica' },
+      { data: 'especialista_origen' },
+      {
+        data: 'motivo_derivacion',
+        render: function(data) {
+          return data ? (data.length > 50 ? data.substring(0, 50) + '...' : data) : '-';
+        }
+      },
+      {
+        data: function(row) {
+          return `
+            <button type="button" class="btn btn-info btn-sm btn-ver-derivacion" 
+                    data-id="${row.id_derivacion}" title="Ver Detalles">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button type="button" class="btn btn-success btn-sm btn-aceptar-derivacion" 
+                    data-id="${row.id_derivacion}" title="Aceptar">
+              <i class="fas fa-check"></i>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm btn-rechazar-derivacion" 
+                    data-id="${row.id_derivacion}" title="Rechazar">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+        },
+        className: 'text-center',
+        orderable: false
+      }
+    ],
+    order: [[0, 'asc'], [1, 'desc']]
+  });
+};
+
+const initDatatableEnviadas = () => {
+  if ($.fn.DataTable.isDataTable('#tblEnviadas')) {
+    $('#tblEnviadas').DataTable().destroy();
+  }
+
+  $('#tblEnviadas').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/derivaciones',
+      dataSrc: function(json) {
+        if (!json.success) {
+          console.error('Error al cargar derivaciones enviadas:', json.error);
+          return [];
+        }
+        // Filtrar solo las enviadas por el usuario actual (usando el campo 'tipo')
+        const todas = json.data || [];
+        const enviadas = todas.filter(d => d.tipo === 'ENVIADA');
+        console.log(`DEBUG Derivaciones Enviadas: Total=${todas.length}, Enviadas=${enviadas.length}`);
+        console.log('Ejemplos de tipo:', todas.slice(0, 3).map(d => ({id: d.id_derivacion, tipo: d.tipo})));
+        return enviadas;
+      }
+    },
+    columns: [
+      { data: 'fecha_derivacion' },
+      { data: 'paciente_nombre' },
+      { data: 'historia_clinica' },
+      {
+        data: function(row) {
+          if (row.es_externo) {
+            return `
+              ${row.especialista_destino || '-'}
+              <br><span class="badge badge-info badge-sm">Externo</span>
+              ${row.externo_telefono ? `<br><small class="text-muted"><i class="fas fa-phone"></i> ${row.externo_telefono}</small>` : ''}
+            `;
+          }
+          return row.especialista_destino || '-';
+        }
+      },
+      {
+        data: 'estado',
+        render: function(data) {
+          const badges = {
+            'PENDIENTE': '<span class="badge badge-warning">PENDIENTE</span>',
+            'ACEPTADA': '<span class="badge badge-success">ACEPTADA</span>',
+            'RECHAZADA': '<span class="badge badge-danger">RECHAZADA</span>',
+            'CANCELADA': '<span class="badge badge-secondary">CANCELADA</span>'
+          };
+          return badges[data] || data;
+        }
+      },
+      {
+        data: 'motivo_derivacion',
+        render: function(data) {
+          return data ? (data.length > 40 ? data.substring(0, 40) + '...' : data) : '-';
+        }
+      },
+      {
+        data: function(row) {
+          let acciones = `
+            <button type="button" class="btn btn-info btn-sm btn-ver-derivacion" 
+                    data-id="${row.id_derivacion}" title="Ver Detalles">
+              <i class="fas fa-eye"></i>
+            </button>
+          `;
+          if (row.estado === 'PENDIENTE') {
+            acciones += `
+              <button type="button" class="btn btn-warning btn-sm btn-cancelar-derivacion" 
+                      data-id="${row.id_derivacion}" title="Cancelar">
+                <i class="fas fa-ban"></i>
+              </button>
+            `;
+          }
+          return acciones;
+        },
+        className: 'text-center',
+        orderable: false
+      }
+    ],
+    order: [[0, 'desc']]
+  });
+};
+
+const initDatatableHistorial = () => {
+  if ($.fn.DataTable.isDataTable('#tblHistorial')) {
+    $('#tblHistorial').DataTable().destroy();
+  }
+
+  $('#tblHistorial').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/derivaciones',
+      dataSrc: function(json) {
+        return json.success ? (json.data || []) : [];
+      }
+    },
+    columns: [
+      { data: 'fecha_derivacion' },
+      {
+        data: 'tipo',
+        render: function(data) {
+          if (data === 'ENVIADA') {
+            return '<span class="badge badge-primary"><i class="fas fa-paper-plane"></i> Enviada</span>';
+          } else if (data === 'RECIBIDA') {
+            return '<span class="badge badge-success"><i class="fas fa-inbox"></i> Recibida</span>';
+          }
+          return '<span class="badge badge-secondary">-</span>';
+        }
+      },
+      { data: 'paciente_nombre' },
+      { data: 'historia_clinica' },
+      { data: 'especialista_origen' },
+      {
+        data: function(row) {
+          if (row.es_externo) {
+            return `
+              ${row.especialista_destino || '-'}
+              <br><span class="badge badge-info badge-sm">Externo</span>
+            `;
+          }
+          return row.especialista_destino || '-';
+        }
+      },
+      {
+        data: 'estado',
+        render: function(data) {
+          const badges = {
+            'PENDIENTE': '<span class="badge badge-warning">PENDIENTE</span>',
+            'ACEPTADA': '<span class="badge badge-success">ACEPTADA</span>',
+            'RECHAZADA': '<span class="badge badge-danger">RECHAZADA</span>',
+            'CANCELADA': '<span class="badge badge-secondary">CANCELADA</span>'
+          };
+          return badges[data] || data;
+        }
+      },
+      {
+        data: 'urgencia',
+        render: function(data) {
+          const badges = {
+            'URGENTE': '<span class="badge badge-danger">URGENTE</span>',
+            'ALTA': '<span class="badge badge-warning">ALTA</span>',
+            'NORMAL': '<span class="badge badge-info">NORMAL</span>',
+            'BAJA': '<span class="badge badge-secondary">BAJA</span>'
+          };
+          return badges[data] || data;
+        }
+      },
+      {
+        data: function(row) {
+          return `
+            <button type="button" class="btn btn-info btn-sm btn-ver-derivacion" 
+                    data-id="${row.id_derivacion}" title="Ver Detalles">
+              <i class="fas fa-eye"></i>
+            </button>
+          `;
+        },
+        className: 'text-center',
+        orderable: false
+      }
+    ],
+    order: [[0, 'desc']]
+  });
+};
+
+// ==========================================
+// CARGAR ESPECIALISTAS DISPONIBLES
+// ==========================================
+const cargarEspecialistasDisponibles = () => {
+  console.log('Cargando especialistas disponibles...');
+  
+  // Intentar primero con el endpoint específico de derivaciones
+  fetch('/api/v1/especialistas-disponibles')
+    .then(resp => {
+      console.log('Respuesta recibida:', resp.status, resp.statusText);
+      if (!resp.ok) {
+        // Si falla, intentar con el endpoint general de especialistas
+        console.log('Endpoint específico falló, intentando endpoint general...');
+        return fetch('/api/v1/especialistas');
+      }
+      return resp.json();
+    })
+    .then(data => {
+      // Si la respuesta anterior fue un fetch, necesitamos convertirla a JSON
+      if (data instanceof Response) {
+        return data.json();
+      }
+      return data;
+    })
+    .then(data => {
+      console.log('Datos recibidos:', data);
+      
+      if (data.success && data.data) {
+        // Obtener id del especialista actual para excluirlo
+        const idEspecialistaActual = obtenerIdEspecialistaActual();
+        
+        let especialistas = data.data;
+        
+        // Filtrar el especialista actual si existe
+        if (idEspecialistaActual) {
+          especialistas = especialistas.filter(esp => esp.id_especialista !== idEspecialistaActual);
+        }
+        
+        let html = '<option value="">Seleccione un especialista...</option>';
+        if (especialistas.length === 0) {
+          html += '<option value="" disabled>No hay especialistas disponibles</option>';
+        } else {
+          especialistas.forEach(esp => {
+            const nombre = esp.nombre_completo || `${esp.nombre || ''} ${esp.apellido || ''}`.trim();
+            const matricula = esp.matricula || '';
+            html += `<option value="${esp.id_especialista}">${nombre}${matricula ? ' - ' + matricula : ''}</option>`;
+          });
+        }
+        $('#id_especialista_destino').html(html);
+        console.log(`Especialistas cargados: ${especialistas.length}`);
+      } else {
+        console.error('Error en respuesta:', data.error || 'Respuesta sin datos');
+        $('#id_especialista_destino').html('<option value="">Error al cargar especialistas</option>');
+      }
+    })
+    .catch(err => {
+      console.error('Error cargando especialistas:', err);
+      // Intentar con endpoint alternativo
+      fetch('/api/v1/especialistas')
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success && data.data) {
+            let html = '<option value="">Seleccione un especialista...</option>';
+            data.data.forEach(esp => {
+              const nombre = esp.nombre_completo || `${esp.nombre || ''} ${esp.apellido || ''}`.trim();
+              html += `<option value="${esp.id_especialista}">${nombre}${esp.matricula ? ' - ' + esp.matricula : ''}</option>`;
+            });
+            $('#id_especialista_destino').html(html);
+          } else {
+            $('#id_especialista_destino').html('<option value="">Error al cargar especialistas</option>');
+          }
+        })
+        .catch(err2 => {
+          console.error('Error con endpoint alternativo:', err2);
+          $('#id_especialista_destino').html('<option value="">Error al cargar especialistas</option>');
+        });
+    });
+};
+
+// ==========================================
+// NUEVA DERIVACIÓN
+// ==========================================
+$('#btnNuevaDerivacion').on('click', function() {
+  $('#formDerivacion')[0].reset();
+  $('#id_paciente_derivacion').val('');
+  $('#txtPacienteDerivacion').val('');
+  $('#infoPacienteDerivacion').text('');
+  // Resetear a interno por defecto
+  $('#tipoInterno').prop('checked', true);
+  $('#grupoEspecialistaInterno').show();
+  $('#grupoEspecialistaExterno').hide();
+  $('#id_especialista_destino').prop('required', true);
+  $('#externo_nombre').prop('required', false);
+  
+  // Recargar especialistas cuando se abre el modal
+  cargarEspecialistasDisponibles();
+  
+  $('#modalNuevaDerivacion').modal('show');
+});
+
+// Buscar paciente para derivación
+$('#btnBuscarPacienteDerivacion').on('click', function() {
+  // Aquí puedes usar un modal de búsqueda de pacientes
+  // Por ahora, usar los pacientes del especialista actual
+  Swal.fire({
+    title: 'Buscar Paciente',
+    html: `
+      <input type="text" id="buscarPaciente" class="swal2-input" placeholder="Buscar por nombre o HC...">
+      <div id="resultadosPacientes" class="mt-3" style="max-height: 300px; overflow-y: auto;"></div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Seleccionar',
+    cancelButtonText: 'Cancelar',
+    didOpen: () => {
+      cargarPacientesParaDerivacion();
+      $('#buscarPaciente').on('input', function() {
+        filtrarPacientes($(this).val());
+      });
+    },
+    preConfirm: () => {
+      const seleccionado = $('.paciente-item.selected');
+      if (seleccionado.length === 0) {
+        Swal.showValidationMessage('Debe seleccionar un paciente');
+        return false;
+      }
+      return seleccionado.data('paciente');
+    }
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      const paciente = result.value;
+      $('#id_paciente_derivacion').val(paciente.id_paciente);
+      $('#txtPacienteDerivacion').val(`${paciente.nombre} ${paciente.apellido}`);
+      $('#infoPacienteDerivacion').html(`<strong>HC:</strong> ${paciente.historia_clinica || 'S/N'}`);
+    }
+  });
+});
+
+const cargarPacientesParaDerivacion = () => {
+  fetch('/api/v1/pacientes')
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.success && data.data) {
+        pacientesDisponibles = data.data;
+        mostrarPacientesEnModal(data.data);
+      }
+    });
+};
+
+const mostrarPacientesEnModal = (pacientes) => {
+  let html = '';
+  pacientes.forEach(p => {
+    html += `
+      <div class="paciente-item list-group-item list-group-item-action" 
+           data-paciente='${JSON.stringify(p)}' 
+           style="cursor: pointer;">
+        <div class="d-flex justify-content-between">
+          <div>
+            <strong>${p.nombre} ${p.apellido}</strong><br>
+            <small class="text-muted">HC: ${p.historia_clinica || 'S/N'} | CI: ${p.cedula || 'S/N'}</small>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  $('#resultadosPacientes').html(html || '<p class="text-muted">No hay pacientes disponibles</p>');
+  
+  $('.paciente-item').on('click', function() {
+    $('.paciente-item').removeClass('selected active');
+    $(this).addClass('selected active');
+  });
+};
+
+const filtrarPacientes = (termino) => {
+  if (!termino) {
+    mostrarPacientesEnModal(pacientesDisponibles);
+    return;
+  }
+  const filtrados = pacientesDisponibles.filter(p => {
+    const nombreCompleto = `${p.nombre} ${p.apellido}`.toLowerCase();
+    const hc = (p.historia_clinica || '').toLowerCase();
+    const terminoLower = termino.toLowerCase();
+    return nombreCompleto.includes(terminoLower) || hc.includes(terminoLower);
+  });
+  mostrarPacientesEnModal(filtrados);
+};
+
+// Guardar derivación
+$('#btnGuardarDerivacion').on('click', function() {
+  const form = $('#formDerivacion')[0];
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
+  const motivo = $('#motivo_derivacion').val().trim();
+  if (motivo.length < 10) {
+    Swal.fire('Error', 'El motivo debe tener al menos 10 caracteres', 'error');
+    return;
+  }
+  
+  const esExterno = $('input[name="tipoDerivacion"]:checked').val() === 'externo';
+  
+  const data = {
+    id_paciente: parseInt($('#id_paciente_derivacion').val()),
+    motivo_derivacion: motivo,
+    observaciones: $('#observaciones').val().trim() || null,
+    urgencia: $('#urgencia').val(),
+    es_externo: esExterno
+  };
+  
+  if (esExterno) {
+    // Validar nombre externo
+    const nombreExterno = $('#externo_nombre').val().trim();
+    if (!nombreExterno) {
+      Swal.fire('Error', 'El nombre del especialista externo es obligatorio', 'error');
+      return;
+    }
+    data.externo_nombre = nombreExterno;
+    data.externo_apellido = $('#externo_apellido').val().trim() || null;
+    data.externo_telefono = $('#externo_telefono').val().trim() || null;
+    data.externo_matricula = $('#externo_matricula').val().trim() || null;
+  } else {
+    // Validar especialista interno
+    const idEspecialista = $('#id_especialista_destino').val();
+    if (!idEspecialista) {
+      Swal.fire('Error', 'Debe seleccionar un especialista', 'error');
+      return;
+    }
+    data.id_especialista_destino = parseInt(idEspecialista);
+  }
+  
+  const btn = $(this);
+  const btnText = btn.html();
+  btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Enviando...');
+  
+  fetch('/api/v1/derivaciones', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    },
+    body: JSON.stringify(data)
+  })
+  .then(resp => resp.json())
+  .then(result => {
+    btn.prop('disabled', false).html(btnText);
+    
+    if (result.success) {
+      Swal.fire('Éxito', 'Derivación enviada exitosamente', 'success');
+      $('#modalNuevaDerivacion').modal('hide');
+      $('#tblPendientes').DataTable().ajax.reload();
+      $('#tblEnviadas').DataTable().ajax.reload();
+    } else {
+      Swal.fire('Error', result.error || 'Error al crear la derivación', 'error');
+    }
+  })
+  .catch(err => {
+    btn.prop('disabled', false).html(btnText);
+    Swal.fire('Error', 'Error de conexión', 'error');
+  });
+});
+
+// ==========================================
+// VER DETALLES DERIVACIÓN
+// ==========================================
+$(document).on('click', '.btn-ver-derivacion', function() {
+  const idDerivacion = $(this).data('id');
+  
+  $('#modalVerDerivacion').modal('show');
+  $('#contenidoDerivacion').html(`
+    <div class="text-center py-5">
+      <i class="fas fa-spinner fa-spin fa-3x text-info"></i>
+      <p class="mt-3">Cargando información...</p>
+    </div>
+  `);
+  
+  fetch(`/api/v1/derivaciones/${idDerivacion}`)
+    .then(resp => {
+      if (!resp.ok) {
+        throw new Error(`Error HTTP: ${resp.status}`);
+      }
+      return resp.json();
+    })
+    .then(data => {
+      if (data.success && data.data) {
+        const d = data.data;
+        const contenido = `
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-primary border-bottom pb-2 mb-3">
+                <i class="fas fa-user"></i> Información del Paciente
+              </h6>
+              <table class="table table-sm table-borderless">
+                <tr><th width="40%">Paciente:</th><td><strong>${d.paciente_nombre}</strong></td></tr>
+                <tr><th>Historia Clínica:</th><td>${d.historia_clinica || 'S/N'}</td></tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary border-bottom pb-2 mb-3">
+                <i class="fas fa-exchange-alt"></i> Información de Derivación
+              </h6>
+              <table class="table table-sm table-borderless">
+                <tr><th width="40%">Derivado Por:</th><td>${d.especialista_origen}</td></tr>
+                <tr><th>Derivado A:</th><td>
+                  ${d.es_externo ? `
+                    <strong>${d.especialista_destino}</strong>
+                    ${d.externo_telefono ? `<br><small class="text-muted"><i class="fas fa-phone"></i> ${d.externo_telefono}</small>` : ''}
+                    ${d.externo_matricula ? `<br><small class="text-muted">Matrícula: ${d.externo_matricula}</small>` : ''}
+                    <br><span class="badge badge-info">Especialista Externo</span>
+                  ` : d.especialista_destino}
+                </td></tr>
+                <tr><th>Estado:</th><td>
+                  ${d.estado === 'PENDIENTE' ? '<span class="badge badge-warning">PENDIENTE</span>' : ''}
+                  ${d.estado === 'ACEPTADA' ? '<span class="badge badge-success">ACEPTADA</span>' : ''}
+                  ${d.estado === 'RECHAZADA' ? '<span class="badge badge-danger">RECHAZADA</span>' : ''}
+                  ${d.estado === 'CANCELADA' ? '<span class="badge badge-secondary">CANCELADA</span>' : ''}
+                </td></tr>
+                <tr><th>Urgencia:</th><td>
+                  ${d.urgencia === 'URGENTE' ? '<span class="badge badge-danger">URGENTE</span>' : ''}
+                  ${d.urgencia === 'ALTA' ? '<span class="badge badge-warning">ALTA</span>' : ''}
+                  ${d.urgencia === 'NORMAL' ? '<span class="badge badge-info">NORMAL</span>' : ''}
+                  ${d.urgencia === 'BAJA' ? '<span class="badge badge-secondary">BAJA</span>' : ''}
+                </td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-12">
+              <h6 class="text-primary border-bottom pb-2 mb-3">
+                <i class="fas fa-file-alt"></i> Motivo y Observaciones
+              </h6>
+              <p><strong>Motivo:</strong></p>
+              <p class="text-muted">${d.motivo_derivacion || '-'}</p>
+              ${d.observaciones ? `
+                <p class="mt-3"><strong>Observaciones:</strong></p>
+                <p class="text-muted">${d.observaciones}</p>
+              ` : ''}
+              ${d.motivo_rechazo ? `
+                <div class="alert alert-danger mt-3">
+                  <strong>Motivo de Rechazo:</strong><br>
+                  ${d.motivo_rechazo}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <small class="text-muted">
+                <strong>Fecha de Derivación:</strong> ${d.fecha_derivacion || '-'}
+              </small>
+            </div>
+            <div class="col-md-6">
+              ${d.fecha_respuesta ? `
+                <small class="text-muted">
+                  <strong>Fecha de Respuesta:</strong> ${d.fecha_respuesta}
+                </small>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        
+        $('#contenidoDerivacion').html(contenido);
+      } else {
+        $('#contenidoDerivacion').html(`
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i> ${data.error || 'No se pudo cargar la información'}
+          </div>
+        `);
+      }
+    })
+    .catch(err => {
+      console.error('Error al cargar derivación:', err);
+      $('#contenidoDerivacion').html(`
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> Error al cargar la información: ${err.message || 'Error de conexión'}
+        </div>
+      `);
+    });
+});
+
+// ==========================================
+// ACEPTAR DERIVACIÓN
+// ==========================================
+$(document).on('click', '.btn-aceptar-derivacion', function() {
+  const idDerivacion = $(this).data('id');
+  
+  Swal.fire({
+    title: '¿Aceptar Derivación?',
+    text: '¿Está seguro de aceptar esta derivación? El paciente será asignado a tu lista.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, Aceptar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#28a745'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch(`/api/v1/derivaciones/${idDerivacion}/aceptar`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('Éxito', 'Derivación aceptada exitosamente', 'success');
+          $('#tblPendientes').DataTable().ajax.reload();
+          $('#tblEnviadas').DataTable().ajax.reload();
+          $('#tblHistorial').DataTable().ajax.reload();
+        } else {
+          Swal.fire('Error', data.error || 'Error al aceptar la derivación', 'error');
+        }
+      })
+      .catch(err => {
+        Swal.fire('Error', 'Error de conexión', 'error');
+      });
+    }
+  });
+});
+
+// ==========================================
+// RECHAZAR DERIVACIÓN
+// ==========================================
+$(document).on('click', '.btn-rechazar-derivacion', function() {
+  const idDerivacion = $(this).data('id');
+  
+  $('#id_derivacion_responder').val(idDerivacion);
+  $('#contenidoRechazo').show();
+  $('#btnRechazarDerivacion').show();
+  $('#btnAceptarDerivacion').hide();
+  $('#tituloResponder').html('<i class="fas fa-times-circle"></i> Rechazar Derivación');
+  $('#motivo_rechazo').val('');
+  $('#modalResponderDerivacion').modal('show');
+  
+  // Cargar info de la derivación
+  fetch(`/api/v1/derivaciones/${idDerivacion}`)
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.success && data.data) {
+        const d = data.data;
+        $('#infoDerivacionResponder').html(`
+          <div class="alert alert-info">
+            <strong>Paciente:</strong> ${d.paciente_nombre}<br>
+            <strong>Motivo:</strong> ${d.motivo_derivacion}
+          </div>
+        `);
+      }
+    });
+});
+
+$('#btnRechazarDerivacion').on('click', function() {
+  const motivoRechazo = $('#motivo_rechazo').val().trim();
+  if (!motivoRechazo || motivoRechazo.length < 5) {
+    Swal.fire('Error', 'Debe proporcionar un motivo de rechazo (mínimo 5 caracteres)', 'error');
+    return;
+  }
+  
+  const idDerivacion = $('#id_derivacion_responder').val();
+  const btn = $(this);
+  const btnText = btn.html();
+  btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Rechazando...');
+  
+  fetch(`/api/v1/derivaciones/${idDerivacion}/rechazar`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    },
+    body: JSON.stringify({ motivo_rechazo: motivoRechazo })
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    btn.prop('disabled', false).html(btnText);
+    
+    if (data.success) {
+      Swal.fire('Éxito', 'Derivación rechazada exitosamente', 'success');
+      $('#modalResponderDerivacion').modal('hide');
+      $('#tblPendientes').DataTable().ajax.reload();
+      $('#tblEnviadas').DataTable().ajax.reload();
+      $('#tblHistorial').DataTable().ajax.reload();
+    } else {
+      Swal.fire('Error', data.error || 'Error al rechazar la derivación', 'error');
+    }
+  })
+  .catch(err => {
+    btn.prop('disabled', false).html(btnText);
+    Swal.fire('Error', 'Error de conexión', 'error');
+  });
+});
+
+// ==========================================
+// CANCELAR DERIVACIÓN
+// ==========================================
+$(document).on('click', '.btn-cancelar-derivacion', function() {
+  const idDerivacion = $(this).data('id');
+  
+  Swal.fire({
+    title: '¿Cancelar Derivación?',
+    text: '¿Está seguro de cancelar esta derivación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, Cancelar',
+    cancelButtonText: 'No',
+    confirmButtonColor: '#ffc107'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch(`/api/v1/derivaciones/${idDerivacion}/cancelar`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('Éxito', 'Derivación cancelada exitosamente', 'success');
+          $('#tblEnviadas').DataTable().ajax.reload();
+          $('#tblHistorial').DataTable().ajax.reload();
+        } else {
+          Swal.fire('Error', data.error || 'Error al cancelar la derivación', 'error');
+        }
+      })
+      .catch(err => {
+        Swal.fire('Error', 'Error de conexión', 'error');
+      });
+    }
+  });
+});
+
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+function obtenerIdEspecialistaActual() {
+  // Esta función debería obtener el id_especialista del usuario logueado
+  // Por ahora retornamos null, se puede mejorar con un endpoint
+  return null; // Se filtrará en el servidor
+}
+</script>
+{% endblock %}
+

@@ -1,9 +1,8 @@
-from flask import Blueprint, render_template, jsonify
-from app.dao.referenciales.diagnostico.DiagnosticoDao import DiagnosticoDao
+from flask import Blueprint, render_template
 
 diagmod = Blueprint('diagnostico', __name__, template_folder='templates')
 
 @diagmod.route('/diagnostico-index')
 def diagnosticoIndex():
-    diagdao = DiagnosticoDao()
-    return render_template('diagnostico-index.html', lista_diagnosticos=diagdao.getDiagnosticos())
+    return render_template('diagnostico-index.html')
+

@@ -1,4 +1,4 @@
-from flask import Blueprint,render_template
+from flask import Blueprint, render_template
 
 genmod = Blueprint('genero', __name__, template_folder='templates')
 

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block titulo %}Política de Privacidad - AngaSys{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="h3 mb-3 text-gray-800">
+                    <i class="fas fa-shield-alt text-primary mr-2"></i>
+                    Política de Privacidad
+                </h1>
+                <p class="text-muted">Última actualización: {{ current_year }}</p>
+            </div>
+
+            <!-- Contenido -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4 class="h5 text-primary mb-4">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Información General
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                AngaSys es un sistema de gestión de consultorios psicológicos y neuropsicológicos 
+                                desarrollado para la <strong>Clínica Integral Neuropsicológica (CIN)</strong>. 
+                                Nos comprometemos a proteger la privacidad y confidencialidad de todos los datos 
+                                personales y médicos que se manejan a través de nuestra plataforma.
+                            </p>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-database mr-2"></i>
+                                1. Recopilación de Información
+                            </h4>
+                            <p class="text-gray-700 mb-3">
+                                El sistema recopila y almacena la siguiente información:
+                            </p>
+                            <ul class="text-gray-700 mb-4">
+                                <li><strong>Datos de Pacientes:</strong> Información personal, historial médico, 
+                                    diagnósticos, tratamientos, citas y consultas.</li>
+                                <li><strong>Datos de Funcionarios:</strong> Información de personal médico y 
+                                    administrativo que utiliza el sistema.</li>
+                                <li><strong>Datos de Usuarios:</strong> Credenciales de acceso, roles y permisos 
+                                    dentro del sistema.</li>
+                                <li><strong>Datos de Operaciones:</strong> Registros de facturación, ventas, 
+                                    cobranzas y transacciones financieras.</li>
+                            </ul>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-lock mr-2"></i>
+                                2. Uso de la Información
+                            </h4>
+                            <p class="text-gray-700 mb-3">
+                                La información recopilada se utiliza exclusivamente para:
+                            </p>
+                            <ul class="text-gray-700 mb-4">
+                                <li>Gestión de pacientes y atención médica.</li>
+                                <li>Agendamiento y seguimiento de citas médicas.</li>
+                                <li>Registro de consultas, diagnósticos y tratamientos.</li>
+                                <li>Gestión administrativa y financiera de la clínica.</li>
+                                <li>Cumplimiento de obligaciones legales y regulatorias.</li>
+                            </ul>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-user-shield mr-2"></i>
+                                3. Confidencialidad Médica
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                Todos los datos médicos y de salud están protegidos bajo el secreto profesional 
+                                y las normativas de confidencialidad médica. El acceso a la información de pacientes 
+                                está restringido únicamente al personal autorizado según su rol y función dentro 
+                                de la clínica.
+                            </p>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-shield-virus mr-2"></i>
+                                4. Seguridad de los Datos
+                            </h4>
+                            <p class="text-gray-700 mb-3">
+                                Implementamos medidas de seguridad técnicas y organizativas para proteger los datos:
+                            </p>
+                            <ul class="text-gray-700 mb-4">
+                                <li>Autenticación de usuarios mediante credenciales seguras.</li>
+                                <li>Control de acceso basado en roles y permisos.</li>
+                                <li>Encriptación de contraseñas y datos sensibles.</li>
+                                <li>Registro de auditoría de todas las operaciones realizadas.</li>
+                                <li>Respaldo regular de la información.</li>
+                            </ul>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-users-cog mr-2"></i>
+                                5. Acceso y Control de Datos
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                Solo el personal autorizado con credenciales válidas puede acceder al sistema. 
+                                Cada usuario tiene permisos específicos según su función:
+                            </p>
+                            <ul class="text-gray-700 mb-4">
+                                <li><strong>Administradores:</strong> Acceso completo al sistema.</li>
+                                <li><strong>Especialistas:</strong> Acceso a módulos de consultas y atención médica.</li>
+                                <li><strong>Recepción:</strong> Acceso a agendamiento y módulo de ventas.</li>
+                            </ul>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-file-contract mr-2"></i>
+                                6. Compartir Información
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                La información de pacientes no se comparte con terceros, excepto cuando:
+                            </p>
+                            <ul class="text-gray-700 mb-4">
+                                <li>Sea requerido por ley o autoridad competente.</li>
+                                <li>El paciente haya dado su consentimiento explícito.</li>
+                                <li>Sea necesario para la atención médica del paciente.</li>
+                            </ul>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-clock mr-2"></i>
+                                7. Retención de Datos
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                Los datos médicos se conservan según los plazos establecidos por la legislación 
+                                vigente en materia de historiales clínicos y documentación médica. Los datos 
+                                financieros se conservan según los requerimientos fiscales y contables.
+                            </p>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-user-edit mr-2"></i>
+                                8. Derechos de los Usuarios
+                            </h4>
+                            <p class="text-gray-700 mb-3">
+                                Los pacientes y usuarios tienen derecho a:
+                            </p>
+                            <ul class="text-gray-700 mb-4">
+                                <li>Solicitar acceso a sus datos personales.</li>
+                                <li>Solicitar corrección de información incorrecta.</li>
+                                <li>Solicitar información sobre el uso de sus datos.</li>
+                                <li>Presentar reclamos sobre el manejo de sus datos.</li>
+                            </ul>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-envelope mr-2"></i>
+                                9. Contacto
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                Para consultas sobre esta política de privacidad o para ejercer sus derechos, 
+                                puede contactarnos a través de:
+                            </p>
+                            <div class="bg-light p-3 rounded mb-4">
+                                <p class="mb-1"><strong>Email:</strong> armanuramirez16@gmail.com</p>
+                                <p class="mb-0"><strong>Horario de atención:</strong> Lunes a Viernes, 9:00 - 18:00</p>
+                            </div>
+
+                            <h4 class="h5 text-primary mb-4 mt-5">
+                                <i class="fas fa-sync-alt mr-2"></i>
+                                10. Cambios en la Política
+                            </h4>
+                            <p class="text-gray-700 mb-4">
+                                Nos reservamos el derecho de actualizar esta política de privacidad. 
+                                Cualquier cambio será notificado a través del sistema y la fecha de 
+                                última actualización será reflejada en esta página.
+                            </p>
+
+                            <div class="alert alert-info mt-5">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>Nota importante:</strong> Esta política de privacidad forma parte 
+                                de los términos de uso del sistema AngaSys. Al utilizar el sistema, 
+                                usted acepta las prácticas descritas en esta política.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de regreso -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('login.inicio') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+    
 {% block titulo %}
 Géneros
 {% endblock %}
@@ -17,52 +17,66 @@ Géneros
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Tipos Géneros</th>
+              <th>Descripción</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
-      </table>
+        </table>
       </div>
     </div>
- <!-- /tarjeta -->
+    <!-- /tarjeta -->
 
- <!-- Modal Formulario -->
- <div class="modal" id="modalFormulario">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="modalTitle"></h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <input type="hidden" id="txtIdGenero">
-          <label for="txtDescripcion">Género:</label>
-          <input type="text" class="form-control" placeholder="Ingrese el género" id="txtDescripcion">
+    <!-- Modal formulario -->
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <input type="hidden" id="txtIdGenero">
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción:</label>
+              <input type="text" class="form-control" placeholder="Ingrese un género" id="txtDescripcion">
+            </div>
+            <div class="form-group">
+              <label for="chkEstado">Estado:</label><br>
+              <input type="checkbox" id="chkEstado" checked> Activo
+            </div>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-        <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-      </div>
     </div>
-  </div>
- </div>
 
- <div class="row mt-4 d-none" id="rowAlerta">
-    <div class="col col-md-12">
-        <div class="alert alert-success">
-            <strong>Registro Exitoso!</strong>
-            <div class="row" id="mostrarAlerta"></div>
+    <div class="row mt-4 d-none" id="rowAlerta">
+        <div class="col col-md-12">
+            <div class="alert alert-success">
+                <strong>Registro Exitoso!</strong>
+                <div class="row" id="mostrarAlerta"></div>
+            </div>
         </div>
     </div>
-</div>
 </div>
 {% endblock %}
 
 {% block js %}
 <script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
@@ -71,9 +85,14 @@ Géneros
       ajax:'/api/v1/generos',
       columns: [
         { data: 'descripcion' },
+        { data: 'estado', render: function(val) {
+            return val ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_genero}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_genero}">Eliminar</button>`;
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
           }
         }
       ]
@@ -82,9 +101,10 @@ Géneros
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      $('#modalTitle').text("Ingresa el género");
+      $('#modalTitle').text("Agregar un Género");
       $('#txtIdGenero').val("");
       $('#txtDescripcion').val("");
+      $('#chkEstado').prop("checked", true);
       $('#modalFormulario').modal();
     });
   }
@@ -93,46 +113,63 @@ Géneros
     $('#btnGuardar').on('click', function() {
       const idGenero = $('#txtIdGenero').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
+      const estado = $('#chkEstado').is(':checked');
       const tabla = $('#tbl').DataTable();
 
+      const payload = { descripcion: nuevaDescripcion, estado: estado };
+
       if(idGenero) {
+        // update
         fetch(`/api/v1/generos/${idGenero}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ descripcion: nuevaDescripcion })
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
-          if(data.success) {
+          if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "El Género ha sido actualizado correctamente.", "success");
+            Swal.fire("Actualizado", "El género ha sido actualizado correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire("Error", data.error || "Ocurrió un error.");
+            Swal.fire("Error", data.error || "No se pudo actualizar el género.", "error");
           }
-        }).catch(err => Swal.fire("Error", "Ocurrió un error al actualizar el Género.", "error"));
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al actualizar el género.", "error");
+        });
       } else {
+        // insert
         fetch(`/api/v1/generos`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ descripcion: nuevaDescripcion })
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
-          if(data.success) {
+          if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Guardado", "El Género ha sido agregado correctamente.", "success");
+            Swal.fire("Agregado", "El género ha sido agregado correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire("Error", data.error || "Ocurrió un error.");
+            Swal.fire("Error", data.error || "No se pudo guardar el género.", "error");
           }
-        }).catch(err => Swal.fire("Error", "Ocurrió un error al guardar el Género.", "error"));
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al guardar el género.", "error");
+        });
       }
-      $('#txtDescripcion').val("");
-      $('#modalFormulario').modal("hide");
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]', function(){
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
       Swal.fire({
         title: "¿Deseas editar este registro?",
         showCancelButton: true,
@@ -141,8 +178,10 @@ Géneros
       }).then((result) => {
         if (result.isConfirmed) {
           $('#modalTitle').text("Editar un Género");
+
           const idGenero = $(this).data('id');
           $('#txtIdGenero').val(idGenero);
+
           fetch(`/api/v1/generos/${idGenero}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
@@ -150,6 +189,7 @@ Géneros
           .then(resp => resp.json())
           .then(data => {
             $('#txtDescripcion').val(data.data.descripcion);
+            $('#chkEstado').prop("checked", data.data.estado);
             $('#modalFormulario').modal();
           });
         }
@@ -158,7 +198,7 @@ Géneros
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
       const idGenero = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -169,18 +209,24 @@ Géneros
         if (result.isConfirmed) {
           fetch(`/api/v1/generos/${idGenero}`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
           })
           .then(resp => resp.json())
           .then(data => {
-            if(data.success) {
+            if(data && !data.error && data.success) {
+              const fila = $(this).closest('tr');
               const tabla = $('#tbl').DataTable();
-              tabla.ajax.reload();
-              Swal.fire("Eliminado", "El Género ha sido eliminado correctamente.", "success");
+              tabla.row(fila).remove().draw();
+              Swal.fire("Eliminado", "El género ha sido eliminado.", "success");
             } else {
-              Swal.fire("Error", data.error || "Ocurrió un error.");
+              Swal.fire("Error", data.error || "No se pudo eliminar el género.", "error");
             }
-          }).catch(err => Swal.fire("Error", "Ocurrió un error al eliminar el Género.", "error"));
+          }).catch(err => {
+            Swal.fire("Error", "Ocurrió un error al eliminar el género.", "error");
+          });
         }
       });
     });

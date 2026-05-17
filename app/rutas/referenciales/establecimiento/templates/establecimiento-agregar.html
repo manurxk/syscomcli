@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Establecimiento
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-store"></i> Registrar Nuevo Establecimiento
+        </h3>
+        <a href="{{ url_for('establecimiento.establecimientoIndex') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Listado
+        </a>
+    </div>
+
+    <!-- Formulario Principal -->
+    <form id="formEstablecimiento">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="txtIdEstablecimiento">
+        
+        <!-- CARD 1: Datos Básicos -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Datos Básicos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Sede <span class="text-danger">*</span></label>
+                            <select class="form-control" id="selSede" required>
+                                <option value="">Seleccione una sede...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Código <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txtCodigoEstablecimiento" placeholder="001" maxlength="3" pattern="[0-9]{3}" required>
+                            <small class="form-text text-muted">Código de 3 dígitos (001, 002, etc.)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Es Principal</label><br>
+                            <input type="checkbox" id="chkEsPrincipal"> Sí
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txtNombreEstablecimiento" placeholder="Ej: Establecimiento Matriz" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Descripción</label>
+                            <textarea class="form-control" id="txtDescripcion" rows="3" placeholder="Descripción del establecimiento..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Estado</label><br>
+                            <input type="checkbox" id="chkEstado" checked> Activo
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <a href="{{ url_for('establecimiento.establecimientoIndex') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="button" class="btn btn-primary" id="btnGuardar">
+                            <i class="fas fa-save"></i> Guardar Establecimiento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  // Obtener ID de establecimiento desde URL si es edición
+  const urlParams = new URLSearchParams(window.location.search);
+  const idEstablecimientoEditar = urlParams.get('id');
+
+  // Cargar sedes en el select
+  const cargarSedes = () => {
+    fetch('/api/v1/sedes', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+      if(data && data.success && data.data) {
+        const select = $('#selSede');
+        select.empty();
+        select.append('<option value="">Seleccione una sede...</option>');
+        data.data.forEach(sede => {
+          select.append(`<option value="${sede.id}">${sede.descripcion}${sede.empresa ? ' - ' + sede.empresa : ''}</option>`);
+        });
+      }
+    })
+    .catch(err => {
+      console.error('Error cargando sedes:', err);
+    });
+  }
+
+  // Cargar datos si es edición
+  const cargarDatosEdicion = () => {
+    if (idEstablecimientoEditar) {
+      fetch(`/api/v1/establecimientos/${idEstablecimientoEditar}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && data.success && data.data) {
+          const establecimiento = data.data;
+          
+          $('#txtIdEstablecimiento').val(establecimiento.id);
+          $('#selSede').val(establecimiento.id_sede);
+          $('#txtCodigoEstablecimiento').val(establecimiento.codigo_establecimiento || '');
+          $('#txtNombreEstablecimiento').val(establecimiento.nombre_establecimiento || '');
+          $('#txtDescripcion').val(establecimiento.descripcion || '');
+          $('#chkEsPrincipal').prop("checked", establecimiento.es_principal || false);
+          $('#chkEstado').prop("checked", establecimiento.estado !== false);
+          
+          // Cambiar título
+          $('h3').html('<i class="fas fa-store"></i> Editar Establecimiento');
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando establecimiento:', err);
+      });
+    }
+  }
+
+  // Guardar establecimiento
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idEstablecimiento = $('#txtIdEstablecimiento').val();
+
+      // Validaciones básicas
+      if (!$('#selSede').val() || !$('#txtNombreEstablecimiento').val()) {
+        Swal.fire("Error", "Los campos Sede y Nombre son obligatorios.", "error");
+        return;
+      }
+
+      // Validar código (3 dígitos)
+      const codigo = $('#txtCodigoEstablecimiento').val();
+      if (codigo && !/^\d{3}$/.test(codigo)) {
+        Swal.fire("Error", "El código de establecimiento debe tener exactamente 3 dígitos.", "error");
+        return;
+      }
+
+      const payload = {
+        id_sede: parseInt($('#selSede').val()),
+        codigo_establecimiento: codigo || null,
+        nombre_establecimiento: $('#txtNombreEstablecimiento').val(),
+        descripcion: $('#txtDescripcion').val() || null,
+        es_principal: $('#chkEsPrincipal').is(':checked'),
+        est_establecimiento: $('#chkEstado').is(':checked')
+      };
+
+      const url = idEstablecimiento ? `/api/v1/establecimientos/${idEstablecimiento}` : '/api/v1/establecimientos';
+      const method = idEstablecimiento ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          Swal.fire({
+            title: idEstablecimiento ? "Actualizado" : "Agregado",
+            text: `El establecimiento ha sido ${idEstablecimiento ? 'actualizado' : 'agregado'} correctamente.`,
+            icon: "success",
+            confirmButtonText: "Aceptar"
+          }).then(() => {
+            window.location.href = "{{ url_for('establecimiento.establecimientoIndex') }}";
+          });
+        } else {
+          Swal.fire("Error", data.error || `No se pudo ${idEstablecimiento ? 'actualizar' : 'guardar'} el establecimiento.`, "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", `Ocurrió un error al ${idEstablecimiento ? 'actualizar' : 'guardar'} el establecimiento.`, "error");
+      });
+    });
+  }
+
+  $(function() {
+    cargarSedes();
+    // Esperar un poco para que se carguen las sedes antes de cargar datos de edición
+    setTimeout(() => {
+      cargarDatosEdicion();
+    }, 300);
+    guardar();
+  });
+</script>
+{% endblock %}
+
+
+
+

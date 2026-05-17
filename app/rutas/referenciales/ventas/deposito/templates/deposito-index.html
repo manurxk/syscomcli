@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Depósitos
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Depósitos</h3>
+    <div class="card">
+      <div class="card-header">
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Código</th>
+              <th>Tipo</th>
+              <th>Número Cuenta</th>
+              <th>Banco</th>
+              <th>Moneda</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="txtIdDeposito">
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="Ej: Cuenta Principal Banco ABC" id="txtDescripcion" required>
+            </div>
+            <div class="form-group">
+              <label for="txtCodigo">Código:</label>
+              <input type="text" class="form-control" placeholder="Código del depósito" id="txtCodigo" maxlength="20">
+            </div>
+            <div class="form-group">
+              <label for="selTipoDeposito">Tipo de Depósito: <span class="text-danger">*</span></label>
+              <select class="form-control" id="selTipoDeposito" required>
+                <option value="BANCO">Banco</option>
+                <option value="CUENTA_CORRIENTE">Cuenta Corriente</option>
+                <option value="CAJA_FISICA">Caja Física</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="txtNumeroCuenta">Número de Cuenta:</label>
+              <input type="text" class="form-control" placeholder="Número de cuenta bancaria" id="txtNumeroCuenta" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label for="txtBanco">Banco:</label>
+              <input type="text" class="form-control" placeholder="Nombre del banco" id="txtBanco" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="txtRucBanco">RUC del Banco:</label>
+              <input type="text" class="form-control" placeholder="RUC del banco" id="txtRucBanco" maxlength="20">
+            </div>
+            <div class="form-group">
+              <label for="selMoneda">Moneda:</label>
+              <select class="form-control" id="selMoneda">
+                <option value="PYG" selected>Guaraní Paraguayo (PYG)</option>
+                <option value="USD">Dólar Estadounidense (USD)</option>
+                <option value="EUR">Euro (EUR)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
+              <select class="form-control" id="selEstado" required>
+                <option value="A">Activo</option>
+                <option value="I">Inactivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax:'/api/v1/depositos',
+      columns: [
+        { data: 'descripcion' },
+        { data: 'codigo' },
+        { data: 'tipo_deposito' },
+        { data: 'numero_cuenta' },
+        { data: 'banco' },
+        { data: 'moneda' },
+        { data: 'estado', render: function(val) {
+            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar Depósito");
+      $('#txtIdDeposito').val("");
+      $('#txtDescripcion').val("");
+      $('#txtCodigo').val("");
+      $('#selTipoDeposito').val("BANCO");
+      $('#txtNumeroCuenta').val("");
+      $('#txtBanco').val("");
+      $('#txtRucBanco').val("");
+      $('#selMoneda').val("PYG");
+      $('#selEstado').val("A");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idDeposito = $('#txtIdDeposito').val();
+      const descripcion = $('#txtDescripcion').val();
+      const codigo = $('#txtCodigo').val();
+      const tipoDeposito = $('#selTipoDeposito').val();
+      const numeroCuenta = $('#txtNumeroCuenta').val();
+      const banco = $('#txtBanco').val();
+      const rucBanco = $('#txtRucBanco').val();
+      const moneda = $('#selMoneda').val();
+      const estado = $('#selEstado').val();
+      const tabla = $('#tbl').DataTable();
+
+      if (!descripcion || descripcion.trim() === '') {
+        Swal.fire("Error", "La descripción es obligatoria.", "error");
+        return;
+      }
+      if (!tipoDeposito) {
+        Swal.fire("Error", "El tipo de depósito es obligatorio.", "error");
+        return;
+      }
+
+      const payload = { 
+        descripcion: descripcion, 
+        codigo: codigo,
+        tipo_deposito: tipoDeposito,
+        numero_cuenta: numeroCuenta,
+        banco: banco,
+        ruc_banco: rucBanco,
+        moneda: moneda,
+        estado: estado 
+      };
+
+      const url = idDeposito ? `/api/v1/depositos/${idDeposito}` : '/api/v1/depositos';
+      const method = idDeposito ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          tabla.ajax.reload();
+          Swal.fire(idDeposito ? "Actualizado" : "Agregado", 
+                   `El depósito ha sido ${idDeposito ? 'actualizado' : 'agregado'} correctamente.`, 
+                   "success");
+          $('#modalFormulario').modal("hide");
+        } else {
+          Swal.fire("Error", data.error || "No se pudo guardar el depósito.", "error");
+        }
+      }).catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error.", "error");
+      });
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      const idDeposito = $(this).data('id');
+      $('#modalTitle').text("Editar Depósito");
+      $('#txtIdDeposito').val(idDeposito);
+      fetch(`/api/v1/depositos/${idDeposito}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success && data.data) {
+          $('#txtDescripcion').val(data.data.descripcion);
+          $('#txtCodigo').val(data.data.codigo || '');
+          $('#selTipoDeposito').val(data.data.tipo_deposito);
+          $('#txtNumeroCuenta').val(data.data.numero_cuenta || '');
+          $('#txtBanco').val(data.data.banco || '');
+          $('#txtRucBanco').val(data.data.ruc_banco || '');
+          $('#selMoneda').val(data.data.moneda || 'PYG');
+          $('#selEstado').val(data.data.estado);
+          $('#modalFormulario').modal();
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+      const idDeposito = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/depositos/${idDeposito}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const tabla = $('#tbl').DataTable();
+              tabla.ajax.reload();
+              Swal.fire("Eliminado", "El depósito ha sido eliminado.", "success");
+            } else {
+              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+            }
+          }).catch(err => {
+            Swal.fire("Error", "Ocurrió un error.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  $(function() {
+    initDatatable();
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
-from flask import Blueprint,render_template
+from flask import Blueprint, render_template
 
-estmod = Blueprint('estado_civil', __name__, template_folder='templates')
+ecivmod = Blueprint('estado_civil', __name__, template_folder='templates')
 
-@estmod.route('/estado_civil-index')
-def estado_civilIndex():
+@ecivmod.route('/estado-civil-index')
+def estadoCivilIndex():
     return render_template('estado_civil-index.html')

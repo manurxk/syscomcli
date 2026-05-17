@@ -1,30 +1,305 @@
 {% from 'macros.html' import modal %}
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/cin.avif') }}">
+    <meta name="description" content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
+    <meta name="author" content="CIN">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
 
-    <title>{% block titulo %}{% endblock %}</title>
+    <title>{% block titulo %}Sistema CIN{% endblock %}</title>
 
-    <!-- CSS de iconos y fuentes-->
+    <!-- CSS de iconos y fuentes -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
-
-    <!-- CSS principal-->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    
+    <!-- CSS principal -->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
-
+    
     <!-- CSS de Datatables -->
     <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 
+    <!-- Estilos personalizados adicionales -->
+    <style>
+        :root {
+            /* Colores primarios (mantenidos para compatibilidad) */
+            --primary-color: #4f46e5;
+            --primary-dark: #4338ca;
+            
+            /* Colores azul cobalto - Color principal del sistema */
+            --cobalt-blue: #0047AB;
+            --cobalt-blue-dark: #003A8C;
+            --cobalt-blue-light: #0056CC;
+            
+            --sidebar-width: 14rem;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--cobalt-blue) 0%, var(--cobalt-blue-dark) 100%);
+        }
+
+        .sidebar .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left: 4px solid #fff;
+        }
+
+        .collapse-item {
+            transition: all 0.2s ease;
+            padding: 0.75rem 1rem;
+        }
+
+        .collapse-item:hover {
+            background-color: #f3f4f6;
+            padding-left: 1.5rem;
+        }
+
+        .topbar {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem 1rem;
+        }
+
+        .sidebar-divider {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-heading {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 800;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+        }
+
+        .scroll-to-top {
+            background-color: var(--cobalt-blue);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-to-top:hover {
+            background-color: var(--cobalt-blue-dark);
+            transform: scale(1.1);
+        }
+
+        /* Clases utilitarias para azul cobalto */
+        .bg-cobalt-blue {
+            background-color: var(--cobalt-blue) !important;
+        }
+
+        .bg-cobalt-blue-dark {
+            background-color: var(--cobalt-blue-dark) !important;
+        }
+
+        .bg-cobalt-blue-light {
+            background-color: var(--cobalt-blue-light) !important;
+        }
+
+        .text-cobalt-blue {
+            color: var(--cobalt-blue) !important;
+        }
+
+        .border-cobalt-blue {
+            border-color: var(--cobalt-blue) !important;
+        }
+
+        .btn-cobalt-blue {
+            background-color: var(--cobalt-blue);
+            border-color: var(--cobalt-blue);
+            color: white;
+        }
+
+        .btn-cobalt-blue:hover {
+            background-color: var(--cobalt-blue-dark);
+            border-color: var(--cobalt-blue-dark);
+            color: white;
+        }
+
+        /* Estilos para el footer - Ocupa todo el ancho */
+        footer {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            position: relative;
+            left: 0;
+            right: 0;
+            background-color: var(--cobalt-blue-dark) !important;
+        }
+
+        footer * {
+            background-color: transparent !important;
+        }
+
+        footer .container-fluid,
+        footer .row,
+        footer .col-lg-4,
+        footer .col-lg-2,
+        footer .col-md-6,
+        footer .col-12 {
+            background-color: transparent !important;
+        }
+
+        footer a:hover {
+            text-decoration: none !important;
+        }
+
+        footer ul li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Ajustes responsive para el footer */
+        @media (max-width: 768px) {
+            footer {
+                padding-top: 2rem !important;
+                padding-bottom: 1.5rem !important;
+            }
+            
+            footer .col-lg-4,
+            footer .col-lg-2,
+            footer .col-md-6 {
+                margin-bottom: 2rem !important;
+            }
+            
+            footer .col-lg-4:last-child,
+            footer .col-lg-2:last-child,
+            footer .col-md-6:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        /* Centrado del footer */
+        footer .container-fluid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        footer .row {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Mejora de hover para enlaces del footer */
+        footer a {
+            transition: all 0.3s ease !important;
+        }
+
+        footer a:hover {
+            opacity: 1 !important;
+            transform: translateX(3px);
+        }
+
+        #content-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #content {
+            flex: 1;
+        }
+
+        /* Estilos para el dropdown de búsqueda */
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+        }
+
+        .search-results-section {
+            padding: 0.5rem 0;
+        }
+
+        .search-results-section-title {
+            padding: 0.5rem 1rem;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--cobalt-blue);
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .search-result-item-subtitle {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .search-result-item-icon {
+            margin-right: 0.5rem;
+            color: var(--cobalt-blue);
+        }
+
+        .search-no-results {
+            padding: 1.5rem;
+            text-align: center;
+            color: #999;
+        }
+
+        .search-loading {
+            padding: 1rem;
+            text-align: center;
+            color: #666;
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -33,162 +308,340 @@
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('login.inicio') }}">
-                <div class="sidebar-brand-icon rotate">
-                    <img src="{{ url_for('static', filename='img/cin.avif') }}" alt="Descripción de la imagen" width="50">
-                </div>
-                <div class="sidebar-brand-text mx-3">SYSCONCLI CIN<sup>&reg</sup></div>
-            </a>
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+            <div class="sidebar-brand-icon rotate-n-15">
+                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo" style="width: 40px; height: 40px;">
+            </div>
+            <div class="sidebar-brand-text mx-3">Anga<sup>Sys</sup></div>
+        </a>
 
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('login.inicio') }}"><i class="fas fa-fw  fas fa-home"></i><span>Inicio</span></a>
-            </li>
+            <!-- <li class="nav-item active">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li> -->
 
             <!-- Divider -->
             <hr class="sidebar-divider">
 
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Gestión del Sistema
+            </div>
 
-        <!-- Gestión -->
-        <div class="sidebar-heading">Gestión</div>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('persona.personaIndex') }}">
-                <i class="fas fa-user-injured"></i>
-                <span>Personas</span></a>
-        </li>
-
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('medico.medicoIndex') }}">
-                <i class="fas fa-user-md"></i>
-                <span>Profesionales</span></a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('agenda_medica.agenda_medicaIndex') }}">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Agenda Médica</span></a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('cita.citaIndex') }}">
-                <i class="fas fa-notes-medical"></i>
-                <span>Citas</span></a>
-        </li>
-
-        <!-- Divider -->
-        <hr class="sidebar-divider">
-
-        <!-- Administración -->
-        <div class="sidebar-heading">Administración</div>
-
-        <li class="nav-item">
-            <a class="nav-link" href="reportes.html">
-                <i class="fas fa-file-medical-alt"></i>
-                <span>Reportes</span></a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('usuario.usuarioIndex') }}">
-                <i class="fas fa-users-cog"></i>
-                <span>Usuarios</span></a>
-        </li>
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-               <!-- Modulos -->
-        <div class="sidebar-heading">Módulos</div>
- <!-- Nav Item - Pages Collapse Menu -->
-             <!-- Nav Item - Utilities Collapse Menu -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAgendamiento"
-                    aria-expanded="true" aria-controls="collapseAgendamiento">
-                   <i class="fas fa-calendar"></i>
-                    <span class="text-wrap">Agendamiento</span>
-                </a>
-                <div id="collapseAgendamiento" class="collapse" aria-labelledby="headingAgendamiento"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="#">Gestionar Citas</a>
-                        <a class="collapse-item" href="#">Gestión de Agenda</a>
-                    </div>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseConsultorio"
-                    aria-expanded="true" aria-controls="collapseConsultorio">
-                    	<i class="fas fa-brain"></i>
-                    <span class="text-wrap">Consultorio</span>
-                </a>
-                <div id="collapseConsultorio" class="collapse" aria-labelledby="headingConsultorio"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-3 collapse-inner rounded">
-                        <a class="collapse-item" href="#">Gestionar Citas</a>
-                        <a class="collapse-item" href="#">Gestión de Agenda</a>
-                    </div>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
-                    aria-expanded="true" aria-controls="collapseVentas">
-                   	<i class="fas fa-chart-line"></i>
-                    <span class="text-wrap">Ventas</span>
-                </a>
-                <div id="collapseVentas" class="collapse" aria-labelledby="headingVentas"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-4 collapse-inner rounded">
-                        <a class="collapse-item" href="#">Gestionar Citas</a>
-                        <a class="collapse-item" href="#">Gestión de Agenda</a>
-                    </div>
-                </div>
-            </li>
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
+            <!-- ========================================== -->
+            <!-- REFERENCIALES (ADMIN Y SUPERADMIN) -->
+            <!-- ========================================== -->
+            {% if es_admin_o_superadmin() %}
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReferenciales"
                     aria-expanded="true" aria-controls="collapseReferenciales">
-                    <i class="fas fa-fw fa-cog"></i>
+                    <i class="fas fa-fw fa-database"></i>
                     <span>Referenciales</span>
                 </a>
-                <div id="collapseReferenciales" class="collapse" aria-labelledby="headingReferenciales"
-                    data-parent="#accordionSidebar">
+                <div id="collapseReferenciales" class="collapse" aria-labelledby="headingReferenciales" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                  
-                        <a class="collapse-item" href="{{ url_for('turno.turnoIndex') }}">Turnos</a>
-                        <a class="collapse-item" href="{{ url_for('dia.diaIndex') }}">Días laborales</a>
-                        <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">especialidad</a>
-                        <a class="collapse-item" href="{{ url_for('sala_atencion.sala_atencionIndex') }}">sala_atencion</a>
-                        <a class="collapse-item" href="{{ url_for('hora.horaIndex') }}">Horario de atención</a>
-                    
+                        
+                        <!-- DATOS GENERALES -->
+                        <h6 class="collapse-header">Datos Generales:</h6>
+                        <a class="collapse-item" href="{{ url_for('ciudad.ciudadIndex') }}">
+                            <i class="fas fa-city fa-sm mr-2"></i>Ciudades
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('genero.generoIndex') }}">
+                            <i class="fas fa-venus-mars fa-sm mr-2"></i>Géneros
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('estado_civil.estadoCivilIndex') }}">
+                            <i class="fas fa-heart fa-sm mr-2"></i>Estados Civiles
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('nivel_instruccion.nivelInstruccionIndex') }}">
+                            <i class="fas fa-graduation-cap fa-sm mr-2"></i>Nivel de Instrucción
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('profesion.profesionIndex') }}">
+                            <i class="fas fa-briefcase fa-sm mr-2"></i>Profesiones
+                        </a>
+                        
+                        <!-- CONFIGURACIÓN CLÍNICA -->
+                        <h6 class="collapse-header mt-3">Configuración Clínica:</h6>
+                        <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">
+                            <i class="fas fa-user-md fa-sm mr-2"></i>Especialidades
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('consultorio.consultorioIndex') }}">
+                            <i class="fas fa-clinic-medical fa-sm mr-2"></i>Consultorios
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('dia.diaIndex') }}">
+                            <i class="fas fa-calendar-day fa-sm mr-2"></i>Días Laborables
+                        </a>
 
-                        <!-- <a class="collapse-item" href="#">Ciudad</a>
-                        <a class="collapse-item" href="#">Pais</a>
-                        <a class="collapse-item" href="{{ url_for('nacionalidad.nacionalidadIndex') }}">Nacionalidad</a>
-                        <a class="collapse-item" href="#">Ocupación</a>
-                        <a class="collapse-item" href="#">Estado Civil</a>
-                        <a class="collapse-item" href="{{ url_for('persona.personaIndex') }}">Persona</a>
-                        <a class="collapse-item" href="#">Dia</a>
-                        <a class="collapse-item" href="#">Instrumento Utilizado (test)</a>
-                        <a class="collapse-item" href="#">Tratamiento</a>
-                        <a class="collapse-item" href="#">Diagnóstico</a>       -->
+                        <!-- CATÁLOGOS MÉDICOS (Comentados - Descomentar si los necesitas) -->
+                        <!--
+                        <h6 class="collapse-header mt-3">Catálogos Médicos:</h6>
+                        <a class="collapse-item" href="{{ url_for('diagnostico.diagnosticoIndex') }}">
+                            <i class="fas fa-stethoscope fa-sm mr-2"></i>Diagnósticos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('medicamento.medicamentoIndex') }}">
+                            <i class="fas fa-pills fa-sm mr-2"></i>Medicamentos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('signo.signoIndex') }}">
+                            <i class="fas fa-heartbeat fa-sm mr-2"></i>Signos Vitales
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('sintoma.sintomaIndex') }}">
+                            <i class="fas fa-notes-medical fa-sm mr-2"></i>Síntomas
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('tipo_analisis.tipoAnalisisIndex') }}">
+                            <i class="fas fa-vial fa-sm mr-2"></i>Tipos de Análisis
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('tipo_estudio.tipoEstudioIndex') }}">
+                            <i class="fas fa-x-ray fa-sm mr-2"></i>Tipos de Estudios
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('tipo_procedimiento.tipoProcedimientoIndex') }}">
+                            <i class="fas fa-procedures fa-sm mr-2"></i>Tipos de Procedimientos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('tipo_tratamiento.tipoTratamientoIndex') }}">
+                            <i class="fas fa-hand-holding-medical fa-sm mr-2"></i>Tipos de Tratamientos
+                        </a>
+                        -->
+                        
+                        <!-- SEGURIDAD -->
+                        <h6 class="collapse-header mt-3">Seguridad:</h6>
+                        <a class="collapse-item" href="{{ url_for('cargo.cargoIndex') }}">
+                            <i class="fas fa-id-badge fa-sm mr-2"></i>Cargos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('grupo.grupoIndex') }}">
+                            <i class="fas fa-users-cog fa-sm mr-2"></i>Grupos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('modulo.moduloIndex') }}">
+                            <i class="fas fa-th-large fa-sm mr-2"></i>Módulos
+                        </a>
                     </div>
                 </div>
             </li>
+            {% endif %}
 
-                
+            <!-- ========================================== -->
+            <!-- REGISTRAR PERSONAS (ADMIN Y SUPERADMIN) -->
+            <!-- ========================================== -->
+            {% if es_admin_o_superadmin() %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRegistrar"
+                    aria-expanded="true" aria-controls="collapseRegistrar">
+                    <i class="fas fa-fw fa-user-plus"></i>
+                    <span>Registrar</span>
+                </a>
+                <div id="collapseRegistrar" class="collapse" aria-labelledby="headingRegistrar"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gestión de Personas:</h6>
+                        <a class="collapse-item" href="{{ url_for('paciente.pacienteIndex') }}">
+                            <i class="fas fa-user-injured fa-sm mr-2"></i>Pacientes
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('funcionario.funcionarioIndex') }}">
+                            <i class="fas fa-user-tie fa-sm mr-2"></i>Funcionarios
+                        </a>
+                        {% if es_superadmin() %}
+                        <a class="collapse-item" href="{{ url_for('usuario.usuarioIndex') }}">
+                            <i class="fas fa-users fa-sm mr-2"></i>Usuarios
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endif %}
 
+            <!-- Divider -->
+            <hr class="sidebar-divider">
 
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Atención al Paciente
+            </div>
 
+            <!-- ========================================== -->
+            <!-- AGENDAMIENTO (ADMIN, SUPERADMIN, RECEPCIÓN Y ESPECIALISTA) -->
+            <!-- ========================================== -->
+            {% if es_admin_o_superadmin() or es_recepcion() or es_especialista() or puede_acceder_modulo('Agendamiento') %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAgenda"
+                    aria-expanded="true" aria-controls="collapseAgenda">
+                    <i class="fas fa-fw fa-calendar-alt"></i>
+                    <span>Agendamiento</span>
+                </a>
+                <div id="collapseAgenda" class="collapse" aria-labelledby="headingAgenda"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gestión de Citas:</h6>
+                        <a class="collapse-item" href="{{ url_for('agenda.agendaIndex') }}">
+                            <i class="fas fa-calendar-plus fa-sm mr-2"></i>Agenda Médica
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('cita.citaIndex') }}">
+                            <i class="fas fa-calendar-check fa-sm mr-2"></i>Citas Médicas
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('cita.calendario') }}">
+                            <i class="fas fa-calendar fa-sm mr-2"></i>Calendario
+                        </a>
+                        {% if es_admin_o_superadmin() or es_recepcion() %}
+                        <a class="collapse-item" href="{{ url_for('fichamedica.fichaMedicaIndex') }}">
+                            <i class="fas fa-file-medical fa-sm mr-2"></i>Fichas Médicas
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endif %}
 
+            <!-- ========================================== -->
+            <!-- CONSULTAS MÉDICAS (ESPECIALISTAS, ADMIN Y SUPERADMIN) -->
+            <!-- ========================================== -->
+            {% if es_admin_o_superadmin() or es_especialista() or puede_acceder_modulo('Consultorios') %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseConsultas"
+                    aria-expanded="true" aria-controls="collapseConsultas">
+                    <i class="fas fa-fw fa-stethoscope"></i>
+                    <span>Consultas Médicas</span>
+                </a>
+                <div id="collapseConsultas" class="collapse" aria-labelledby="headingConsultas"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gestión de Consultas:</h6>
+                        
+                        {% if es_recepcion() or es_admin_o_superadmin() %}
+                        <a class="collapse-item" href="{{ url_for('paciente.pacienteIndex') }}">
+                            <i class="fas fa-user-injured fa-sm mr-2"></i>Pacientes
+                        </a>
+                        {% endif %}
+                        
+                        {% if es_especialista() or es_admin_o_superadmin() %}
+                        <a class="collapse-item" href="{{ url_for('registrarconsulta.consultaIndex') }}">
+                            <i class="fas fa-clipboard-check fa-sm mr-2"></i>Registrar Consulta
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrardiagnostico.diagnosticoIndex') }}">
+                            <i class="fas fa-diagnoses fa-sm mr-2"></i>Registrar Diagnóstico
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrartratamiento.tratamientoIndex') }}">
+                            <i class="fas fa-pills fa-sm mr-2"></i>Registrar Tratamiento
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrarprocedimiento.procedimientoIndex') }}">
+                            <i class="fas fa-procedures fa-sm mr-2"></i>Registrar Procedimiento
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('anamnesis.anamnesisIndex') }}">
+                            <i class="fas fa-file-medical fa-sm mr-2"></i>Anamnesis
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Divider para separar secciones -->
+                        <div class="dropdown-divider"></div>
+                        
+                        <h6 class="collapse-header">Documentos y Gestión:</h6>
+                        
+                        {% if es_especialista() or es_admin_o_superadmin() %}
+                        <a class="collapse-item" href="{{ url_for('registrarpresupuesto.presupuestoIndex') }}">
+                            <i class="fas fa-file-invoice-dollar fa-sm mr-2"></i>Presupuestos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrarreceta.recetaIndex') }}">
+                            <i class="fas fa-prescription fa-sm mr-2"></i>Recetas Médicas
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrarordenestudio.ordenEstudioIndex') }}">
+                            <i class="fas fa-file-medical fa-sm mr-2"></i>Órdenes de Estudios
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrarcertificadomedico.certificadoMedicoIndex') }}">
+                            <i class="fas fa-certificate fa-sm mr-2"></i>Certificados Médicos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('registrarinsumo.insumoIndex') }}">
+                            <i class="fas fa-boxes fa-sm mr-2"></i>Insumos Médicos
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endif %}
+
+            <!-- ========================================== -->
+            <!-- VENTAS (ADMIN, SUPERADMIN, RECEPCIÓN Y GRUPO VENTAS) -->
+            <!-- ========================================== -->
+            {% if es_admin_o_superadmin() or es_recepcion() or es_ventas() %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
+                    aria-expanded="true" aria-controls="collapseVentas">
+                    <i class="fas fa-fw fa-cash-register"></i>
+                    <span>Ventas</span>
+                </a>
+                <div id="collapseVentas" class="collapse" aria-labelledby="headingVentas"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gestión de Ventas:</h6>
+                        {% if es_admin_o_superadmin() or es_ventas() %}
+                        <a class="collapse-item" href="{{ url_for('pedido.pedidoIndex') }}">
+                            <i class="fas fa-shopping-cart fa-sm mr-2"></i>Registrar Pedido
+                        </a>
+                        {% endif %}
+                        <a class="collapse-item" href="{{ url_for('factura.facturaIndex') }}">
+                            <i class="fas fa-file-invoice-dollar fa-sm mr-2"></i>Registrar Factura
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('cuenta_cobrar.cuentaCobrarIndex') }}">
+                            <i class="fas fa-money-check-alt fa-sm mr-2"></i>Cuentas a Cobrar
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('cobranza.cobranzaIndex') }}">
+                            <i class="fas fa-cash-register fa-sm mr-2"></i>Cobranzas
+                        </a>
+                        {% if es_admin_o_superadmin() or es_ventas() %}
+                        <a class="collapse-item" href="{{ url_for('apertura_cierre_caja.aperturaCierreIndex') }}">
+                            <i class="fas fa-door-open fa-sm mr-2"></i>Apertura/Cierre de Caja
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('arqueo_caja.arqueoCajaIndex') }}">
+                            <i class="fas fa-calculator fa-sm mr-2"></i>Arqueo de Caja
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('recaudacion.recaudacionIndex') }}">
+                            <i class="fas fa-money-bill-wave fa-sm mr-2"></i>Recaudaciones
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('nota_credito.notaCreditoIndex') }}">
+                            <i class="fas fa-file-invoice fa-sm mr-2"></i>Notas de Crédito
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('nota_debito.notaDebitoIndex') }}">
+                            <i class="fas fa-file-invoice fa-sm mr-2"></i>Notas de Débito
+                        </a>
+                        {% endif %}
+                        {% if es_admin_o_superadmin() or es_ventas() %}
+                        <a class="collapse-item" href="{{ url_for('libro_ventas.libroVentasIndex') }}">
+                            <i class="fas fa-book fa-sm mr-2"></i>Libro de Ventas
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Divider para separar secciones -->
+                        <div class="dropdown-divider"></div>
+                        
+                        <!-- CONFIGURACIÓN DE VENTAS -->
+                        {% if es_admin_o_superadmin() %}
+                        <h6 class="collapse-header">Configuración de Ventas:</h6>
+                        <a class="collapse-item" href="{{ url_for('empresa.empresaIndex') }}">
+                            <i class="fas fa-building fa-sm mr-2"></i>Empresa
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('sede.sedeIndex') }}">
+                            <i class="fas fa-map-marker-alt fa-sm mr-2"></i>Sedes
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('timbrado.timbradoIndex') }}">
+                            <i class="fas fa-stamp fa-sm mr-2"></i>Timbrados
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('establecimiento.establecimientoIndex') }}">
+                            <i class="fas fa-store fa-sm mr-2"></i>Establecimientos
+                        </a>
+                        <a class="collapse-item" href="{{ url_for('puntoexpedicion.puntoExpedicionIndex') }}">
+                            <i class="fas fa-cash-register fa-sm mr-2"></i>Puntos de Expedición
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endif %}
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
 
             <!-- Sidebar Toggler (Sidebar) -->
             <div class="text-center d-none d-md-inline">
@@ -212,25 +665,25 @@
                         <i class="fa fa-bars"></i>
                     </button>
 
-                                        <!-- Buscador Mejorado -->
-                        <form method="GET" action="{{ url_for('buscar') }}" class="d-flex align-items-center my-2 my-md-0 w-100" style="max-width: 400px; margin-left: 0;">
-                        <div class="input-group shadow-sm rounded-pill border" style="border-color: #343a40;">
-                            <input 
-                            type="text" 
-                            class="form-control border-0 bg-white rounded-start-pill px-1" 
-                            placeholder="Buscar..." 
-                            aria-label="Buscar" 
-                            name="termino" 
-                            required
-                            style="outline: none;"
-                            >
-                            <button class="btn btn-outline-primary rounded-end-pill px-6" type="submit">
-                            <i class="fas fa-search"></i>
-                            </button>
+                    <!-- Topbar Search -->
+                    <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search" id="searchForm">
+                        <div class="input-group position-relative">
+                            <input type="text" 
+                                   class="form-control bg-light border-0 small" 
+                                   id="globalSearchInput"
+                                   placeholder="Buscar pacientes, especialistas, referenciales..." 
+                                   aria-label="Search" 
+                                   aria-describedby="basic-addon2"
+                                   autocomplete="off">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit" style="background-color: var(--cobalt-blue); border-color: var(--cobalt-blue);">
+                                    <i class="fas fa-search fa-sm"></i>
+                                </button>
+                            </div>
+                            <!-- Dropdown de resultados -->
+                            <div id="searchResults" class="search-results-dropdown" style="display: none;"></div>
                         </div>
-                        </form>
-
-
+                    </form>
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
@@ -241,29 +694,27 @@
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-search fa-fw"></i>
                             </a>
-                            <!-- Dropdown - Messages -->
                             <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
                                 aria-labelledby="searchDropdown">
-                                <form class="form-inline mr-auto w-100 navbar-search">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control bg-light border-0 small"
-                                            placeholder="Search for..." aria-label="Search"
-                                            aria-describedby="basic-addon2">
+                                <form class="form-inline mr-auto w-100 navbar-search" id="searchFormMobile">
+                                    <div class="input-group position-relative">
+                                        <input type="text" 
+                                               class="form-control bg-light border-0 small"
+                                               id="globalSearchInputMobile"
+                                               placeholder="Buscar..." 
+                                               aria-label="Search"
+                                               autocomplete="off">
                                         <div class="input-group-append">
-                                            <button class="btn btn-primary" type="button">
+                                            <button class="btn btn-primary" type="submit" style="background-color: var(--cobalt-blue); border-color: var(--cobalt-blue);">
                                                 <i class="fas fa-search fa-sm"></i>
                                             </button>
                                         </div>
+                                        <!-- Dropdown de resultados móvil -->
+                                        <div id="searchResultsMobile" class="search-results-dropdown" style="display: none;"></div>
                                     </div>
                                 </form>
                             </div>
                         </li>
-                           
-                           
-                        </li>
-
-                        <!-- Nav Item - Messages -->
-                      
 
                         <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -271,23 +722,23 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ session['usuario_nombre'] }}</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                    {{ session.get('nombre_persona', 'Usuario') }}
+                                    <span class="badge ml-1" style="background-color: var(--cobalt-blue);">{{ session.get('grupo', 'Sin rol') }}</span>
+                                </span>
                                 <img class="img-profile rounded-circle"
-                                    src="{{ url_for('static', filename='img/undraw_profile.svg') }}">
+                                    src="{{ url_for('static', filename='img/undraw_profile.svg') }}" alt="Perfil">
                             </a>
-                            <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="{{ url_for('perfil.perfilIndex') }}">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Usuario
+                                    Mi Perfil
                                 </a>
-                               
-                        
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{{ url_for('login.logout') }}">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Salir
+                                    Cerrar Sesión
                                 </a>
                             </div>
                         </li>
@@ -307,67 +758,386 @@
             </div>
             <!-- End of Main Content -->
 
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>&copy; 2025 SYSCONCLI®. Todos los derechos reservados</span>
-                    </div>
-                </div>
-            </footer>
-            <!-- End of Footer -->
-
         </div>
         <!-- End of Content Wrapper -->
 
     </div>
     <!-- End of Page Wrapper -->
 
-    <!-- Scroll to Top Button-->
+    <!-- Footer -->
+    <footer class="text-white w-100" style="background-color: var(--cobalt-blue-dark) !important; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; padding-top: 3rem; padding-bottom: 2rem;">
+        <div class="container-fluid px-4" style="background-color: transparent; max-width: 1200px; margin: 0 auto;">
+            <!-- Sección Superior -->
+            <div class="row pb-4 justify-content-center">
+                <!-- Columna 1: Logo y Descripción -->
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
+                        <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo AngaSys" style="width: 50px; height: 50px; margin-right: 12px;">
+                        <h4 class="mb-0 font-weight-bold" style="font-size: 1.5rem;">AngaSys</h4>
+                    </div>
+                    <p class="text-white mb-3 text-center text-md-left" style="opacity: 0.9; font-size: 0.9rem; line-height: 1.6;">
+                        Sistema de gestión de consultorios psicológicos. Ayudamos a profesionales de la salud mental a gestionar eficientemente sus consultorios y brindar una mejor atención a sus pacientes.
+                    </p>
+                    <!-- Redes Sociales -->
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start" style="gap: 12px;">
+                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Nuestro Sistema -->
+                {% set tiene_enlaces_sistema = es_admin_o_superadmin() or puede_acceder_modulo('Agendamiento') or puede_acceder_modulo('Consultorios') or es_recepcion() or es_ventas() or es_especialista() %}
+                {% if tiene_enlaces_sistema %}
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
+                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem; letter-spacing: 0.5px;">NUESTRO SISTEMA</h5>
+                    <ul class="list-unstyled" style="line-height: 2.2;">
+                        {% if es_admin_o_superadmin() %}
+                        <li>
+                            <a href="{{ url_for('consultorio.consultorioIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                Consultorios
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if es_admin_o_superadmin() or es_recepcion() or es_especialista() or puede_acceder_modulo('Agendamiento') %}
+                        <li>
+                            <a href="{{ url_for('agenda.agendaIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                Agendamiento
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if es_admin_o_superadmin() or es_especialista() or puede_acceder_modulo('Consultorios') %}
+                        <li>
+                            <a href="{{ url_for('registrarconsulta.consultaIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                Consultas Médicas
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if es_admin_o_superadmin() or es_recepcion() or es_ventas() %}
+                        <li>
+                            <a href="{{ url_for('factura.facturaIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                Ventas
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Columna 3: Servicios -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
+                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem; letter-spacing: 0.5px;">SERVICIOS</h5>
+                    <ul class="list-unstyled" style="line-height: 2.2;">
+                        <li>
+                            <a href="{{ url_for('informacion.soporte') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                <i class="fas fa-question-circle mr-1"></i>Soporte
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('informacion.contacto') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                <i class="fas fa-envelope mr-1"></i>Contacto
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('perfil.perfilIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                <i class="fas fa-user mr-1"></i>Mi Perfil
+                            </a>
+                        </li>
+                        {% if es_superadmin() %}
+                        <li>
+                            <a href="{{ url_for('usuario.usuarioIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                                <i class="fas fa-cog mr-1"></i>Administración
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Columna 4: Contáctanos -->
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
+                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem; letter-spacing: 0.5px;">CONTÁCTANOS</h5>
+                    <ul class="list-unstyled" style="line-height: 2.2;">
+                        <li class="text-white" style="opacity: 0.9; font-size: 0.9rem;">
+                            <i class="fas fa-building mr-2"></i>
+                            Clínica Integral Neuropsicológica
+                        </li>
+                        <li class="text-white" style="opacity: 0.9; font-size: 0.9rem;">
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:armanuramirez16@gmail.com" class="text-white" style="opacity: 0.9; text-decoration: none; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
+                                armanuramirez16@gmail.com
+                            </a>
+                        </li>
+                        <li class="text-white" style="opacity: 0.9; font-size: 0.9rem;">
+                            <i class="fas fa-clock mr-2"></i>
+                            Lunes a Viernes: 9:00 - 18:00
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Línea Divisoria -->
+            <div class="border-top mb-3 mt-4" style="border-color: rgba(255,255,255,0.2); border-width: 1px !important; width: 100%;"></div>
+
+            <!-- Sección Inferior -->
+            <div class="row align-items-center justify-content-center">
+                <div class="col-md-6 mb-2 mb-md-0 text-center">
+                    <p class="text-white mb-0" style="opacity: 0.8; font-size: 0.85rem;">
+                        <i class="far fa-copyright mr-1"></i>AngaSys {{ current_year if current_year else '2025' }} — Todos los derechos reservados
+                        <span class="ml-2" style="opacity: 0.7;">|</span>
+                        <span class="ml-2" style="opacity: 0.7;">
+                            <i class="fas fa-code-branch mr-1"></i>Versión {{ app_version if app_version else '2.0.0' }}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-end align-items-center" style="gap: 8px;">
+                        <a href="{{ url_for('informacion.privacidad') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.85rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            Políticas de Privacidad
+                        </a>
+                        <span class="text-white" style="opacity: 0.5;">•</span>
+                        <a href="#" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.85rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            Políticas de Cookies
+                        </a>
+                        <span class="text-white" style="opacity: 0.5;">•</span>
+                        <a href="#" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.85rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            Términos y Condiciones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- End of Footer -->
+
+    <!-- Scroll to Top Button -->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="login.html">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap core JavaScript-->
+    <!-- Bootstrap core JavaScript -->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- Core plugin JavaScript-->
+    <!-- Core plugin JavaScript -->
     <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
 
-    <!-- Custom scripts for all pages-->
+    <!-- Custom scripts for all pages -->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
 
-     <!-- Librerias para usar Datatables -->
-     <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
-     <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <!-- Datatables -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
 
-     <!-- Libreria para mensajes emergentes -->
-     <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
+    <!-- SweetAlert2 -->
+    <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
 
-    {# Este bloque pertenece a nuestros scripts de js #}
     {% block js %}
     {% endblock %}
+
+    <!-- Script de búsqueda global -->
+    <script>
+        $(document).ready(function() {
+            let searchTimeout;
+            const minSearchLength = 2;
+            const searchDelay = 300; // ms
+
+            // Función para realizar búsqueda
+            function realizarBusqueda(termino, resultsContainer) {
+                if (termino.length < minSearchLength) {
+                    resultsContainer.hide().empty();
+                    return;
+                }
+
+                // Mostrar indicador de carga
+                resultsContainer.html('<div class="search-loading"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>').show();
+
+                $.ajax({
+                    url: '/api/v1/busqueda',
+                    method: 'GET',
+                    data: { q: termino, limite: 20 },
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            mostrarResultados(response.data, resultsContainer);
+                        } else {
+                            mostrarSinResultados(resultsContainer);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error en búsqueda:', error);
+                        resultsContainer.html('<div class="search-no-results">Error al realizar la búsqueda</div>').show();
+                    }
+                });
+            }
+
+            // Función para mostrar resultados
+            function mostrarResultados(data, container) {
+                let html = '';
+                let tieneResultados = false;
+
+                // Pacientes
+                if (data.pacientes && data.pacientes.length > 0) {
+                    tieneResultados = true;
+                    html += '<div class="search-results-section">';
+                    html += '<div class="search-results-section-title"><i class="fas fa-user-injured"></i> Pacientes</div>';
+                    data.pacientes.forEach(function(paciente) {
+                        html += `
+                            <div class="search-result-item" onclick="window.location.href='${paciente.url}'">
+                                <div class="search-result-item-title">
+                                    <i class="fas fa-user-injured search-result-item-icon"></i>
+                                    ${escapeHtml(paciente.nombre_completo)}
+                                </div>
+                                <div class="search-result-item-subtitle">
+                                    HC: ${escapeHtml(paciente.historia_clinica)} | CI: ${escapeHtml(paciente.cedula)}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                // Especialistas
+                if (data.especialistas && data.especialistas.length > 0) {
+                    tieneResultados = true;
+                    html += '<div class="search-results-section">';
+                    html += '<div class="search-results-section-title"><i class="fas fa-user-md"></i> Especialistas</div>';
+                    data.especialistas.forEach(function(especialista) {
+                        html += `
+                            <div class="search-result-item" onclick="window.location.href='${especialista.url}'">
+                                <div class="search-result-item-title">
+                                    <i class="fas fa-user-md search-result-item-icon"></i>
+                                    ${escapeHtml(especialista.nombre_completo)}
+                                </div>
+                                <div class="search-result-item-subtitle">
+                                    ${especialista.matricula ? 'Mat: ' + escapeHtml(especialista.matricula) + ' | ' : ''}CI: ${escapeHtml(especialista.cedula)}
+                                    ${especialista.especialidades ? ' | ' + escapeHtml(especialista.especialidades) : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                // Referenciales
+                if (data.referenciales && data.referenciales.length > 0) {
+                    tieneResultados = true;
+                    html += '<div class="search-results-section">';
+                    html += '<div class="search-results-section-title"><i class="fas fa-database"></i> Referenciales</div>';
+                    data.referenciales.forEach(function(ref) {
+                        const iconos = {
+                            'ciudad': 'fa-city',
+                            'especialidad': 'fa-user-md',
+                            'consultorio': 'fa-clinic-medical'
+                        };
+                        const icono = iconos[ref.tipo] || 'fa-tag';
+                        html += `
+                            <div class="search-result-item" onclick="window.location.href='${ref.url}'">
+                                <div class="search-result-item-title">
+                                    <i class="fas ${icono} search-result-item-icon"></i>
+                                    ${escapeHtml(ref.nombre)}
+                                </div>
+                                <div class="search-result-item-subtitle">
+                                    ${escapeHtml(ref.tipo_display)}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                if (!tieneResultados) {
+                    mostrarSinResultados(container);
+                } else {
+                    container.html(html).show();
+                }
+            }
+
+            // Función para mostrar sin resultados
+            function mostrarSinResultados(container) {
+                container.html('<div class="search-no-results">No se encontraron resultados</div>').show();
+            }
+
+            // Función para escapar HTML
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
+            }
+
+            // Eventos para búsqueda desktop
+            const searchInput = $('#globalSearchInput');
+            const searchResults = $('#searchResults');
+            const searchForm = $('#searchForm');
+
+            searchInput.on('input', function() {
+                const termino = $(this).val().trim();
+                clearTimeout(searchTimeout);
+                
+                if (termino.length >= minSearchLength) {
+                    searchTimeout = setTimeout(function() {
+                        realizarBusqueda(termino, searchResults);
+                    }, searchDelay);
+                } else {
+                    searchResults.hide().empty();
+                }
+            });
+
+            searchForm.on('submit', function(e) {
+                e.preventDefault();
+                const termino = searchInput.val().trim();
+                if (termino.length >= minSearchLength) {
+                    realizarBusqueda(termino, searchResults);
+                }
+            });
+
+            // Ocultar resultados al hacer clic fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.navbar-search').length) {
+                    searchResults.hide();
+                    $('#searchResultsMobile').hide();
+                }
+            });
+
+            // Eventos para búsqueda móvil
+            const searchInputMobile = $('#globalSearchInputMobile');
+            const searchResultsMobile = $('#searchResultsMobile');
+            const searchFormMobile = $('#searchFormMobile');
+
+            searchInputMobile.on('input', function() {
+                const termino = $(this).val().trim();
+                clearTimeout(searchTimeout);
+                
+                if (termino.length >= minSearchLength) {
+                    searchTimeout = setTimeout(function() {
+                        realizarBusqueda(termino, searchResultsMobile);
+                    }, searchDelay);
+                } else {
+                    searchResultsMobile.hide().empty();
+                }
+            });
+
+            searchFormMobile.on('submit', function(e) {
+                e.preventDefault();
+                const termino = searchInputMobile.val().trim();
+                if (termino.length >= minSearchLength) {
+                    realizarBusqueda(termino, searchResultsMobile);
+                }
+            });
+        });
+    </script>
 
 </body>
 

@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Aperturas y Cierres de Caja
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-cash-register"></i> Aperturas y Cierres de Caja
+        </h3>
+        <a href="{{ url_for('apertura_cierre_caja.aperturaCierreAgregar') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Apertura/Cierre
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filtroTipo">Filtrar por Tipo:</label>
+                        <select class="form-control" id="filtroTipo">
+                            <option value="">Todos</option>
+                            <option value="APERTURA">Aperturas</option>
+                            <option value="CIERRE">Cierres</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filtroEstado">Filtrar por Estado:</label>
+                        <select class="form-control" id="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="A">Activa</option>
+                            <option value="C">Cerrada</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary" id="btnAplicarFiltros">
+                                <i class="fas fa-filter"></i> Aplicar Filtros
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Lista de Aperturas y Cierres</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered w-100" id="tblAperturasCierres">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Caja</th>
+                            <th>Usuario</th>
+                            <th>Saldo Inicial</th>
+                            <th>Saldo Final</th>
+                            <th>Efectivo</th>
+                            <th>Cheques</th>
+                            <th>Tarjetas</th>
+                            <th>Transferencias</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Detalle -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Detalle de Apertura/Cierre</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detalleContenido">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}" || null;
+let tablaAperturasCierres = null;
+
+// Inicializar DataTable
+const initDatatable = () => {
+    tablaAperturasCierres = $('#tblAperturasCierres').DataTable({
+        language: {
+            url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+        },
+        ajax: {
+            url: '/api/v1/aperturas_cierres',
+            dataSrc: 'data'
+        },
+        columns: [
+            { 
+                data: 'tipo_operacion',
+                render: function(data) {
+                    return data === 'APERTURA' 
+                        ? '<span class="badge badge-success">Apertura</span>'
+                        : '<span class="badge badge-info">Cierre</span>';
+                }
+            },
+            { data: 'fecha_operacion' },
+            { data: 'caja' },
+            { data: 'usuario' },
+            { 
+                data: 'saldo_inicial',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'saldo_final',
+                render: function(data) {
+                    return data ? formatearMoneda(data) : '-';
+                }
+            },
+            { 
+                data: 'monto_efectivo',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'monto_cheques',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'monto_tarjetas',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'monto_transferencias',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'est_apertura_cierre',
+                render: function(data) {
+                    const estados = {
+                        'A': '<span class="badge badge-success">Activa</span>',
+                        'C': '<span class="badge badge-secondary">Cerrada</span>'
+                    };
+                    return estados[data] || data;
+                }
+            },
+            { 
+                data: function(row) {
+                    return `
+                        <button type="button" name="btn_ver" class="btn btn-info btn-sm" data-id="${row.id_apertura_cierre}" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+        order: [[1, 'desc']] // Ordenar por fecha descendente
+    });
+}
+
+// Formatear moneda
+function formatearMoneda(valor) {
+    return new Intl.NumberFormat('es-PY', {
+        style: 'currency',
+        currency: 'PYG',
+        minimumFractionDigits: 0
+    }).format(valor || 0);
+}
+
+// Ver detalle
+const verDetalle = () => {
+    $('#tblAperturasCierres').on('click', 'button[name="btn_ver"]', function(){
+        const idAperturaCierre = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        fetch(`/api/v1/aperturas_cierres/${idAperturaCierre}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            Swal.close();
+            if(data && data.success && data.data) {
+                const apertura = data.data;
+                
+                const detalleHtml = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Información General</h6>
+                            <table class="table table-sm">
+                                <tr><th>Tipo:</th><td><span class="badge badge-${apertura.tipo_operacion === 'APERTURA' ? 'success' : 'info'}">${apertura.tipo_operacion}</span></td></tr>
+                                <tr><th>Fecha:</th><td>${apertura.fecha_operacion}</td></tr>
+                                <tr><th>Caja:</th><td>${apertura.caja}</td></tr>
+                                <tr><th>Usuario:</th><td>${apertura.usuario}</td></tr>
+                                <tr><th>Estado:</th><td><span class="badge badge-${apertura.est_apertura_cierre === 'A' ? 'success' : 'secondary'}">${apertura.est_apertura_cierre === 'A' ? 'Activa' : 'Cerrada'}</span></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Montos</h6>
+                            <table class="table table-sm">
+                                <tr><th>Saldo Inicial:</th><td><strong>${formatearMoneda(apertura.saldo_inicial)}</strong></td></tr>
+                                ${apertura.saldo_final ? `<tr><th>Saldo Final:</th><td><strong>${formatearMoneda(apertura.saldo_final)}</strong></td></tr>` : ''}
+                                <tr><th>Efectivo:</th><td>${formatearMoneda(apertura.monto_efectivo)}</td></tr>
+                                <tr><th>Cheques:</th><td>${formatearMoneda(apertura.monto_cheques)}</td></tr>
+                                <tr><th>Tarjetas:</th><td>${formatearMoneda(apertura.monto_tarjetas)}</td></tr>
+                                <tr><th>Transferencias:</th><td>${formatearMoneda(apertura.monto_transferencias)}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    ${apertura.observaciones ? `<div class="row"><div class="col-md-12"><h6>Observaciones:</h6><p>${apertura.observaciones}</p></div></div>` : ''}
+                `;
+                
+                $('#detalleContenido').html(detalleHtml);
+                $('#modalDetalle').modal('show');
+            } else {
+                Swal.fire("Error", "No se pudo cargar la información.", "error");
+            }
+        })
+        .catch(err => {
+            Swal.close();
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al cargar la información.", "error");
+        });
+    });
+}
+
+// Aplicar filtros
+$('#btnAplicarFiltros').on('click', function() {
+    const tipo = $('#filtroTipo').val();
+    const estado = $('#filtroEstado').val();
+    
+    // Aplicar filtros en el DataTable
+    tablaAperturasCierres.column(0).search(tipo);
+    tablaAperturasCierres.column(10).search(estado);
+    tablaAperturasCierres.draw();
+});
+
+// Limpiar filtros
+$('#btnLimpiarFiltros').on('click', function() {
+    $('#filtroTipo').val('');
+    $('#filtroEstado').val('');
+    tablaAperturasCierres.search('').columns().search('').draw();
+});
+
+// Inicializar cuando el documento esté listo
+$(function() {
+    initDatatable();
+    verDetalle();
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

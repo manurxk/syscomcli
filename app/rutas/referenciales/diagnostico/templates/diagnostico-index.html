@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+    
 {% block titulo %}
 Diagnósticos
 {% endblock %}
@@ -11,25 +11,26 @@ Diagnósticos
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Diagnosticos</th>
+              <th>Descripción</th>
+              <th>Código CIE-10</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
-        </table>
+      </table>
       </div>
     </div>
     <!-- /tarjeta -->
 
-    <!-- El formulario -->
+    <!-- Modal formulario -->
     <div class="modal" id="modalFormulario">
-      <!-- La clase modal-dialog-centered centra el modal -->
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
@@ -41,10 +42,23 @@ Diagnósticos
 
           <!-- Modal body -->
           <div class="modal-body">
+            <input type="hidden" id="txtIdDiagnostico">
             <div class="form-group">
-              <input type="hidden" id="txtIdDiagnostico">
-              <label for="txtDescripcion">Diagnostico:</label>
-              <input type="text" class="form-control" placeholder="Ingrese algún diagnóstico" id="txtDescripcion">
+              <label for="txtDescripcion">Descripción:</label>
+              <input type="text" class="form-control" placeholder="Ingrese una descripción de diagnóstico" id="txtDescripcion">
+              <small class="form-text text-muted">Solo letras, números, espacios y puntos</small>
+            </div>
+            <div class="form-group">
+              <label for="txtCodigoCie10">Código CIE-10:</label>
+              <input type="text" class="form-control" placeholder="Ej: A15.0, B99.9" id="txtCodigoCie10">
+              <small class="form-text text-muted">Formato: Letra + 2 dígitos + opcional punto + 1-2 dígitos</small>
+            </div>
+            <div class="form-group">
+              <label for="selectEstado">Estado:</label>
+              <select class="form-control" id="selectEstado">
+                <option value="A">Activo</option>
+                <option value="I">Inactivo</option>
+              </select>
             </div>
           </div>
 
@@ -71,6 +85,7 @@ Diagnósticos
 
 {% block js %}
 <script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
 
   const initDatatable = () => {
     $('#tbl').DataTable({
@@ -80,9 +95,18 @@ Diagnósticos
       ajax:'/api/v1/diagnosticos',
       columns: [
         { data: 'descripcion' },
+        { data: 'codigo_cie10', render: function(val) {
+            return val ? val : '<span class="badge badge-secondary">N/A</span>';
+          }
+        },
+        { data: 'estado', render: function(val) {
+            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
+                               : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-info" data-id="${row.id_diagnostico}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id="${row.id_diagnostico}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
           }
         }
       ]
@@ -91,11 +115,11 @@ Diagnósticos
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      // Setear un título a modal
       $('#modalTitle').text("Agregar un Diagnóstico");
-      // inicia ventana modal
       $('#txtIdDiagnostico').val("");
       $('#txtDescripcion').val("");
+      $('#txtCodigoCie10').val("");
+      $('#selectEstado').val("A");
       $('#modalFormulario').modal();
     });
   }
@@ -104,23 +128,39 @@ Diagnósticos
     $('#btnGuardar').on('click', function() {
       const idDiagnostico = $('#txtIdDiagnostico').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
+      const codigoCie10 = $('#txtCodigoCie10').val();
+      const estado = $('#selectEstado').val();
       const tabla = $('#tbl').DataTable();
+
+      if(!nuevaDescripcion.trim()) {
+        Swal.fire("Error", "La descripción no puede estar vacía.", "error");
+        return;
+      }
+
+      const payload = { 
+        descripcion: nuevaDescripcion, 
+        codigo_cie10: codigoCie10 || null,
+        estado: estado 
+      };
 
       if(idDiagnostico) {
         // update
         fetch(`/api/v1/diagnosticos/${idDiagnostico}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
             Swal.fire("Actualizado", "El diagnóstico ha sido actualizado correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire(data.error);
+            Swal.fire("Error", data.error || "No se pudo actualizar el diagnóstico.", "error");
           }
         }).catch(err => {
           console.error(err);
@@ -131,30 +171,30 @@ Diagnósticos
         fetch(`/api/v1/diagnosticos`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "El diagnóstico ha sido agregado correctamente.", "success");
+            Swal.fire("Agregado", "El diagnóstico ha sido agregado correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire(data.error);
+            Swal.fire("Error", data.error || "No se pudo guardar el diagnóstico.", "error");
           }
         }).catch(err => {
           console.error(err);
           Swal.fire("Error", "Ocurrió un error al guardar el diagnóstico.", "error");
         });
       }
-      $('#txtDescripcion').val("");
-      $('#modalFormulario').modal("hide");
     });
   }
 
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]',function(){
-      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas editar este registro?",
         showCancelButton: true,
@@ -167,16 +207,15 @@ Diagnósticos
           const idDiagnostico = $(this).data('id');
           $('#txtIdDiagnostico').val(idDiagnostico);
 
-          // Necesitamos obtener la descripción del backend
           fetch(`/api/v1/diagnosticos/${idDiagnostico}`, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
           })
           .then(resp => resp.json())
           .then(data => {
             $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtCodigoCie10').val(data.data.codigo_cie10 || "");
+            $('#selectEstado').val(data.data.estado);
             $('#modalFormulario').modal();
           });
         }
@@ -187,7 +226,6 @@ Diagnósticos
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
       const idDiagnostico = $(this).data('id');
-      // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
@@ -198,26 +236,25 @@ Diagnósticos
           fetch(`/api/v1/diagnosticos/${idDiagnostico}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
             if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
               const fila = $(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", data.success);
+              Swal.fire("Eliminado", "El diagnóstico ha sido eliminado.", "success");
             } else {
-              Swal.fire(data.error);
+              Swal.fire("Error", data.error || "No se pudo eliminar el diagnóstico.", "error");
             }
           }).catch(err => {
             Swal.fire("Error", "Ocurrió un error al eliminar el diagnóstico.", "error");
           });
         }
       });
-
     });
   }
 

@@ -1,136 +1,161 @@
-# Data access object - DAO
+# Data Access Object - DAO
+import re
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
-class DiaDao:
+class DiaSemanaDao:
+
+    # ============================
+    # OBTENER REGISTROS
+    # ============================
 
     def getDias(self):
-        diaSQL = """
-        SELECT id_dia, descripcion
-        FROM dias
+        sql = """
+        SELECT id_dia_semana, des_dia_semana, dia_orden, est_dia_semana
+        FROM dias_semana
+        ORDER BY dia_orden
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(diaSQL)
-            dias = cur.fetchall()  # trae datos de la bd
-
-            # Transformar los datos en una lista de diccionarios
-            return [{'id_dia': dia[0], 'descripcion': dia[1]} for dia in dias]
-
+            cur.execute(sql)
+            dias = cur.fetchall()
+            return [
+                {
+                    'id': d[0],
+                    'descripcion': d[1],
+                    'orden': d[2],
+                    'estado': d[3]
+                } for d in dias
+            ]
         except Exception as e:
-            app.logger.error(f"Error al obtener todos los dias: {str(e)}")
+            app.logger.error(f"Error al obtener días: {str(e)}")
             return []
-
         finally:
             cur.close()
             con.close()
 
-    def getDiaById(self, id):
-        diaSQL = """
-        SELECT id_dia, descripcion
-        FROM dias WHERE id_dia=%s
+    def getDiaById(self, id_dia_semana):
+        sql = """
+        SELECT id_dia_semana, des_dia_semana, dia_orden, est_dia_semana
+        FROM dias_semana
+        WHERE id_dia_semana=%s
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(diaSQL, (id,))
-            diaEncontrada = cur.fetchone()  # Obtener una sola fila
-            if diaEncontrada:
+            cur.execute(sql, (id_dia_semana,))
+            dia = cur.fetchone()
+            if dia:
                 return {
-                    "id_dia": diaEncontrada[0],
-                    "descripcion": diaEncontrada[1]
-                }  # Retornar los datos de los dias
-            else:
-                return None  # Retornar None si no se encuentra el dia
-        except Exception as e:
-            app.logger.error(f"Error al obtener dia: {str(e)}")
+                    'id': dia[0],
+                    'descripcion': dia[1],
+                    'orden': dia[2],
+                    'estado': dia[3]
+                }
             return None
-
+        except Exception as e:
+            app.logger.error(f"Error al obtener día: {str(e)}")
+            return None
         finally:
             cur.close()
             con.close()
 
-    def guardarDia(self, descripcion):
-        insertDiaSQL = """
-        INSERT INTO dias(descripcion) VALUES(%s) RETURNING id_dia
-        """
+    # ============================
+    # VALIDACIONES
+    # ============================
 
+    def diaExiste(self, descripcion):
+        sql = "SELECT 1 FROM dias_semana WHERE LOWER(des_dia_semana)=LOWER(%s)"
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
-        # Ejecucion exitosa
         try:
-            cur.execute(insertDiaSQL, (descripcion,))
-            dia_id = cur.fetchone()[0]
-            con.commit()  # se confirma la insercion
-            return dia_id
+            cur.execute(sql, (descripcion,))
+            return cur.fetchone() is not None
+        finally:
+            cur.close()
+            con.close()
 
-        # Si algo fallo entra aqui
-        except Exception as e:
-            app.logger.error(f"Error al insertar dia: {str(e)}")
-            con.rollback()  # retroceder si hubo error
+    def validarDescripcion(self, descripcion):
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$"
+        return bool(re.match(patron, descripcion))
+
+    # ============================
+    # CRUD
+    # ============================
+
+    def guardarDia(self, descripcion, orden, estado=True):
+        if not self.validarDescripcion(descripcion):
+            app.logger.warning("Descripción inválida: solo letras y acentos")
+            return False
+        if self.diaExiste(descripcion):
+            app.logger.warning("El día ya existe")
             return False
 
-        # Siempre se va ejecutar
-        finally:
-            cur.close()
-            con.close()
-
-    def updateDia(self, id, descripcion):
-        updateDiaSQL = """
-        UPDATE dias
-        SET descripcion=%s
-        WHERE id_dia=%s
+        sql = """
+        INSERT INTO dias_semana(des_dia_semana, dia_orden, est_dia_semana)
+        VALUES(%s, %s, %s)
+        RETURNING id_dia_semana
         """
-
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
         try:
-            cur.execute(updateDiaSQL, (descripcion, id,))
-            filas_afectadas = cur.rowcount  # Obtener el número de filas afectadas
+            cur.execute(sql, (descripcion, orden, estado))
+            id_dia = cur.fetchone()[0]
             con.commit()
-
-            return filas_afectadas > 0  # Retornar True si se actualizó al menos una fila
-
+            return id_dia
         except Exception as e:
-            app.logger.error(f"Error al actualizar dia: {str(e)}")
+            app.logger.error(f"Error al insertar día: {str(e)}")
             con.rollback()
             return False
-
         finally:
             cur.close()
             con.close()
 
-    def deleteDia(self, id):
-        deleteDiaSQL = """
-        DELETE FROM dias
-        WHERE id_dia=%s
-        """
+    def updateDia(self, id_dia_semana, descripcion, orden, estado=True):
+        if not self.validarDescripcion(descripcion):
+            app.logger.warning("Descripción inválida")
+            return False
 
+        sql = """
+        UPDATE dias_semana
+        SET des_dia_semana=%s, dia_orden=%s, est_dia_semana=%s
+        WHERE id_dia_semana=%s
+        """
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
         try:
-            cur.execute(deleteDiaSQL, (id,))
-            rows_affected = cur.rowcount
+            cur.execute(sql, (descripcion, orden, estado, id_dia_semana))
+            filas = cur.rowcount
             con.commit()
-
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
-
+            return filas > 0
         except Exception as e:
-            app.logger.error(f"Error al eliminar dia: {str(e)}")
+            app.logger.error(f"Error al actualizar día: {str(e)}")
             con.rollback()
             return False
+        finally:
+            cur.close()
+            con.close()
 
+    def deleteDia(self, id_dia_semana):
+        sql = "DELETE FROM dias_semana WHERE id_dia_semana=%s"
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(sql, (id_dia_semana,))
+            filas = cur.rowcount
+            con.commit()
+            return filas > 0
+        except Exception as e:
+            app.logger.error(f"Error al eliminar día: {str(e)}")
+            con.rollback()
+            return False
         finally:
             cur.close()
             con.close()

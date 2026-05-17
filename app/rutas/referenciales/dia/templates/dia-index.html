@@ -1,23 +1,25 @@
 {% extends 'base.html' %}
-
+    
 {% block titulo %}
-Dia de la Cita
+Días de la Semana
 {% endblock %}
 
 {% block contenido %}
 <div class="container mt-4">
-    <h3>Listar Dia de la Cita</h3>
+    <h3>Listar Días de la Semana</h3>
 
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Dias</th>
+              <th>Descripción</th>
+              <th>Orden</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -25,9 +27,8 @@ Dia de la Cita
       </table>
       </div>
     </div>
-    <!-- /tarjeta -->
 
-    <!-- El formulario -->
+    <!-- Modal formulario -->
     <div class="modal" id="modalFormulario">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -35,29 +36,30 @@ Dia de la Cita
           <!-- Modal Header -->
           <div class="modal-header">
             <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
           </div>
 
-          <input type="hidden" id="txtIdDia" />
-          <!-- Combo dia-->
-          <div class="form-group">
-            <label for="cbo_dia">Dia:</label>
-            <select id="cbo_dia" class="custom-select">
-              
-                <option value="1">Domingo</option>
-                <option value="2">Lunes</option>
-                <option value="3">Martes</option>
-                <option value="4">Miércoles</option>
-                <option value="5">Jueves</option>
-                <option value="6">Viernes</option>
-                <option value="7">Sábado</option>
-            </select>
+          <!-- Modal body -->
+          <div class="modal-body">
+            <input type="hidden" id="txtIdDia">
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción:</label>
+              <input type="text" class="form-control" placeholder="Ingrese un día de la semana" id="txtDescripcion">
+            </div>
+            <div class="form-group">
+              <label for="txtOrden">Orden:</label>
+              <input type="number" class="form-control" id="txtOrden" placeholder="Ej: 1 para lunes, 2 para martes...">
+            </div>
+            <div class="form-group">
+              <label for="chkEstado">Estado:</label><br>
+              <input type="checkbox" id="chkEstado" checked> Activo
+            </div>
           </div>
 
           <!-- Modal footer -->
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
           </div>
 
         </div>
@@ -77,169 +79,149 @@ Dia de la Cita
 
 {% block js %}
 <script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax: '/api/v1/dias',
+      ajax:'/api/v1/dias',
       columns: [
         { data: 'descripcion' },
-        { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-info" data-id="${row.id_dia}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id="${row.id_dia}">Eliminar</button>`;
-          }
+        { data: 'orden' },
+        { data: 'estado', render: val => 
+            val ? '<span class="badge badge-success">Activo</span>' 
+                : '<span class="badge badge-secondary">Inactivo</span>'
+        },
+        { data: row => `
+            <button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
+            <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
         }
       ]
     });
-  };
+  }
 
   const agregar = () => {
-    $('#btnAgregar').on('click', function() {
-      $('#modalTitle').text("Agregar Dia");
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar un Día");
       $('#txtIdDia').val("");
-      $('#cbo_dia').val("Seleccione el dia");
+      $('#txtDescripcion').val("");
+      $('#txtOrden').val("");
+      $('#chkEstado').prop("checked", true);
       $('#modalFormulario').modal();
     });
-  };
+  }
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
       const idDia = $('#txtIdDia').val();
-      const diaSeleccionado = $('#cbo_dia option:selected').text(); // Obtenemos el texto seleccionado
+      const descripcion = $('#txtDescripcion').val();
+      const orden = $('#txtOrden').val();
+      const estado = $('#chkEstado').is(':checked');
       const tabla = $('#tbl').DataTable();
 
-      if (diaSeleccionado === "Seleccione el dia") {
-        Swal.fire("Error", "Debe seleccionar el dia.", "warning");
-        return;
-      }
+      const payload = { descripcion, orden, estado };
 
-      const data = {
-        descripcion: diaSeleccionado
-      };
+      const url = idDia ? `/api/v1/dias/${idDia}` : `/api/v1/dias`;
+      const method = idDia ? 'PUT' : 'POST';
+      const msg = idDia ? 'actualizado' : 'agregado';
 
-      if (idDia) {
-        // Actualizar
-        fetch(`/api/v1/dias/${idDia}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        })
-        .then(resp => resp.json())
-        .then(data => {
-          if (data && !data.error && data.success) {
-            tabla.ajax.reload();
-            Swal.fire("Actualizado", "El dia ha sido actualizado correctamente.", "success");
-          } else {
-            Swal.fire(data.error);
-          }
-        }).catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al actualizar el dia.", "error");
-        });
-      } else {
-        // Insertar
-        fetch(`/api/v1/dias`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        })
-        .then(resp => resp.json())
-        .then(data => {
-          if (data && !data.error && data.success) {
-            tabla.ajax.reload();
-            Swal.fire("Agregado", "El dia ha sido agregado correctamente.", "success");
-          } else {
-            Swal.fire(data.error);
-          }
-        }).catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al guardar el dia.", "error");
-        });
-      }
-
-      $('#cbo_dia').val("Seleccione el dia");
-      $('#modalFormulario').modal("hide");
+      fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success) {
+          tabla.ajax.reload();
+          Swal.fire("Éxito", `El día ha sido ${msg} correctamente.`, "success");
+          $('#modalFormulario').modal("hide");
+        } else {
+          Swal.fire("Error", data.error || "No se pudo guardar el día.", "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error al guardar el día.", "error");
+      });
     });
-  };
+  }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]', function() {
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
       Swal.fire({
         title: "¿Deseas editar este registro?",
         showCancelButton: true,
-        confirmButtonText: "Sí",
-        cancelButtonText: "No"
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          $('#modalTitle').text("Editar dia");
+          $('#modalTitle').text("Editar un Día");
 
           const idDia = $(this).data('id');
           $('#txtIdDia').val(idDia);
 
           fetch(`/api/v1/dias/${idDia}`, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
           })
           .then(resp => resp.json())
           .then(data => {
-            $('#cbo_dia').val(data.data.descripcion); // Asumiendo que la descripción es el valor que necesitas
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtOrden').val(data.data.orden);
+            $('#chkEstado').prop("checked", data.data.estado);
             $('#modalFormulario').modal();
-          }).catch(err => {
-            console.error(err);
-            Swal.fire("Error", "Ocurrió un error al obtener el dia.", "error");
           });
         }
       });
     });
-  };
+  }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]', function() {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
       const idDia = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
-        confirmButtonText: "Sí",
-        cancelButtonText: "No"
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
           fetch(`/api/v1/dias/${idDia}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
-            if (data && !data.error && data.success) {
+            if(data && data.success) {
               const fila = $(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", data.success);
+              Swal.fire("Eliminado", "El día ha sido eliminado.", "success");
             } else {
-              Swal.fire(data.error);
+              Swal.fire("Error", data.error || "No se pudo eliminar el día.", "error");
             }
-          }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error al eliminar el dia.", "error");
-          });
+          })
+          .catch(() => Swal.fire("Error", "Ocurrió un error al eliminar el día.", "error"));
         }
       });
     });
-  };
+  }
 
   const addEvents = () => {
     agregar();
     guardar();
     editar();
     eliminar();
-  };
+  }
 
   $(function() {
     initDatatable();

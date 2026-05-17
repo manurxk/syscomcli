@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Monedas
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Monedas</h3>
+    <div class="card">
+      <div class="card-header">
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Código</th>
+              <th>Símbolo</th>
+              <th>Decimales</th>
+              <th>Moneda Local</th>
+              <th>Tasa Cambio</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="txtIdMoneda">
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="Ej: Guaraní Paraguayo" id="txtDescripcion" required>
+            </div>
+            <div class="form-group">
+              <label for="txtCodigo">Código ISO: <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" placeholder="Ej: PYG, USD, EUR" id="txtCodigo" maxlength="3" required>
+            </div>
+            <div class="form-group">
+              <label for="txtSimbolo">Símbolo:</label>
+              <input type="text" class="form-control" placeholder="Ej: Gs., $, €" id="txtSimbolo" maxlength="10">
+            </div>
+            <div class="form-group">
+              <label for="txtDecimales">Decimales:</label>
+              <input type="number" class="form-control" id="txtDecimales" min="0" max="4" value="0">
+            </div>
+            <div class="form-group">
+              <label for="chkEsMonedaLocal">Es Moneda Local:</label><br>
+              <input type="checkbox" id="chkEsMonedaLocal"> (Marcar si es la moneda local del sistema)
+            </div>
+            <div class="form-group">
+              <label for="txtTasaCambio">Tasa de Cambio:</label>
+              <input type="number" class="form-control" id="txtTasaCambio" step="0.0001" min="0" value="1.0">
+              <small class="form-text text-muted">Tasa de cambio respecto a la moneda local (1.0 = igual valor)</small>
+            </div>
+            <div class="form-group">
+              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
+              <select class="form-control" id="selEstado" required>
+                <option value="A">Activo</option>
+                <option value="I">Inactivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax:'/api/v1/monedas',
+      columns: [
+        { data: 'descripcion' },
+        { data: 'codigo' },
+        { data: 'simbolo' },
+        { data: 'decimales' },
+        { data: 'es_moneda_local', render: function(val) {
+            return val ? '<span class="badge badge-success">Sí</span>' : '<span class="badge badge-secondary">No</span>';
+          }
+        },
+        { data: 'tasa_cambio', render: function(val) { return parseFloat(val).toFixed(4); } },
+        { data: 'estado', render: function(val) {
+            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar Moneda");
+      $('#txtIdMoneda').val("");
+      $('#txtDescripcion').val("");
+      $('#txtCodigo').val("");
+      $('#txtSimbolo').val("");
+      $('#txtDecimales').val("0");
+      $('#chkEsMonedaLocal').prop("checked", false);
+      $('#txtTasaCambio').val("1.0");
+      $('#selEstado').val("A");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idMoneda = $('#txtIdMoneda').val();
+      const descripcion = $('#txtDescripcion').val();
+      const codigo = $('#txtCodigo').val();
+      const simbolo = $('#txtSimbolo').val();
+      const decimales = parseInt($('#txtDecimales').val()) || 0;
+      const esMonedaLocal = $('#chkEsMonedaLocal').is(':checked');
+      const tasaCambio = parseFloat($('#txtTasaCambio').val()) || 1.0;
+      const estado = $('#selEstado').val();
+      const tabla = $('#tbl').DataTable();
+
+      if (!descripcion || descripcion.trim() === '') {
+        Swal.fire("Error", "La descripción es obligatoria.", "error");
+        return;
+      }
+      if (!codigo || codigo.trim() === '') {
+        Swal.fire("Error", "El código es obligatorio.", "error");
+        return;
+      }
+
+      const payload = { 
+        descripcion: descripcion, 
+        codigo: codigo,
+        simbolo: simbolo,
+        decimales: decimales,
+        es_moneda_local: esMonedaLocal,
+        tasa_cambio: tasaCambio,
+        estado: estado 
+      };
+
+      const url = idMoneda ? `/api/v1/monedas/${idMoneda}` : '/api/v1/monedas';
+      const method = idMoneda ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          tabla.ajax.reload();
+          Swal.fire(idMoneda ? "Actualizado" : "Agregado", 
+                   `La moneda ha sido ${idMoneda ? 'actualizada' : 'agregada'} correctamente.`, 
+                   "success");
+          $('#modalFormulario').modal("hide");
+        } else {
+          Swal.fire("Error", data.error || "No se pudo guardar la moneda.", "error");
+        }
+      }).catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error.", "error");
+      });
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      const idMoneda = $(this).data('id');
+      $('#modalTitle').text("Editar Moneda");
+      $('#txtIdMoneda').val(idMoneda);
+      fetch(`/api/v1/monedas/${idMoneda}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success && data.data) {
+          $('#txtDescripcion').val(data.data.descripcion);
+          $('#txtCodigo').val(data.data.codigo);
+          $('#txtSimbolo').val(data.data.simbolo || '');
+          $('#txtDecimales').val(data.data.decimales);
+          $('#chkEsMonedaLocal').prop("checked", data.data.es_moneda_local);
+          $('#txtTasaCambio').val(data.data.tasa_cambio);
+          $('#selEstado').val(data.data.estado);
+          $('#modalFormulario').modal();
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+      const idMoneda = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/monedas/${idMoneda}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const tabla = $('#tbl').DataTable();
+              tabla.ajax.reload();
+              Swal.fire("Eliminado", "La moneda ha sido eliminada.", "success");
+            } else {
+              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+            }
+          }).catch(err => {
+            Swal.fire("Error", "Ocurrió un error.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  $(function() {
+    initDatatable();
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

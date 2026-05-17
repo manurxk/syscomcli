@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Libro de Ventas
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-book"></i> Libro de Ventas
+        </h3>
+        <div>
+            <button type="button" class="btn btn-success" id="btnExportar">
+                <i class="fas fa-file-excel"></i> Exportar
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Filtros de Búsqueda</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="fechaDesde">Fecha Desde:</label>
+                        <input type="date" class="form-control" id="fechaDesde">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="fechaHasta">Fecha Hasta:</label>
+                        <input type="date" class="form-control" id="fechaHasta">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary" id="btnAplicarFiltros">
+                                <i class="fas fa-filter"></i> Aplicar Filtros
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Resumen por Tipo de Comprobante</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm" id="tblResumen">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Tipo Comprobante</th>
+                            <th>Cantidad</th>
+                            <th>Monto Gravado</th>
+                            <th>Monto Exento</th>
+                            <th>IVA</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>Totales Generales</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>Total Registros:</strong> <span id="totalRegistros">0</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>Total Gravado:</strong> <span id="totalGravado">0</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>Total Exento:</strong> <span id="totalExento">0</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>Total IVA:</strong> <span id="totalIva">0</span></p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <p class="mb-0"><strong>Total General:</strong> <span id="totalGeneral" style="font-size: 1.2em;">0</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Registro de Ventas</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered w-100" id="tblLibroVentas">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Número</th>
+                            <th>Paciente</th>
+                            <th>Gravado</th>
+                            <th>Exento</th>
+                            <th>IVA</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Detalle -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Detalle del Registro</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detalleContenido">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}" || null;
+let tablaLibroVentas = null;
+
+// Inicializar DataTable
+const initDatatable = () => {
+    tablaLibroVentas = $('#tblLibroVentas').DataTable({
+        language: {
+            url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+        },
+        ajax: {
+            url: '/api/v1/libro_ventas',
+            dataSrc: 'data'
+        },
+        columns: [
+            { data: 'libro_fecha' },
+            { 
+                data: 'tipo_comprobante',
+                render: function(data) {
+                    const tipos = {
+                        'FACTURA': '<span class="badge badge-primary">Factura</span>',
+                        'NOTA_CREDITO': '<span class="badge badge-success">Nota Crédito</span>',
+                        'NOTA_DEBITO': '<span class="badge badge-warning">Nota Débito</span>'
+                    };
+                    return tipos[data] || data;
+                }
+            },
+            { data: 'numero_comprobante' },
+            { data: 'paciente_nombre' },
+            { 
+                data: 'monto_gravado',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'monto_exento',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'monto_iva',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: 'monto_total',
+                render: function(data) {
+                    return formatearMoneda(data);
+                }
+            },
+            { 
+                data: function(row) {
+                    return `
+                        <button type="button" name="btn_ver" class="btn btn-info btn-sm" data-id="${row.id_libro_venta}" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+        order: [[0, 'desc']],
+        footerCallback: function(row, data, start, end, display) {
+            // Calcular totales en el footer si es necesario
+        }
+    });
+}
+
+// Cargar resumen
+function cargarResumen() {
+    const fechaDesde = $('#fechaDesde').val();
+    const fechaHasta = $('#fechaHasta').val();
+    
+    fetch(`/api/v1/libro_ventas/resumen?${fechaDesde ? 'fecha_desde=' + fechaDesde + '&' : ''}${fechaHasta ? 'fecha_hasta=' + fechaHasta : ''}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if(data && data.success && data.data) {
+            const tbody = $('#tblResumen tbody');
+            tbody.empty();
+            
+            data.data.forEach(resumen => {
+                const row = `
+                    <tr>
+                        <td>${resumen.tipo_comprobante}</td>
+                        <td>${resumen.cantidad}</td>
+                        <td class="text-right">${formatearMoneda(resumen.total_gravado)}</td>
+                        <td class="text-right">${formatearMoneda(resumen.total_exento)}</td>
+                        <td class="text-right">${formatearMoneda(resumen.total_iva)}</td>
+                        <td class="text-right"><strong>${formatearMoneda(resumen.total_total)}</strong></td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+    })
+    .catch(err => console.error('Error cargando resumen:', err));
+}
+
+// Cargar totales
+function cargarTotales() {
+    const fechaDesde = $('#fechaDesde').val();
+    const fechaHasta = $('#fechaHasta').val();
+    
+    fetch(`/api/v1/libro_ventas/totales?${fechaDesde ? 'fecha_desde=' + fechaDesde + '&' : ''}${fechaHasta ? 'fecha_hasta=' + fechaHasta : ''}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if(data && data.success && data.data) {
+            const totales = data.data;
+            $('#totalRegistros').text(totales.total_registros);
+            $('#totalGravado').text(formatearMoneda(totales.total_gravado));
+            $('#totalExento').text(formatearMoneda(totales.total_exento));
+            $('#totalIva').text(formatearMoneda(totales.total_iva));
+            $('#totalGeneral').text(formatearMoneda(totales.total_total));
+        }
+    })
+    .catch(err => console.error('Error cargando totales:', err));
+}
+
+// Formatear moneda
+function formatearMoneda(valor) {
+    return new Intl.NumberFormat('es-PY', {
+        style: 'currency',
+        currency: 'PYG',
+        minimumFractionDigits: 0
+    }).format(valor || 0);
+}
+
+// Ver detalle
+const verDetalle = () => {
+    $('#tblLibroVentas').on('click', 'button[name="btn_ver"]', function(){
+        const idLibro = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        fetch(`/api/v1/libro_ventas/${idLibro}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            Swal.close();
+            if(data && data.success && data.data) {
+                const entrada = data.data;
+                
+                const contenido = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Información General</h6>
+                            <table class="table table-sm">
+                                <tr><th>Fecha:</th><td>${entrada.libro_fecha}</td></tr>
+                                <tr><th>Tipo:</th><td><span class="badge badge-${entrada.tipo_comprobante === 'FACTURA' ? 'primary' : (entrada.tipo_comprobante === 'NOTA_CREDITO' ? 'success' : 'warning')}">${entrada.tipo_comprobante}</span></td></tr>
+                                <tr><th>Número:</th><td>${entrada.numero_comprobante}</td></tr>
+                                <tr><th>Paciente:</th><td>${entrada.paciente_nombre}</td></tr>
+                                <tr><th>CI:</th><td>${entrada.paciente_cedula || 'N/A'}</td></tr>
+                                <tr><th>Historia Clínica:</th><td>${entrada.historia_clinica || 'N/A'}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Montos</h6>
+                            <table class="table table-sm">
+                                <tr><th>Monto Gravado:</th><td>${formatearMoneda(entrada.monto_gravado)}</td></tr>
+                                <tr><th>Monto Exento:</th><td>${formatearMoneda(entrada.monto_exento)}</td></tr>
+                                <tr><th>IVA:</th><td>${formatearMoneda(entrada.monto_iva)}</td></tr>
+                                <tr><th>Total:</th><td><strong>${formatearMoneda(entrada.monto_total)}</strong></td></tr>
+                            </table>
+                            ${entrada.codigo_sifen ? `<p><strong>Código SIFEN:</strong> ${entrada.codigo_sifen}</p>` : ''}
+                            ${entrada.numero_timbrado ? `<p><strong>Número Timbrado:</strong> ${entrada.numero_timbrado}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                $('#detalleContenido').html(contenido);
+                $('#modalDetalle').modal('show');
+            } else {
+                Swal.fire("Error", "No se pudo cargar la información.", "error");
+            }
+        })
+        .catch(err => {
+            Swal.close();
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al cargar la información.", "error");
+        });
+    });
+}
+
+// Aplicar filtros
+$('#btnAplicarFiltros').on('click', function() {
+    const fechaDesde = $('#fechaDesde').val();
+    const fechaHasta = $('#fechaHasta').val();
+    
+    // Recargar tabla con filtros
+    tablaLibroVentas.ajax.url(`/api/v1/libro_ventas?${fechaDesde ? 'fecha_desde=' + fechaDesde + '&' : ''}${fechaHasta ? 'fecha_hasta=' + fechaHasta : ''}`).load();
+    
+    // Recargar resumen y totales
+    cargarResumen();
+    cargarTotales();
+});
+
+// Limpiar filtros
+$('#btnLimpiarFiltros').on('click', function() {
+    $('#fechaDesde').val('');
+    $('#fechaHasta').val('');
+    tablaLibroVentas.ajax.url('/api/v1/libro_ventas').load();
+    cargarResumen();
+    cargarTotales();
+});
+
+// Exportar
+$('#btnExportar').on('click', function() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Exportar Libro de Ventas',
+        text: 'La funcionalidad de exportación se implementará próximamente.',
+        confirmButtonText: 'Entendido'
+    });
+});
+
+// Inicializar cuando el documento esté listo
+$(function() {
+    initDatatable();
+    verDetalle();
+    cargarResumen();
+    cargarTotales();
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

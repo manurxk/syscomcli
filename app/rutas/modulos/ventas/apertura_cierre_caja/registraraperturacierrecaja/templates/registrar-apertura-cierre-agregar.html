@@ -1,0 +1,560 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Registrar Apertura/Cierre de Caja
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-cash-register"></i> Registrar Apertura/Cierre de Caja
+        </h3>
+        <a href="{{ url_for('apertura_cierre_caja.aperturaCierreIndex') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Listado
+        </a>
+    </div>
+
+    <!-- Formulario Principal -->
+    <form id="formAperturaCierre" method="POST">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <!-- Tarjeta: Tipo de Operación -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-toggle-on"></i> Tipo de Operación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Tipo de Operación: <span class="text-danger">*</span></label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tipoOperacion" id="tipoApertura" value="APERTURA" checked>
+                                <label class="form-check-label" for="tipoApertura">
+                                    <i class="fas fa-door-open"></i> Apertura de Caja
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tipoOperacion" id="tipoCierre" value="CIERRE">
+                                <label class="form-check-label" for="tipoCierre">
+                                    <i class="fas fa-door-closed"></i> Cierre de Caja
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Datos de la Operación -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Datos de la Operación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="txtCaja">Caja: <span class="text-danger">*</span></label>
+                            <select class="form-control" id="txtCaja" name="id_caja" required>
+                                <option value="">Seleccione...</option>
+                            </select>
+                            <small class="form-text text-muted">Seleccione la caja a operar</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="txtFecha">Fecha y Hora: <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="txtFecha" name="fecha_operacion" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información de Apertura Activa (solo para cierres) -->
+                <div id="infoAperturaActiva" style="display: none;">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Información de Apertura Activa</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Fecha Apertura:</strong> <span id="fechaApertura"></span></p>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Saldo Inicial:</strong> <span id="saldoInicialApertura"></span></p>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Saldo Esperado:</strong> <span id="saldoEsperado"></span></p>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-sm btn-info" id="btnRecalcularSaldo">
+                                    <i class="fas fa-sync"></i> Recalcular
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Montos (Apertura) -->
+        <div class="card shadow mb-4" id="cardApertura">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-money-bill-wave"></i> Saldo Inicial - Apertura
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="txtSaldoInicial">Saldo Inicial (Gs.): <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="txtSaldoInicial" name="saldo_inicial" 
+                                   value="0" min="0" required>
+                            <small class="form-text text-muted">Monto con el que se abre la caja</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Montos (Cierre) -->
+        <div class="card shadow mb-4" id="cardCierre" style="display: none;">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-calculator"></i> Conteo de Cierre
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Importante:</strong> Realice el conteo físico de cada tipo de pago antes de registrar el cierre.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="txtMontoEfectivo">Monto en Efectivo (Gs.): <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="txtMontoEfectivo" name="monto_efectivo" 
+                                   value="0" min="0" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="txtMontoCheques">Monto en Cheques (Gs.):</label>
+                            <input type="number" class="form-control" id="txtMontoCheques" name="monto_cheques" 
+                                   value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="txtMontoTarjetas">Monto en Tarjetas (Gs.):</label>
+                            <input type="number" class="form-control" id="txtMontoTarjetas" name="monto_tarjetas" 
+                                   value="0" min="0">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="txtMontoTransferencias">Monto en Transferencias (Gs.):</label>
+                            <input type="number" class="form-control" id="txtMontoTransferencias" name="monto_transferencias" 
+                                   value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>Resumen de Cierre</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>Saldo Inicial:</th>
+                                        <td id="resumenSaldoInicial">0</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Contado:</th>
+                                        <td id="resumenTotalContado"><strong>0</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Saldo Final Calculado:</th>
+                                        <td id="resumenSaldoFinal"><strong class="text-primary">0</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Saldo Final (Ingresar):</th>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm" id="txtSaldoFinal" 
+                                                   name="saldo_final" min="0" required>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Diferencia:</th>
+                                        <td id="resumenDiferencia"><strong>0</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Observaciones -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-comment"></i> Observaciones
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="txtObservaciones">Observaciones:</label>
+                    <textarea class="form-control" id="txtObservaciones" name="observaciones" rows="3" 
+                              placeholder="Observaciones adicionales sobre la operación"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('apertura_cierre_caja.aperturaCierreIndex') }}'">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardar">
+                            <i class="fas fa-save"></i> Guardar Operación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+let cajas = [];
+let aperturaActiva = null;
+
+// Función para obtener el token CSRF
+function getCSRFToken() {
+    return $('#csrf_token').val() || null;
+}
+
+// Cargar referenciales al iniciar
+$(document).ready(function() {
+    cargarReferenciales();
+    inicializarFecha();
+    inicializarEventos();
+});
+
+// Cargar referenciales dinámicamente
+function cargarReferenciales() {
+    // Cargar cajas
+    fetch('/api/v1/cajas')
+        .then(resp => resp.json())
+        .then(data => {
+            if(data && data.success && data.data) {
+                cajas = data.data.filter(c => c.estado === 'A');
+                const select = $('#txtCaja');
+                select.empty().append('<option value="">Seleccione...</option>');
+                cajas.forEach(caja => {
+                    select.append(`<option value="${caja.id}">${caja.descripcion}</option>`);
+                });
+            }
+        })
+        .catch(err => console.error('Error cargando cajas:', err));
+}
+
+// Inicializar fecha actual
+function inicializarFecha() {
+    const now = new Date();
+    const fecha = now.toISOString().slice(0, 16);
+    $('#txtFecha').val(fecha);
+}
+
+// Inicializar eventos
+function inicializarEventos() {
+    // Cambiar tipo de operación
+    $('input[name="tipoOperacion"]').on('change', function() {
+        const tipo = $(this).val();
+        if (tipo === 'APERTURA') {
+            $('#cardApertura').show();
+            $('#cardCierre').hide();
+            $('#infoAperturaActiva').hide();
+            $('#txtSaldoInicial').prop('required', true);
+            $('#txtSaldoFinal').prop('required', false);
+            $('#txtMontoEfectivo').prop('required', false);
+        } else {
+            $('#cardApertura').hide();
+            $('#cardCierre').show();
+            $('#txtSaldoInicial').prop('required', false);
+            $('#txtSaldoFinal').prop('required', true);
+            $('#txtMontoEfectivo').prop('required', true);
+            
+            // Cargar información de apertura activa si hay caja seleccionada
+            const idCaja = $('#txtCaja').val();
+            if (idCaja) {
+                cargarAperturaActiva(idCaja);
+            }
+        }
+    });
+    
+    // Al seleccionar caja, verificar si hay apertura activa (para cierres)
+    $('#txtCaja').on('change', function() {
+        const tipo = $('input[name="tipoOperacion"]:checked').val();
+        if (tipo === 'CIERRE') {
+            const idCaja = $(this).val();
+            if (idCaja) {
+                cargarAperturaActiva(idCaja);
+            } else {
+                $('#infoAperturaActiva').hide();
+            }
+        }
+    });
+    
+    // Recalcular saldo esperado
+    $('#btnRecalcularSaldo').on('click', function() {
+        const idCaja = $('#txtCaja').val();
+        if (idCaja) {
+            cargarAperturaActiva(idCaja);
+        }
+    });
+    
+    // Calcular totales al cambiar montos
+    $('#txtMontoEfectivo, #txtMontoCheques, #txtMontoTarjetas, #txtMontoTransferencias, #txtSaldoFinal').on('input', function() {
+        calcularResumenCierre();
+    });
+    
+    // Enviar formulario
+    $('#formAperturaCierre').on('submit', function(e) {
+        e.preventDefault();
+        console.log('Formulario enviado, llamando a guardarOperacion()');
+        guardarOperacion();
+    });
+    
+    // También manejar clic directo en el botón por si acaso
+    $('#btnGuardar').on('click', function(e) {
+        e.preventDefault();
+        console.log('Botón guardar clickeado');
+        guardarOperacion();
+    });
+}
+
+// Cargar apertura activa
+function cargarAperturaActiva(idCaja) {
+    fetch(`/api/v1/aperturas_cierres/caja/${idCaja}/activa`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if(data && data.success && data.data) {
+            aperturaActiva = data.data;
+            
+            $('#fechaApertura').text(aperturaActiva.fecha_operacion);
+            $('#saldoInicialApertura').text(formatearMoneda(aperturaActiva.saldo_inicial));
+            
+            if (aperturaActiva.saldo_esperado) {
+                $('#saldoEsperado').text(formatearMoneda(aperturaActiva.saldo_esperado.saldo_esperado));
+                $('#resumenSaldoInicial').text(formatearMoneda(aperturaActiva.saldo_inicial));
+                
+                // Prellenar montos esperados
+                $('#txtMontoEfectivo').val(aperturaActiva.saldo_esperado.total_efectivo || 0);
+                $('#txtMontoCheques').val(aperturaActiva.saldo_esperado.total_cheques || 0);
+                $('#txtMontoTarjetas').val(aperturaActiva.saldo_esperado.total_tarjetas || 0);
+                $('#txtMontoTransferencias').val(aperturaActiva.saldo_esperado.total_transferencias || 0);
+                
+                calcularResumenCierre();
+            }
+            
+            $('#infoAperturaActiva').show();
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin Apertura Activa',
+                text: 'No hay una apertura activa para esta caja. Debe abrir la caja primero.',
+                confirmButtonText: 'Entendido'
+            });
+            $('#infoAperturaActiva').hide();
+            aperturaActiva = null;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        $('#infoAperturaActiva').hide();
+        aperturaActiva = null;
+    });
+}
+
+// Calcular resumen de cierre
+function calcularResumenCierre() {
+    if (!aperturaActiva || !aperturaActiva.saldo_esperado) return;
+    
+    const saldoInicial = aperturaActiva.saldo_inicial || 0;
+    const efectivo = parseInt($('#txtMontoEfectivo').val() || 0);
+    const cheques = parseInt($('#txtMontoCheques').val() || 0);
+    const tarjetas = parseInt($('#txtMontoTarjetas').val() || 0);
+    const transferencias = parseInt($('#txtMontoTransferencias').val() || 0);
+    const totalContado = efectivo + cheques + tarjetas + transferencias;
+    const saldoFinalCalculado = saldoInicial + totalContado;
+    const saldoFinalIngresado = parseInt($('#txtSaldoFinal').val() || 0);
+    const diferencia = saldoFinalIngresado - saldoFinalCalculado;
+    
+    $('#resumenSaldoInicial').text(formatearMoneda(saldoInicial));
+    $('#resumenTotalContado').text(formatearMoneda(totalContado));
+    $('#resumenSaldoFinal').text(formatearMoneda(saldoFinalCalculado));
+    $('#resumenDiferencia').text(formatearMoneda(diferencia));
+    
+    // Colorear diferencia
+    const diferenciaEl = $('#resumenDiferencia');
+    diferenciaEl.removeClass('text-success text-danger text-warning');
+    if (diferencia === 0) {
+        diferenciaEl.addClass('text-success');
+    } else if (Math.abs(diferencia) > 1000) {
+        diferenciaEl.addClass('text-danger');
+    } else {
+        diferenciaEl.addClass('text-warning');
+    }
+}
+
+// Formatear moneda
+function formatearMoneda(valor) {
+    return new Intl.NumberFormat('es-PY', {
+        style: 'currency',
+        currency: 'PYG',
+        minimumFractionDigits: 0
+    }).format(valor || 0);
+}
+
+// Guardar operación
+function guardarOperacion() {
+    console.log('guardarOperacion() llamado');
+    const tipo = $('input[name="tipoOperacion"]:checked').val();
+    const idCaja = $('#txtCaja').val();
+    
+    console.log('Tipo de operación:', tipo);
+    console.log('ID Caja:', idCaja);
+    
+    // Validaciones
+    if (!idCaja) {
+        Swal.fire("Error", "Debe seleccionar una caja.", "error");
+        return;
+    }
+    
+    if (tipo === 'CIERRE' && !aperturaActiva) {
+        Swal.fire("Error", "No hay una apertura activa para esta caja. Debe abrir la caja primero.", "error");
+        return;
+    }
+    
+    if (tipo === 'CIERRE') {
+        const saldoFinal = parseInt($('#txtSaldoFinal').val() || 0);
+        if (!saldoFinal || saldoFinal < 0) {
+            Swal.fire("Error", "Debe ingresar un saldo final válido.", "error");
+            return;
+        }
+    }
+    
+    // Obtener ID de usuario (por ahora usar un valor por defecto, debería venir de la sesión)
+    const idUsuario = 1; // TODO: Obtener de la sesión del usuario
+    
+    let payload = {
+        id_caja: parseInt(idCaja),
+        id_usuario: idUsuario,
+        observaciones: $('#txtObservaciones').val() || null
+    };
+    
+    if (tipo === 'APERTURA') {
+        payload.saldo_inicial = parseInt($('#txtSaldoInicial').val() || 0);
+    } else {
+        payload.saldo_final = parseInt($('#txtSaldoFinal').val());
+        payload.monto_efectivo = parseInt($('#txtMontoEfectivo').val() || 0);
+        payload.monto_cheques = parseInt($('#txtMontoCheques').val() || 0);
+        payload.monto_tarjetas = parseInt($('#txtMontoTarjetas').val() || 0);
+        payload.monto_transferencias = parseInt($('#txtMontoTransferencias').val() || 0);
+    }
+    
+    const url = tipo === 'APERTURA' 
+        ? '/api/v1/aperturas_cierres/apertura'
+        : '/api/v1/aperturas_cierres/cierre';
+    
+    // Obtener token CSRF antes de usarlo
+    const token = getCSRFToken();
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // Agregar token CSRF si está disponible
+    if (token) {
+        headers['X-CSRFToken'] = token;
+    }
+    
+    console.log('URL:', url);
+    console.log('Payload:', payload);
+    console.log('Token CSRF:', token);
+    
+    Swal.fire({
+        title: 'Guardando...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+    })
+    .then(resp => {
+        // Verificar si la respuesta es JSON válido
+        const contentType = resp.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            return resp.json();
+        } else {
+            return resp.text().then(text => {
+                console.error("Respuesta no JSON:", text);
+                throw new Error("Respuesta del servidor no es JSON válido");
+            });
+        }
+    })
+    .then(data => {
+        Swal.close();
+        if(data && !data.error && data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: tipo === 'APERTURA' ? 'Apertura Registrada' : 'Cierre Registrado',
+                text: `La ${tipo.toLowerCase()} ha sido registrada exitosamente.`,
+                confirmButtonText: 'Ir al Listado'
+            }).then(() => {
+                window.location.href = "{{ url_for('apertura_cierre_caja.aperturaCierreIndex') }}";
+            });
+        } else {
+            const errorMsg = data?.error || data?.message || `No se pudo guardar la ${tipo.toLowerCase()}.`;
+            console.error("Error del servidor:", data);
+            Swal.fire("Error", errorMsg, "error");
+        }
+    })
+    .catch(err => {
+        Swal.close();
+        console.error("Error completo:", err);
+        Swal.fire("Error", `Ocurrió un error al guardar la operación: ${err.message || 'Error desconocido'}`, "error");
+    });
+}
+</script>
+{% endblock %}
+
+
+
+

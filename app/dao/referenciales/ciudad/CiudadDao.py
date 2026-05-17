@@ -1,141 +1,148 @@
 # Data access object - DAO
+import re
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
 class CiudadDao:
 
     def getCiudades(self):
-
-        ciudadSQL = """
-        SELECT id_ciudad, descripcion
+        sql = """
+        SELECT id_ciudad, des_ciudad, est_ciudad
         FROM ciudades
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(ciudadSQL)
-            ciudades = cur.fetchall() # trae datos de la bd
-
-            # Transformar los datos en una lista de diccionarios
-            return [{'id_ciudad': ciudad[0], 'descripcion': ciudad[1]} for ciudad in ciudades]
-
+            cur.execute(sql)
+            ciudades = cur.fetchall()
+            return [{'id': c[0], 'descripcion': c[1], 'estado': c[2]} for c in ciudades]
         except Exception as e:
             app.logger.error(f"Error al obtener todas las ciudades: {str(e)}")
             return []
-
         finally:
             cur.close()
             con.close()
 
-    def getCiudadById(self, id):
-
-        ciudadSQL = """
-        SELECT id_ciudad, descripcion
-        FROM ciudades WHERE id_ciudad=%s
+    def getCiudadById(self, id_ciudad):
+        sql = """
+        SELECT id_ciudad, des_ciudad, est_ciudad
+        FROM ciudades
+        WHERE id_ciudad=%s
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(ciudadSQL, (id,))
-            ciudadEncontrada = cur.fetchone() # Obtener una sola fila
-            if ciudadEncontrada:
-                return {
-                        "id_ciudad": ciudadEncontrada[0],
-                        "descripcion": ciudadEncontrada[1]
-                    }  # Retornar los datos de la ciudad
-            else:
-                return None # Retornar None si no se encuentra la ciudad
+            cur.execute(sql, (id_ciudad,))
+            ciudad = cur.fetchone()
+            if ciudad:
+                return {"id": ciudad[0], "descripcion": ciudad[1], "estado": ciudad[2]}
+            return None
         except Exception as e:
             app.logger.error(f"Error al obtener ciudad: {str(e)}")
             return None
-
         finally:
             cur.close()
             con.close()
 
-    def guardarCiudad(self, descripcion):
+    # ============================
+    # VALIDACIONES
+    # ============================
 
-        insertCiudadSQL = """
-        INSERT INTO ciudades(descripcion) VALUES(%s) RETURNING id_ciudad
-        """
-
+    def ciudadExiste(self, descripcion):
+        """Verifica si ya existe la ciudad con el mismo nombre (case-insensitive)."""
+        sql = "SELECT 1 FROM ciudades WHERE LOWER(des_ciudad)=LOWER(%s)"
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
-        # Ejecucion exitosa
         try:
-            cur.execute(insertCiudadSQL, (descripcion,))
-            ciudad_id = cur.fetchone()[0]
-            con.commit() # se confirma la insercion
-            return ciudad_id
+            cur.execute(sql, (descripcion,))
+            return cur.fetchone() is not None
+        finally:
+            cur.close()
+            con.close()
 
-        # Si algo fallo entra aqui
-        except Exception as e:
-            app.logger.error(f"Error al insertar ciudad: {str(e)}")
-            con.rollback() # retroceder si hubo error
+    def validarDescripcion(self, descripcion):
+        """Permite solo letras, números, acentos y espacios."""
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 ]+$"
+        return bool(re.match(patron, descripcion))
+
+    # ============================
+    # CRUD
+    # ============================
+
+    def guardarCiudad(self, descripcion, estado=True):
+        # Validaciones
+        if not self.validarDescripcion(descripcion):
+            app.logger.warning("Descripción inválida: solo letras, números y acentos")
+            return False
+        if self.ciudadExiste(descripcion):
+            app.logger.warning("La ciudad ya existe")
             return False
 
-        # Siempre se va ejecutar
+        sql = """
+        INSERT INTO ciudades(des_ciudad, est_ciudad)
+        VALUES(%s, %s)
+        RETURNING id_ciudad
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(sql, (descripcion, estado))
+            id_ciudad = cur.fetchone()[0]
+            con.commit()
+            return id_ciudad
+        except Exception as e:
+            app.logger.error(f"Error al insertar ciudad: {str(e)}")
+            con.rollback()
+            return False
         finally:
             cur.close()
             con.close()
 
-    def updateCiudad(self, id, descripcion):
+    def updateCiudad(self, id_ciudad, descripcion, estado=True):
+        # Validaciones
+        if not self.validarDescripcion(descripcion):
+            app.logger.warning("Descripción inválida")
+            return False
 
-        updateCiudadSQL = """
+        sql = """
         UPDATE ciudades
-        SET descripcion=%s
+        SET des_ciudad=%s, est_ciudad=%s
         WHERE id_ciudad=%s
         """
-
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
         try:
-            cur.execute(updateCiudadSQL, (descripcion, id,))
-            filas_afectadas = cur.rowcount # Obtener el número de filas afectadas
+            cur.execute(sql, (descripcion, estado, id_ciudad))
+            filas = cur.rowcount
             con.commit()
-
-            return filas_afectadas > 0 # Retornar True si se actualizó al menos una fila
-
+            return filas > 0
         except Exception as e:
             app.logger.error(f"Error al actualizar ciudad: {str(e)}")
             con.rollback()
             return False
-
         finally:
             cur.close()
             con.close()
 
-    def deleteCiudad(self, id):
-
-        updateCiudadSQL = """
-        DELETE FROM ciudades
-        WHERE id_ciudad=%s
-        """
-
+    def deleteCiudad(self, id_ciudad):
+        sql = "DELETE FROM ciudades WHERE id_ciudad=%s"
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
         try:
-            cur.execute(updateCiudadSQL, (id,))
-            rows_affected = cur.rowcount
+            cur.execute(sql, (id_ciudad,))
+            filas = cur.rowcount
             con.commit()
-
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
-
+            return filas > 0
         except Exception as e:
             app.logger.error(f"Error al eliminar ciudad: {str(e)}")
             con.rollback()
             return False
-
         finally:
             cur.close()
             con.close()

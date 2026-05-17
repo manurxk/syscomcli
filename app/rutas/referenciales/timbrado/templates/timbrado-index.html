@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Timbrados
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-stamp"></i> Gestión de Timbrados
+        </h3>
+        <a href="{{ url_for('timbrado.timbradoAgregar') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Timbrado
+        </a>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Lista de Timbrados</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered w-100" id="tbl">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Empresa</th>
+                            <th>Número</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Vencimiento</th>
+                            <th>Tipo Documento</th>
+                            <th>Tipo Generación</th>
+                            <th>Estado</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/timbrados',
+      columns: [
+        { data: 'empresa' },
+        { data: 'numero_timbrado' },
+        { 
+          data: 'fecha_inicio',
+          render: function(data) {
+            if (data) {
+              const date = new Date(data);
+              return date.toLocaleDateString('es-PY');
+            }
+            return '';
+          }
+        },
+        { 
+          data: 'fecha_vencimiento',
+          render: function(data) {
+            if (data) {
+              const date = new Date(data);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const vencimiento = new Date(date);
+              vencimiento.setHours(0, 0, 0, 0);
+              
+              let clase = '';
+              if (vencimiento < today) {
+                clase = 'badge-danger';
+              } else if ((vencimiento - today) / (1000 * 60 * 60 * 24) <= 30) {
+                clase = 'badge-warning';
+              }
+              
+              const fechaStr = date.toLocaleDateString('es-PY');
+              return clase ? `<span class="badge ${clase}">${fechaStr}</span>` : fechaStr;
+            }
+            return '';
+          }
+        },
+        { 
+          data: 'tipo_documento',
+          render: function(data) {
+            const tipos = {
+              'factura': 'Factura',
+              'nota_credito': 'Nota de Crédito',
+              'nota_debito': 'Nota de Débito',
+              'autofactura': 'Autofactura',
+              'nota_remision': 'Nota de Remisión',
+              'comprobante_retencion': 'Comprobante Retención'
+            };
+            return tipos[data] || data;
+          }
+        },
+        { 
+          data: 'tipo_generacion',
+          render: function(data) {
+            const tipos = {
+              'electronico': 'Electrónico',
+              'preimpreso': 'Preimpreso',
+              'autoimpreso': 'Autoimpreso',
+              'virtual': 'Virtual'
+            };
+            return tipos[data] || data;
+          }
+        },
+        { 
+          data: 'estado',
+          render: function(val) {
+            const estados = {
+              'activo': 'badge-success',
+              'vencido': 'badge-danger',
+              'dado_baja': 'badge-secondary',
+              'suspendido': 'badge-warning'
+            };
+            const clase = estados[val] || 'badge-secondary';
+            return `<span class="badge ${clase}">${val}</span>`;
+          }
+        },
+        {
+          data: 'estado_activo',
+          render: function(val) {
+            return val ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
+        { 
+          data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">
+                      <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">
+                      <i class="fas fa-trash"></i> Eliminar
+                    </button>`;
+          }
+        }
+      ]
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]', function(){
+      const idTimbrado = $(this).data('id');
+      window.location.href = "{{ url_for('timbrado.timbradoAgregar') }}?id=" + idTimbrado;
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){
+      const idTimbrado = $(this).data('id');
+      
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        text: "Esta acción no se puede deshacer.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#d33"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/timbrados/${idTimbrado}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const tabla = $('#tbl').DataTable();
+              tabla.ajax.reload();
+              Swal.fire("Eliminado", "El timbrado ha sido eliminado.", "success");
+            } else {
+              Swal.fire("Error", data.error || "No se pudo eliminar el timbrado.", "error");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al eliminar el timbrado.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  $(function() {
+    initDatatable();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}

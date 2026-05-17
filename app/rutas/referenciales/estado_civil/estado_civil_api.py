@@ -1,148 +1,179 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.estado_civil.Estado_civilDao import Estado_civilDao
+from app.dao.referenciales.estado_civil.EstadoCivilDao import EstadoCivilDao
 
-estapi = Blueprint('estapi', __name__)
+ecapi = Blueprint('ecapi', __name__)
 
-# Trae todos los estado_civiles
-@estapi.route('/estado_civiles', methods=['GET'])
-def getEstado_civiles():
-    estdao = Estado_civilDao()
+# ===============================
+# Trae todos los estados civiles
+# ===============================
+@ecapi.route('/estados-civiles', methods=['GET'])
+def getEstadosCiviles():
+    ecdao = EstadoCivilDao()
 
     try:
-        estado_civiles = estdao.getEstado_civiles()
-
+        estados = ecdao.getEstadosCiviles()
         return jsonify({
             'success': True,
-            'data': estado_civiles,
+            'data': estados,
             'error': None
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todos los estado_civiles: {str(e)}")
+        app.logger.error(f"Error al obtener todos los estados civiles: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Trae un estado_civil por ID
-@estapi.route('/estado_civiles/<int:estado_civil_id>', methods=['GET'])
-def getEstado_civil(estado_civil_id):
-    estdao = Estado_civilDao()
+# ===============================
+# Trae un estado civil por ID
+# ===============================
+@ecapi.route('/estados-civiles/<int:estado_id>', methods=['GET'])
+def getEstadoCivil(estado_id):
+    ecdao = EstadoCivilDao()
 
     try:
-        estado_civil = estdao.getEstado_civilById(estado_civil_id)
+        estado = ecdao.getEstadoCivilById(estado_id)
 
-        if estado_civil:
+        if estado:
             return jsonify({
                 'success': True,
-                'data': estado_civil,
+                'data': estado,
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el estado_civil con el ID proporcionado.'
+                'error': 'No se encontró el estado civil con el ID proporcionado.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al obtener estado_civil: {str(e)}")
+        app.logger.error(f"Error al obtener estado civil: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega un nuevo estado_civil
-@estapi.route('/estado_civiles', methods=['POST'])
-def addestado_civil():
+# ===============================
+# Agrega un nuevo estado civil
+# ===============================
+@ecapi.route('/estados-civiles', methods=['POST'])
+def addEstadoCivil():
     data = request.get_json()
-    estdao = Estado_civilDao()
+    ecdao = EstadoCivilDao()
 
-    # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['descripcion']
+    # Validar que el JSON tenga los campos necesarios
+    campos_requeridos = ['descripcion', 'estado']
 
-    # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
-        if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
+        if campo not in data:
             return jsonify({
-                            'success': False,
-                            'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
-                            }), 400
+                'success': False,
+                'error': f'El campo {campo} es obligatorio.'
+            }), 400
+        if campo == 'descripcion' and (data[campo] is None or len(data[campo].strip()) == 0):
+            return jsonify({
+                'success': False,
+                'error': 'La descripción no puede estar vacía.'
+            }), 400
 
     try:
         descripcion = data['descripcion'].upper()
-        estado_civil_id = estdao.guardarEstado_civil(descripcion)
-        if estado_civil_id is not None:
+        estado = bool(data['estado'])
+
+        estado_id = ecdao.guardarEstadoCivil(descripcion, estado)
+        if estado_id:
             return jsonify({
                 'success': True,
-                'data': {'id_estado_civil': estado_civil_id, 'descripcion': descripcion},
+                'data': {
+                    'id': estado_id,
+                    'descripcion': descripcion,
+                    'estado': estado
+                },
                 'error': None
             }), 201
         else:
-            return jsonify({ 'success': False, 'error': 'No se pudo guardar el estado_civil. Consulte con el administrador.' }), 500
+            return jsonify({
+                'success': False,
+                'error': 'No se pudo guardar el estado civil (duplicado o inválido).'
+            }), 400
     except Exception as e:
-        app.logger.error(f"Error al agregar estado_civil: {str(e)}")
+        app.logger.error(f"Error al agregar estado civil: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Actualiza un estado_civil
-@estapi.route('/estado_civiles/<int:estado_civil_id>', methods=['PUT'])
-def updateEstado_civil(estado_civil_id):
+# ===============================
+# Actualiza un estado civil
+# ===============================
+@ecapi.route('/estados-civiles/<int:estado_id>', methods=['PUT'])
+def updateEstadoCivil(estado_id):
     data = request.get_json()
-    estdao = Estado_civilDao()
+    ecdao = EstadoCivilDao()
 
-    # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['descripcion']
+    campos_requeridos = ['descripcion', 'estado']
 
-    # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
-        if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
+        if campo not in data:
             return jsonify({
-                            'success': False,
-                            'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
-                            }), 400
-    descripcion = data['descripcion']
+                'success': False,
+                'error': f'El campo {campo} es obligatorio.'
+            }), 400
+        if campo == 'descripcion' and (data[campo] is None or len(data[campo].strip()) == 0):
+            return jsonify({
+                'success': False,
+                'error': 'La descripción no puede estar vacía.'
+            }), 400
+
     try:
-        if estdao.updateEstado_civil(estado_civil_id, descripcion.upper()):
+        descripcion = data['descripcion'].upper()
+        estado = bool(data['estado'])
+
+        if ecdao.updateEstadoCivil(estado_id, descripcion, estado):
             return jsonify({
                 'success': True,
-                'data': {'id_estado_civil': estado_civil_id, 'descripcion': descripcion},
+                'data': {
+                    'id': estado_id,
+                    'descripcion': descripcion,
+                    'estado': estado
+                },
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el estado_civil con el ID proporcionado o no se pudo actualizar.'
+                'error': 'No se encontró el estado civil con el ID proporcionado o no se pudo actualizar.'
             }), 404
     except Exception as e:
-        app.logger.error(f"Error al actualizar estado_civil: {str(e)}")
+        app.logger.error(f"Error al actualizar estado civil: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Elimina un estado_civil
-@estapi.route('/estado_civiles/<int:estado_civil_id>', methods=['DELETE'])
-def deleteEstado_civil(estado_civil_id):
-    estdao = Estado_civilDao()
+# ===============================
+# Elimina un estado civil
+# ===============================
+@ecapi.route('/estados-civiles/<int:estado_id>', methods=['DELETE'])
+def deleteEstadoCivil(estado_id):
+    ecdao = EstadoCivilDao()
 
     try:
-        # Usar el retorno de eliminarEstado_civil para determinar el éxito
-        if estdao.deleteEstado_civil(estado_civil_id):
+        if ecdao.deleteEstadoCivil(estado_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'estado_civil con ID {estado_civil_id} eliminada correctamente.',
+                'mensaje': f'Estado civil con ID {estado_id} eliminado correctamente.',
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el estado_civil con el ID proporcionado o no se pudo eliminar.'
+                'error': 'No se encontró el estado civil con el ID proporcionado o no se pudo eliminar.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al eliminar estado_civil: {str(e)}")
+        app.logger.error(f"Error al eliminar estado civil: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'

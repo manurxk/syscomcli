@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:17
+    container_name: syscomcli_bd # Nombre de contenedor BD para TESIS
+    restart: always
+    # ESTO ACELERA LA CARGA DE DUMPS:
+    command: >
+      postgres  -c synchronous_commit=off  -c full_page_writes=off -c max_wal_size=3GB -c checkpoint_timeout=20min
+    env_file:
+      - ../.env
+    ports:
+      - "5434:5432" # Expuesto en el puerto 5434 (ya que 5432 y 5433 están en uso)
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+      - tesis_syscomcli_data:/var/lib/postgresql/data
+    networks:
+      - network-tesis
+    shm_size: '256mb'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ..
+      dockerfile: dock/Dockerfile
+    container_name: syscomcli_app # Nombre de contenedor App para TESIS
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - DB_HOST=db
+    ports:
+      - "5005:5000" # Flask HTTP Expuesto en el puerto 5005 (evitando 5000 y 5001)
+      - "5680:5678" # debugpy (debug remoto, puerto alternativo)
+    volumes:
+      # Hot reload: monta la raíz del proyecto para que los cambios se reflejen al instante
+      - ..:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - network-tesis
+
+volumes:
+  tesis_syscomcli_data: # Volumen independiente
+
+networks:
+  network-tesis: # Red independiente
+    driver: bridge

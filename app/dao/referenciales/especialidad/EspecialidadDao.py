@@ -1,141 +1,148 @@
 # Data access object - DAO
+import re
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
 class EspecialidadDao:
 
     def getEspecialidades(self):
-
-        especialidadSQL = """
-        SELECT id_especialidad, descripcion
+        sql = """
+        SELECT id_especialidad, des_especialidad, est_especialidad
         FROM especialidades
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(especialidadSQL)
-            especialidades = cur.fetchall() # trae datos de la bd
-
-            # Transformar los datos en una lista de diccionarios
-            return [{'id_especialidad': especialidad[0], 'descripcion': especialidad[1]} for especialidad in especialidades]
-
+            cur.execute(sql)
+            especialidades = cur.fetchall()
+            return [{'id': e[0], 'descripcion': e[1], 'estado': e[2]} for e in especialidades]
         except Exception as e:
             app.logger.error(f"Error al obtener todas las especialidades: {str(e)}")
             return []
-
         finally:
             cur.close()
             con.close()
 
-    def getEspecialidadById(self, id):
-
-        especialidadSQL = """
-        SELECT id_especialidad, descripcion
-        FROM especialidades WHERE id_especialidad=%s
+    def getEspecialidadById(self, id_especialidad):
+        sql = """
+        SELECT id_especialidad, des_especialidad, est_especialidad
+        FROM especialidades
+        WHERE id_especialidad=%s
         """
-        # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(especialidadSQL, (id,))
-            especialidadEncontrada = cur.fetchone() # Obtener una sola fila
-            if especialidadEncontrada:
-                return {
-                        "id_especialidad": especialidadEncontrada[0],
-                        "descripcion": especialidadEncontrada[1]
-                    }  # Retornar los datos de la ciudad
-            else:
-                return None # Retornar None si no se encuentra la especialidad
+            cur.execute(sql, (id_especialidad,))
+            especialidad = cur.fetchone()
+            if especialidad:
+                return {"id": especialidad[0], "descripcion": especialidad[1], "estado": especialidad[2]}
+            return None
         except Exception as e:
             app.logger.error(f"Error al obtener especialidad: {str(e)}")
             return None
-
         finally:
             cur.close()
             con.close()
 
-    def guardarEspecialidad(self, descripcion):
+    # ============================
+    # VALIDACIONES
+    # ============================
 
-        insertEspecialidadSQL = """
-        INSERT INTO especialidades(descripcion) VALUES(%s) RETURNING id_especialidad
-        """
-
+    def especialidadExiste(self, descripcion):
+        """Verifica si ya existe la especialidad con el mismo nombre (case-insensitive)."""
+        sql = "SELECT 1 FROM especialidades WHERE LOWER(des_especialidad)=LOWER(%s)"
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
-        # Ejecucion exitosa
         try:
-            cur.execute(insertEspecialidadSQL, (descripcion,))
-            ciudad_id = cur.fetchone()[0]
-            con.commit() # se confirma la insercion
-            return ciudad_id
+            cur.execute(sql, (descripcion,))
+            return cur.fetchone() is not None
+        finally:
+            cur.close()
+            con.close()
 
-        # Si algo fallo entra aqui
-        except Exception as e:
-            app.logger.error(f"Error al insertar especialidad: {str(e)}")
-            con.rollback() # retroceder si hubo error
+    def validarDescripcion(self, descripcion):
+        """Permite solo letras, números, acentos y espacios."""
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 ]+$"
+        return bool(re.match(patron, descripcion))
+
+    # ============================
+    # CRUD
+    # ============================
+
+    def guardarEspecialidad(self, descripcion, estado=True):
+        # Validaciones
+        if not self.validarDescripcion(descripcion):
+            app.logger.warning("Descripción inválida: solo letras, números y acentos")
+            return False
+        if self.especialidadExiste(descripcion):
+            app.logger.warning("La especialidad ya existe")
             return False
 
-        # Siempre se va ejecutar
+        sql = """
+        INSERT INTO especialidades(des_especialidad, est_especialidad)
+        VALUES(%s, %s)
+        RETURNING id_especialidad
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(sql, (descripcion, estado))
+            id_especialidad = cur.fetchone()[0]
+            con.commit()
+            return id_especialidad
+        except Exception as e:
+            app.logger.error(f"Error al insertar especialidad: {str(e)}")
+            con.rollback()
+            return False
         finally:
             cur.close()
             con.close()
 
-    def updateEspecialidad(self, id, descripcion):
+    def updateEspecialidad(self, id_especialidad, descripcion, estado=True):
+        # Validaciones
+        if not self.validarDescripcion(descripcion):
+            app.logger.warning("Descripción inválida")
+            return False
 
-        updateEspecialidadSQL = """
+        sql = """
         UPDATE especialidades
-        SET descripcion=%s
+        SET des_especialidad=%s, est_especialidad=%s
         WHERE id_especialidad=%s
         """
-
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
         try:
-            cur.execute(updateEspecialidadSQL, (descripcion, id,))
-            filas_afectadas = cur.rowcount # Obtener el número de filas afectadas
+            cur.execute(sql, (descripcion, estado, id_especialidad))
+            filas = cur.rowcount
             con.commit()
-
-            return filas_afectadas > 0 # Retornar True si se actualizó al menos una fila
-
+            return filas > 0
         except Exception as e:
             app.logger.error(f"Error al actualizar especialidad: {str(e)}")
             con.rollback()
             return False
-
         finally:
             cur.close()
             con.close()
 
-    def deleteEspecialidad(self, id):
-
-        updateEspecialidadSQL = """
-        DELETE FROM especialidades
-        WHERE id_especialidad=%s
-        """
-
+    def deleteEspecialidad(self, id_especialidad):
+        sql = "DELETE FROM especialidades WHERE id_especialidad=%s"
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
-
         try:
-            cur.execute(updateEspecialidadSQL, (id,))
-            rows_affected = cur.rowcount
+            cur.execute(sql, (id_especialidad,))
+            filas = cur.rowcount
             con.commit()
-
-            return rows_affected > 0  # Retornar True si se eliminó al menos una fila
-
+            return filas > 0
         except Exception as e:
             app.logger.error(f"Error al eliminar especialidad: {str(e)}")
             con.rollback()
             return False
-
         finally:
             cur.close()
             con.close()

@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Sede
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-map-marker-alt"></i> Registrar Nueva Sede
+        </h3>
+        <a href="{{ url_for('sede.sedeIndex') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Listado
+        </a>
+    </div>
+
+    <!-- Formulario Principal -->
+    <form id="formSede">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="txtIdSede">
+        
+        <!-- CARD 1: Datos Básicos -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Datos Básicos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Empresa <span class="text-danger">*</span></label>
+                            <select class="form-control" id="selEmpresa" required>
+                                <option value="">Seleccione una empresa...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Descripción <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txtDescripcion" placeholder="Ej: Sede Central, Sucursal San Lorenzo" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Código de Sede</label>
+                            <input type="text" class="form-control" id="txtCodigoSede" placeholder="Ej: SEDE-001" maxlength="20">
+                            <small class="form-text text-muted">Código único por empresa (opcional)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Es Principal</label><br>
+                            <input type="checkbox" id="chkEsPrincipal"> Sí
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Estado</label><br>
+                            <input type="checkbox" id="chkEstado" checked> Activo
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: Ubicación -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marker-alt"></i> Ubicación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Departamento</label>
+                            <input type="text" class="form-control" id="txtDepartamento" placeholder="Ej: Central">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Ciudad</label>
+                            <input type="text" class="form-control" id="txtCiudad" placeholder="Ej: Asunción">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Código Postal</label>
+                            <input type="text" class="form-control" id="txtCodigoPostal" placeholder="0000" maxlength="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Dirección</label>
+                            <textarea class="form-control" id="txtDireccion" rows="2" placeholder="Dirección completa"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Latitud</label>
+                            <input type="number" step="any" class="form-control" id="txtLatitud" placeholder="Ej: -25.2637">
+                            <small class="form-text text-muted">Coordenada GPS (opcional)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Longitud</label>
+                            <input type="number" step="any" class="form-control" id="txtLongitud" placeholder="Ej: -57.5759">
+                            <small class="form-text text-muted">Coordenada GPS (opcional)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 3: Contacto -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-address-card"></i> Contacto
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Teléfono</label>
+                            <input type="text" class="form-control" id="txtTelefono" placeholder="Ej: +595 21 123456">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Email</label>
+                            <input type="email" class="form-control" id="txtEmail" placeholder="sede@ejemplo.com">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="font-weight-semibold">Horario de Atención</label>
+                            <textarea class="form-control" id="txtHorarioAtencion" rows="2" placeholder="Ej: Lun-Vie: 8:00 - 18:00, Sáb: 8:00 - 12:00"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <a href="{{ url_for('sede.sedeIndex') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="button" class="btn btn-primary" id="btnGuardar">
+                            <i class="fas fa-save"></i> Guardar Sede
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  // Obtener ID de sede desde URL si es edición
+  const urlParams = new URLSearchParams(window.location.search);
+  const idSedeEditar = urlParams.get('id');
+
+  // Cargar empresas en el select
+  const cargarEmpresas = () => {
+    fetch('/api/v1/empresas', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+      if(data && data.success && data.data) {
+        const select = $('#selEmpresa');
+        select.empty();
+        select.append('<option value="">Seleccione una empresa...</option>');
+        data.data.forEach(empresa => {
+          select.append(`<option value="${empresa.id}">${empresa.razon_social}${empresa.ruc_nit ? ' - RUC: ' + empresa.ruc_nit : ''}</option>`);
+        });
+      }
+    })
+    .catch(err => {
+      console.error('Error cargando empresas:', err);
+    });
+  }
+
+  // Cargar datos si es edición
+  const cargarDatosEdicion = () => {
+    if (idSedeEditar) {
+      fetch(`/api/v1/sedes/${idSedeEditar}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && data.success && data.data) {
+          const sede = data.data;
+          
+          $('#txtIdSede').val(sede.id);
+          $('#selEmpresa').val(sede.id_empresa);
+          $('#txtDescripcion').val(sede.descripcion || '');
+          $('#txtCodigoSede').val(sede.codigo_sede || '');
+          $('#txtDireccion').val(sede.direccion || '');
+          $('#txtCiudad').val(sede.ciudad || '');
+          $('#txtDepartamento').val(sede.departamento || '');
+          $('#txtCodigoPostal').val(sede.codigo_postal || '');
+          $('#txtLatitud').val(sede.latitud || '');
+          $('#txtLongitud').val(sede.longitud || '');
+          $('#txtTelefono').val(sede.telefono || '');
+          $('#txtEmail').val(sede.email || '');
+          $('#txtHorarioAtencion').val(sede.horario_atencion || '');
+          $('#chkEsPrincipal').prop("checked", sede.es_principal || false);
+          $('#chkEstado').prop("checked", sede.estado !== false);
+          
+          // Cambiar título
+          $('h3').html('<i class="fas fa-map-marker-alt"></i> Editar Sede');
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando sede:', err);
+      });
+    }
+  }
+
+  // Guardar sede
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idSede = $('#txtIdSede').val();
+
+      // Validaciones básicas
+      if (!$('#selEmpresa').val() || !$('#txtDescripcion').val()) {
+        Swal.fire("Error", "Los campos Empresa y Descripción son obligatorios.", "error");
+        return;
+      }
+
+      const payload = {
+        id_empresa: parseInt($('#selEmpresa').val()),
+        des_sede: $('#txtDescripcion').val(),
+        codigo_sede: $('#txtCodigoSede').val() || null,
+        direccion: $('#txtDireccion').val() || null,
+        ciudad: $('#txtCiudad').val() || null,
+        departamento: $('#txtDepartamento').val() || null,
+        codigo_postal: $('#txtCodigoPostal').val() || null,
+        latitud: $('#txtLatitud').val() ? parseFloat($('#txtLatitud').val()) : null,
+        longitud: $('#txtLongitud').val() ? parseFloat($('#txtLongitud').val()) : null,
+        telefono: $('#txtTelefono').val() || null,
+        email: $('#txtEmail').val() || null,
+        horario_atencion: $('#txtHorarioAtencion').val() || null,
+        es_principal: $('#chkEsPrincipal').is(':checked'),
+        est_sede: $('#chkEstado').is(':checked')
+      };
+
+      const url = idSede ? `/api/v1/sedes/${idSede}` : '/api/v1/sedes';
+      const method = idSede ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if(data && !data.error && data.success) {
+          Swal.fire({
+            title: idSede ? "Actualizado" : "Agregado",
+            text: `La sede ha sido ${idSede ? 'actualizada' : 'agregada'} correctamente.`,
+            icon: "success",
+            confirmButtonText: "Aceptar"
+          }).then(() => {
+            window.location.href = "{{ url_for('sede.sedeIndex') }}";
+          });
+        } else {
+          Swal.fire("Error", data.error || `No se pudo ${idSede ? 'actualizar' : 'guardar'} la sede.`, "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", `Ocurrió un error al ${idSede ? 'actualizar' : 'guardar'} la sede.`, "error");
+      });
+    });
+  }
+
+  $(function() {
+    cargarEmpresas();
+    // Esperar un poco para que se carguen las empresas antes de cargar datos de edición
+    setTimeout(() => {
+      cargarDatosEdicion();
+    }, 300);
+    guardar();
+  });
+</script>
+{% endblock %}
+
+
+
+

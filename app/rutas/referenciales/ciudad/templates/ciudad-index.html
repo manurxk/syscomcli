@@ -11,13 +11,14 @@ Ciudades
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-info" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Ciudades</th>
+              <th>Descripción</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -27,9 +28,8 @@ Ciudades
     </div>
     <!-- /tarjeta -->
 
-    <!-- El formulario -->
+    <!-- Modal formulario -->
     <div class="modal" id="modalFormulario">
-      <!-- La clase modal-dialog-centered centra el modal -->
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
@@ -41,10 +41,14 @@ Ciudades
 
           <!-- Modal body -->
           <div class="modal-body">
+            <input type="hidden" id="txtIdCiudad">
             <div class="form-group">
-              <input type="hidden" id="txtIdCiudad">
-              <label for="txtDescripcion">Ciudad:</label>
+              <label for="txtDescripcion">Descripción:</label>
               <input type="text" class="form-control" placeholder="Ingrese alguna ciudad" id="txtDescripcion">
+            </div>
+            <div class="form-group">
+              <label for="chkEstado">Estado:</label><br>
+              <input type="checkbox" id="chkEstado" checked> Activo
             </div>
           </div>
 
@@ -71,6 +75,7 @@ Ciudades
 
 {% block js %}
 <script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
 
   const initDatatable = () => {
     $('#tbl').DataTable({
@@ -80,9 +85,14 @@ Ciudades
       ajax:'/api/v1/ciudades',
       columns: [
         { data: 'descripcion' },
+        { data: 'estado', render: function(val) {
+            return val ? '<span class="badge badge-success">Activo</span>'
+                       : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-info" data-id_ciudad="${row.id_ciudad}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-warning" data-id_ciudad="${row.id_ciudad}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
           }
         }
       ]
@@ -91,36 +101,42 @@ Ciudades
 
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
-      // Setear un título a modal
       $('#modalTitle').text("Agregar una Ciudad");
-      // inicia ventana modal
       $('#txtIdCiudad').val("");
       $('#txtDescripcion').val("");
+      $('#chkEstado').prop("checked", true);
       $('#modalFormulario').modal();
     });
   }
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const id_ciudad = $('#txtIdCiudad').val();
+      const idCiudad = $('#txtIdCiudad').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
+      const estado = $('#chkEstado').is(':checked');
       const tabla = $('#tbl').DataTable();
 
-      if(id_ciudad) {
+      const payload = { descripcion: nuevaDescripcion, estado: estado };
+
+      if(idCiudad) {
         // update
-        fetch(`/api/v1/ciudades/${id_ciudad}`, {
+        fetch(`/api/v1/ciudades/${idCiudad}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
             Swal.fire("Actualizado", "La ciudad ha sido actualizada correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire(data.error);
+            Swal.fire("Error", data.error || "No se pudo actualizar la ciudad.", "error");
+            // No cierro el modal para permitir corrección
           }
         }).catch(err => {
           console.error(err);
@@ -131,63 +147,61 @@ Ciudades
         fetch(`/api/v1/ciudades`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify({ descripcion: nuevaDescripcion})
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
         })
         .then(resp => resp.json())
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "La ciudad ha sido agregada correctamente.", "success");
+            Swal.fire("Agregado", "La ciudad ha sido agregada correctamente.", "success");
+            $('#modalFormulario').modal("hide");
           } else {
-            Swal.fire(data.error);
+            Swal.fire("Error", data.error || "No se pudo guardar la ciudad.", "error");
+            // No cierro el modal para permitir corrección
           }
         }).catch(err => {
           console.error(err);
           Swal.fire("Error", "Ocurrió un error al guardar la ciudad.", "error");
         });
       }
-      $('#txtDescripcion').val("");
-      $('#modalFormulario').modal("hide");
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]', function() {
-        // Mostrar mensaje de confirmación usando sweetalert
-        Swal.fire({
-            title: "¿Deseas editar este registro?",
-            showCancelButton: true,
-            confirmButtonText: "Si",
-            cancelButtonText: `No`
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $('#modalTitle').text("Editar una Ciudad");
+    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+      Swal.fire({
+        title: "¿Deseas editar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $('#modalTitle').text("Editar una Ciudad");
 
-                const id_ciudad = $(this).data('id_ciudad');
-                $('#txtIdCiudad').val(id_ciudad);
+          const idCiudad = $(this).data('id');
+          $('#txtIdCiudad').val(idCiudad);
 
-                // Necesitamos obtener la descripción del backend
-                fetch(`/api/v1/ciudades/${id_ciudad}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(resp => resp.json())
-                .then(data => {
-                    $('#txtDescripcion').val(data.data.descripcion); // Asegúrate que aquí accedes a la propiedad correcta
-                    $('#modalFormulario').modal();
-                });
-            }
-        });
+          fetch(`/api/v1/ciudades/${idCiudad}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#chkEstado').prop("checked", data.data.estado);
+            $('#modalFormulario').modal();
+          });
+        }
+      });
     });
-  };
+  }
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const id_ciudad = $(this).data('id_ciudad');
-      // Mostrar mensaje de confirmación usando sweetalert
+      const idCiudad = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,
@@ -195,22 +209,22 @@ Ciudades
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/ciudades/${id_ciudad}`, {
+          fetch(`/api/v1/ciudades/${idCiudad}`, {
             method: 'DELETE',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
             }
           })
           .then(resp => resp.json())
           .then(data => {
             if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
               const fila = $(this).closest('tr');
               const tabla = $('#tbl').DataTable();
               tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", data.success);
+              Swal.fire("Eliminado", "La ciudad ha sido eliminada.", "success");
             } else {
-              Swal.fire(data.error);
+              Swal.fire("Error", data.error || "No se pudo eliminar la ciudad.", "error");
             }
           }).catch(err => {
             Swal.fire("Error", "Ocurrió un error al eliminar la ciudad.", "error");

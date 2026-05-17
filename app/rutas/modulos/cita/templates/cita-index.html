@@ -1,0 +1,2613 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Citas Médicas
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="fas fa-calendar-check"></i> Gestión de Citas Médicas
+        </h3>
+        <a href="{{ url_for('cita.citaAgregar') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Cita
+        </a>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0 font-weight-bold">
+                <i class="fas fa-filter"></i> Filtros de Búsqueda
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="filtroEspecialista">Especialista:</label>
+                    <select class="form-control" id="filtroEspecialista">
+                        <option value="">Todos los especialistas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filtroFechaDesde">Fecha Desde:</label>
+                    <input type="date" class="form-control" id="filtroFechaDesde">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtroFechaHasta">Fecha Hasta:</label>
+                    <input type="date" class="form-control" id="filtroFechaHasta">
+                </div>
+                <div class="col-md-3">
+                    <label>&nbsp;</label><br>
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-info" onclick="aplicarFiltrosCitas()">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="limpiarFiltrosCitas()">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tarjeta principal -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Lista de Citas</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered w-100" id="tblCitas">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Paciente</th>
+                            <th>Especialista</th>
+                            <th>Especialidad</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Recordatorios</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Registrar/Editar Cita -->
+<div class="modal fade" id="modalFormularioCita" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h4 class="modal-title">
+                    <span id="tituloModal">Nueva Cita</span>
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+                <form id="formCita">
+                    <input type="hidden" id="txtIdCita">
+                    
+                    <!-- SECCIÓN 1: INFORMACIÓN DEL PACIENTE -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-primary">Información del Paciente</h6>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" id="id_paciente">
+                            
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Paciente <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" 
+                                           placeholder="Haga clic para buscar paciente" 
+                                           id="txtPaciente" 
+                                           readonly 
+                                           required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="button" id="btnBuscarPaciente">
+                                            Buscar
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Busque el paciente en el sistema</small>
+                            </div>
+
+                            <!-- Info del paciente seleccionado -->
+                            <div id="infoPaciente" style="display: none;">
+                                <div class="alert alert-primary border-0">
+                                    <div class="row">
+                                        <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                                            <small class="text-muted d-block">Nombre</small>
+                                            <strong id="infoPacNombre"></strong>
+                                        </div>
+                                        <div class="col-lg-2 col-md-6 mb-2 mb-lg-0">
+                                            <small class="text-muted d-block">CI</small>
+                                            <strong id="infoPacCedula"></strong>
+                                        </div>
+                                        <div class="col-lg-2 col-md-6 mb-2 mb-lg-0">
+                                            <small class="text-muted d-block">HC</small>
+                                            <strong id="infoPacHC"></strong>
+                                        </div>
+                                        <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                                            <small class="text-muted d-block">Teléfono</small>
+                                            <strong id="infoPacTelefono"></strong>
+                                        </div>
+                                        <div class="col-lg-2 col-md-6">
+                                            <small class="text-muted d-block">Edad</small>
+                                            <strong id="infoPacEdad"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Historial con especialista -->
+                                <div id="historialPaciente" style="display: none;">
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Historial con Especialista Seleccionado</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="contenidoHistorial"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 2: ESPECIALIDAD Y ESPECIALISTA -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-success">Especialidad y Especialista</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Especialidad <span class="text-danger">*</span></label>
+                                        <input type="hidden" id="id_especialidad">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" 
+                                                   placeholder="Seleccione especialidad" 
+                                                   id="txtEspecialidad" 
+                                                   readonly 
+                                                   required>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="button" id="btnBuscarEspecialidad">
+                                                    Buscar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Seleccione la especialidad médica</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Especialista <span class="text-danger">*</span></label>
+                                        <input type="hidden" id="id_especialista">
+                                        <div class="input-group">
+                                            <select class="form-control" id="selectEspecialista" required disabled>
+                                                <option value="">-- Primero seleccione una especialidad --</option>
+                                            </select>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text" 
+                                                      id="colorEspecialista" 
+                                                      style="background-color: #3498db; width: 40px;">
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Seleccione el especialista de la lista</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 3: FECHA Y HORARIO -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-info">Fecha y Horario</h6>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" id="id_agenda_horario">
+                            <input type="hidden" id="txtHoraInicio">
+                            <input type="hidden" id="txtHoraFin">
+                            
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Fecha de la Cita <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="txtFechaCita" required>
+                                <small class="form-text text-muted">Seleccione la fecha para ver horarios disponibles</small>
+                                
+                                <div class="form-check mt-2">
+                                    <input type="checkbox" class="form-check-input" id="chkSoloFechaExacta">
+                                    <label class="form-check-label" for="chkSoloFechaExacta">
+                                        <small>Buscar solo en esta fecha exacta (de lo contrario busca 7 días desde esta fecha)</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Loader -->
+                            <div id="loadingCupos" class="text-center my-4" style="display:none;">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Buscando horarios disponibles...</p>
+                            </div>
+
+                            <!-- Sin cupos -->
+                            <div id="sinCupos" class="alert alert-warning" style="display:none;">
+                                No hay horarios disponibles para la fecha seleccionada.
+                            </div>
+
+                            <!-- Contenedor de cupos -->
+                            <div id="contenedorCupos" class="row mt-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 4: TIPO DE CITA Y DETALLES -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 font-weight-bold text-warning">Tipo de Cita y Detalles</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Tipo de Cita -->
+                            <div class="form-group">
+                                <label class="d-block mb-3 font-weight-semibold">
+                                    Tipo de Cita <span class="text-danger">*</span>
+                                </label>
+                                
+                                <div class="row">
+                                    <!-- Primera Vez -->
+                                    <div class="col-lg-3 col-md-6 mb-3">
+                                        <div class="card tipo-cita-card" data-tipo="PRIMERA_VEZ">
+                                            <div class="card-body text-center p-3">
+                                                <div class="tipo-icon mb-2">
+                                                    <div style="font-size: 2rem; color: #007bff;">👤</div>
+                                                </div>
+                                                <h6 class="card-title mb-2">Primera Vez</h6>
+                                                <p class="card-text text-muted small mb-0">
+                                                    Alta del paciente
+                                                </p>
+                                                <span class="badge badge-pill badge-primary tipo-badge" style="display: none;">
+                                                    Seleccionado
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Evaluación -->
+                                    <div class="col-lg-3 col-md-6 mb-3">
+                                        <div class="card tipo-cita-card" data-tipo="EVALUACION">
+                                            <div class="card-body text-center p-3">
+                                                <div class="tipo-icon mb-2">
+                                                    <div style="font-size: 2rem; color: #17a2b8;">📋</div>
+                                                </div>
+                                                <h6 class="card-title mb-2">Evaluación</h6>
+                                                <p class="card-text text-muted small mb-0">
+                                                    Consulta diagnóstica
+                                                </p>
+                                                <span class="badge badge-pill badge-info tipo-badge" style="display: none;">
+                                                    Seleccionado
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tratamiento -->
+                                    <div class="col-lg-3 col-md-6 mb-3">
+                                        <div class="card tipo-cita-card" data-tipo="TRATAMIENTO">
+                                            <div class="card-body text-center p-3">
+                                                <div class="tipo-icon mb-2">
+                                                    <div style="font-size: 2rem; color: #28a745;">💚</div>
+                                                </div>
+                                                <h6 class="card-title mb-2">Tratamiento</h6>
+                                                <p class="card-text text-muted small mb-0">
+                                                    Sesión terapéutica
+                                                </p>
+                                                <span class="badge badge-pill badge-success tipo-badge" style="display: none;">
+                                                    Seleccionado
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Seguimiento -->
+                                    <div class="col-lg-3 col-md-6 mb-3">
+                                        <div class="card tipo-cita-card" data-tipo="SEGUIMIENTO">
+                                            <div class="card-body text-center p-3">
+                                                <div class="tipo-icon mb-2">
+                                                    <div style="font-size: 2rem; color: #ffc107;">✅</div>
+                                                </div>
+                                                <h6 class="card-title mb-2">Seguimiento</h6>
+                                                <p class="card-text text-muted small mb-0">
+                                                    Control post-tratamiento
+                                                </p>
+                                                <span class="badge badge-pill badge-warning tipo-badge" style="display: none;">
+                                                    Seleccionado
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" id="txtTipoCita" required>
+                            </div>
+
+                            <!-- Alert contextual -->
+                            <div id="alertTipoCita" class="alert" style="display: none;"></div>
+
+                            <!-- Número de sesión (solo TRATAMIENTO) -->
+                            <div class="row">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group" id="grupoNumeroSesion" style="display: none;">
+                                        <label class="font-weight-semibold">Número de Sesión <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" 
+                                               id="txtNumeroSesion" 
+                                               min="1" 
+                                               placeholder="Ej: 1, 2, 3...">
+                                        <small class="form-text text-muted">Se calculará automáticamente según historial</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                        <input type="hidden" id="id_estado_cita" value="1">
+                                        <select class="form-control" id="txtEstadoCita" required></select>
+                                        <small class="form-text text-muted">Estado de la cita</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Motivo y Observaciones -->
+                            <div class="row">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" 
+                                                  id="txtMotivo" 
+                                                  rows="4" 
+                                                  placeholder="Describa el motivo de la consulta..." 
+                                                  required></textarea>
+                                        <small class="form-text text-muted">Razón principal de la cita</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">Observaciones</label>
+                                        <textarea class="form-control" 
+                                                  id="txtObservaciones" 
+                                                  rows="4" 
+                                                  placeholder="Observaciones adicionales..."></textarea>
+                                        <small class="form-text text-muted">Notas complementarias (opcional)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardarCita">
+                    Guardar Cita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: BUSCAR PACIENTE -->
+<div class="modal fade" id="modalBuscarPaciente" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Buscar Paciente</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <p class="mb-0 text-muted">
+                        Busque un paciente existente o registre uno nuevo
+                    </p>
+                    <button type="button" class="btn btn-success" id="btnAbrirRegistroRapido">
+                        Registrar Nuevo
+                    </button>
+                </div>
+                
+                <hr>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered w-100" id="tblPacientes">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>HC</th>
+                                <th>Nombre Completo</th>
+                                <th>CI</th>
+                                <th>Teléfono</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: REGISTRO RÁPIDO -->
+<div class="modal fade" id="modalRegistroRapido" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Registro Rápido de Paciente</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formRegistroRapido">
+                    <div class="alert alert-info border-0">
+                        <strong>Registro simplificado</strong> - Datos básicos para crear la cita
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="txtNombreRapido" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Apellido <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="txtApellidoRapido" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Cédula <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="txtCedulaRapido" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="txtTelefonoRapido" 
+                                       placeholder="Ej: 0981123456" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txtFechaNacimientoRapido" required>
+                        <small class="form-text text-muted">Se detectará automáticamente si es menor de edad</small>
+                    </div>
+
+                    <div id="alertMenorRapido" class="alert alert-warning border-0" style="display:none;">
+                        <strong>Paciente menor de edad detectado.</strong><br>
+                        Complete los datos de AL MENOS uno de los tutores (nombre Y apellido).
+                    </div>
+
+                    <div id="camposTutorRapido" style="display:none;">
+                        <hr>
+                        <h6 class="text-warning font-weight-bold">Datos del Tutor</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Nombre de la Madre</label>
+                                    <input type="text" class="form-control" id="txtNombreMadreRapido">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Apellido de la Madre</label>
+                                    <input type="text" class="form-control" id="txtApellidoMadreRapido">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Nombre del Padre</label>
+                                    <input type="text" class="form-control" id="txtNombrePadreRapido">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-semibold">Apellido del Padre</label>
+                                    <input type="text" class="form-control" id="txtApellidoPadreRapido">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info border-0">
+                            <small>Debe completar <strong>nombre Y apellido</strong> de al menos uno de los tutores</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardarRapido">
+                    Registrar y Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: BUSCAR ESPECIALIDAD -->
+<div class="modal fade" id="modalBuscarEspecialidad" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Seleccionar Especialidad</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered w-100" id="tblEspecialidades">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Especialidad</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+/* Estilos generales */
+.modal-body {
+    padding: 1.5rem;
+}
+
+.card-header {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+}
+
+.form-group label {
+    margin-bottom: 0.375rem;
+    font-size: 0.9rem;
+}
+
+.form-control, .input-group-text {
+    font-size: 0.9rem;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
+}
+
+.font-weight-semibold {
+    font-weight: 600;
+}
+
+/* Tipo de Cita Cards */
+.tipo-cita-card {
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    height: 100%;
+}
+
+.tipo-cita-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    transform: translateY(-3px);
+}
+
+.tipo-cita-card.selected {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
+}
+
+.tipo-cita-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    background-color: #f8f9fa;
+}
+
+.tipo-cita-card.disabled:hover {
+    border-color: #e9ecef;
+    box-shadow: none;
+    transform: none;
+}
+
+.tipo-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.tipo-icon {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Cupos Cards - MEJORADO */
+.cupo-card {
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.cupo-card:hover {
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    transform: translateY(-2px);
+}
+
+.cupo-card.selected {
+    border-color: #007bff;
+    background: #e7f3ff;
+    box-shadow: 0 0 15px rgba(0,123,255,0.5);
+}
+
+/* ✅ MEJORADO: Horarios ocupados más visibles */
+.cupo-card.sin-cupos {
+    border-color: #dc3545 !important;
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%) !important;
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.cupo-card.sin-cupos:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Icono de "ocupado" */
+.cupo-card.sin-cupos .card-body::before {
+    content: "🚫";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.cupo-card.sin-cupos h5 {
+    color: #721c24;
+    text-decoration: line-through;
+}
+
+.cupo-card.sin-cupos .badge-danger {
+    background-color: #dc3545 !important;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Historial */
+.historial-item {
+    padding: 10px;
+    border-left: 3px solid #007bff;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.historial-item:hover {
+    background-color: #e9ecef;
+}
+
+.historial-item.primera_vez { border-left-color: #007bff; }
+.historial-item.evaluacion { border-left-color: #17a2b8; }
+.historial-item.tratamiento { border-left-color: #28a745; }
+.historial-item.seguimiento { border-left-color: #ffc107; }
+
+/* Alerts */
+.alert-primary {
+    background-color: #e7f1ff;
+    border-left: 4px solid #007bff;
+}
+
+.alert-info {
+    background-color: #e7f3ff;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-warning {
+    background-color: #fff8e1;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-success {
+    background-color: #e8f5e9;
+    border-left: 4px solid #28a745;
+}
+
+/* Spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 95%;
+        margin: 0.5rem auto;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+        max-height: 70vh;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .alert {
+        font-size: 0.85rem;
+    }
+    
+    .tipo-icon div { 
+        font-size: 1.5rem !important; 
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-body {
+        max-height: 65vh;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+    }
+    
+    .card-header h6 {
+        font-size: 0.95rem;
+    }
+    
+    .tipo-cita-card .card-text { 
+        font-size: 0.75rem; 
+    }
+}
+
+/* Scrollbar personalizado */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Validación */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-image: none;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+{% endblock %}
+
+
+{% block js %}
+<script>
+
+// ==========================================
+// CONSTANTES Y CONFIGURACIÓN
+// ==========================================
+const CSRFToken = "{{ csrf_token() }}" || null;
+
+// Estado global (sin wizard)
+let pacienteSeleccionado = null;
+let especialistaSeleccionado = null;
+let especialidadSeleccionada = null;
+let historialPaciente = null;
+
+// ==========================================
+// DATATABLE PRINCIPAL DE CITAS
+// ==========================================
+const initDatatable = () => {
+  tablaCitas = $('#tblCitas').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/citas',
+      dataSrc: function(json) {
+        console.log('Respuesta del servidor:', json);
+        if (json.success) {
+          return json.data;
+        } else {
+          console.error('Error del servidor:', json.error);
+          Swal.fire('Error', json.error || 'Error al cargar datos', 'error');
+          return [];
+        }
+      },
+      error: function(xhr, error, thrown) {
+        console.error('Error en AJAX:', xhr.responseText);
+        Swal.fire('Error', 'No se pudieron cargar las citas', 'error');
+      }
+    },
+    columns: [
+      { data: 'cita_fecha', title: 'Fecha' },
+      { data: 'cita_hora_inicio', title: 'Hora' },
+      { data: 'paciente_nombre', title: 'Paciente' },
+      { data: 'especialista_nombre', title: 'Especialista' },
+      { data: 'especialidad', title: 'Especialidad' },
+      { 
+        data: 'cita_tipo',
+        render: function(data, type, row) {
+          const badges = {
+            'PRIMERA_VEZ': '<span class="badge badge-primary">Primera Vez</span>',
+            'EVALUACION': '<span class="badge badge-info">Evaluación</span>',
+            'TRATAMIENTO': `<span class="badge badge-success">Tratamiento ${row.cita_numero_sesion ? '#' + row.cita_numero_sesion : ''}</span>`,
+            'SEGUIMIENTO': '<span class="badge badge-warning">Seguimiento</span>'
+          };
+          return badges[data] || data;
+        },
+        title: 'Tipo',
+        className: 'text-center'
+      },
+      { 
+        data: 'estado_nombre',
+        render: function(data, type, row) {
+          return `<span class="badge" style="background-color: ${row.estado_color}">${data}</span>`;
+        },
+        title: 'Estado',
+        className: 'text-center'
+      },
+      { 
+        data: function(row) {
+          const idCita = row.id_cita;
+          return `
+            <div id="recordatorios-${idCita}" class="recordatorios-container">
+              <span class="badge badge-secondary">
+                <i class="fas fa-spinner fa-spin"></i> Cargando...
+              </span>
+            </div>
+            <button type="button" class="btn btn-info btn-sm btn-ver-recordatorios mt-1" 
+                    data-id="${idCita}" 
+                    title="Ver recordatorios"
+                    style="display: none;">
+              <i class="fas fa-bell"></i> Ver
+            </button>
+          `;
+        },
+        title: 'Recordatorios',
+        className: 'text-center',
+        orderable: false,
+        width: '150px'
+      },
+      { 
+        data: function(row) {
+          return `
+            <button type="button" name="btn_editar" class="btn btn-warning btn-sm" 
+                    data-id="${row.id_cita}" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" 
+                    data-id="${row.id_cita}" 
+                    data-paciente="${row.paciente_nombre}" 
+                    title="Eliminar">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          `;
+        },
+        title: 'Acciones',
+        className: 'text-center',
+        orderable: false
+      }
+    ],
+    order: [[0, 'desc'], [1, 'desc']],
+    responsive: true,
+    pageLength: 10
+  });
+}
+
+// ==========================================
+// VARIABLES GLOBALES
+// ==========================================
+let tablaCitas = null;
+
+// ==========================================
+// FUNCIONES DE FILTROS
+// ==========================================
+
+function cargarEspecialistasEnFiltro() {
+  $.ajax({
+    url: '/api/v1/especialistas',
+    method: 'GET',
+    success: function(response) {
+      if (response.success && response.data) {
+        let html = '<option value="">Todos los especialistas</option>';
+        response.data.forEach(function(esp) {
+          html += `<option value="${esp.id_especialista}">${esp.nombre_completo}</option>`;
+        });
+        $('#filtroEspecialista').html(html);
+      }
+    },
+    error: function() {
+      console.error('Error al cargar especialistas para filtro');
+    }
+  });
+}
+
+function aplicarFiltrosCitas() {
+  if (tablaCitas) {
+    tablaCitas.draw();
+  }
+}
+
+function limpiarFiltrosCitas() {
+  $('#filtroEspecialista').val('');
+  $('#filtroFechaDesde').val('');
+  $('#filtroFechaHasta').val('');
+  if (tablaCitas) {
+    tablaCitas.draw();
+  }
+}
+
+// Filtro personalizado para DataTables
+let filtroCitasActivo = false;
+
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+  // Solo aplicar a la tabla de citas
+  if (settings.nTable.id !== 'tblCitas') return true;
+  
+  const filtroEspecialista = $('#filtroEspecialista').val();
+  const filtroFechaDesde = $('#filtroFechaDesde').val();
+  const filtroFechaHasta = $('#filtroFechaHasta').val();
+  
+  // Si no hay filtros activos, mostrar todo
+  if (!filtroEspecialista && !filtroFechaDesde && !filtroFechaHasta) {
+    filtroCitasActivo = false;
+    return true;
+  }
+  
+  filtroCitasActivo = true;
+  
+  // Obtener datos de la fila desde la tabla
+  if (!tablaCitas) return true;
+  const rowData = tablaCitas.row(dataIndex).data();
+  if (!rowData) return true;
+  
+  // Filtro por especialista
+  if (filtroEspecialista) {
+    const idEspecialistaRow = rowData.id_especialista || rowData.id_profesional;
+    if (String(idEspecialistaRow) !== String(filtroEspecialista)) {
+      return false;
+    }
+  }
+  
+  // Filtro por fecha
+  if (filtroFechaDesde || filtroFechaHasta) {
+    const fechaCita = rowData.cita_fecha;
+    if (!fechaCita) return false;
+    
+    // Convertir fecha de formato DD/MM/YYYY a Date
+    let fechaRow = null;
+    if (fechaCita.includes('/')) {
+      // Formato DD/MM/YYYY (formato del API)
+      const partesFecha = fechaCita.split('/');
+      if (partesFecha.length === 3) {
+        const dia = parseInt(partesFecha[0], 10);
+        const mes = parseInt(partesFecha[1], 10) - 1; // Mes es 0-indexed
+        const año = parseInt(partesFecha[2], 10);
+        fechaRow = new Date(año, mes, dia);
+      }
+    } else if (fechaCita.includes('-')) {
+      // Formato YYYY-MM-DD
+      fechaRow = new Date(fechaCita);
+    }
+    
+    if (!fechaRow || isNaN(fechaRow.getTime())) {
+      console.warn('Fecha inválida:', fechaCita);
+      return false;
+    }
+    
+    // Comparar fechas (solo la parte de fecha, sin hora)
+    if (filtroFechaDesde) {
+      const desde = new Date(filtroFechaDesde);
+      desde.setHours(0, 0, 0, 0);
+      const fechaRowComparar = new Date(fechaRow);
+      fechaRowComparar.setHours(0, 0, 0, 0);
+      if (fechaRowComparar < desde) return false;
+    }
+    
+    if (filtroFechaHasta) {
+      const hasta = new Date(filtroFechaHasta);
+      hasta.setHours(23, 59, 59, 999);
+      const fechaRowComparar = new Date(fechaRow);
+      fechaRowComparar.setHours(23, 59, 59, 999);
+      if (fechaRowComparar > hasta) return false;
+    }
+  }
+  
+  return true;
+});
+
+// ==========================================
+// DATATABLES DE BÚSQUEDA
+// ==========================================
+const initPacientesDatatable = () => {
+  if ($.fn.DataTable.isDataTable('#tblPacientes')) {
+    $('#tblPacientes').DataTable().destroy();
+  }
+
+  $('#tblPacientes').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/pacientes',
+      dataSrc: function(json) {
+        console.log('Respuesta pacientes:', json);
+        if (json.success && json.data && json.data.length > 0) {
+          console.log('Primer paciente:', json.data[0]);
+        }
+        return json.success ? json.data : [];
+      }
+    },
+    columns: [
+      { 
+        data: 'historia_clinica', 
+        title: 'HC',
+        render: function(data) {
+          return data || 'N/A';
+        }
+      },
+      { 
+        data: null,
+        title: 'Nombre Completo',
+        render: function(data, type, row) {
+          return `${row.nombre || ''} ${row.apellido || ''}`.trim();
+        }
+      },
+      { data: 'cedula', title: 'CI' },
+      { 
+        data: 'telefono', 
+        title: 'Teléfono',
+        render: function(data) {
+          return data || 'N/A';
+        }
+      },
+      {
+        data: function(row) {
+          const nombreCompleto = `${row.nombre || ''} ${row.apellido || ''}`.trim();
+          return `
+            <button type="button" class="btn btn-success btn-sm btn-select-paciente" 
+                    data-id="${row.id_paciente}"
+                    data-nombre="${nombreCompleto}"
+                    data-cedula="${row.cedula}"
+                    data-telefono="${row.telefono || 'N/A'}"
+                    data-hc="${row.historia_clinica || 'N/A'}"
+                    data-fecha-nacimiento="${row.fecha_nacimiento || ''}">
+              Seleccionar
+            </button>
+          `;
+        },
+        title: 'Acciones',
+        orderable: false,
+        className: 'text-center'
+      }
+    ],
+    responsive: true,
+    pageLength: 8,
+    order: [[1, 'asc']]
+  });
+}
+
+const initEspecialidadesDatatable = () => {
+  if ($.fn.DataTable.isDataTable('#tblEspecialidades')) {
+    $('#tblEspecialidades').DataTable().destroy();
+  }
+
+  $('#tblEspecialidades').DataTable({
+    language: {
+      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+    },
+    ajax: {
+      url: '/api/v1/especialidades',
+      dataSrc: function(json) {
+        console.log('Respuesta especialidades:', json);
+        return json.success ? json.data : [];
+      }
+    },
+    columns: [
+      { data: 'descripcion', title: 'Especialidad' },
+      {
+        data: function(row) {
+          return `
+            <button type="button" class="btn btn-success btn-sm btn-select-especialidad" 
+                    data-id="${row.id}"
+                    data-nombre="${row.descripcion}">
+              Seleccionar
+            </button>
+          `;
+        },
+        title: 'Acciones',
+        orderable: false,
+        className: 'text-center'
+      }
+    ],
+    responsive: true,
+    pageLength: 8,
+    order: [[0, 'asc']]
+  });
+}
+
+
+// ==========================================
+// SELECCIÓN DE PACIENTE
+// ==========================================
+const seleccionarPaciente = () => {
+  $('#tblPacientes').on('click', '.btn-select-paciente', function() {
+    const data = $(this).data();
+    
+    pacienteSeleccionado = {
+      id: data.id,
+      nombre: data.nombre,
+      cedula: data.cedula,
+      telefono: data.telefono,
+      hc: data.hc,
+      fecha_nacimiento: data.fechaNacimiento
+    };
+
+    // Calcular edad
+    let edad = 'N/A';
+    if (data.fechaNacimiento) {
+      const nacimiento = new Date(data.fechaNacimiento);
+      const hoy = new Date();
+      edad = Math.floor((hoy - nacimiento) / (365.25 * 24 * 60 * 60 * 1000));
+    }
+
+    // Llenar información
+    $('#id_paciente').val(data.id);
+    $('#txtPaciente').val(data.nombre);
+    $('#infoPacNombre').text(data.nombre);
+    $('#infoPacCedula').text(data.cedula);
+    $('#infoPacHC').text(data.hc);
+    $('#infoPacTelefono').text(data.telefono);
+    $('#infoPacEdad').text(edad + ' años');
+
+    // Mostrar panel de información
+    $('#infoPaciente').fadeIn();
+
+    // Cerrar modal
+    $('#modalBuscarPaciente').modal('hide');
+
+    console.log('Paciente seleccionado:', pacienteSeleccionado);
+  });
+}
+
+const cargarHistorialPaciente = (idPaciente, idEspecialista) => {
+  if (!idPaciente || !idEspecialista) return;
+
+  console.log(`Cargando historial: Paciente ${idPaciente}, Especialista ${idEspecialista}`);
+
+  fetch(`/api/v1/citas/paciente/${idPaciente}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (data.success && data.data.length > 0) {
+      historialPaciente = data.data;
+      mostrarHistorial(historialPaciente);
+      actualizarOpcionesTipoCita(historialPaciente);
+    } else {
+      historialPaciente = [];
+      mostrarMensajeSinHistorial();
+      habilitarSoloPrimeraVez();
+    }
+  })
+  .catch(err => {
+    console.error('Error cargando historial:', err);
+  });
+}
+
+const mostrarHistorial = (citas) => {
+  let html = '';
+  
+  citas.forEach(cita => {
+    html += `
+      <div class="historial-item ${cita.tipo.toLowerCase()} mt-2 p-2">
+        <strong>${cita.tipo}</strong> - ${cita.fecha} ${cita.hora}
+        <br><small>${cita.especialidad} | ${cita.estado}</small>
+      </div>
+    `;
+  });
+  
+  $('#contenidoHistorial').html(html);
+  $('#historialPaciente').fadeIn();
+}
+
+const mostrarMensajeSinHistorial = () => {
+  $('#contenidoHistorial').html(`
+    <div class="alert alert-warning border-0">
+      Este paciente no tiene citas previas con este especialista.
+      <br><strong>Solo puede agendar PRIMERA VEZ.</strong>
+    </div>
+  `);
+  $('#historialPaciente').fadeIn();
+}
+
+// ==========================================
+// SELECCIÓN DE ESPECIALIDAD
+// ==========================================
+const seleccionarEspecialidad = () => {
+  $('#tblEspecialidades').on('click', '.btn-select-especialidad', function() {
+    const data = $(this).data();
+    
+    especialidadSeleccionada = {
+      id: data.id,
+      nombre: data.nombre
+    };
+
+    $('#id_especialidad').val(data.id);
+    $('#txtEspecialidad').val(data.nombre);
+    $('#especialidadSeleccionada').text(data.nombre);
+
+    // Cargar especialistas filtrados por especialidad en el dropdown
+    cargarEspecialistasPorEspecialidad(data.id);
+
+    $('#modalBuscarEspecialidad').modal('hide');
+
+    console.log('Especialidad seleccionada:', especialidadSeleccionada);
+  });
+}
+
+// ==========================================
+// CARGAR ESPECIALISTAS POR ESPECIALIDAD
+// ==========================================
+const cargarEspecialistasPorEspecialidad = (idEspecialidad) => {
+  const select = $('#selectEspecialista');
+  
+  // Limpiar y deshabilitar mientras carga
+  select.empty().append('<option value="">Cargando especialistas...</option>').prop('disabled', true);
+  
+  const url = `/api/v1/especialistas?id_especialidad=${idEspecialidad}`;
+  
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    select.empty();
+    
+    if (data.success && data.data && data.data.length > 0) {
+      select.append('<option value="">-- Seleccione un especialista --</option>');
+      
+      data.data.forEach(esp => {
+        const displayText = esp.matricula 
+          ? `${esp.nombre_completo} - ${esp.matricula}` 
+          : esp.nombre_completo;
+        const option = $('<option></option>')
+          .attr('value', esp.id_especialista)
+          .attr('data-color', esp.color_agenda || '#3498db')
+          .text(displayText);
+        select.append(option);
+      });
+      
+      select.prop('disabled', false);
+      console.log(`Cargados ${data.data.length} especialistas para la especialidad ${idEspecialidad}`);
+    } else {
+      select.append('<option value="">No hay especialistas disponibles</option>');
+      select.prop('disabled', true);
+      Swal.fire('Información', 'No se encontraron especialistas para esta especialidad', 'info');
+    }
+  })
+  .catch(err => {
+    console.error('Error cargando especialistas:', err);
+    select.empty().append('<option value="">Error al cargar especialistas</option>');
+    select.prop('disabled', true);
+    Swal.fire('Error', 'No se pudieron cargar los especialistas', 'error');
+  });
+}
+
+// ==========================================
+// SELECCIÓN DE ESPECIALISTA (DROPDOWN)
+// ==========================================
+const seleccionarEspecialista = () => {
+  $('#selectEspecialista').on('change', function() {
+    const idEspecialista = $(this).val();
+    const optionSelected = $(this).find('option:selected');
+    
+    if (!idEspecialista) {
+      especialistaSeleccionado = null;
+      $('#id_especialista').val('');
+      $('#colorEspecialista').css('background-color', '#3498db');
+      return;
+    }
+    
+    const color = optionSelected.data('color') || '#3498db';
+    const nombre = optionSelected.text();
+    
+    especialistaSeleccionado = {
+      id: parseInt(idEspecialista),
+      nombre: nombre,
+      color: color
+    };
+
+    $('#id_especialista').val(idEspecialista);
+    $('#colorEspecialista').css('background-color', color);
+
+    // Cargar historial del paciente con este especialista
+    if (pacienteSeleccionado) {
+      console.log('Cargando historial para:', {
+        paciente: pacienteSeleccionado.id,
+        especialista: idEspecialista
+      });
+      cargarHistorialPaciente(pacienteSeleccionado.id, parseInt(idEspecialista));
+    }
+
+    // ✅ Cargar cupos automáticamente si ya hay una fecha seleccionada
+    const fechaSeleccionada = $('#txtFechaCita').val();
+    if (fechaSeleccionada) {
+      console.log('Fecha ya seleccionada, cargando cupos automáticamente...');
+      setTimeout(() => {
+        cargarCuposDisponibles();
+      }, 300);
+    }
+
+    console.log('Especialista seleccionado:', especialistaSeleccionado);
+  });
+}
+
+// ==========================================
+// FECHA Y HORARIOS
+// ==========================================
+
+
+
+// ==========================================
+// CARGAR CUPOS CON PRESELECCIÓN EN EDICIÓN
+// ==========================================
+
+const cargarCuposDisponibles = () => {
+  const fecha = $('#txtFechaCita').val();
+  const idEspecialista = $('#id_especialista').val();
+
+  if (!fecha || !idEspecialista) {
+    Swal.fire('Atención', 'Debe seleccionar primero un especialista', 'warning');
+    return;
+  }
+
+  $('#loadingCupos').show();
+  $('#contenedorCupos').empty();
+  $('#sinCupos').hide();
+
+  const soloFechaExacta = $('#chkSoloFechaExacta').is(':checked');
+  const fechaInicio = fecha;
+  
+  let fechaFin;
+  if (soloFechaExacta) {
+    fechaFin = fecha;
+  } else {
+    const fechaObj = new Date(fecha + 'T00:00:00');
+    fechaObj.setDate(fechaObj.getDate() + 7);
+    fechaFin = fechaObj.toISOString().split('T')[0];
+  }
+
+  console.log(`Buscando cupos del ${fechaInicio} al ${fechaFin}`);
+
+  // ✅ Guardar el ID de agenda actual para resaltarlo
+  const agendaActual = $('#id_agenda_horario').val();
+
+  fetch(`/api/v1/cupos/especialista/${idEspecialista}?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    $('#loadingCupos').hide();
+    console.log('Respuesta de cupos:', data);
+
+    if (data.success && data.data.length > 0) {
+      mostrarCupos(data.data);
+      
+      // ✅ IMPORTANTE: Resaltar el cupo previamente seleccionado
+      if (agendaActual) {
+        setTimeout(() => {
+          const cardActual = $(`.cupo-card[data-id="${agendaActual}"]`);
+          if (cardActual.length > 0) {
+            cardActual.addClass('selected');
+            cardActual.find('.btn-seleccionar-cupo')
+                     .html('<i class="fas fa-check mr-1"></i>Seleccionado')
+                     .removeClass('btn-primary')
+                     .addClass('btn-success');
+            
+            console.log('Cupo actual resaltado:', agendaActual);
+          }
+        }, 100);
+      }
+    } else {
+      $('#sinCupos').show();
+    }
+  })
+  .catch(err => {
+    console.error('Error cargando cupos:', err);
+    $('#loadingCupos').hide();
+    $('#sinCupos').show();
+  });
+}
+
+
+
+
+const mostrarCupos = (cupos) => {
+  let html = '';
+  
+  const cuposMañana = [];
+  const cuposTarde = [];
+
+  cupos.forEach(cupo => {
+    const bloques = dividirCupoEnBloques(cupo);
+    
+    bloques.forEach(bloque => {
+      if (bloque.turno && bloque.turno.toUpperCase().includes('MAÑANA')) {
+        cuposMañana.push(bloque);
+      } else if (bloque.turno && bloque.turno.toUpperCase().includes('TARDE')) {
+        cuposTarde.push(bloque);
+      }
+    });
+  });
+
+  if (cuposMañana.length > 0) {
+    html += '<div class="col-12 mb-3"><h5 class="text-primary">🌅 Turno Mañana</h5></div>';
+    cuposMañana.forEach(cupo => {
+      html += renderCupoCard(cupo);
+    });
+  }
+
+  if (cuposTarde.length > 0) {
+    html += '<div class="col-12 mb-3 mt-4"><h5 class="text-warning">🌇 Turno Tarde</h5></div>';
+    cuposTarde.forEach(cupo => {
+      html += renderCupoCard(cupo);
+    });
+  }
+
+  $('#contenedorCupos').html(html);
+  
+  // ✅ Agregar animación de entrada
+  $('.cupo-card').each(function(index) {
+    $(this).css({
+      opacity: 0,
+      transform: 'translateY(20px)'
+    }).delay(index * 50).animate({
+      opacity: 1
+    }, 300, function() {
+      $(this).css('transform', 'translateY(0)');
+    });
+  });
+}
+
+const dividirCupoEnBloques = (cupo) => {
+  const bloques = [];
+  const duracion = 60;
+  
+  const [horaInicioH, horaInicioM] = cupo.hora_inicio.split(':').map(Number);
+  const [horaFinH, horaFinM] = cupo.hora_fin.split(':').map(Number);
+  
+  const minutosInicio = horaInicioH * 60 + horaInicioM;
+  const minutosFin = horaFinH * 60 + horaFinM;
+  
+  const totalMinutos = minutosFin - minutosInicio;
+  const numBloques = Math.floor(totalMinutos / duracion);
+  
+  if (numBloques <= 1) {
+    return [cupo];
+  }
+  
+  const cuposPorBloque = Math.floor(cupo.cupos_totales / numBloques);
+  const cuposOcupados = parseInt(cupo.cupos_ocupados) || 0;
+  
+  // ✅ Calcular cupos ocupados y disponibles por bloque
+  // Si hay cupos ocupados, necesitamos saber en qué bloques están
+  // Por ahora, distribuimos equitativamente los cupos ocupados
+  const cuposOcupadosPorBloque = Math.floor(cuposOcupados / numBloques);
+  const restoOcupados = cuposOcupados % numBloques;
+  
+  for (let i = 0; i < numBloques; i++) {
+    const minutosInicioBloque = minutosInicio + (i * duracion);
+    const minutosFinBloque = minutosInicioBloque + duracion;
+    
+    const horaInicioBloque = formatearHora(minutosInicioBloque);
+    const horaFinBloque = formatearHora(minutosFinBloque);
+    
+    // ✅ Calcular cupos ocupados para este bloque específico
+    // Si hay resto, los primeros bloques tienen 1 cupo ocupado adicional
+    const cuposOcupadosEnEsteBloque = cuposOcupadosPorBloque + (i < restoOcupados ? 1 : 0);
+    const cuposDisponiblesEnEsteBloque = cuposPorBloque - cuposOcupadosEnEsteBloque;
+    
+    bloques.push({
+      ...cupo,
+      hora_inicio: horaInicioBloque,
+      hora_fin: horaFinBloque,
+      cupos_totales: cuposPorBloque,
+      cupos_ocupados: cuposOcupadosEnEsteBloque,
+      cupos_disponibles: Math.max(0, cuposDisponiblesEnEsteBloque),
+      es_bloque_dividido: true
+    });
+  }
+  
+  return bloques;
+}
+
+const formatearHora = (minutos) => {
+  const horas = Math.floor(minutos / 60);
+  const mins = minutos % 60;
+  return `${horas.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+}
+
+// ==========================================
+// RENDERIZAR CARD DE CUPO - VERSIÓN MEJORADA
+// ==========================================
+
+
+const renderCupoCard = (cupo) => {
+  // ✅ Convertir a número para comparación correcta
+  const disponibles = parseInt(cupo.cupos_disponibles) || 0;
+  const idAgenda = parseInt(cupo.id_agenda_horario);
+  
+  const horaInicio = cupo.hora_inicio.substring(0, 5);
+  const horaFin = cupo.hora_fin.substring(0, 5);
+  
+  let claseCard = 'cupo-card';
+  let claseBadge = 'badge-success';
+  let textoEstado = 'Disponible';
+  let iconoEstado = '✅';
+  let disabled = '';
+  let colorBorde = '#28a745';
+  
+  // ✅ Determinar estado visual - Verde si hay cupos disponibles, Rojo si está ocupado
+  if (disponibles <= 0) {
+    claseCard += ' sin-cupos';
+    claseBadge = 'badge-danger';
+    textoEstado = 'Ocupado';
+    iconoEstado = '🚫';
+    disabled = 'disabled';
+    colorBorde = '#dc3545';
+  }
+
+  return `
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card ${claseCard}" 
+           data-id="${idAgenda}" 
+           data-hora-inicio="${horaInicio}" 
+           data-hora-fin="${horaFin}"
+           style="border-color: ${colorBorde};">
+        <div class="card-body text-center p-3" style="position: relative;">
+          <p class="mb-2 text-muted small">
+            <strong>${cupo.dia_semana}</strong><br>
+            ${cupo.fecha_especifica}
+          </p>
+          <h5 class="mb-2" style="${disponibles <= 0 ? 'color: #721c24;' : ''}">
+            ${iconoEstado} ${horaInicio} - ${horaFin}
+          </h5>
+          <p class="mb-2">
+            <span class="badge ${claseBadge} badge-cupo-disponible">
+              ${textoEstado}
+            </span>
+          </p>
+          <p class="mb-2 text-muted small">
+            ${disponibles <= 0 ? `Turno reservado (${cupo.cupos_ocupados}/${cupo.cupos_totales})` : `Disponible (${disponibles}/${cupo.cupos_totales})`}
+          </p>
+          <button type="button" 
+                  class="btn btn-sm ${disponibles <= 0 ? 'btn-danger' : 'btn-success'} mt-2 btn-seleccionar-cupo" 
+                  ${disabled}>
+            ${disponibles <= 0 ? '❌ No disponible' : '✅ Seleccionar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+// ==========================================
+// SELECCIÓN DE CUPO - VERSIÓN CORREGIDA
+// ==========================================
+
+const seleccionarCupo = () => {
+  // IMPORTANTE: Usar off() primero para evitar duplicación de eventos
+  $(document).off('click', '.btn-seleccionar-cupo');
+  
+  $(document).on('click', '.btn-seleccionar-cupo:not([disabled])', function(e) {
+    // ✅ PREVENIR COMPORTAMIENTO POR DEFECTO
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const card = $(this).closest('.card');
+    const idAgenda = card.data('id');
+    const horaInicio = card.data('hora-inicio');
+    const horaFin = card.data('hora-fin');
+
+    console.log('Cupo seleccionado:', { idAgenda, horaInicio, horaFin });
+
+    if (!idAgenda || isNaN(idAgenda)) {
+      console.error('ID de agenda inválido:', idAgenda);
+      Swal.fire('Error', 'El horario seleccionado no es válido', 'error');
+      return false; // ✅ Detener ejecución
+    }
+
+    // Remover selección previa
+    $('.cupo-card').removeClass('selected');
+    $('.btn-seleccionar-cupo').html('Seleccionar').removeClass('btn-success').addClass('btn-primary');
+    
+    // Marcar como seleccionado
+    card.addClass('selected');
+    $(this).html('<i class="fas fa-check mr-1"></i>Seleccionado')
+           .removeClass('btn-primary')
+           .addClass('btn-success');
+
+    // Asignar valores a los campos ocultos
+    $('#id_agenda_horario').val(parseInt(idAgenda));
+    $('#txtHoraInicio').val(horaInicio);
+    $('#txtHoraFin').val(horaFin);
+
+    // Feedback visual con toast
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Horario ${horaInicio} - ${horaFin} seleccionado`,
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true
+    });
+
+    console.log('Cupo asignado correctamente:', {
+      idAgenda: $('#id_agenda_horario').val(),
+      horaInicio: $('#txtHoraInicio').val(),
+      horaFin: $('#txtHoraFin').val()
+    });
+    
+    // ✅ IMPORTANTE: No cerrar el modal, retornar false
+    return false;
+  });
+}
+
+// ==========================================
+// TIPO DE CITA Y VALIDACIONES
+// ==========================================
+const actualizarOpcionesTipoCita = (historial) => {
+  const tienePrimeraVez = historial.some(c => c.tipo === 'PRIMERA_VEZ');
+  const tieneTratamientos = historial.filter(c => c.tipo === 'TRATAMIENTO');
+  const tratamientosCompletados = tieneTratamientos.filter(c => c.estado === 'COMPLETADA');
+  const tratamientosActivos = tieneTratamientos.filter(c => c.estado !== 'COMPLETADA' && c.estado !== 'CANCELADA');
+
+  console.log('Análisis de historial:', {
+    tienePrimeraVez,
+    totalTratamientos: tieneTratamientos.length,
+    tratamientosCompletados: tratamientosCompletados.length,
+    tratamientosActivos: tratamientosActivos.length
+  });
+
+  $('.tipo-cita-card').removeClass('disabled').find('.tipo-badge').hide();
+  $('#alertTipoCita').hide();
+
+  if (!tienePrimeraVez) {
+    habilitarSoloPrimeraVez();
+  } else if (tieneTratamientos.length === 0) {
+    deshabilitarCard('PRIMERA_VEZ', 'Primera vez ya realizada');
+    habilitarCard('EVALUACION');
+    habilitarCard('TRATAMIENTO');
+    deshabilitarCard('SEGUIMIENTO', 'Requiere tratamiento completado');
+  } else if (tratamientosActivos.length > 0) {
+    deshabilitarCard('PRIMERA_VEZ', 'Primera vez ya realizada');
+    habilitarCard('EVALUACION');
+    habilitarCard('TRATAMIENTO');
+    deshabilitarCard('SEGUIMIENTO', 'Tratamiento en curso');
+    
+    const ultimaSesion = Math.max(...tieneTratamientos.map(t => t.cita_numero_sesion || 0));
+    $('#txtNumeroSesion').val(ultimaSesion + 1);
+  } else if (tratamientosCompletados.length > 0) {
+    deshabilitarCard('PRIMERA_VEZ', 'Primera vez ya realizada');
+    habilitarCard('EVALUACION');
+    habilitarCard('TRATAMIENTO');
+    habilitarCard('SEGUIMIENTO');
+    
+    $('#txtNumeroSesion').val(1);
+  }
+}
+
+const habilitarSoloPrimeraVez = () => {
+  $('.tipo-cita-card').addClass('disabled');
+  $('.tipo-cita-card[data-tipo="PRIMERA_VEZ"]').removeClass('disabled');
+  
+  $('#alertTipoCita').removeClass('alert-danger alert-warning alert-success')
+    .addClass('alert-info')
+    .html('Esta será la primera cita del paciente. A partir de aquí podrá acceder a evaluaciones y tratamientos.')
+    .show();
+}
+
+const deshabilitarCard = (tipo, mensaje) => {
+  const card = $(`.tipo-cita-card[data-tipo="${tipo}"]`);
+  card.addClass('disabled');
+  card.find('.card-text').text(mensaje);
+}
+
+const habilitarCard = (tipo) => {
+  $(`.tipo-cita-card[data-tipo="${tipo}"]`).removeClass('disabled');
+}
+
+const seleccionarTipoCita = () => {
+  $(document).on('click', '.tipo-cita-card:not(.disabled)', function() {
+    const tipo = $(this).data('tipo');
+
+    $('.tipo-cita-card').removeClass('selected');
+    $('.tipo-badge').hide();
+
+    $(this).addClass('selected');
+    $(this).find('.tipo-badge').show();
+
+    $('#txtTipoCita').val(tipo);
+
+    if (tipo === 'TRATAMIENTO') {
+      $('#grupoNumeroSesion').slideDown();
+      $('#txtNumeroSesion').prop('required', true);
+    } else {
+      $('#grupoNumeroSesion').slideUp();
+      $('#txtNumeroSesion').prop('required', false);
+      $('#txtNumeroSesion').val('');
+    }
+
+    mostrarMensajeContextual(tipo);
+
+    console.log('Tipo de cita seleccionado:', tipo);
+  });
+}
+
+const mostrarMensajeContextual = (tipo) => {
+  const mensajes = {
+    'PRIMERA_VEZ': {
+      clase: 'alert-info',
+      texto: 'Esta será la primera cita del paciente con esta especialidad. A partir de esta cita podrá acceder a evaluaciones y tratamientos.'
+    },
+    'EVALUACION': {
+      clase: 'alert-info',
+      texto: 'Consulta de evaluación diagnóstica. Puede tener múltiples evaluaciones durante el tratamiento.'
+    },
+    'TRATAMIENTO': {
+      clase: 'alert-success',
+      texto: 'Sesión terapéutica formal. Recuerde indicar el número de sesión correspondiente.'
+    },
+    'SEGUIMIENTO': {
+      clase: 'alert-warning',
+      texto: 'Control post-tratamiento. Verifique que el paciente haya completado su ciclo terapéutico.'
+    }
+  };
+
+  const msg = mensajes[tipo];
+  $('#alertTipoCita').removeClass('alert-info alert-warning alert-success alert-danger')
+    .addClass(msg.clase)
+    .html(msg.texto)
+    .slideDown();
+}
+
+// ==========================================
+// CARGAR ESTADOS DE CITA
+// ==========================================
+const cargarEstadosCita = () => {
+  fetch('/api/v1/estados-citas', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRFToken
+    }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (data.success) {
+      let html = '';
+      data.data.forEach(estado => {
+        html += `<option value="${estado.id_estado_cita}">${estado.nombre}</option>`;
+      });
+      $('#txtEstadoCita').html(html);
+      $('#id_estado_cita').val(data.data[0].id_estado_cita);
+    }
+  })
+  .catch(err => {
+    console.error('Error cargando estados:', err);
+  });
+}
+
+// ==========================================
+// CRUD - FUNCIONES PRINCIPALES
+// ==========================================
+const agregar = () => {
+  $('#btnAgregar').on('click', function() {
+    $('#tituloModal').text('Nueva Cita');
+    limpiarFormulario();
+    $('#modalFormularioCita').modal('show');
+  });
+}
+
+const limpiarFormulario = () => {
+  $('#formCita')[0].reset();
+  $('#txtIdCita').val('');
+  
+  pacienteSeleccionado = null;
+  especialistaSeleccionado = null;
+  especialidadSeleccionada = null;
+  historialPaciente = null;
+
+  $('#id_paciente').val('');
+  $('#id_especialidad').val('');
+  $('#id_especialista').val('');
+  $('#id_agenda_horario').val('');
+  $('#txtTipoCita').val('');
+
+  // Limpiar select de especialistas
+  $('#selectEspecialista').empty().append('<option value="">-- Primero seleccione una especialidad --</option>').prop('disabled', true);
+  $('#colorEspecialista').css('background-color', '#3498db');
+
+  $('#infoPaciente').hide();
+  $('#historialPaciente').hide();
+  $('#grupoNumeroSesion').hide();
+  $('#alertTipoCita').hide();
+  $('#contenedorCupos').empty();
+
+  $('.tipo-cita-card').removeClass('selected disabled');
+  $('.tipo-badge').hide();
+
+  $('.form-control').removeClass('is-invalid is-valid');
+  
+  console.log('Formulario limpiado');
+}
+
+// ==========================================
+// GUARDAR CITA - VERSIÓN MEJORADA CON VALIDACIÓN Y RECARGA DE CUPOS
+// ==========================================
+
+const guardarCita = () => {
+  $('#btnGuardarCita').on('click', function(e) {
+    // ✅ Prevenir comportamiento por defecto
+    e.preventDefault();
+    
+    console.log('Iniciando guardado de cita...');
+
+    // Validar id_agenda_horario
+    const idAgendaHorario = $('#id_agenda_horario').val();
+    console.log('ID Agenda Horario:', idAgendaHorario);
+    
+    if (!idAgendaHorario || isNaN(parseInt(idAgendaHorario))) {
+      console.error('id_agenda_horario inválido:', idAgendaHorario);
+      Swal.fire({
+        icon: 'error',
+        title: 'Falta seleccionar horario',
+        text: 'Debe seleccionar un horario disponible para la cita',
+        confirmButtonColor: '#3085d6'
+      });
+      
+      // Resaltar sección de horarios
+      $('html, body').animate({
+        scrollTop: $('#contenedorCupos').offset().top - 100
+      }, 500);
+      
+      return false;
+    }
+
+    // Validación de campos requeridos
+    const camposRequeridos = {
+      'id_paciente': 'Paciente',
+      'id_especialidad': 'Especialidad',
+      'selectEspecialista': 'Especialista',
+      'txtFechaCita': 'Fecha de cita',
+      'txtHoraInicio': 'Hora de inicio',
+      'txtHoraFin': 'Hora de fin',
+      'txtTipoCita': 'Tipo de cita',
+      'txtMotivo': 'Motivo de consulta',
+      'id_estado_cita': 'Estado'
+    };
+
+    let valido = true;
+    let camposFaltantes = [];
+
+    Object.keys(camposRequeridos).forEach(campo => {
+      const valor = $(`#${campo}`).val();
+      
+      if (!valor || valor.trim() === '') {
+        $(`#${campo}`).addClass('is-invalid');
+        camposFaltantes.push(camposRequeridos[campo]);
+        valido = false;
+      } else {
+        $(`#${campo}`).removeClass('is-invalid');
+      }
+    });
+    
+    // Actualizar id_especialista desde el select
+    const idEspecialistaSelect = $('#selectEspecialista').val();
+    if (idEspecialistaSelect) {
+      $('#id_especialista').val(idEspecialistaSelect);
+    }
+
+    const tipoCita = $('#txtTipoCita').val();
+    if (tipoCita === 'TRATAMIENTO') {
+      const numeroSesion = $('#txtNumeroSesion').val();
+      if (!numeroSesion || parseInt(numeroSesion) < 1) {
+        $('#txtNumeroSesion').addClass('is-invalid');
+        camposFaltantes.push('Número de sesión');
+        valido = false;
+      }
+    }
+
+    if (!valido) {
+      console.error('Validación fallida. Campos faltantes:', camposFaltantes);
+      Swal.fire({
+        icon: 'error',
+        title: 'Campos incompletos',
+        html: `<p>Complete los siguientes campos obligatorios:</p>
+               <ul class="text-left">
+                 ${camposFaltantes.map(c => `<li>${c}</li>`).join('')}
+               </ul>`,
+        confirmButtonColor: '#3085d6'
+      });
+      return false;
+    }
+
+    // Construir objeto de datos
+    const idCita = $('#txtIdCita').val();
+    const dataCita = {
+      id_paciente: parseInt($('#id_paciente').val()),
+      id_agenda_horario: parseInt($('#id_agenda_horario').val()),
+      id_especialista: parseInt($('#id_especialista').val()),
+      id_especialidad: parseInt($('#id_especialidad').val()),
+      cita_fecha: $('#txtFechaCita').val(),
+      cita_hora_inicio: $('#txtHoraInicio').val() + ':00',
+      cita_hora_fin: $('#txtHoraFin').val() + ':00',
+      cita_tipo: $('#txtTipoCita').val(),
+      cita_motivo: $('#txtMotivo').val(),
+      cita_observaciones: $('#txtObservaciones').val() || null,
+      cita_numero_sesion: tipoCita === 'TRATAMIENTO' ? parseInt($('#txtNumeroSesion').val()) : null,
+      id_estado_cita: parseInt($('#txtEstadoCita').val()) || 1,
+      cita_creacion_usuario: 1
+    };
+    
+    console.log('Datos a enviar:', dataCita);
+
+    const tabla = $('#tblCitas').DataTable();
+    const url = idCita ? `/api/v1/citas/${idCita}` : '/api/v1/citas';
+    const method = idCita ? 'PUT' : 'POST';
+
+    if (method === 'PUT') {
+      delete dataCita.cita_creacion_usuario;
+      dataCita.modificacion_usuario = 1;
+    }
+
+    // Deshabilitar botón y mostrar loading
+    const btn = $(this);
+    const btnTextOriginal = btn.html();
+    btn.prop('disabled', true)
+       .html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRFToken
+      },
+      body: JSON.stringify(dataCita)
+    })
+    .then(resp => {
+      if (!resp.ok) {
+        return resp.json().then(err => {
+          throw new Error(err.error || `HTTP ${resp.status}`);
+        });
+      }
+      return resp.json();
+    })
+    .then(data => {
+      btn.prop('disabled', false).html(btnTextOriginal);
+      
+      if (data && data.success) {
+        tabla.ajax.reload();
+        
+        // ✅ NUEVO: Recargar cupos para ver el horario ocupado en rojo
+        const fechaCita = $('#txtFechaCita').val();
+        const idEspecialista = $('#id_especialista').val();
+        
+        if (fechaCita && idEspecialista) {
+          console.log('Recargando cupos para actualizar disponibilidad...');
+          setTimeout(() => {
+            cargarCuposDisponibles();
+          }, 500);
+        }
+        
+        $('#modalFormularioCita').modal('hide');
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: data.data?.mensaje || `La cita ha sido ${idCita ? 'actualizada' : 'creada'} correctamente. El horario ahora se muestra como ocupado.`,
+          confirmButtonColor: '#28a745'
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.error || 'Ocurrió un error al guardar',
+          confirmButtonColor: '#d33'
+        });
+      }
+    })
+    .catch(err => {
+      btn.prop('disabled', false).html(btnTextOriginal);
+      console.error('Error en fetch:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Ocurrió un error al guardar la cita',
+        confirmButtonColor: '#d33'
+      });
+    });
+    
+    return false; // ✅ Prevenir cualquier submit accidental
+  });
+}
+
+const editar = () => {
+  $('#tblCitas').on('click', 'button[name="btn_editar"]', function() {
+    const idCita = $(this).data('id');
+
+    Swal.fire({
+      title: '¿Deseas editar esta cita?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, editar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirigir a la página de agregar con el ID de la cita para editar
+        window.location.href = `/cita/cita-agregar?editar=${idCita}`;
+      }
+    });
+  });
+}
+
+const eliminar = () => {
+  $('#tblCitas').on('click', 'button[name="btn_eliminar"]', function() {
+    const idCita = $(this).data('id');
+    const paciente = $(this).data('paciente');
+
+    Swal.fire({
+      title: '¿Estás seguro de eliminar esta cita?',
+      text: `Paciente: ${paciente}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/api/v1/citas/${idCita}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          }
+        })
+        .then(resp => {
+          if (!resp.ok) {
+            throw new Error(`HTTP error! status: ${resp.status}`);
+          }
+          return resp.json();
+        })
+        .then(data => {
+          if (data && data.success) {
+            const tabla = $('#tblCitas').DataTable();
+            tabla.ajax.reload();
+            Swal.fire('Eliminado', data.mensaje || 'La cita ha sido eliminada correctamente', 'success');
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo eliminar la cita', 'error');
+          }
+        })
+        .catch(err => {
+          console.error('Error al eliminar:', err);
+          Swal.fire('Error', 'Ocurrió un error al eliminar la cita: ' + err.message, 'error');
+        });
+      }
+    });
+  });
+}
+
+// ==========================================
+// EVENTOS MODALES
+// ==========================================
+const bindModalEvents = () => {
+  $('#btnBuscarPaciente').on('click', function() {
+    $('#modalBuscarPaciente').modal('show');
+    $('#tblPacientes').DataTable().ajax.reload();
+  });
+
+  $('#btnBuscarEspecialidad').on('click', function() {
+    $('#modalBuscarEspecialidad').modal('show');
+    $('#tblEspecialidades').DataTable().ajax.reload();
+  });
+
+}
+
+// ==========================================
+// EVENTOS DE FECHA
+// ==========================================
+const bindFechaEvents = () => {
+  $('#txtFechaCita').on('change', function() {
+    const fecha = $(this).val();
+    const idEspecialista = $('#id_especialista').val();
+    
+    if (fecha && idEspecialista) {
+      cargarCuposDisponibles();
+    }
+  });
+  
+  $('#chkSoloFechaExacta').on('change', function() {
+    const fecha = $('#txtFechaCita').val();
+    const idEspecialista = $('#id_especialista').val();
+    
+    if (fecha && idEspecialista) {
+      cargarCuposDisponibles();
+    }
+  });
+}
+
+// ==========================================
+// REGISTRO RÁPIDO DE PACIENTE
+// ==========================================
+const abrirRegistroRapido = () => {
+  $('#btnAbrirRegistroRapido').on('click', function() {
+    $('#formRegistroRapido')[0].reset();
+    $('#alertMenorRapido').hide();
+    $('#camposTutorRapido').hide();
+    $('#modalRegistroRapido').modal('show');
+  });
+}
+
+const validarEdadRapido = () => {
+  $('#txtFechaNacimientoRapido').on('change', function() {
+    const fechaNac = new Date($(this).val());
+    const hoy = new Date();
+    const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+    
+    if (edad < 18) {
+      $('#alertMenorRapido').fadeIn();
+      $('#camposTutorRapido').slideDown();
+      
+      $('#txtNombreMadreRapido, #txtApellidoMadreRapido, #txtNombrePadreRapido, #txtApellidoPadreRapido').on('input', function() {
+        validarTutores();
+      });
+    } else {
+      $('#alertMenorRapido').fadeOut();
+      $('#camposTutorRapido').slideUp();
+    }
+  });
+}
+
+const validarTutores = () => {
+  const nombreMadre = $('#txtNombreMadreRapido').val().trim();
+  const apellidoMadre = $('#txtApellidoMadreRapido').val().trim();
+  const nombrePadre = $('#txtNombrePadreRapido').val().trim();
+  const apellidoPadre = $('#txtApellidoPadreRapido').val().trim();
+  
+  const madreCompleta = nombreMadre && apellidoMadre;
+  const padreCompleto = nombrePadre && apellidoPadre;
+  
+  $('#txtNombreMadreRapido, #txtApellidoMadreRapido, #txtNombrePadreRapido, #txtApellidoPadreRapido')
+    .removeClass('is-invalid is-valid');
+  
+  if (madreCompleta || padreCompleto) {
+    if (madreCompleta) {
+      $('#txtNombreMadreRapido, #txtApellidoMadreRapido').addClass('is-valid');
+    }
+    if (padreCompleto) {
+      $('#txtNombrePadreRapido, #txtApellidoPadreRapido').addClass('is-valid');
+    }
+    return true;
+  } else {
+    if (nombreMadre && !apellidoMadre) {
+      $('#txtApellidoMadreRapido').addClass('is-invalid');
+    } else if (!nombreMadre && apellidoMadre) {
+      $('#txtNombreMadreRapido').addClass('is-invalid');
+    }
+    
+    if (nombrePadre && !apellidoPadre) {
+      $('#txtApellidoPadreRapido').addClass('is-invalid');
+    } else if (!nombrePadre && apellidoPadre) {
+      $('#txtNombrePadreRapido').addClass('is-invalid');
+    }
+    
+    return false;
+  }
+}
+
+const guardarPacienteRapido = () => {
+  $('#btnGuardarRapido').on('click', function() {
+    const form = $('#formRegistroRapido')[0];
+    
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const fechaNac = new Date($('#txtFechaNacimientoRapido').val());
+    const hoy = new Date();
+    const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+    const esMenor = edad < 18;
+
+    if (esMenor) {
+      const nombreMadre = $('#txtNombreMadreRapido').val().trim();
+      const apellidoMadre = $('#txtApellidoMadreRapido').val().trim();
+      const nombrePadre = $('#txtNombrePadreRapido').val().trim();
+      const apellidoPadre = $('#txtApellidoPadreRapido').val().trim();
+      
+      const madreCompleta = nombreMadre && apellidoMadre;
+      const padreCompleto = nombrePadre && apellidoPadre;
+      
+      if (!madreCompleta && !padreCompleto) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Datos incompletos',
+          html: 'Para menores de edad debe completar:<br>' +
+                '<strong>Nombre Y Apellido</strong> de al menos uno de los tutores'
+        });
+        validarTutores();
+        return;
+      }
+    }
+
+    const dataPaciente = {
+      nombre: $('#txtNombreRapido').val(),
+      apellido: $('#txtApellidoRapido').val(),
+      cedula: $('#txtCedulaRapido').val(),
+      telefono: $('#txtTelefonoRapido').val(),
+      fecha_nacimiento: $('#txtFechaNacimientoRapido').val(),
+      direccion: null,
+      email: null
+    };
+
+    if (esMenor) {
+      const nombreMadre = $('#txtNombreMadreRapido').val().trim();
+      const apellidoMadre = $('#txtApellidoMadreRapido').val().trim();
+      const nombrePadre = $('#txtNombrePadreRapido').val().trim();
+      const apellidoPadre = $('#txtApellidoPadreRapido').val().trim();
+      
+      if (nombreMadre && apellidoMadre) {
+        dataPaciente.nombre_madre = `${nombreMadre} ${apellidoMadre}`;
+      }
+      if (nombrePadre && apellidoPadre) {
+        dataPaciente.nombre_padre = `${nombrePadre} ${apellidoPadre}`;
+      }
+    }
+
+    console.log('Guardando paciente rápido:', dataPaciente);
+
+    const btn = $(this);
+    const btnTextOriginal = btn.html();
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+
+    fetch('/api/v1/pacientes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRFToken
+      },
+      body: JSON.stringify(dataPaciente)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+      btn.prop('disabled', false).html(btnTextOriginal);
+      
+      if (data.success) {
+        Swal.fire('Éxito', 'Paciente registrado correctamente', 'success');
+        
+        const paciente = data.data;
+        
+        pacienteSeleccionado = {
+          id: paciente.id_paciente,
+          nombre: `${dataPaciente.nombre} ${dataPaciente.apellido}`,
+          cedula: dataPaciente.cedula,
+          telefono: dataPaciente.telefono,
+          hc: paciente.historia_clinica || 'N/A',
+          fecha_nacimiento: dataPaciente.fecha_nacimiento
+        };
+
+        $('#id_paciente').val(paciente.id_paciente);
+        $('#txtPaciente').val(pacienteSeleccionado.nombre);
+        $('#infoPacNombre').text(pacienteSeleccionado.nombre);
+        $('#infoPacCedula').text(dataPaciente.cedula);
+        $('#infoPacHC').text(pacienteSeleccionado.hc);
+        $('#infoPacTelefono').text(dataPaciente.telefono);
+        $('#infoPacEdad').text(edad + ' años');
+        $('#infoPaciente').fadeIn();
+
+        $('#modalRegistroRapido').modal('hide');
+        $('#modalBuscarPaciente').modal('hide');
+
+        $('#tblPacientes').DataTable().ajax.reload();
+      } else {
+        Swal.fire('Error', data.error || 'No se pudo registrar el paciente', 'error');
+      }
+    })
+    .catch(err => {
+      btn.prop('disabled', false).html(btnTextOriginal);
+      console.error('Error guardando paciente:', err);
+      Swal.fire('Error', 'Ocurrió un error al guardar: ' + err.message, 'error');
+    });
+  });
+}
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+$(document).ready(function() {
+  console.log('Inicializando sistema de citas médicas...');
+
+  initDatatable();
+  
+  try {
+    initPacientesDatatable();
+    console.log('Tabla de pacientes inicializada');
+  } catch(e) {
+    console.error('Error inicializando tabla de pacientes:', e);
+  }
+
+  try {
+    initEspecialidadesDatatable();
+    console.log('Tabla de especialidades inicializada');
+  } catch(e) {
+    console.error('Error inicializando tabla de especialidades:', e);
+  }
+
+
+  cargarEstadosCita();
+  
+  // Cargar especialistas para el filtro
+  cargarEspecialistasEnFiltro();
+
+  // Eventos
+  agregar();
+  guardarCita();
+  editar();
+  eliminar();
+  bindModalEvents();
+  bindFechaEvents();
+  
+  seleccionarPaciente();
+  seleccionarEspecialidad();
+  seleccionarEspecialista();
+  seleccionarCupo();
+  seleccionarTipoCita();
+  
+  abrirRegistroRapido();
+  validarEdadRapido();
+  guardarPacienteRapido();
+
+  console.log('Sistema de citas médicas completamente inicializado');
+  
+  // Cargar recordatorios después de que la tabla se inicialice
+  setTimeout(() => {
+    cargarRecordatoriosEnTabla();
+  }, 1000);
+});
+
+// ==========================================
+// FUNCIONES DE RECORDATORIOS
+// ==========================================
+
+function cargarRecordatoriosEnTabla() {
+  const tabla = $('#tblCitas').DataTable();
+  const datos = tabla.rows().data().toArray();
+  
+  datos.forEach(function(cita) {
+    if (cita.id_cita) {
+      cargarEstadoRecordatorios(cita.id_cita);
+    }
+  });
+}
+
+function cargarEstadoRecordatorios(idCita) {
+  $.ajax({
+    url: `/api/v1/citas/${idCita}/recordatorios`,
+    method: 'GET',
+    success: function(response) {
+      console.log(`[Recordatorios] Respuesta para cita ${idCita}:`, response);
+      
+      if (response.success) {
+        const recordatorio = response.data; // Ahora es un objeto único, no un array
+        
+        let html = '';
+        
+        if (!recordatorio) {
+          // No existe recordatorio para esta cita
+          html = '<span class="badge badge-secondary">Sin recordatorios</span>';
+          console.log(`[Recordatorios] Cita ${idCita}: No tiene recordatorios`);
+        } else {
+          // Nueva estructura: un objeto con campos booleanos
+          const inmediato = recordatorio.inmediato_enviado ? '✅' : '';
+          const recordatorio24h = recordatorio['24h_enviado'] ? '✅' : (recordatorio['24h_fecha_programada'] ? '⏳' : '');
+          const recordatorio12h = recordatorio['12h_enviado'] ? '✅' : (recordatorio['12h_fecha_programada'] ? '⏳' : '');
+          
+          let badges = [];
+          
+          if (inmediato) {
+            badges.push(`<span class="badge badge-success" title="Inmediato enviado">${inmediato}</span>`);
+          }
+          
+          if (recordatorio24h) {
+            const estado24h = recordatorio['24h_enviado'] ? '24h enviado' : '24h pendiente';
+            badges.push(`<span class="badge badge-${recordatorio['24h_enviado'] ? 'success' : 'warning'}" title="${estado24h}">${recordatorio24h}</span>`);
+          }
+          
+          if (recordatorio12h) {
+            const estado12h = recordatorio['12h_enviado'] ? '12h enviado' : '12h pendiente';
+            badges.push(`<span class="badge badge-${recordatorio['12h_enviado'] ? 'success' : 'warning'}" title="${estado12h}">${recordatorio12h}</span>`);
+          }
+          
+          if (badges.length === 0) {
+            html = '<span class="badge badge-secondary">Sin recordatorios</span>';
+          } else {
+            html = badges.join(' ');
+          }
+          
+          console.log(`[Recordatorios] Cita ${idCita}: Inmediato=${recordatorio.inmediato_enviado}, 24h=${recordatorio['24h_enviado']}, 12h=${recordatorio['12h_enviado']}`);
+        }
+        
+        $(`#recordatorios-${idCita}`).html(html);
+        $(`.btn-ver-recordatorios[data-id="${idCita}"]`).show();
+      } else {
+        console.error(`[Recordatorios] Error en respuesta para cita ${idCita}:`, response.error);
+        $(`#recordatorios-${idCita}`).html(`<span class="badge badge-secondary" title="${response.error || 'Error desconocido'}">N/A</span>`);
+      }
+    },
+    error: function(xhr, status, error) {
+      console.error(`[Recordatorios] Error AJAX para cita ${idCita}:`, status, error, xhr.responseText);
+      let errorMsg = 'Error';
+      if (xhr.responseJSON && xhr.responseJSON.error) {
+        errorMsg = xhr.responseJSON.error;
+      } else if (xhr.status === 404) {
+        errorMsg = 'No encontrado';
+      }
+      $(`#recordatorios-${idCita}`).html(`<span class="badge badge-danger" title="Error: ${errorMsg}">Error</span>`);
+    }
+  });
+}
+
+function verRecordatoriosCita(idCita) {
+  // Redirigir a vista de recordatorios con filtro por cita
+  window.location.href = `/recordatorio/recordatorio-index?id_cita=${idCita}`;
+}
+
+// Recargar recordatorios cuando se recarga la tabla
+$(document).on('draw.dt', '#tblCitas', function() {
+  setTimeout(() => {
+    cargarRecordatoriosEnTabla();
+  }, 500);
+});
+
+// Evento para botón ver recordatorios
+$(document).on('click', '.btn-ver-recordatorios', function() {
+  const idCita = $(this).data('id');
+  verRecordatoriosCita(idCita);
+});
+
+</script>
+
+<!-- Modal Recordatorios (Opcional - para ver sin salir de la página) -->
+<div class="modal fade" id="modalRecordatoriosCita" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h4 class="modal-title">Recordatorios de la Cita</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="contenidoRecordatoriosCita">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Cargando recordatorios...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <a href="#" class="btn btn-primary" id="btnVerTodosRecordatorios">
+                    <i class="fas fa-external-link-alt"></i> Ver Todos
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+

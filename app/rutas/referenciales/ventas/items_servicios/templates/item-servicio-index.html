@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Catálogo de Items/Servicios
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Catálogo de Items/Servicios</h3>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <button type="button" class="btn btn-primary" id="btnAgregar">
+            <i class="fas fa-plus"></i> Agregar
+        </button>
+        <small class="text-muted">
+            Usa este catálogo para registrar tus servicios (consultas, evaluaciones, informes, etc.) y productos.
+        </small>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tblItems">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Unidad</th>
+              <th>Precio Ref. (Gs.)</th>
+              <th>% IVA</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal formulario -->
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="txtIdItem">
+
+            <div class="form-group">
+              <label for="txtCodigo">Código interno:</label>
+              <input type="text" class="form-control" id="txtCodigo" placeholder="Ej: CONS-001">
+              <small class="form-text text-muted">Opcional, pero recomendado para reportes.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="txtDescripcion">Descripción del servicio/item: <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="txtDescripcion" placeholder="Ej: Consulta psicológica individual">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="txtUnidad">Unidad de medida:</label>
+                <input type="text" class="form-control" id="txtUnidad" value="SESION">
+                <small class="form-text text-muted">Ej: SESION, SERVICIO, UNID.</small>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="txtPrecio">Precio referencial (Gs.):</label>
+                <input type="number" class="form-control" id="txtPrecio" min="0" value="0">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="txtPorcentajeIva">% IVA:</label>
+                <select class="form-control" id="txtPorcentajeIva">
+                  <option value="0">Exento</option>
+                  <option value="5">5%</option>
+                  <option value="10" selected>10%</option>
+                </select>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="chkEstado">Estado:</label><br>
+                <input type="checkbox" id="chkEstado" checked> Activo
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tblItems').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/items_servicios',
+      columns: [
+        { data: 'codigo' },
+        { data: 'descripcion' },
+        { data: 'unidad_medida' },
+        { data: 'precio_referencial', render: val => new Intl.NumberFormat('es-PY').format(val || 0) },
+        { data: 'porcentaje_impuesto', render: v => v ? v + '%' : '0%' },
+        { data: 'estado', render: function(val) {
+            return val === 'A' || val === true
+              ? '<span class="badge badge-success">Activo</span>'
+              : '<span class="badge badge-secondary">Inactivo</span>';
+          }
+        },
+        { data: function(row) {
+            return `
+              <button type="button" name="btn_editar" class="btn btn-sm btn-primary" data-id="${row.id}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" name="btn_eliminar" class="btn btn-sm btn-danger" data-id="${row.id}">
+                <i class="fas fa-trash"></i>
+              </button>`;
+          }
+        }
+      ]
+    });
+  };
+
+  const abrirModalAgregar = () => {
+    $('#btnAgregar').on('click', function() {
+      $('#modalTitle').text("Agregar Item/Servicio");
+      $('#txtIdItem').val("");
+      $('#txtCodigo').val("");
+      $('#txtDescripcion').val("");
+      $('#txtUnidad').val("SESION");
+      $('#txtPrecio').val(0);
+      $('#txtPorcentajeIva').val(10);
+      $('#chkEstado').prop("checked", true);
+      $('#modalFormulario').modal();
+    });
+  };
+
+  const guardarItem = () => {
+    $('#btnGuardar').on('click', function() {
+      const idItem = $('#txtIdItem').val();
+      const descripcion = $('#txtDescripcion').val().trim();
+
+      if (!descripcion) {
+        Swal.fire("Error", "La descripción es obligatoria.", "error");
+        return;
+      }
+
+      const payload = {
+        codigo: $('#txtCodigo').val().trim() || null,
+        descripcion: descripcion,
+        unidad_medida: $('#txtUnidad').val().trim() || 'SESION',
+        precio_referencial: parseInt($('#txtPrecio').val() || 0),
+        porcentaje_impuesto: parseFloat($('#txtPorcentajeIva').val() || 0),
+        estado: $('#chkEstado').is(':checked')
+      };
+
+      const metodo = idItem ? 'PUT' : 'POST';
+      const url = idItem ? `/api/v1/items_servicios/${idItem}` : '/api/v1/items_servicios';
+
+      fetch(url, {
+        method: metodo,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success) {
+          $('#tblItems').DataTable().ajax.reload();
+          Swal.fire("Éxito", "El item/servicio se guardó correctamente.", "success");
+          $('#modalFormulario').modal('hide');
+        } else {
+          Swal.fire("Error", data.error || "No se pudo guardar el item/servicio.", "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error al guardar el item/servicio.", "error");
+      });
+    });
+  };
+
+  const editarItem = () => {
+    $('#tblItems').on('click', 'button[name="btn_editar"]', function() {
+      const idItem = $(this).data('id');
+
+      Swal.fire({
+        title: "¿Deseas editar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: "No"
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        fetch(`/api/v1/items_servicios/${idItem}`)
+          .then(resp => resp.json())
+          .then(data => {
+            if (!data.success || !data.data) {
+              Swal.fire("Error", data.error || "No se pudo obtener el item/servicio.", "error");
+              return;
+            }
+            const item = data.data;
+            $('#modalTitle').text("Editar Item/Servicio");
+            $('#txtIdItem').val(item.id);
+            $('#txtCodigo').val(item.codigo || '');
+            $('#txtDescripcion').val(item.descripcion || '');
+            $('#txtUnidad').val(item.unidad_medida || 'SESION');
+            $('#txtPrecio').val(item.precio_referencial || 0);
+            $('#txtPorcentajeIva').val(item.porcentaje_impuesto || 0);
+            $('#chkEstado').prop("checked", item.estado === 'A' || item.estado === true);
+            $('#modalFormulario').modal();
+          })
+          .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al obtener los datos.", "error");
+          });
+      });
+    });
+  };
+
+  const eliminarItem = () => {
+    $('#tblItems').on('click', 'button[name="btn_eliminar"]', function() {
+      const idItem = $(this).data('id');
+
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: "No"
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        fetch(`/api/v1/items_servicios/${idItem}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          }
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && data.success) {
+            $('#tblItems').DataTable().ajax.reload();
+            Swal.fire("Eliminado", "El item/servicio fue eliminado.", "success");
+          } else {
+            Swal.fire("Error", data.error || "No se pudo eliminar el item/servicio.", "error");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al eliminar el item/servicio.", "error");
+        });
+      });
+    });
+  };
+
+  $(function() {
+    initDatatable();
+    abrirModalAgregar();
+    guardarItem();
+    editarItem();
+    eliminarItem();
+  });
+</script>
+{% endblock %}
+
+
+
+
