@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app as app
+from flask import Blueprint, request, jsonify, session, current_app as app
 from app.dao.referenciales.ventas.items_servicios.ItemServicioDao import ItemServicioDao
 
 itemapi = Blueprint('itemapi', __name__)
@@ -49,6 +49,7 @@ def add_item():
             id_tipo_impuesto=data.get('id_tipo_impuesto'),
             porcentaje_impuesto=data.get('porcentaje_impuesto', 0),
             estado='A' if data.get('estado', True) else 'I',
+            usuario_id=session.get('id_usuario')
         )
         if not item_id:
             return jsonify({'success': False, 'error': 'No se pudo guardar el item/servicio.'}), 400
@@ -80,6 +81,7 @@ def update_item(item_id):
             id_tipo_impuesto=data.get('id_tipo_impuesto'),
             porcentaje_impuesto=data.get('porcentaje_impuesto', 0),
             estado='A' if data.get('estado', True) else 'I',
+            usuario_id=session.get('id_usuario')
         )
         if not ok:
             return jsonify({'success': False, 'error': 'No se pudo actualizar el item/servicio.'}), 400

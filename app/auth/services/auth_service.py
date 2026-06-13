@@ -403,6 +403,7 @@ class AuthService:
             'nombre_completo': usuario['nombre_completo'],
             'grupo': usuario['grupo_nombre'],
             'id_grupo': usuario['id_grupo'],
+            'id_funcionario': usuario.get('id_funcionario'),
             'session_token': session_token,
             'csrf_token': csrf_token,
             'refresh_token': refresh_token,

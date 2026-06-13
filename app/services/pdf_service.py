@@ -127,35 +127,41 @@ class FichaMedicaPDFService:
             leading=11
         ))
     
-    def generar_ficha_completa(self, ficha_data):
+    def generar_ficha_completa(self, ficha_data, config_empresa=None):
         """
-        Genera un PDF completo de la ficha médica
+        Genera un PDF completo con toda la información de la ficha médica
         
         Args:
-            ficha_data (dict): Diccionario con toda la información de la ficha médica
+            ficha_data (dict): Diccionario con toda la información
+            config_empresa (dict, optional): Configuración de la clínica (logo, nombre, etc.)
             
         Returns:
             BytesIO: Buffer con el PDF generado
         """
         buffer = BytesIO()
         
-        # Crear documento PDF con márgenes mejorados
+        # Configuración del documento
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            rightMargin=40,
-            leftMargin=40,
-            topMargin=60,
+            rightMargin=50,
+            leftMargin=50,
+            topMargin=40,
             bottomMargin=50,
             title="Ficha Médica",
-            author="Sistema Clínico"
+            author=config_empresa.get('nombre', 'Sistema Clínico') if config_empresa else "Sistema Clínico"
         )
         
         # Lista de elementos del documento
         elementos = []
         
-        # Agregar encabezado
-        elementos.extend(self._crear_encabezado(ficha_data.get('paciente', {})))
+        # Agregar encabezado (Clinic info)
+        elementos.extend(self._crear_encabezado_clinica(config_empresa))
+        elementos.append(Spacer(1, 0.2 * inch))
+        
+        # Título de la Ficha
+        elementos.append(Paragraph("FICHA MÉDICA DEL PACIENTE", self.styles['TituloFicha']))
+        elementos.append(Spacer(1, 0.1 * inch))
         
         # Agregar información del paciente
         elementos.extend(self._crear_info_paciente(ficha_data.get('paciente', {})))
@@ -201,12 +207,13 @@ class FichaMedicaPDFService:
         buffer.seek(0)
         return buffer
     
-    def generar_ficha_basica(self, ficha_data):
+    def generar_ficha_basica(self, ficha_data, config_empresa=None):
         """
         Genera un PDF básico con información resumida
         
         Args:
             ficha_data (dict): Diccionario con la información de la ficha médica
+            config_empresa (dict, optional): Configuración de la clínica
             
         Returns:
             BytesIO: Buffer con el PDF generado
@@ -218,14 +225,19 @@ class FichaMedicaPDFService:
             pagesize=A4,
             rightMargin=50,
             leftMargin=50,
-            topMargin=50,
+            topMargin=40,
             bottomMargin=50
         )
         
         elementos = []
         
-        # Agregar encabezado
-        elementos.extend(self._crear_encabezado(ficha_data.get('paciente', {})))
+        # Agregar encabezado de clínica
+        elementos.extend(self._crear_encabezado_clinica(config_empresa))
+        elementos.append(Spacer(1, 0.2 * inch))
+        
+        # Título
+        elementos.append(Paragraph("RESUMEN DE FICHA MÉDICA", self.styles['TituloFicha']))
+        elementos.append(Spacer(1, 0.1 * inch))
         
         # Agregar información del paciente
         elementos.extend(self._crear_info_paciente(ficha_data.get('paciente', {})))
@@ -248,60 +260,72 @@ class FichaMedicaPDFService:
         buffer.seek(0)
         return buffer
     
-    def _crear_encabezado(self, paciente):
-        """Crea el encabezado del documento con diseño mejorado"""
+    def _crear_encabezado_clinica(self, config_empresa):
+        """Crea el encabezado con el logo y datos de la clínica"""
         elementos = []
         
-        # Barra superior decorativa
-        barra_superior = Table(
-            [['']],
-            colWidths=[7*inch],
-            rowHeights=[0.15*inch]
+        import os
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        
+        logo_path = None
+        if config_empresa and config_empresa.get('logo_path'):
+            logo_abs = os.path.join(base_path, 'app', 'static', config_empresa['logo_path'])
+            if os.path.exists(logo_abs):
+                logo_path = logo_abs
+        
+        # Fallback a logo por defecto si no hay uno configurado
+        if not logo_path:
+            logo_default = os.path.join(base_path, 'app', 'static', 'img', 'logo_clinica.png')
+            if os.path.exists(logo_default):
+                logo_path = logo_default
+
+        # Tabla de encabezado: [Logo | Datos Clínica]
+        nombre_clinica = config_empresa.get('nombre', 'CLÍNICA MÉDICA') if config_empresa else 'CLÍNICA MÉDICA'
+        ruc_clinica = config_empresa.get('ruc', '') if config_empresa else ''
+        direccion = config_empresa.get('direccion', '') if config_empresa else ''
+        telefono = config_empresa.get('telefono', '') if config_empresa else ''
+        
+        datos_clinica = [
+            Paragraph(f"<b>{nombre_clinica}</b>", self.styles['Seccion']),
+            Paragraph(f"RUC: {ruc_clinica}" if ruc_clinica else "", self.styles['TextoNormal']),
+            Paragraph(direccion, self.styles['TextoNormal']),
+            Paragraph(f"Tel: {telefono}" if telefono else "", self.styles['TextoNormal'])
+        ]
+        
+        celda_logo = ""
+        if logo_path:
+            try:
+                img = RLImage(logo_path, width=1.5*inch, height=0.6*inch, kind='proportional')
+                celda_logo = img
+            except:
+                celda_logo = ""
+        
+        tabla_header = Table(
+            [[celda_logo, datos_clinica]],
+            colWidths=[2*inch, 5*inch]
         )
-        barra_superior.setStyle(TableStyle([
+        tabla_header.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ]))
+        
+        elementos.append(tabla_header)
+        
+        # Línea decorativa
+        linea = Table([['']], colWidths=[7*inch], rowHeights=[2])
+        linea.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.colores['primario']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
-        elementos.append(barra_superior)
-        elementos.append(Spacer(1, 0.25 * inch))
+        elementos.append(linea)
         
-        # Título principal con mejor diseño
-        titulo = Paragraph(
-            "FICHA MÉDICA DEL PACIENTE",
-            self.styles['TituloFicha']
-        )
-        elementos.append(titulo)
-        elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Fecha de generación con diseño mejorado
-        fecha_actual = datetime.now().strftime("%d/%m/%Y a las %H:%M")
-        fecha_texto = Paragraph(
-            f"<font color='{self.colores['gris_medio']}'><i>Documento generado el {fecha_actual}</i></font>",
-            ParagraphStyle(
-                'FechaGen',
-                parent=self.styles['Normal'],
-                fontSize=9,
-                textColor=self.colores['gris_medio'],
-                alignment=TA_CENTER,
-                spaceAfter=0
-            )
-        )
-        elementos.append(fecha_texto)
-        elementos.append(Spacer(1, 0.35 * inch))
-        
-        # Línea separadora decorativa
-        linea_separadora = Table(
-            [['']],
-            colWidths=[7*inch],
-            rowHeights=[1]
-        )
-        linea_separadora.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['gris_borde']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        elementos.append(linea_separadora)
-        elementos.append(Spacer(1, 0.25 * inch))
-        
+        return elementos
+
+    def _crear_encabezado(self, paciente):
+        """Crea el encabezado del documento con diseño mejorado (Deprecado a favor de _crear_encabezado_clinica)"""
+        elementos = []
+        # Mantengo este método vacío o simplificado por si se usa en otros lados, 
+        # pero la lógica principal ahora está arriba.
         return elementos
     
     def _crear_info_paciente(self, paciente):
@@ -618,6 +642,109 @@ class FichaMedicaPDFService:
         elementos.append(Spacer(1, 0.3 * inch))
         
         return elementos
+
+class CertificadoPDFService:
+    """Servicio para generar certificados médicos en PDF con branding de la clínica"""
+    
+    def __init__(self):
+        self.colores = {
+            'primario': colors.HexColor('#0d6efd'),
+            'secundario': colors.HexColor('#6c757d'),
+            'exito': colors.HexColor('#198754'),
+            'info': colors.HexColor('#0dcaf0'),
+            'advertencia': colors.HexColor('#ffc107'),
+            'peligro': colors.HexColor('#dc3545'),
+            'fondo_claro': colors.HexColor('#f8f9fa'),
+            'gris_medio': colors.HexColor('#6c757d'),
+            'gris_borde': colors.HexColor('#dee2e6')
+        }
+        self.styles = getSampleStyleSheet()
+        self._configurar_estilos()
+
+    def _configurar_estilos(self):
+        self.styles.add(ParagraphStyle(
+            name='TituloCertificado',
+            parent=self.styles['Heading1'],
+            fontSize=22,
+            alignment=1,
+            spaceAfter=30,
+            textColor=colors.HexColor('#2c3e50'),
+            fontName='Helvetica-Bold'
+        ))
+        self.styles.add(ParagraphStyle(
+            name='CuerpoCertificado',
+            parent=self.styles['Normal'],
+            fontSize=12,
+            leading=18,
+            alignment=4,
+            spaceAfter=20
+        ))
+        self.styles.add(ParagraphStyle(
+            name='FirmaCert',
+            parent=self.styles['Normal'],
+            fontSize=11,
+            alignment=1,
+            spaceBefore=40
+        ))
+
+    def generar_pdf(self, certificado_data, config_empresa=None):
+        """Genera el PDF del certificado médico"""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=50,
+            leftMargin=50,
+            topMargin=40,
+            bottomMargin=40
+        )
+        
+        elements = []
+        
+        # 1. Encabezado de la clínica (WOW branding)
+        ficha_service = FichaMedicaPDFService()
+        elements.extend(ficha_service._crear_encabezado_clinica(config_empresa))
+        
+        elements.append(Spacer(1, 40))
+        
+        # 2. Título Central
+        elements.append(Paragraph("CERTIFICADO MÉDICO", self.styles['TituloCertificado']))
+        
+        # 3. Contenido
+        nombre_paciente = certificado_data.get('paciente_nombre', 'N/A')
+        cedula_paciente = certificado_data.get('paciente_cedula', 'N/A')
+        fecha_emision = certificado_data.get('fecha_emision', datetime.now().strftime('%d/%m/%Y'))
+        
+        texto_intro = f"Por la presente, quien suscribe, certifica que el/la paciente <b>{nombre_paciente}</b>, con documento de identidad Nro. <b>{cedula_paciente}</b>, ha sido evaluado/a en nuestra institución."
+        elements.append(Paragraph(texto_intro, self.styles['CuerpoCertificado']))
+        
+        # Detalles
+        if certificado_data.get('diagnostico'):
+            elements.append(Paragraph(f"<b>DIAGNÓSTICO:</b> {certificado_data['diagnostico']}", self.styles['CuerpoCertificado']))
+            
+        if certificado_data.get('descripcion'):
+            elements.append(Paragraph(f"<b>DETALLES:</b> {certificado_data['descripcion']}", self.styles['CuerpoCertificado']))
+            
+        if certificado_data.get('recomendaciones'):
+            elements.append(Paragraph(f"<b>RECOMENDACIONES:</b> {certificado_data['recomendaciones']}", self.styles['CuerpoCertificado']))
+
+        elements.append(Paragraph(f"Se expide el presente documento el día {fecha_emision}, para los fines que el interesado considere conveniente.", self.styles['CuerpoCertificado']))
+        
+        elements.append(Spacer(1, 80))
+        
+        # 4. Firma
+        nombre_profesional = certificado_data.get('profesional_nombre', '__________________________')
+        registro_profesional = certificado_data.get('profesional_registro', '')
+        
+        elements.append(Spacer(1, 20))
+        elements.append(HRFlowable(width="40%", thickness=1, color=colors.black, spaceAfter=5))
+        elements.append(Paragraph(f"<b>{nombre_profesional}</b>", self.styles['FirmaCert']))
+        if registro_profesional:
+            elements.append(Paragraph(f"Registro Nro: {registro_profesional}", self.styles['FirmaCert']))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer
     
     def _crear_citas(self, citas):
         """Crea la sección de próximas citas"""

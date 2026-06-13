@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas PDF</title>
+    <style>
+        /* WeasyPrint y CSS Basico */
+        @page {
+            size: A4 landscape;
+            margin: 1.5cm;
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+                color: #555;
+            }
+            @bottom-left {
+                content: "Generado el {{ range(1, 1000) | random }}"; /* Timestamp fallback */
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            border-bottom: 2px solid #dc3545;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #dc3545;
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            color: #555;
+        }
+        .kpi-section {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 15px 0;
+        }
+        .kpi-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .kpi-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #777;
+            margin: 0 0 5px;
+        }
+        .kpi-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #222;
+            margin: 0;
+        }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        table.data-table th, table.data-table td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+        }
+        table.data-table th {
+            background-color: #f1f5f9;
+            color: #333;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11px;
+            text-align: left;
+        }
+        .align-right { text-align: right !important; }
+        .align-center { text-align: center !important; }
+        .row-total {
+            background-color: #e2e8f0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Reporte Detallado de Ventas</h1>
+        <p><strong>Periodo:</strong> {{ fecha_desde }} al {{ fecha_hasta }} &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; <strong>Condición de Venta:</strong> {{ metodo_pago }}</p>
+    </div>
+
+    <!-- KPIs Rápidos -->
+    <table class="kpi-section">
+        <tr>
+            <td class="kpi-box" style="border-color: #0d6efd;">
+                <p class="kpi-title">Total Comprobantes</p>
+                <p class="kpi-value">{{ totales.cantidad_comprobantes }}</p>
+            </td>
+            <td class="kpi-box" style="border-color: #0dcaf0;">
+                <p class="kpi-title">Monto Gravado (₲)</p>
+                <p class="kpi-value">{{ totales.total_gravado_formateado }}</p>
+            </td>
+            <td class="kpi-box" style="border-color: #ffc107;">
+                <p class="kpi-title">Total IVA (₲)</p>
+                <p class="kpi-value">{{ totales.total_iva_formateado }}</p>
+            </td>
+            <td class="kpi-box" style="border-color: #198754;">
+                <p class="kpi-title">Venta Total (₲)</p>
+                <p class="kpi-value">{{ totales.total_general_formateado }}</p>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Tabla Detalle -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="align-center" style="width: 10%;">Fecha</th>
+                <th class="align-center" style="width: 12%;">Nro Comprobante</th>
+                <th style="width: 25%;">Cliente</th>
+                <th class="align-center" style="width: 10%;">RUC/CI</th>
+                <th class="align-center" style="width: 10%;">Condición</th>
+                <th class="align-right" style="width: 11%;">Gravado (₲)</th>
+                <th class="align-right" style="width: 11%;">IVA (₲)</th>
+                <th class="align-right" style="width: 11%;">Total (₲)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in datos %}
+            <tr>
+                <td class="align-center">{{ fila.fecha }}</td>
+                <td class="align-center">{{ fila.numero_comprobante }}</td>
+                <td>{{ fila.nombre_cliente }}</td>
+                <td class="align-center">{{ fila.ruc_cliente }}</td>
+                <td class="align-center">{{ fila.metodo_pago }}</td>
+                <td class="align-right">{{ fila.gravado_formateado }}</td>
+                <td class="align-right">{{ fila.iva_formateado }}</td>
+                <td class="align-right" style="font-weight: bold;">{{ fila.total_formateado }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="align-center">No existen comprobantes generados en este periodo.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="row-total">
+                <td colspan="5" class="align-right">TOTALES ACUMULADOS</td>
+                <td class="align-right">{{ totales.total_gravado_formateado }}</td>
+                <td class="align-right">{{ totales.total_iva_formateado }}</td>
+                <td class="align-right">{{ totales.total_general_formateado }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+</body>
+</html>

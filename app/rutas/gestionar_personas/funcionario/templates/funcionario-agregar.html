@@ -5,499 +5,505 @@
 {% endblock %}
 
 {% block contenido %}
-<div class="container-fluid mt-4">
-    <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">
-            <i class="fas fa-user-tie"></i> {% if id_funcionario %}Editar Funcionario{% else %}Registrar Nuevo Funcionario{% endif %}
-        </h3>
-        <a href="{{ url_for('funcionario.funcionarioIndex') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver al Listado
-        </a>
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">
+            <div class="page-header-icon"><i data-feather="user-plus"></i></div>
+            {% if id_funcionario %}Editar Funcionario{% else %}Registrar Funcionario{% endif %}
+          </h1>
+          <div class="page-header-subtitle">Completa la información necesaria para gestionar el perfil del funcionario en el sistema</div>
+        </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a href="{{ url_for('funcionario.funcionarioIndex') }}" class="btn btn-sm btn-light text-primary fw-500 shadow-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+          </a>
+        </div>
+      </div>
     </div>
+  </div>
+</header>
 
-    <!-- Formulario Principal -->
-    <form id="formFuncionario">
-        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" id="txtIdPersona">
-        <input type="hidden" id="txtIdFuncionario">
-        
-        <!-- CARD 1: Datos Personales -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-user"></i> Datos Personales
-                </h5>
+<div class="container-xl px-4 mt-n10">
+
+  <form id="formFuncionario">
+    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" id="txtIdPersona">
+    <input type="hidden" id="txtIdFuncionario" value="{{ id_funcionario or '' }}">
+
+    <div class="row justify-content-center">
+      <!-- Contenido del Formulario -->
+      <div class="col-lg-10">
+        <!-- SECCIÓN: Datos Personales -->
+        <div id="section-personales" class="card shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+              <i class="fas fa-user me-2"></i> Datos Personales
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="small mb-1" for="txtNombre">Nombres <span class="text-danger">*</span></label>
+                <input class="form-control" id="txtNombre" type="text" placeholder="Ingrese los nombres" required>
+              </div>
+              <div class="col-md-6">
+                <label class="small mb-1" for="txtApellido">Apellidos <span class="text-danger">*</span></label>
+                <input class="form-control" id="txtApellido" type="text" placeholder="Ingrese los apellidos" required>
+              </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtNombre" placeholder="Ingrese el nombre" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Apellido <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtApellido" placeholder="Ingrese el apellido" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Cédula <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtCedula" placeholder="Ingrese la cédula" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Fecha de Nacimiento<span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="txtFecha_nacimiento">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Sexo</label>
-                            <select class="form-control" id="id_genero">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Estado Civil</label>
-                            <select class="form-control" id="id_estado_civil">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="small mb-1" for="txtCedula">Cédula de Identidad <span class="text-danger">*</span></label>
+                <input class="form-control" id="txtCedula" type="text" placeholder="Ingrese el número de cédula"
+                  required>
+              </div>
+              <div class="col-md-6">
+                <label class="small mb-1" for="txtFecha_nacimiento">Fecha de Nacimiento <span
+                    class="text-danger">*</span></label>
+                <input class="form-control" id="txtFecha_nacimiento" type="date" required>
+              </div>
             </div>
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="small mb-1" for="id_genero">Género</label>
+                <select class="form-select" id="id_genero">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="small mb-1" for="id_estado_civil">Estado Civil</label>
+                <select class="form-select" id="id_estado_civil">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- CARD 2: Contacto y Ubicación -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-address-card"></i> Contacto y Ubicación
-                </h5>
+        <!-- SECCIÓN: Contacto y Ubicación -->
+        <div id="section-contacto" class="card shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-success">
+              <i class="fas fa-address-card me-2"></i> Contacto y Ubicación
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="small mb-1" for="txtTelefono">Teléfono / Celular <span
+                    class="text-danger">*</span></label>
+                <input class="form-control" id="txtTelefono" type="text" placeholder="Ingrese el número de teléfono"
+                  required>
+              </div>
+              <div class="col-md-6">
+                <label class="small mb-1" for="txtCorreo">Email</label>
+                <input class="form-control" id="txtCorreo" type="email" placeholder="nombre@ejemplo.com">
+              </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtTelefono" placeholder="Ingrese el teléfono" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="txtCorreo" placeholder="Ingrese el correo">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Domicilio</label>
-                            <input type="text" class="form-control" id="txtDomicilio" placeholder="Ingrese el domicilio">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <input type="hidden" id="id_ciudad">
-                            <label class="font-weight-semibold">Ciudad de Residencia</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="txtCiudad" placeholder="Haga clic para buscar" readonly>
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" type="button" id="btnBuscarCiudad">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <input type="hidden" id="id_ciudad_nacimiento">
-                            <label class="font-weight-semibold">Ciudad de Nacimiento</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="txtCiudad_nacimiento" placeholder="Haga clic para buscar" readonly>
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" type="button" id="btnBuscarCiudadNacimiento">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="mb-3">
+              <label class="small mb-1" for="txtDomicilio">Dirección de Domicilio</label>
+              <input class="form-control" id="txtDomicilio" type="text" placeholder="Ingrese la dirección completa">
             </div>
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="small mb-1">Ciudad de Residencia</label>
+                <div class="input-group">
+                  <input type="hidden" id="id_ciudad">
+                  <input class="form-control" id="txtCiudad" type="text" placeholder="Seleccionar ciudad..." readonly>
+                  <button class="btn btn-outline-primary" type="button" id="btnBuscarCiudad">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="small mb-1">Ciudad de Nacimiento</label>
+                <div class="input-group">
+                  <input type="hidden" id="id_ciudad_nacimiento">
+                  <input class="form-control" id="txtCiudad_nacimiento" type="text" placeholder="Seleccionar ciudad..."
+                    readonly>
+                  <button class="btn btn-outline-primary" type="button" id="btnBuscarCiudadNacimiento">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- CARD 3: Formación Profesional -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-graduation-cap"></i> Formación Profesional
-                </h5>
+        <!-- SECCIÓN: Formación -->
+        <div id="section-profesional" class="card shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-info">
+              <i class="fas fa-graduation-cap me-2"></i> Formación y Profesión
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="small mb-1" for="id_nivel_instruccion">Nivel de Instrucción</label>
+                <select class="form-select" id="id_nivel_instruccion">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="small mb-1" for="id_profesion">Profesión / Ocupación</label>
+                <select class="form-select" id="id_profesion">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Nivel de Instrucción</label>
-                            <select class="form-control" id="id_nivel_instruccion">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Profesión/Ocupación</label>
-                            <select class="form-control" id="id_profesion">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
 
-        <!-- CARD 4: Datos Laborales -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-warning text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-briefcase"></i> Datos Laborales
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Cargo <span class="text-danger">*</span></label>
-                            <select class="form-control" id="id_cargo" required>
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Estado</label>
-                            <div class="custom-control custom-switch mt-2">
-                                <input type="checkbox" class="custom-control-input" id="chkActivo" checked>
-                                <label class="custom-control-label" for="chkActivo">
-                                    <strong>Funcionario Activo</strong>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+        <!-- SECCIÓN: Datos Laborales -->
+        <div id="section-laborales" class="card shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-warning">
+              <i class="fas fa-briefcase me-2"></i> Datos Laborales
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row gx-3 align-items-center">
+              <div class="col-md-7 mb-3 mb-md-0">
+                <label class="small mb-1" for="id_cargo">Cargo Asignado <span class="text-danger">*</span></label>
+                <select class="form-select" id="id_cargo" required>
+                  <option value="">Seleccione un cargo...</option>
+                </select>
+              </div>
+              <div class="col-md-5">
+                <div class="form-check form-switch mt-md-4">
+                  <input class="form-check-input" type="checkbox" id="chkActivo" checked>
+                  <label class="form-check-label fw-bold" for="chkActivo">Funcionario Activo</label>
                 </div>
+              </div>
             </div>
+          </div>
         </div>
 
-        <!-- CARD 5: Grupos/Roles Asignados -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-user-shield"></i> Grupos/Roles Asignados
-                </h5>
+        <!-- SECCIÓN: Seguridad y Roles -->
+        <div id="section-seguridad" class="card shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-muted">
+              <i class="fas fa-user-shield me-2"></i> Seguridad y Roles del Sistema
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-soft-primary d-flex align-items-center mb-4" role="alert">
+              <i class="fas fa-info-circle me-3 fa-lg text-primary"></i>
+              <div class="text-primary small">
+                Defina los grupos de acceso para este funcionario. Estos determinarán sus permisos cuando se habilite su
+                usuario.
+              </div>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info border-0">
-                    <i class="fas fa-info-circle"></i> 
-                    Asigne los grupos/roles que este funcionario podrá utilizar cuando se le cree un usuario en el sistema.
-                    Puede seleccionar múltiples grupos.
-                </div>
-                
-                <div class="form-group">
-                    <label class="font-weight-semibold">
-                        <i class="fas fa-users"></i> Grupos Disponibles
-                    </label>
-                    <small class="form-text text-muted mb-2 d-block">
-                        Seleccione uno o más grupos/roles. El primer grupo seleccionado será el rol principal.
-                    </small>
-                    <div class="border rounded p-3" id="contenedorGrupos" style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-spinner fa-spin"></i> Cargando grupos...
-                        </div>
-                    </div>
-                    <small class="form-text text-muted mt-2">
-                        <i class="fas fa-check-circle text-success"></i> 
-                        <span id="contadorGrupos">0 grupos seleccionados</span>
-                    </small>
-                </div>
+
+            <label class="small mb-2 fw-bold text-dark">
+              Grupos / Roles Disponibles <span class="text-muted font-weight-normal">(Máximo 3)</span>
+            </label>
+
+            <div class="border rounded bg-light p-3 mb-3" id="contenedorGrupos"
+              style="max-height: 250px; overflow-y: auto;">
+              <!-- Cargado dinámicamente -->
+              <div class="text-center text-muted py-3">
+                <i class="fas fa-spinner fa-spin me-2"></i> Cargando grupos...
+              </div>
             </div>
+
+            <div class="mt-2 d-flex justify-content-between align-items-center">
+              <small class="text-muted">El primer grupo seleccionado será el rol principal.</small>
+              <span class="badge bg-light text-dark border p-2" id="contadorGrupos">0 seleccionados</span>
+            </div>
+          </div>
         </div>
 
-        <!-- CARD 6: Datos de Especialista (COLAPSABLE) -->
+        <!-- SECCIÓN: Especialista (OCULTO POR DEFECTO) -->
         <div class="collapse" id="collapseEspecialista">
-            <div class="card shadow mb-4">
-                <div class="card-header text-white" style="background-color: #6f42c1;">
-                    <h5 class="mb-0">
-                        <i class="fas fa-stethoscope"></i> Datos de Especialista (Psicólogo/a)
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info border-0">
-                        <i class="fas fa-info-circle"></i> Complete estos datos solo si el funcionario es un profesional de la salud mental.
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Matrícula Profesional <span class="text-danger" id="lblMatriculaRequerida">*</span></label>
-                                <input type="text" class="form-control" id="txtMatricula" placeholder="Ej: MAT-PSI-001">
-                                <small class="form-text text-muted">Número de matrícula del Consejo Profesional</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Color en Agenda</label>
-                                <input type="color" class="form-control" id="txtColorAgenda" value="#3498db" style="height: 45px;">
-                                <small class="form-text text-muted">Color para identificar en el calendario</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">
-                                    <i class="fas fa-check-square"></i> Especialidades 
-                                    <span class="text-danger" id="lblEspecialidadesRequeridas">*</span>
-                                </label>
-                                <small class="form-text text-muted mb-2 d-block">
-                                    <i class="fas fa-info-circle"></i> Seleccione <strong>una o más especialidades</strong> (mínimo 1). 
-                                    Puede seleccionar múltiples opciones marcando los checkboxes.
-                                </small>
-                                <div class="border rounded p-3 mt-2" id="contenedorEspecialidades" style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
-                                    <div class="text-center text-muted py-3">
-                                        <i class="fas fa-spinner fa-spin"></i> Cargando especialidades...
-                                    </div>
-                                </div>
-                                <small class="form-text text-muted mt-2">
-                                    <i class="fas fa-check-circle text-success"></i> 
-                                    <span id="contadorEspecialidades">0 especialidades seleccionadas</span>
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          <div id="section-especialista" class="card shadow-sm mb-4 border-start-purple">
+            <div class="card-header bg-white py-3">
+              <h6 class="m-0 fw-bold text-purple">
+                <i class="fas fa-stethoscope me-2"></i> Datos de Especialista
+              </h6>
             </div>
-        </div>
-
-        <!-- Botones de Acción -->
-        <div class="card shadow mb-4">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('funcionario.funcionarioIndex') }}'">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary" id="btnGuardar">
-                            <i class="fas fa-save"></i> Guardar Funcionario
-                        </button>
-                    </div>
+              <div class="alert alert-soft-purple mb-4 d-flex align-items-center">
+                <i class="fas fa-id-card me-3 fa-lg text-purple"></i>
+                <div class="text-purple small">Complete estos datos adicionales para profesionales de la salud.</div>
+              </div>
+              <div class="row gx-3 mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                  <label class="small mb-1" for="txtMatricula">Matrícula Profesional <span
+                      class="text-danger">*</span></label>
+                  <input class="form-control" id="txtMatricula" type="text" placeholder="Ej: MAT-12345">
                 </div>
-            </div>
-        </div>
-    </form>
-</div>
+                <div class="col-md-6">
+                  <label class="small mb-1" for="txtColorAgenda">Color Identificador en Agenda</label>
+                  <div class="d-flex align-items-center">
+                    <input class="form-control form-control-color me-3" id="txtColorAgenda" type="color" value="#0061f2"
+                      title="Elija el color para el calendario">
+                    <small class="text-muted">Color para citas en el calendario</small>
+                  </div>
+                </div>
+              </div>
 
-<!-- Modal Buscar Ciudad (reutilizable) -->
-<div class="modal fade" id="modalBuscarCiudad" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="tituloModalCiudad">Seleccionar Ciudad</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-bordered w-100" id="tblCiudad">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Ciudad</th>
-                                <th style="width: 120px;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+              <label class="small mb-2 fw-bold text-dark">Especialidades Médicas</label>
+              <div class="border rounded bg-light p-3 mb-3" id="contenedorEspecialidades"
+                style="max-height: 250px; overflow-y: auto;">
+                <!-- Cargado dinámicamente -->
+                <div class="text-center text-muted py-3">
+                  <i class="fas fa-spinner fa-spin me-2"></i> Cargando especialidades...
                 </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Seleccione una o más especialidades.</small>
+                <span class="badge bg-light text-dark border p-2" id="contadorEspecialidades">0 seleccionadas</span>
+              </div>
             </div>
+          </div>
         </div>
+
+        <!-- Botones de Acción FINAL -->
+        <div class="card shadow-sm mb-5 border-0 bg-transparent">
+          <div class="card-body p-0 d-flex justify-content-end">
+            <button class="btn btn-outline-secondary me-2 shadow-sm" type="button" id="btnCancelar">
+              <i class="fas fa-times me-1"></i> Cancelar
+            </button>
+            <button class="btn btn-primary shadow-sm px-4" type="button" id="btnGuardar">
+              <i class="fas fa-save me-1"></i> {% if id_funcionario %}Guardar Cambios{% else %}Registrar Funcionario{%
+              endif %}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+  </form>
 </div>
 
 <style>
-.form-group label {
+  /* Custom Colors and Section Styles */
+  .text-purple {
+    color: #6f42c1 !important;
+  }
+
+  .bg-purple {
+    background-color: #6f42c1 !important;
+  }
+
+  .border-start-purple {
+    border-left: 0.35rem solid #6f42c1 !important;
+  }
+
+
+  /* Alert improvements (SB Admin Pro style) */
+  .alert-soft-primary {
+    background-color: #e8f0fe !important;
+    border: 1px solid rgba(0, 97, 242, 0.1) !important;
+  }
+
+  .alert-soft-purple {
+    background-color: #f3e5f5 !important;
+    border: 1px solid rgba(111, 66, 193, 0.1) !important;
+  }
+
+  /* Form Elements */
+  .form-select,
+  .form-control {
+    border-radius: 0.35rem !important;
+    padding: 0.6rem 0.75rem !important;
+  }
+
+  .form-select:focus,
+  .form-control:focus {
+    border-color: #bac8f3 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 97, 242, 0.1) !important;
+  }
+</style>
+
+<!-- Modal Buscar Ciudad (reutilizable) -->
+<div class="modal fade" id="modalBuscarCiudad" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="tituloModalCiudad">Seleccionar Ciudad</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle w-100" id="tblCiudad">
+            <thead class="table-light">
+              <tr>
+                <th>Ciudad</th>
+                <th style="width: 120px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-group label {
     margin-bottom: 0.375rem;
     font-size: 0.9rem;
-}
+  }
 
-.form-control:focus {
+  .form-control:focus {
     border-color: #007bff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
+  }
 
-.font-weight-semibold {
+  .fw-semibold {
     font-weight: 600;
-}
+  }
 
-.form-control.is-invalid {
+  .form-control.is-invalid {
     border-color: #dc3545;
-}
+  }
 
-.form-control.is-valid {
+  .form-control.is-valid {
     border-color: #28a745;
-}
+  }
 
-#contenedorEspecialidades .custom-control {
+  #contenedorEspecialidades .custom-control {
     padding: 8px;
     border-bottom: 1px solid #dee2e6;
-}
+  }
 
-#contenedorEspecialidades .custom-control:hover {
+  #contenedorEspecialidades .custom-control:hover {
     background-color: #e9ecef;
-}
+  }
 
-#contenedorEspecialidades .custom-control:last-child {
+  #contenedorEspecialidades .custom-control:last-child {
     border-bottom: none;
-}
+  }
 
-#contenedorGrupos .custom-control {
+  #contenedorGrupos .custom-control {
     padding: 8px;
     border-bottom: 1px solid #dee2e6;
-}
+  }
 
-#contenedorGrupos .custom-control:hover {
+  #contenedorGrupos .custom-control:hover {
     background-color: #e9ecef;
-}
+  }
 
-#contenedorGrupos .custom-control:last-child {
+  #contenedorGrupos .custom-control:last-child {
     border-bottom: none;
-}
+  }
 </style>
 
 {% endblock %}
 
 {% block js %}
 <script>
-// ==========================================
-// CONSTANTES Y CONFIGURACIÓN
-// ==========================================
-const CSRFToken = "{{ csrf_token() }}" || null;
-let especialidadesCargadas = false;
-let idCargoEspecialista = null; // Se detectará dinámicamente
-let gruposCargados = false;
+  // ==========================================
+  // CONSTANTES Y CONFIGURACIÓN
+  // ==========================================
+  const CSRFToken = "{{ csrf_token() }}" || null;
+  let especialidadesCargadas = false;
+  let idCargoEspecialista = null; // Se detectará dinámicamente
+  let gruposCargados = false;
 
-// ==========================================
-// CARGAR CATÁLOGOS EN SELECTS
-// ==========================================
-const cargarCatalogos = () => {
-  console.log('📋 Cargando catálogos...');
-  
-  cargarSelect('/api/v1/generos', '#id_genero');
-  cargarSelect('/api/v1/estados-civiles', '#id_estado_civil');
-  cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
-  cargarSelect('/api/v1/profesiones', '#id_profesion');
-  cargarSelect('/api/v1/cargos-permitidos', '#id_cargo'); // Usar endpoint filtrado
-  cargarGrupos(); // Cargar grupos para asignación
-}
+  // ==========================================
+  // CARGAR CATÁLOGOS EN SELECTS
+  // ==========================================
+  const cargarCatalogos = () => {
+    console.log('📋 Cargando catálogos...');
 
-const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
-  fetch(url)
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        let html = `<option value="">${placeholder}</option>`;
-        data.data.forEach(item => {
-          html += `<option value="${item.id}">${item.descripcion}</option>`;
-          
-          // Detectar dinámicamente el ID del cargo "Especialista" o "ESPECIALISTA"
-          if (selector === '#id_cargo') {
-            const descCargo = (item.descripcion || '').toUpperCase();
-            if (descCargo.includes('ESPECIALISTA') || descCargo.includes('ESPECIALIST')) {
-              idCargoEspecialista = item.id;
-              console.log(`✅ Cargo Especialista detectado con ID: ${idCargoEspecialista}`);
-            }
-          }
-        });
-        // Deshabilitar eventos temporalmente para evitar que se dispare change al cargar
-        $(selector).off('change');
-        $(selector).html(html);
-        // Re-vincular eventos después de cargar (solo para el select de cargo)
-        if (selector === '#id_cargo') {
-          // Vincular el evento change después de cargar el select
-          $('#id_cargo').off('change').on('change', function() {
-            const cargoId = parseInt($(this).val());
-            
-            // Solo procesar si hay un valor seleccionado válido
-            if (!cargoId || isNaN(cargoId)) {
-              $('#collapseEspecialista').collapse('hide');
-              $('#txtMatricula').val('').attr('required', false).removeClass('is-invalid');
-              $('#txtColorAgenda').val('#3498db');
-              $('.especialidad-check').prop('checked', false);
-              return;
-            }
-            
-            // Verificar si es cargo de Especialista (dinámicamente o por ID hardcodeado)
-            const esEspecialista = (idCargoEspecialista && cargoId === idCargoEspecialista) || 
-                                   CARGOS_ESPECIALISTAS.includes(cargoId);
-            
-            if (esEspecialista) {
-              console.log('✅ Cargo Especialista detectado, mostrando sección de especialidades');
-              $('#collapseEspecialista').collapse('show');
-              cargarEspecialidades();
-              $('#txtMatricula').attr('required', true);
-            } else {
-              $('#collapseEspecialista').collapse('hide');
-              $('#txtMatricula').val('').attr('required', false).removeClass('is-invalid');
-              $('#txtColorAgenda').val('#3498db');
-              $('.especialidad-check').prop('checked', false);
+    cargarSelect('/api/v1/generos', '#id_genero');
+    cargarSelect('/api/v1/estados-civiles', '#id_estado_civil');
+    cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
+    cargarSelect('/api/v1/profesiones', '#id_profesion');
+    cargarSelect('/api/v1/cargos-permitidos', '#id_cargo'); // Usar endpoint filtrado
+    cargarGrupos(); // Cargar grupos para asignación
+  }
+
+  const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          let html = `<option value="">${placeholder}</option>`;
+          data.data.forEach(item => {
+            html += `<option value="${item.id}">${item.descripcion}</option>`;
+
+            // Detectar dinámicamente el ID del cargo "Especialista" o "ESPECIALISTA"
+            if (selector === '#id_cargo') {
+              const descCargo = (item.descripcion || '').toUpperCase();
+              if (descCargo.includes('ESPECIALISTA') || descCargo.includes('ESPECIALIST')) {
+                idCargoEspecialista = item.id;
+                console.log(`✅ Cargo Especialista detectado con ID: ${idCargoEspecialista}`);
+              }
             }
           });
-        }
-        console.log(`✅ ${selector} cargado con ${data.data.length} opciones`);
-      }
-    })
-    .catch(err => console.error(`❌ Error cargando ${selector}:`, err));
-}
+          // Deshabilitar eventos temporalmente para evitar que se dispare change al cargar
+          $(selector).off('change');
+          $(selector).html(html);
+          // Re-vincular eventos después de cargar (solo para el select de cargo)
+          if (selector === '#id_cargo') {
+            // Vincular el evento change después de cargar el select
+            $('#id_cargo').off('change').on('change', function () {
+              const cargoId = parseInt($(this).val());
 
-// ==========================================
-// MANEJO DE ESPECIALIDADES
-// ==========================================
-const cargarEspecialidades = () => {
-  // Siempre recargar para asegurar que estén disponibles
-  console.log('📋 Cargando especialidades...');
-  
-  $('#contenedorEspecialidades').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando especialidades...</div>');
-  
-  fetch('/api/v1/especialidades')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success && data.data && data.data.length > 0) {
-        let html = '';
-        data.data.forEach(esp => {
-          const espId = esp.id_especialidad || esp.id;
-          const espDesc = esp.descripcion || esp.des_especialidad || esp.nombre;
-          
-          if (!espId) {
-            console.error('❌ Especialidad sin ID:', esp);
-            return;
+              // Solo procesar si hay un valor seleccionado válido
+              if (!cargoId || isNaN(cargoId)) {
+                $('#collapseEspecialista').collapse('hide');
+                $('#txtMatricula').val('').attr('required', false).removeClass('is-invalid');
+                $('#txtColorAgenda').val('#3498db');
+                $('.especialidad-check').prop('checked', false);
+                return;
+              }
+
+              // Verificar si es cargo de Especialista (dinámicamente o por ID hardcodeado)
+              const esEspecialista = (idCargoEspecialista && cargoId === idCargoEspecialista) ||
+                CARGOS_ESPECIALISTAS.includes(cargoId);
+
+              if (esEspecialista) {
+                console.log('✅ Cargo Especialista detectado, mostrando sección de especialidades');
+                $('#collapseEspecialista').collapse('show');
+                cargarEspecialidades();
+                $('#txtMatricula').attr('required', true);
+              } else {
+                $('#collapseEspecialista').collapse('hide');
+                $('#txtMatricula').val('').attr('required', false).removeClass('is-invalid');
+                $('#txtColorAgenda').val('#3498db');
+                $('.especialidad-check').prop('checked', false);
+              }
+            });
           }
-          
-          html += `
+          console.log(`✅ ${selector} cargado con ${data.data.length} opciones`);
+        }
+      })
+      .catch(err => console.error(`❌ Error cargando ${selector}:`, err));
+  }
+
+  // ==========================================
+  // MANEJO DE ESPECIALIDADES
+  // ==========================================
+  const cargarEspecialidades = () => {
+    // Siempre recargar para asegurar que estén disponibles
+    console.log('📋 Cargando especialidades...');
+
+    $('#contenedorEspecialidades').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando especialidades...</div>');
+
+    fetch('/api/v1/especialidades')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          let html = '';
+          data.data.forEach(esp => {
+            const espId = esp.id_especialidad || esp.id;
+            const espDesc = esp.descripcion || esp.des_especialidad || esp.nombre;
+
+            if (!espId) {
+              console.error('❌ Especialidad sin ID:', esp);
+              return;
+            }
+
+            html += `
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input especialidad-check" 
                      id="esp_${espId}" value="${espId}" name="especialidades[]">
@@ -506,95 +512,95 @@ const cargarEspecialidades = () => {
               </label>
             </div>
           `;
-        });
-        
-        if (html === '') {
-          html = '<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>';
-        }
-        
-        $('#contenedorEspecialidades').html(html);
-        especialidadesCargadas = true;
-        console.log(`✅ ${data.data.length} especialidades cargadas y listas para selección múltiple`);
-        
-        // Agregar evento para contar especialidades seleccionadas
-        $('.especialidad-check').on('change', function() {
-          const seleccionadas = $('.especialidad-check:checked').length;
-          $('#contadorEspecialidades').text(`${seleccionadas} especialidad${seleccionadas !== 1 ? 'es' : ''} seleccionada${seleccionadas !== 1 ? 's' : ''}`);
-          
-          if (seleccionadas > 0) {
-            $('#contadorEspecialidades').removeClass('text-muted').addClass('text-success');
-          } else {
-            $('#contadorEspecialidades').removeClass('text-success').addClass('text-muted');
+          });
+
+          if (html === '') {
+            html = '<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>';
           }
-        });
-      } else {
-        $('#contenedorEspecialidades').html('<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>');
+
+          $('#contenedorEspecialidades').html(html);
+          especialidadesCargadas = true;
+          console.log(`✅ ${data.data.length} especialidades cargadas y listas para selección múltiple`);
+
+          // Agregar evento para contar especialidades seleccionadas
+          $('.especialidad-check').on('change', function () {
+            const seleccionadas = $('.especialidad-check:checked').length;
+            $('#contadorEspecialidades').text(`${seleccionadas} especialidad${seleccionadas !== 1 ? 'es' : ''} seleccionada${seleccionadas !== 1 ? 's' : ''}`);
+
+            if (seleccionadas > 0) {
+              $('#contadorEspecialidades').removeClass('text-muted').addClass('text-success');
+            } else {
+              $('#contadorEspecialidades').removeClass('text-success').addClass('text-muted');
+            }
+          });
+        } else {
+          $('#contenedorEspecialidades').html('<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>');
+        }
+      })
+      .catch(err => {
+        console.error('❌ Error cargando especialidades:', err);
+        $('#contenedorEspecialidades').html('<div class="alert alert-danger">Error al cargar especialidades. Intente recargar la página.</div>');
+      });
+  }
+
+  const getEspecialidadesSeleccionadas = () => {
+    const especialidades = [];
+    $('.especialidad-check:checked').each(function () {
+      const id = parseInt($(this).val());
+      if (!isNaN(id) && id > 0) {
+        especialidades.push(id);
       }
-    })
-    .catch(err => {
-      console.error('❌ Error cargando especialidades:', err);
-      $('#contenedorEspecialidades').html('<div class="alert alert-danger">Error al cargar especialidades. Intente recargar la página.</div>');
     });
-}
+    return especialidades;
+  }
 
-const getEspecialidadesSeleccionadas = () => {
-  const especialidades = [];
-  $('.especialidad-check:checked').each(function() {
-    const id = parseInt($(this).val());
-    if (!isNaN(id) && id > 0) {
-      especialidades.push(id);
-    }
-  });
-  return especialidades;
-}
-
-const marcarEspecialidades = (ids) => {
-  $('.especialidad-check').prop('checked', false);
-  if (ids && ids.length > 0) {
-    ids.forEach(id => {
-      $(`#esp_${id}`).prop('checked', true);
-    });
-    // Actualizar contador
-    const seleccionadas = ids.length;
-    $('#contadorEspecialidades').text(`${seleccionadas} especialidad${seleccionadas !== 1 ? 'es' : ''} seleccionada${seleccionadas !== 1 ? 's' : ''}`);
-    if (seleccionadas > 0) {
-      $('#contadorEspecialidades').removeClass('text-muted').addClass('text-success');
+  const marcarEspecialidades = (ids) => {
+    $('.especialidad-check').prop('checked', false);
+    if (ids && ids.length > 0) {
+      ids.forEach(id => {
+        $(`#esp_${id}`).prop('checked', true);
+      });
+      // Actualizar contador
+      const seleccionadas = ids.length;
+      $('#contadorEspecialidades').text(`${seleccionadas} especialidad${seleccionadas !== 1 ? 'es' : ''} seleccionada${seleccionadas !== 1 ? 's' : ''}`);
+      if (seleccionadas > 0) {
+        $('#contadorEspecialidades').removeClass('text-muted').addClass('text-success');
+      }
     }
   }
-}
 
-// ==========================================
-// MANEJO DE GRUPOS/ROLES
-// ==========================================
-const cargarGrupos = () => {
-  console.log('📋 Cargando grupos/roles permitidos...');
-  
-  $('#contenedorGrupos').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando grupos...</div>');
-  
-  // Cargar solo los grupos que el usuario actual puede asignar
-  fetch('/api/v1/funcionarios/grupos-permitidos')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success && data.data && data.data.length > 0) {
-        let html = '';
-        data.data.forEach(grupo => {
-          const grupoId = grupo.id || grupo.id_grupo;
-          const grupoDesc = grupo.descripcion || grupo.des_grupo;
-          
-          if (!grupoId) {
-            console.error('❌ Grupo sin ID:', grupo);
-            return;
-          }
-          
-          // Validación adicional: excluir Administrador y Superadministrador si no es Superadmin
-          // (aunque el backend ya debería filtrarlos, esto es una capa extra de seguridad)
-          const descLower = (grupoDesc || '').toLowerCase();
-          if (descLower === 'administrador' || descLower === 'superadministrador') {
-            console.warn(`⚠️ Grupo "${grupoDesc}" excluido del listado (solo Superadmin puede asignarlo)`);
-            return;
-          }
-          
-          html += `
+  // ==========================================
+  // MANEJO DE GRUPOS/ROLES
+  // ==========================================
+  const cargarGrupos = () => {
+    console.log('📋 Cargando grupos/roles permitidos...');
+
+    $('#contenedorGrupos').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando grupos...</div>');
+
+    // Cargar solo los grupos que el usuario actual puede asignar
+    fetch('/api/v1/funcionarios/grupos-permitidos')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          let html = '';
+          data.data.forEach(grupo => {
+            const grupoId = grupo.id || grupo.id_grupo;
+            const grupoDesc = grupo.descripcion || grupo.des_grupo;
+
+            if (!grupoId) {
+              console.error('❌ Grupo sin ID:', grupo);
+              return;
+            }
+
+            // Validación adicional: excluir Administrador y Superadministrador si no es Superadmin
+            // (aunque el backend ya debería filtrarlos, esto es una capa extra de seguridad)
+            const descLower = (grupoDesc || '').toLowerCase();
+            if (descLower === 'administrador' || descLower === 'superadministrador') {
+              console.warn(`⚠️ Grupo "${grupoDesc}" excluido del listado (solo Superadmin puede asignarlo)`);
+              return;
+            }
+
+            html += `
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input grupo-check" 
                      id="grupo_${grupoId}" value="${grupoId}" name="grupos[]">
@@ -603,451 +609,454 @@ const cargarGrupos = () => {
               </label>
             </div>
           `;
-        });
-        
-        if (html === '') {
-          html = '<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>';
-        }
-        
-        $('#contenedorGrupos').html(html);
-        gruposCargados = true;
-        console.log(`✅ ${data.data.length} grupos cargados y listos para selección múltiple`);
-        
-        // Agregar evento para contar grupos seleccionados y validar máximo
-        $('.grupo-check').on('change', function() {
-          const seleccionados = $('.grupo-check:checked').length;
-          const maxGrupos = 3;
-          
-          // Validar máximo 3 grupos
-          if (seleccionados > maxGrupos) {
-            $(this).prop('checked', false);
-            Swal.fire('Límite alcanzado', `Un funcionario puede tener máximo ${maxGrupos} grupos asignados.`, 'warning');
-            return;
+          });
+
+          if (html === '') {
+            html = '<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>';
           }
-          
-          $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de ${maxGrupos} máximo`);
-          
-          if (seleccionados > 0) {
-            $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-            if (seleccionados >= maxGrupos) {
-              $('#contadorGrupos').addClass('text-warning');
+
+          $('#contenedorGrupos').html(html);
+          gruposCargados = true;
+          console.log(`✅ ${data.data.length} grupos cargados y listos para selección múltiple`);
+
+          // Agregar evento para contar grupos seleccionados y validar máximo
+          $('.grupo-check').on('change', function () {
+            const seleccionados = $('.grupo-check:checked').length;
+            const maxGrupos = 3;
+
+            // Validar máximo 3 grupos
+            if (seleccionados > maxGrupos) {
+              $(this).prop('checked', false);
+              Swal.fire('Límite alcanzado', `Un funcionario puede tener máximo ${maxGrupos} grupos asignados.`, 'warning');
+              return;
             }
-          } else {
-            $('#contadorGrupos').removeClass('text-success text-warning').addClass('text-muted');
-          }
-        });
+
+            $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de ${maxGrupos} máximo`);
+
+            if (seleccionados > 0) {
+              $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
+              if (seleccionados >= maxGrupos) {
+                $('#contadorGrupos').addClass('text-warning');
+              }
+            } else {
+              $('#contadorGrupos').removeClass('text-success text-warning').addClass('text-muted');
+            }
+          });
+        } else {
+          $('#contenedorGrupos').html('<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>');
+        }
+      })
+      .catch(err => {
+        console.error('❌ Error cargando grupos:', err);
+        $('#contenedorGrupos').html('<div class="alert alert-danger">Error al cargar grupos. Intente recargar la página.</div>');
+      });
+  }
+
+  const getGruposSeleccionados = () => {
+    const grupos = [];
+    $('.grupo-check:checked').each(function () {
+      const id = parseInt($(this).val());
+      if (!isNaN(id) && id > 0) {
+        grupos.push(id);
+      }
+    });
+    return grupos;
+  }
+
+  const marcarGrupos = (ids) => {
+    $('.grupo-check').prop('checked', false);
+    if (ids && ids.length > 0) {
+      ids.forEach(id => {
+        $(`#grupo_${id}`).prop('checked', true);
+      });
+      // Actualizar contador
+      const seleccionados = ids.length;
+      $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de 3 máximo`);
+      if (seleccionados > 0) {
+        $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
+        if (seleccionados >= 3) {
+          $('#contadorGrupos').addClass('text-warning');
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // DETECCIÓN DE ESPECIALISTA POR CARGO
+  // ==========================================
+  const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado (se detectará dinámicamente)
+
+  const esCargoEspecialista = () => {
+    const cargoId = parseInt($('#id_cargo').val());
+    if (!cargoId || isNaN(cargoId)) {
+      return false;
+    }
+
+    // Verificar dinámicamente o por fallback
+    return (idCargoEspecialista && cargoId === idCargoEspecialista) ||
+      CARGOS_ESPECIALISTAS.includes(cargoId);
+  }
+
+  const detectarEspecialistaPorCargo = () => {
+    // Asegurar que el collapse esté cerrado por defecto
+    $('#collapseEspecialista').collapse('hide');
+
+    // El evento change se vinculará después de cargar el select en cargarSelect()
+    // Esta función solo asegura que el collapse esté cerrado al inicio
+  }
+
+  // ==========================================
+  // VALIDACIÓN Y GUARDADO
+  // ==========================================
+  const validarFormulario = () => {
+    let valido = true;
+
+    const camposObligatorios = ['#txtNombre', '#txtApellido', '#txtCedula', '#txtTelefono', '#id_cargo'];
+
+    camposObligatorios.forEach(campo => {
+      const valor = $(campo).val();
+      if (!valor || valor === '') {
+        $(campo).addClass('is-invalid');
+        valido = false;
       } else {
-        $('#contenedorGrupos').html('<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>');
+        $(campo).removeClass('is-invalid').addClass('is-valid');
       }
-    })
-    .catch(err => {
-      console.error('❌ Error cargando grupos:', err);
-      $('#contenedorGrupos').html('<div class="alert alert-danger">Error al cargar grupos. Intente recargar la página.</div>');
     });
-}
 
-const getGruposSeleccionados = () => {
-  const grupos = [];
-  $('.grupo-check:checked').each(function() {
-    const id = parseInt($(this).val());
-    if (!isNaN(id) && id > 0) {
-      grupos.push(id);
-    }
-  });
-  return grupos;
-}
+    if (esCargoEspecialista()) {
+      const matricula = $('#txtMatricula').val();
+      if (!matricula || matricula === '') {
+        $('#txtMatricula').addClass('is-invalid');
+        Swal.fire('Atención', 'La matrícula es obligatoria para psicólogos', 'warning');
+        valido = false;
+      }
 
-const marcarGrupos = (ids) => {
-  $('.grupo-check').prop('checked', false);
-  if (ids && ids.length > 0) {
-    ids.forEach(id => {
-      $(`#grupo_${id}`).prop('checked', true);
-    });
-    // Actualizar contador
-    const seleccionados = ids.length;
-    $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de 3 máximo`);
-    if (seleccionados > 0) {
-      $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-      if (seleccionados >= 3) {
-        $('#contadorGrupos').addClass('text-warning');
+      const especialidades = getEspecialidadesSeleccionadas();
+      if (especialidades.length === 0) {
+        Swal.fire('Atención', 'Debe seleccionar al menos una especialidad', 'warning');
+        valido = false;
       }
     }
+
+    return valido;
   }
-}
 
-// ==========================================
-// DETECCIÓN DE ESPECIALISTA POR CARGO
-// ==========================================
-const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado (se detectará dinámicamente)
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      console.log('🔍 Iniciando validación...');
 
-const esCargoEspecialista = () => {
-  const cargoId = parseInt($('#id_cargo').val());
-  if (!cargoId || isNaN(cargoId)) {
-    return false;
+      if (!validarFormulario()) {
+        console.log('❌ Validación falló');
+        return;
+      }
+
+      const esEspecialista = esCargoEspecialista();
+
+      const dataFuncionario = {
+        id_persona: $('#txtIdPersona').val() || null,
+        nombre: $('#txtNombre').val().trim(),
+        apellido: $('#txtApellido').val().trim(),
+        cedula: $('#txtCedula').val().trim(),
+        telefono: $('#txtTelefono').val().trim(),
+        id_cargo: parseInt($('#id_cargo').val()),
+        fecha_nacimiento: $('#txtFecha_nacimiento').val() || null,
+        correo: $('#txtCorreo').val().trim() || null,
+        domicilio: $('#txtDomicilio').val().trim() || null,
+        id_genero: $('#id_genero').val() ? parseInt($('#id_genero').val()) : null,
+        id_estado_civil: $('#id_estado_civil').val() ? parseInt($('#id_estado_civil').val()) : null,
+        id_ciudad: $('#id_ciudad').val() ? parseInt($('#id_ciudad').val()) : null,
+        id_ciudad_nacimiento: $('#id_ciudad_nacimiento').val() ? parseInt($('#id_ciudad_nacimiento').val()) : null,
+        id_nivel_instruccion: $('#id_nivel_instruccion').val() ? parseInt($('#id_nivel_instruccion').val()) : null,
+        id_profesion: $('#id_profesion').val() ? parseInt($('#id_profesion').val()) : null,
+        activo: $('#chkActivo').is(':checked')
+      };
+
+      if (esEspecialista) {
+        dataFuncionario.esp_matricula = $('#txtMatricula').val().trim();
+        dataFuncionario.esp_color_agenda = $('#txtColorAgenda').val();
+        dataFuncionario.especialidades = getEspecialidadesSeleccionadas();
+      }
+
+      // Agregar grupos/roles asignados
+      const gruposSeleccionados = getGruposSeleccionados();
+      if (gruposSeleccionados.length > 0) {
+        dataFuncionario.grupos = gruposSeleccionados;
+        // El primer grupo seleccionado será el principal
+        dataFuncionario.grupo_principal = gruposSeleccionados[0];
+      }
+
+      console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));
+
+      const btn = $(this);
+      const idFuncionario = $('#txtIdFuncionario').val();
+      const esEdicion = idFuncionario && idFuncionario !== '';
+      const url = esEdicion ? `/api/v1/funcionarios/${idFuncionario}` : '/api/v1/funcionarios';
+      const method = esEdicion ? 'PUT' : 'POST';
+
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(dataFuncionario)
+      })
+        .then(resp => {
+          return resp.text().then(text => {
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              throw new Error('Respuesta del servidor no es JSON válido');
+            }
+
+            if (!resp.ok) {
+              throw new Error(data.error || data.message || `HTTP ${resp.status}`);
+            }
+
+            return data;
+          });
+        })
+        .then(data => {
+          btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
+
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: esEdicion ? '¡Funcionario Actualizado!' : '¡Funcionario Registrado!',
+              text: data.data?.mensaje || 'Operación exitosa',
+              confirmButtonText: 'Ir al Listado'
+            }).then(() => {
+              window.location.href = "{{ url_for('funcionario.funcionarioIndex') }}";
+            });
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar el funcionario', 'error');
+          }
+        })
+        .catch(err => {
+          btn.prop('disabled', false).html(esEdicion ? '<i class="fas fa-save"></i> Actualizar Funcionario' : '<i class="fas fa-save"></i> Guardar Funcionario');
+          console.error('❌ Error guardando funcionario:', err);
+          Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
+        });
+    });
   }
-  
-  // Verificar dinámicamente o por fallback
-  return (idCargoEspecialista && cargoId === idCargoEspecialista) || 
-         CARGOS_ESPECIALISTAS.includes(cargoId);
-}
 
-const detectarEspecialistaPorCargo = () => {
-  // Asegurar que el collapse esté cerrado por defecto
-  $('#collapseEspecialista').collapse('hide');
-  
-  // El evento change se vinculará después de cargar el select en cargarSelect()
-  // Esta función solo asegura que el collapse esté cerrado al inicio
-}
+  // ==========================================
+  // SISTEMA DE BÚSQUEDA DE CIUDAD
+  // ==========================================
+  let dtCiudad = null;
+  let currentCiudadType = 'residencia';
 
-// ==========================================
-// VALIDACIÓN Y GUARDADO
-// ==========================================
-const validarFormulario = () => {
-  let valido = true;
-  
-  const camposObligatorios = ['#txtNombre', '#txtApellido', '#txtCedula', '#txtTelefono', '#id_cargo'];
-  
-  camposObligatorios.forEach(campo => {
-    const valor = $(campo).val();
-    if (!valor || valor === '') {
-      $(campo).addClass('is-invalid');
-      valido = false;
-    } else {
-      $(campo).removeClass('is-invalid').addClass('is-valid');
-    }
-  });
-  
-  if (esCargoEspecialista()) {
-    const matricula = $('#txtMatricula').val();
-    if (!matricula || matricula === '') {
-      $('#txtMatricula').addClass('is-invalid');
-      Swal.fire('Atención', 'La matrícula es obligatoria para psicólogos', 'warning');
-      valido = false;
-    }
-    
-    const especialidades = getEspecialidadesSeleccionadas();
-    if (especialidades.length === 0) {
-      Swal.fire('Atención', 'Debe seleccionar al menos una especialidad', 'warning');
-      valido = false;
-    }
-  }
-  
-  return valido;
-}
-
-const guardar = () => {
-  $('#btnGuardar').on('click', function() {
-    console.log('🔍 Iniciando validación...');
-    
-    if (!validarFormulario()) {
-      console.log('❌ Validación falló');
+  const initCiudadDatatable = () => {
+    if (dtCiudad) {
       return;
     }
-    
-    const esEspecialista = esCargoEspecialista();
-    
-    const dataFuncionario = {
-      id_persona: $('#txtIdPersona').val() || null,
-      nombre: $('#txtNombre').val().trim(),
-      apellido: $('#txtApellido').val().trim(),
-      cedula: $('#txtCedula').val().trim(),
-      telefono: $('#txtTelefono').val().trim(),
-      id_cargo: parseInt($('#id_cargo').val()),
-      fecha_nacimiento: $('#txtFecha_nacimiento').val() || null,
-      correo: $('#txtCorreo').val().trim() || null,
-      domicilio: $('#txtDomicilio').val().trim() || null,
-      id_genero: $('#id_genero').val() ? parseInt($('#id_genero').val()) : null,
-      id_estado_civil: $('#id_estado_civil').val() ? parseInt($('#id_estado_civil').val()) : null,
-      id_ciudad: $('#id_ciudad').val() ? parseInt($('#id_ciudad').val()) : null,
-      id_ciudad_nacimiento: $('#id_ciudad_nacimiento').val() ? parseInt($('#id_ciudad_nacimiento').val()) : null,
-      id_nivel_instruccion: $('#id_nivel_instruccion').val() ? parseInt($('#id_nivel_instruccion').val()) : null,
-      id_profesion: $('#id_profesion').val() ? parseInt($('#id_profesion').val()) : null,
-      activo: $('#chkActivo').is(':checked')
-    };
-    
-    if (esEspecialista) {
-      dataFuncionario.esp_matricula = $('#txtMatricula').val().trim();
-      dataFuncionario.esp_color_agenda = $('#txtColorAgenda').val();
-      dataFuncionario.especialidades = getEspecialidadesSeleccionadas();
-    }
-    
-    // Agregar grupos/roles asignados
-    const gruposSeleccionados = getGruposSeleccionados();
-    if (gruposSeleccionados.length > 0) {
-      dataFuncionario.grupos = gruposSeleccionados;
-      // El primer grupo seleccionado será el principal
-      dataFuncionario.grupo_principal = gruposSeleccionados[0];
-    }
-    
-    console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));
-    
-    const btn = $(this);
-    const idFuncionario = $('#txtIdFuncionario').val();
-    const esEdicion = idFuncionario && idFuncionario !== '';
-    const url = esEdicion ? `/api/v1/funcionarios/${idFuncionario}` : '/api/v1/funcionarios';
-    const method = esEdicion ? 'PUT' : 'POST';
-    
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
-    
-    fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': CSRFToken
+
+    dtCiudad = $('#tblCiudad').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      body: JSON.stringify(dataFuncionario)
-    })
-    .then(resp => {
-      return resp.text().then(text => {
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          throw new Error('Respuesta del servidor no es JSON válido');
-        }
-        
-        if (!resp.ok) {
-          throw new Error(data.error || data.message || `HTTP ${resp.status}`);
-        }
-        
-        return data;
-      });
-    })
-    .then(data => {
-      btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
-      
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: esEdicion ? '¡Funcionario Actualizado!' : '¡Funcionario Registrado!',
-          text: data.data?.mensaje || 'Operación exitosa',
-          confirmButtonText: 'Ir al Listado'
-        }).then(() => {
-          window.location.href = "{{ url_for('funcionario.funcionarioIndex') }}";
-        });
-      } else {
-        Swal.fire('Error', data.error || 'No se pudo guardar el funcionario', 'error');
-      }
-    })
-    .catch(err => {
-      btn.prop('disabled', false).html(esEdicion ? '<i class="fas fa-save"></i> Actualizar Funcionario' : '<i class="fas fa-save"></i> Guardar Funcionario');
-      console.error('❌ Error guardando funcionario:', err);
-      Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
-    });
-  });
-}
-
-// ==========================================
-// SISTEMA DE BÚSQUEDA DE CIUDAD
-// ==========================================
-let dtCiudad = null;
-let currentCiudadType = 'residencia';
-
-const initCiudadDatatable = () => {
-  if (dtCiudad) {
-    return;
-  }
-  
-  dtCiudad = $('#tblCiudad').DataTable({
-    language: {
-      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-    },
-    ajax: {
-      url: '/api/v1/ciudades',
-      dataSrc: 'data'
-    },
-    columns: [
-      { data: 'descripcion' },
-      { 
-        data: function(row) {
-          return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
+      ajax: {
+        url: '/api/v1/ciudades',
+        dataSrc: 'data'
+      },
+      columns: [
+        { data: 'descripcion' },
+        {
+          data: function (row) {
+            return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
                     data-id="${row.id}" 
                     data-descripcion="${row.descripcion}">
                     <i class="fa fa-check"></i> Seleccionar
                   </button>`;
+          }
         }
-      }
-    ]
-  });
-  
-  $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function() {
-    const id = $(this).data('id');
-    const descripcion = $(this).data('descripcion');
-    
-    if (currentCiudadType === 'residencia') {
-      $('#txtCiudad').val(descripcion);
-      $('#id_ciudad').val(id);
-    } else {
-      $('#txtCiudad_nacimiento').val(descripcion);
-      $('#id_ciudad_nacimiento').val(id);
-    }
-    
-    $('#modalBuscarCiudad').modal('hide');
-  });
-};
+      ]
+    });
 
-const bindCiudadSearch = () => {
-  $('#btnBuscarCiudad').on('click', function(e) {
-    e.preventDefault();
-    currentCiudadType = 'residencia';
-    $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
-    $('#modalBuscarCiudad').modal('show');
-  });
-  
-  $('#btnBuscarCiudadNacimiento').on('click', function(e) {
-    e.preventDefault();
-    currentCiudadType = 'nacimiento';
-    $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
-    $('#modalBuscarCiudad').modal('show');
-  });
-  
-  $('#txtCiudad').on('click', function() {
-    $('#btnBuscarCiudad').click();
-  });
-  
-  $('#txtCiudad_nacimiento').on('click', function() {
-    $('#btnBuscarCiudadNacimiento').click();
-  });
-};
+    $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function () {
+      const id = $(this).data('id');
+      const descripcion = $(this).data('descripcion');
 
-// ==========================================
-// CARGAR DATOS PARA EDICIÓN
-// ==========================================
-const cargarDatosFuncionario = (idFuncionario) => {
-  console.log('📋 Cargando datos del funcionario para editar:', idFuncionario);
-  
-  fetch(`/api/v1/funcionarios/${idFuncionario}/editar`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        const func = data.data;
-        console.log('📋 Datos del funcionario cargados:', func);
-        
-        // Llenar datos básicos
-        $('#txtIdPersona').val(func.id_persona);
-        $('#txtIdFuncionario').val(func.id_funcionario);
-        $('#txtNombre').val(func.nombre);
-        $('#txtApellido').val(func.apellido);
-        $('#txtCedula').val(func.cedula);
-        $('#txtFecha_nacimiento').val(func.fecha_nacimiento);
-        $('#txtTelefono').val(func.telefono);
-        $('#txtCorreo').val(func.correo);
-        $('#txtDomicilio').val(func.domicilio);
-        
-        // Esperar a que se carguen los selects antes de asignar valores
-        setTimeout(() => {
-          $('#id_genero').val(func.id_genero);
-          $('#id_estado_civil').val(func.id_estado_civil);
-          $('#id_nivel_instruccion').val(func.id_nivel_instruccion);
-          $('#id_profesion').val(func.id_profesion);
-          $('#id_cargo').val(func.id_cargo);
-          
-          // Verificar si el cargo es de especialista y mostrar la sección
-          const cargoId = parseInt(func.id_cargo);
-          const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
-          const esEspecialistaCargo = (idCargoEspecialista && cargoId === idCargoEspecialista) || 
-                                     CARGOS_ESPECIALISTAS.includes(cargoId);
-          
-          if (esEspecialistaCargo) {
-            console.log('✅ Cargo Especialista detectado al editar, mostrando sección de especialidades');
-            $('#collapseEspecialista').collapse('show');
-            cargarEspecialidades();
-            $('#txtMatricula').attr('required', true);
-            
-            // Si tiene datos de especialista, cargarlos
-            if (func.matricula) {
-              $('#txtMatricula').val(func.matricula);
-              $('#txtColorAgenda').val(func.color_agenda || '#3498db');
-              
-              // Esperar a que se carguen las especialidades
-              setTimeout(() => {
-                if (func.especialidades) {
-                  marcarEspecialidades(func.especialidades);
-                }
-              }, 500);
-            }
-          }
-          
-          // Cargar ciudades después de asignar valores
-          if (func.id_ciudad) {
-            fetch(`/api/v1/ciudades/${func.id_ciudad}`)
-              .then(r => r.json())
-              .then(data => {
-                if (data.success && data.data) {
-                  $('#txtCiudad').val(data.data.desc_ciudad);
-                }
-              });
-          }
-          
-          if (func.id_ciudad_nacimiento) {
-            fetch(`/api/v1/ciudades/${func.id_ciudad_nacimiento}`)
-              .then(r => r.json())
-              .then(data => {
-                if (data.success && data.data) {
-                  $('#txtCiudad_nacimiento').val(data.data.desc_ciudad);
-                }
-              });
-          }
-        }, 300);
-        
-        // Estado
-        $('#chkActivo').prop('checked', func.activo);
-        
-        // Cargar grupos asignados
-        if (func.grupos && func.grupos.length > 0) {
-          setTimeout(() => {
-            marcarGrupos(func.grupos);
-          }, 700);
-        }
-        
-        // Cambiar texto del botón
-        $('#btnGuardar').html('<i class="fas fa-save"></i> Actualizar Funcionario');
+      if (currentCiudadType === 'residencia') {
+        $('#txtCiudad').val(descripcion);
+        $('#id_ciudad').val(id);
       } else {
-        Swal.fire('Error', data.error || 'No se pudo cargar el funcionario', 'error');
+        $('#txtCiudad_nacimiento').val(descripcion);
+        $('#id_ciudad_nacimiento').val(id);
+      }
+
+      (bootstrap.Modal.getInstance(document.getElementById("modalBuscarCiudad")) || new bootstrap.Modal(document.getElementById("modalBuscarCiudad"))).hide();
+    });
+  };
+
+  const bindCiudadSearch = () => {
+    $('#btnBuscarCiudad').on('click', function (e) {
+      e.preventDefault();
+      currentCiudadType = 'residencia';
+      $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
+      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
+    });
+
+    $('#btnBuscarCiudadNacimiento').on('click', function (e) {
+      e.preventDefault();
+      currentCiudadType = 'nacimiento';
+      $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
+      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
+    });
+
+    $('#txtCiudad').on('click', function () {
+      $('#btnBuscarCiudad').click();
+    });
+
+    $('#txtCiudad_nacimiento').on('click', function () {
+      $('#btnBuscarCiudadNacimiento').click();
+    });
+  };
+
+  // ==========================================
+  // CARGAR DATOS PARA EDICIÓN
+  // ==========================================
+  const cargarDatosFuncionario = (idFuncionario) => {
+    console.log('📋 Cargando datos del funcionario para editar:', idFuncionario);
+
+    fetch(`/api/v1/funcionarios/${idFuncionario}/editar`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const func = data.data;
+          console.log('📋 Datos del funcionario cargados:', func);
+
+          // Llenar datos básicos
+          $('#txtIdPersona').val(func.id_persona);
+          $('#txtIdFuncionario').val(func.id_funcionario);
+          $('#txtNombre').val(func.nombre);
+          $('#txtApellido').val(func.apellido);
+          $('#txtCedula').val(func.cedula);
+          $('#txtFecha_nacimiento').val(func.fecha_nacimiento);
+          $('#txtTelefono').val(func.telefono);
+          $('#txtCorreo').val(func.correo);
+          $('#txtDomicilio').val(func.domicilio);
+
+          // Esperar a que se carguen los selects antes de asignar valores
+          setTimeout(() => {
+            $('#id_genero').val(func.id_genero);
+            $('#id_estado_civil').val(func.id_estado_civil);
+            $('#id_nivel_instruccion').val(func.id_nivel_instruccion);
+            $('#id_profesion').val(func.id_profesion);
+            $('#id_cargo').val(func.id_cargo);
+
+            // Verificar si el cargo es de especialista y mostrar la sección
+            const cargoId = parseInt(func.id_cargo);
+            const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
+            const esEspecialistaCargo = (idCargoEspecialista && cargoId === idCargoEspecialista) ||
+              CARGOS_ESPECIALISTAS.includes(cargoId);
+
+            if (esEspecialistaCargo) {
+              console.log('✅ Cargo Especialista detectado al editar, mostrando sección de especialidades');
+              $('#collapseEspecialista').collapse('show');
+              cargarEspecialidades();
+              $('#txtMatricula').attr('required', true);
+
+              // Si tiene datos de especialista, cargarlos
+              if (func.matricula) {
+                $('#txtMatricula').val(func.matricula);
+                $('#txtColorAgenda').val(func.color_agenda || '#3498db');
+
+                // Esperar a que se carguen las especialidades
+                setTimeout(() => {
+                  if (func.especialidades) {
+                    marcarEspecialidades(func.especialidades);
+                  }
+                }, 500);
+              }
+            }
+
+            // Cargar ciudades después de asignar valores
+            if (func.id_ciudad) {
+              fetch(`/api/v1/ciudades/${func.id_ciudad}`)
+                .then(r => r.json())
+                .then(data => {
+                  if (data.success && data.data) {
+                    $('#txtCiudad').val(data.data.desc_ciudad);
+                  }
+                });
+            }
+
+            if (func.id_ciudad_nacimiento) {
+              fetch(`/api/v1/ciudades/${func.id_ciudad_nacimiento}`)
+                .then(r => r.json())
+                .then(data => {
+                  if (data.success && data.data) {
+                    $('#txtCiudad_nacimiento').val(data.data.desc_ciudad);
+                  }
+                });
+            }
+          }, 300);
+
+          // Estado
+          $('#chkActivo').prop('checked', func.activo);
+
+          // Cargar grupos asignados
+          if (func.grupos && func.grupos.length > 0) {
+            setTimeout(() => {
+              marcarGrupos(func.grupos);
+            }, 700);
+          }
+
+          // Cambiar texto del botón
+          $('#btnGuardar').html('<i class="fas fa-save"></i> Actualizar Funcionario');
+        } else {
+          Swal.fire('Error', data.error || 'No se pudo cargar el funcionario', 'error');
+          setTimeout(() => {
+            window.location.href = "{{ url_for('funcionario.funcionarioIndex') }}";
+          }, 2000);
+        }
+      })
+      .catch(err => {
+        console.error('❌ Error cargando funcionario:', err);
+        Swal.fire('Error', 'Error al cargar los datos del funcionario', 'error');
         setTimeout(() => {
           window.location.href = "{{ url_for('funcionario.funcionarioIndex') }}";
         }, 2000);
-      }
-    })
-    .catch(err => {
-      console.error('❌ Error cargando funcionario:', err);
-      Swal.fire('Error', 'Error al cargar los datos del funcionario', 'error');
-      setTimeout(() => {
-        window.location.href = "{{ url_for('funcionario.funcionarioIndex') }}";
-      }, 2000);
-    });
-};
+      });
+  };
 
-// ==========================================
-// INICIALIZACIÓN
-// ==========================================
-$(document).ready(function() {
-  console.log('🚀 Inicializando página de funcionario...');
-  
-  // Verificar si estamos en modo edición
-  const idFuncionario = {{ id_funcionario if id_funcionario else 'null' }};
-  
-  // Asegurar que el collapse de especialista esté cerrado al inicio
-  $('#collapseEspecialista').collapse('hide');
-  
-  // Inicializar detección de especialista (solo para asegurar estado inicial)
-  detectarEspecialistaPorCargo();
-  
-  cargarCatalogos();
-  initCiudadDatatable();
-  bindCiudadSearch();
-  guardar();
-  
-  // Si estamos editando, cargar los datos
-  if (idFuncionario) {
-    console.log('✏️ Modo edición detectado para funcionario:', idFuncionario);
-    // Esperar a que se carguen los catálogos antes de cargar los datos
-    setTimeout(() => {
-      cargarDatosFuncionario(idFuncionario);
-    }, 500);
-  }
-});
+  // ==========================================
+  // INICIALIZACIÓN
+  // ==========================================
+  $(document).ready(function () {
+    console.log('🚀 Inicializando página de funcionario...');
+
+    // Obtener ID si estamos en modo edición (desde el input hidden)
+    const idFuncionario = $('#txtIdFuncionario').val() || null;
+
+    // Asegurar que el collapse de especialista esté cerrado al inicio
+    $('#collapseEspecialista').collapse('hide');
+
+    // Inicializar detección de especialista (solo para asegurar estado inicial)
+    detectarEspecialistaPorCargo();
+
+    cargarCatalogos();
+    initCiudadDatatable();
+    bindCiudadSearch();
+    guardar();
+
+    // Botón cancelar
+    $('#btnCancelar').on('click', function () {
+      window.location.href = "{{ url_for('funcionario.funcionarioIndex') }}";
+    });
+
+    // Si estamos editando, cargar los datos
+    if (idFuncionario) {
+      console.log('✏️ Modo edición detectado para funcionario:', idFuncionario);
+      // Esperar a que se carguen los catálogos antes de cargar los datos
+      setTimeout(() => {
+        cargarDatosFuncionario(idFuncionario);
+      }, 500);
+    }
+  });
 </script>
 {% endblock %}
-
-

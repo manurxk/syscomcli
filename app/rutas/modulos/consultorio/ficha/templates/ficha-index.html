@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ficha Médica de Pacientes
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Gestión de Fichas Médicas
+                    </h1>
+                    <div class="page-header-subtitle">Historial clínico y seguimiento de pacientes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+    <div class="card card-header-actions mb-4">
+        <div class="card-header">
+            Listado de Pacientes
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle w-100" id="tblPacientes">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Historia Clínica</th>
+                            <th>Nombre Completo</th>
+                            <th>Cédula</th>
+                            <th>Edad</th>
+                            <th>Teléfono</th>
+                            <th>Ciudad</th>
+                            <th>Última Consulta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* ficha-index: solo estilos propios de esta página */
+    .text-xs {
+        font-size: .75rem;
+        letter-spacing: .05em;
+    }
+</style>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    const CSRFToken = "{{ csrf_token() }}" || null;
+
+    const initDatatable = () => {
+        $('#tblPacientes').DataTable({
+            language: {
+                url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+            },
+            ajax: {
+                url: '/api/v1/pacientes',
+                dataSrc: function (json) {
+                    if (json.success) return json.data;
+                    Swal.fire('Error', json.error || 'Error al cargar pacientes', 'error');
+                    return [];
+                },
+                error: function (xhr) {
+                    console.error('Error en AJAX:', xhr.responseText);
+                    Swal.fire('Error', 'No se pudieron cargar los pacientes', 'error');
+                }
+            },
+            columns: [
+                { data: 'historia_clinica' },
+                {
+                    data: function (row) { return `${row.nombre} ${row.apellido}`; },
+                    render: function (data, type, row) {
+                        const badge = row.es_menor ? '<span class="badge bg-info-soft text-info ms-1">Menor</span>' : '';
+                        return data + badge;
+                    }
+                },
+                { data: 'cedula' },
+                { data: 'edad', className: 'text-center' },
+                { data: 'telefono' },
+                { data: 'ciudad' },
+                {
+                    data: 'ultima_consulta',
+                    render: function (data) {
+                        return data || '<span class="text-muted">Sin consultas</span>';
+                    },
+                    className: 'text-center'
+                },
+                {
+                    data: function (row) {
+                        return `
+              <a href="/ficha-medica/ver/${row.id_paciente}"
+                 class="btn btn-primary btn-sm"
+                 title="Ver Ficha Médica">
+                <i class="fas fa-file-medical me-1"></i> Ver Ficha
+              </a>`;
+                    },
+                    className: 'text-center',
+                    orderable: false
+                }
+            ],
+            order: [[1, 'asc']],
+            responsive: true,
+            pageLength: 10
+        });
+    }
+
+    $(document).ready(function () {
+        initDatatable();
+    });
+</script>
+{% endblock %}

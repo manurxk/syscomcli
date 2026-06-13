@@ -3,230 +3,533 @@
 {% block titulo %}Contacto - AngaSys{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10 col-xl-8">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="h3 mb-3 text-gray-800">
-                    <i class="fas fa-envelope text-primary mr-2"></i>
-                    Contacto
+<style>
+    /* ── Variables de Interfaz ── */
+    :root {
+        --pri: #0061f2;
+        --pri-soft: rgba(0, 97, 242, 0.08);
+        --text-main: #1a2340;
+        --text-muted: #5a6a8a;
+        --card-border: #e8edf8;
+    }
+
+    /* ── Utility: Report/Premium Style ── */
+    .report-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .12) !important;
+    }
+
+    .kpi-accent {
+        width: 4px;
+        border-radius: 4px 0 0 4px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+    }
+
+    .kpi-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .header-blob-1,
+    .header-blob-2 {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .header-blob-1 {
+        width: 280px;
+        height: 280px;
+        top: -80px;
+        right: -60px;
+        background: rgba(255, 255, 255, .04);
+    }
+
+    .header-blob-2 {
+        width: 360px;
+        height: 360px;
+        bottom: -140px;
+        left: 35%;
+        background: rgba(255, 255, 255, .03);
+    }
+
+    .contact-header {
+        background: linear-gradient(135deg, #0d1b3e 0%, #1a3a6e 55%, #1e4fa0 100%);
+        padding: 4rem 0 8rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* ── Typography Rules ── */
+    .mini-stat-lbl {
+        font-size: .65rem;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .contact-layout {
+        margin-top: -6rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    /* ── Info cards ── */
+    .info-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #fff;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        text-decoration: none;
+        color: inherit;
+        border: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-card-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+    }
+
+    .info-card-value {
+        font-size: 0.85rem;
+        color: var(--pri);
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    /* ── Sobre AngaSys card ── */
+    .about-card {
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f0f5ff 0%, #e8f0fe 100%);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .features-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: #3a4a6a;
+    }
+
+    /* ── Form styling ── */
+    .form-card {
+        border-radius: 15px;
+        overflow: hidden;
+        background: #fff;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 24px rgba(0, 40, 120, 0.08);
+    }
+
+    .form-section-divider {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.5rem 0 1rem;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .form-section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #eef2f8;
+    }
+
+    .asunto-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 0.5rem;
+    }
+
+    .asunto-pill {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: 1.5px solid #eef2f8;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+        user-select: none;
+        font-weight: 500;
+    }
+
+    .asunto-pill:hover, .asunto-pill.active {
+        border-color: var(--pri);
+        color: var(--pri);
+        background: var(--pri-soft);
+    }
+
+    .asunto-pill.active {
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0, 97, 242, 0.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #0061f2, #0047c8);
+        border: none;
+        color: #fff;
+        padding: 0.8rem 2rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(0, 97, 242, 0.3);
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 97, 242, 0.4);
+    }
+
+    /* ── Dark Mode Fixes ── */
+    body.dark-mode .info-card,
+    body.dark-mode .form-card,
+    body.dark-mode .about-card {
+        background: #161b22 !important;
+        border: 1px solid #30363d !important;
+        color: #c9d1d9 !important;
+    }
+
+    body.dark-mode .info-card-title,
+    body.dark-mode .form-card-header-title {
+        color: #f0f6fc !important;
+    }
+
+    body.dark-mode .asunto-pill {
+        background: #0d1117;
+        border-color: #30363d;
+    }
+
+    body.dark-mode .form-section-divider::after {
+        background: #30363d;
+    }
+</style>
+
+<!-- Header -->
+<header class="contact-header">
+    <div class="header-blob-1"></div>
+    <div class="header-blob-2"></div>
+
+    <div class="container-xl px-4 position-relative" style="z-index:1;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('login.inicio') }}" class="text-white-50 text-decoration-none">Inicio</a>
+                        </li>
+                        <li class="breadcrumb-item active text-white-50" aria-current="page">Contacto</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-bold text-white mb-2">
+                    Atención y Soporte
                 </h1>
-                <p class="text-muted">Estamos aquí para ayudarte</p>
+                <p class="mb-0 text-white-50" style="font-size:1rem; max-width: 500px;">
+                    ¿Tenés alguna duda o reporte? Estamos aquí para escucharte y mejorar tu experiencia.
+                </p>
             </div>
+        </div>
+    </div>
+</header>
 
-            <!-- Información de Contacto -->
-            <div class="row mb-4">
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow h-100">
-                        <div class="card-body text-center">
-                            <div class="icon-circle bg-primary text-white mx-auto mb-3">
-                                <i class="fas fa-envelope fa-2x"></i>
-                            </div>
-                            <h5 class="card-title text-gray-800">Email</h5>
-                            <p class="card-text text-gray-700">
-                                <a href="mailto:armanuramirez16@gmail.com" class="text-primary">
-                                    armanuramirez16@gmail.com
-                                </a>
-                            </p>
-                            <p class="text-gray-600 small">
-                                Envíanos un correo con tu consulta, sugerencia o reporte de problemas.
-                            </p>
-                        </div>
-                    </div>
+<!-- Layout principal -->
+<div class="container-xl px-4 contact-layout pb-5">
+    <div class="row g-4">
+
+        <!-- ── Columna izquierda: info ── -->
+        <div class="col-lg-4">
+
+            <!-- Email -->
+            <a href="mailto:armanuramirez16@gmail.com" class="card info-card report-card shadow-sm border-0 d-flex flex-row align-items-center gap-3 ps-4">
+                <div class="kpi-accent bg-primary"></div>
+                <div class="flex-grow-1 text-center py-1">
+                    <div class="mini-stat-lbl">Email de contacto</div>
+                    <div class="fw-bold text-dark" style="font-size:0.95rem;">armanuramirez16@gmail.com</div>
                 </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow h-100">
-                        <div class="card-body text-center">
-                            <div class="icon-circle bg-success text-white mx-auto mb-3">
-                                <i class="fas fa-clock fa-2x"></i>
-                            </div>
-                            <h5 class="card-title text-gray-800">Horario de Atención</h5>
-                            <p class="card-text text-gray-700">
-                                <strong>Lunes a Viernes:</strong><br>
-                                9:00 AM - 6:00 PM
-                            </p>
-                            <p class="text-gray-600 small">
-                                Nuestro equipo está disponible durante el horario laboral para asistirte.
-                            </p>
-                        </div>
-                    </div>
+            </a>
+
+            <!-- Horario -->
+            <div class="card info-card report-card shadow-sm border-0 d-flex flex-row align-items-center gap-3 ps-4">
+                <div class="kpi-accent bg-success"></div>
+                <div class="flex-grow-1 text-center py-1">
+                    <div class="mini-stat-lbl">Horario de atención</div>
+                    <div class="fw-bold text-dark" style="font-size:0.95rem;">Lun – Vie · 09:00 – 18:00</div>
                 </div>
             </div>
 
-            <!-- Formulario de Contacto -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-primary text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-paper-plane mr-2"></i>
-                        Envíanos un Mensaje
-                    </h6>
+            <!-- Tiempo de respuesta -->
+            <div class="card info-card report-card shadow-sm border-0 d-flex flex-row align-items-center gap-3 ps-4">
+                <div class="kpi-accent bg-warning"></div>
+                <div class="flex-grow-1 text-center py-1">
+                    <div class="mini-stat-lbl">Tiempo de respuesta</div>
+                    <div class="fw-bold text-dark" style="font-size:0.95rem;">Menos de 24 hs hábiles</div>
                 </div>
-                <div class="card-body">
-                    <form id="contactoForm">
-                        <div class="form-group">
-                            <label for="nombre" class="text-gray-700">
-                                <i class="fas fa-user mr-2"></i>Nombre Completo
-                            </label>
-                            <input type="text" class="form-control" id="nombre" 
-                                   placeholder="Ingresa tu nombre" required>
+            </div>
+
+            <!-- Sobre AngaSys -->
+            <div class="card about-card border-0 shadow-sm">
+                <div class="fw-bold text-primary mb-2">
+                    Sobre AngaSys
+                </div>
+                <p class="text-muted small mb-3">
+                    AngaSys gestiona de forma integrada los turnos, consultas, documentos médicos
+                    y facturación de la Clínica Integral Neuropsicológica.
+                </p>
+                <ul class="features-list">
+                    <li>Agendamiento</li>
+                    <li>Consultas</li>
+                    <li>Historial</li>
+                    <li>Facturación</li>
+                    <li>Documentos</li>
+                    <li>Roles</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ── Columna derecha: formulario ── -->
+        <div class="col-lg-8">
+
+            <!-- Mensaje éxito (oculto por defecto) -->
+            <div id="mensajeEnvio" class="d-none mb-4" role="alert">
+                <div class="d-flex align-items-start gap-3">
+                    <div
+                        style="width:38px; height:38px; background:#00ac69; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <i class="fas fa-check text-white" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold mb-1" style="font-size:0.92rem;">¡Mensaje preparado!</div>
+                        <p class="mb-0" style="font-size:0.85rem; line-height:1.5;">
+                            Se abrirá tu cliente de correo para completar el envío. Si no se abre automáticamente,
+                            escribinos directamente a
+                            <a href="mailto:armanuramirez16@gmail.com" class="fw-bold"
+                                style="color:inherit;">armanuramirez16@gmail.com</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form card -->
+            <div class="card form-card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div>
+                            <h5 class="fw-bold mb-0">Envíanos un mensaje</h5>
+                            <p class="text-muted small mb-0">Completá el formulario y te responderemos a la brevedad</p>
                         </div>
-                        <div class="form-group">
-                            <label for="email" class="text-gray-700">
-                                <i class="fas fa-envelope mr-2"></i>Email
-                            </label>
-                            <input type="email" class="form-control" id="email" 
-                                   placeholder="tu@email.com" required>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form id="contactoForm" class="needs-validation" novalidate>
+
+                        <!-- Datos personales -->
+                        <div class="form-section-divider">Datos de contacto</div>
+
+                        <div class="row gx-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="mini-stat-lbl mb-1" for="nombre">Nombre completo</label>
+                                <input class="form-control" id="nombre" type="text" placeholder="Tu nombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="mini-stat-lbl mb-1" for="email">Correo electrónico</label>
+                                <input class="form-control" id="email" type="email" placeholder="tu@email.com" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="asunto" class="text-gray-700">
-                                <i class="fas fa-tag mr-2"></i>Asunto
+
+                        <div class="col-md-6 mb-3 ps-0 px-3">
+                            <label class="mini-stat-lbl mb-1" for="telefono">
+                                Teléfono <span class="badge-optional">(Opcional)</span>
                             </label>
-                            <select class="form-control" id="asunto" required>
-                                <option value="">Selecciona un asunto</option>
-                                <option value="soporte">Soporte Técnico</option>
-                                <option value="consulta">Consulta General</option>
-                                <option value="sugerencia">Sugerencia</option>
-                                <option value="error">Reporte de Error</option>
-                                <option value="otro">Otro</option>
-                            </select>
+                            <input class="form-control" id="telefono" type="tel" placeholder="+595 ...">
                         </div>
-                        <div class="form-group">
-                            <label for="mensaje" class="text-gray-700">
-                                <i class="fas fa-comment-alt mr-2"></i>Mensaje
-                            </label>
-                            <textarea class="form-control" id="mensaje" rows="5" 
-                                      placeholder="Escribe tu mensaje aquí..." required></textarea>
+
+                        <!-- Asunto -->
+                        <div class="form-section-divider">Asunto del mensaje</div>
+
+                        <div class="mb-3 px-1">
+                             <div class="asunto-pills" id="asuntoPills">
+                                <div class="asunto-pill" data-value="soporte">Soporte</div>
+                                <div class="asunto-pill" data-value="consulta">Consulta</div>
+                                <div class="asunto-pill" data-value="error">Error</div>
+                                <div class="asunto-pill" data-value="mejora">Mejora</div>
+                                <div class="asunto-pill" data-value="otro">Otro</div>
+                            </div>
+                            <!-- Hidden input para validación -->
+                            <input type="hidden" id="asunto" required>
+                            <div id="asuntoError" class="text-danger mt-1" style="font-size:0.78rem; display:none;">
+                                Seleccioná un tipo de consulta.
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-paper-plane mr-2"></i>Enviar Mensaje
+
+                        <!-- Mensaje -->
+                        <div class="mb-4 px-1">
+                            <label class="mini-stat-lbl mb-1" for="mensaje">Tu mensaje</label>
+                            <textarea class="form-control" id="mensaje" rows="5"
+                                placeholder="Escribe aquí tu consulta detallada..."
+                                required maxlength="1000"></textarea>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="invalid-feedback">Escribí tu mensaje.</div>
+                                <div class="char-counter" id="charCounter">0 / 1000</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 flex-wrap px-1">
+                            <button class="btn btn-submit" id="btnEnviar" type="submit">
+                                Enviar mensaje
                             </button>
+                            <span class="small text-muted" style="font-size:0.78rem;">
+                                Tu información es confidencial.
+                            </span>
                         </div>
+
                     </form>
                 </div>
             </div>
 
-            <!-- Información Adicional -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-primary text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Información del Sistema
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3">
-                                <i class="fas fa-building mr-2"></i>
-                                Sobre AngaSys
-                            </h6>
-                            <p class="text-gray-700 small">
-                                AngaSys es un sistema de gestión integral desarrollado para consultorios 
-                                psicológicos y neuropsicológicos. Facilita la administración de pacientes, 
-                                citas, consultas médicas, diagnósticos y operaciones financieras.
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3">
-                                <i class="fas fa-hospital mr-2"></i>
-                                Clínica Integral Neuropsicológica
-                            </h6>
-                            <p class="text-gray-700 small">
-                                Sistema desarrollado específicamente para la Clínica Integral 
-                                Neuropsicológica (CIN), optimizando todos los procesos administrativos 
-                                y clínicos de la institución.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enlaces Rápidos -->
-            <div class="card shadow mb-4">
-                <div class="card-body">
-                    <h6 class="text-primary mb-3">
-                        <i class="fas fa-link mr-2"></i>
-                        Enlaces Rápidos
-                    </h6>
-                    <div class="row">
-                        <div class="col-md-4 mb-2">
-                            <a href="{{ url_for('informacion.soporte') }}" class="btn btn-outline-primary btn-sm btn-block">
-                                <i class="fas fa-question-circle mr-2"></i>Soporte
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <a href="{{ url_for('informacion.privacidad') }}" class="btn btn-outline-primary btn-sm btn-block">
-                                <i class="fas fa-shield-alt mr-2"></i>Privacidad
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <a href="{{ url_for('login.inicio') }}" class="btn btn-outline-primary btn-sm btn-block">
-                                <i class="fas fa-home mr-2"></i>Inicio
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botón de regreso -->
-            <div class="text-center mt-4">
-                <a href="{{ url_for('login.inicio') }}" class="btn btn-primary">
-                    <i class="fas fa-arrow-left mr-2"></i>Volver al Inicio
+            <!-- Volver -->
+            <div class="text-center mb-5">
+                <a href="{{ url_for('login.inicio') }}" class="btn btn-outline-primary px-4">
+                    Volver al Inicio
                 </a>
             </div>
-        </div>
-    </div>
-</div>
 
-<style>
-.icon-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-</style>
+        </div><!-- /col form -->
+    </div><!-- /row -->
+</div><!-- /container -->
 
 <script>
-document.getElementById('contactoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const nombre = document.getElementById('nombre').value;
-    const email = document.getElementById('email').value;
-    const asunto = document.getElementById('asunto').value;
-    const mensaje = document.getElementById('mensaje').value;
-    
-    // Crear el mailto link
-    const subject = encodeURIComponent(`[${asunto.toUpperCase()}] Consulta desde AngaSys`);
-    const body = encodeURIComponent(`Nombre: ${nombre}\nEmail: ${email}\nAsunto: ${asunto}\n\nMensaje:\n${mensaje}`);
-    const mailtoLink = `mailto:armanuramirez16@gmail.com?subject=${subject}&body=${body}`;
-    
-    // Abrir el cliente de correo
-    window.location.href = mailtoLink;
-    
-    // Mostrar mensaje de confirmación
-    alert('Se abrirá tu cliente de correo. Por favor, envía el mensaje para completar el contacto.');
-});
+    (function () {
+        'use strict';
+
+        window.addEventListener('load', function () {
+            var form = document.getElementById('contactoForm');
+            var btn = document.getElementById('btnEnviar');
+            var alertMsg = document.getElementById('mensajeEnvio');
+            var msgArea = document.getElementById('mensaje');
+            var counter = document.getElementById('charCounter');
+            var pills = document.querySelectorAll('.asunto-pill');
+            var asuntoInput = document.getElementById('asunto');
+            var asuntoError = document.getElementById('asuntoError');
+
+            // ── Char counter ──
+            if (msgArea && counter) {
+                msgArea.addEventListener('input', function () {
+                    var len = msgArea.value.length;
+                    counter.textContent = len + ' / 1000';
+                    counter.classList.toggle('warning', len > 800 && len <= 950);
+                    counter.classList.toggle('danger', len > 950);
+                });
+            }
+
+            // ── Pills de asunto ──
+            pills.forEach(function (pill) {
+                pill.addEventListener('click', function () {
+                    pills.forEach(function (p) { p.classList.remove('active'); });
+                    pill.classList.add('active');
+                    asuntoInput.value = pill.dataset.value;
+                    asuntoError.style.display = 'none';
+                });
+            });
+
+            // ── Submit ──
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                var asuntoValido = asuntoInput.value.trim() !== '';
+                if (!asuntoValido) {
+                    asuntoError.style.display = 'block';
+                }
+
+                form.classList.add('was-validated');
+
+                if (form.checkValidity() === false || !asuntoValido) {
+                    return;
+                }
+
+                // Envío
+                var originalHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...';
+
+                setTimeout(function () {
+                    var nombre = document.getElementById('nombre').value;
+                    var email = document.getElementById('email').value;
+                    var telefono = document.getElementById('telefono').value;
+                    var asunto = asuntoInput.value;
+                    var mensaje = msgArea.value;
+
+                    var subject = encodeURIComponent('[' + asunto.toUpperCase() + '] AngaSys Contacto');
+                    var body = encodeURIComponent(
+                        'Nombre: ' + nombre +
+                        '\nEmail: ' + email +
+                        (telefono ? '\nTeléfono: ' + telefono : '') +
+                        '\nAsunto: ' + asunto +
+                        '\n\nMensaje:\n' + mensaje
+                    );
+                    window.location.href = 'mailto:armanuramirez16@gmail.com?subject=' + subject + '&body=' + body;
+
+                    alertMsg.classList.remove('d-none');
+                    alertMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    pills.forEach(function (p) { p.classList.remove('active'); });
+                    asuntoInput.value = '';
+                    counter.textContent = '0 / 1000';
+                    counter.className = 'char-counter';
+                }, 1500);
+            });
+
+            // Feather Icons replace
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        });
+    })();
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

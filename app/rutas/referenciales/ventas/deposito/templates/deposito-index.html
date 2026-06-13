@@ -1,96 +1,160 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Depósitos
 {% endblock %}
 
-{% block contenido %}
-<div class="container mt-4">
-    <h3>Listar Depósitos</h3>
-    <div class="card">
-      <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
-      </div>
-      <div class="card-body">
-        <table class="table table-striped" id="tbl">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Código</th>
-              <th>Tipo</th>
-              <th>Número Cuenta</th>
-              <th>Banco</th>
-              <th>Moneda</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-      </table>
-      </div>
-    </div>
 
-    <div class="modal" id="modalFormulario">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="txtIdDeposito">
-            <div class="form-group">
-              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="Ej: Cuenta Principal Banco ABC" id="txtDescripcion" required>
-            </div>
-            <div class="form-group">
-              <label for="txtCodigo">Código:</label>
-              <input type="text" class="form-control" placeholder="Código del depósito" id="txtCodigo" maxlength="20">
-            </div>
-            <div class="form-group">
-              <label for="selTipoDeposito">Tipo de Depósito: <span class="text-danger">*</span></label>
-              <select class="form-control" id="selTipoDeposito" required>
-                <option value="BANCO">Banco</option>
-                <option value="CUENTA_CORRIENTE">Cuenta Corriente</option>
-                <option value="CAJA_FISICA">Caja Física</option>
-                <option value="OTRO">Otro</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="txtNumeroCuenta">Número de Cuenta:</label>
-              <input type="text" class="form-control" placeholder="Número de cuenta bancaria" id="txtNumeroCuenta" maxlength="50">
-            </div>
-            <div class="form-group">
-              <label for="txtBanco">Banco:</label>
-              <input type="text" class="form-control" placeholder="Nombre del banco" id="txtBanco" maxlength="100">
-            </div>
-            <div class="form-group">
-              <label for="txtRucBanco">RUC del Banco:</label>
-              <input type="text" class="form-control" placeholder="RUC del banco" id="txtRucBanco" maxlength="20">
-            </div>
-            <div class="form-group">
-              <label for="selMoneda">Moneda:</label>
-              <select class="form-control" id="selMoneda">
-                <option value="PYG" selected>Guaraní Paraguayo (PYG)</option>
-                <option value="USD">Dólar Estadounidense (USD)</option>
-                <option value="EUR">Euro (EUR)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
-              <select class="form-control" id="selEstado" required>
-                <option value="A">Activo</option>
-                <option value="I">Inactivo</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Depósitos
+          </h1>
+          <div class="page-header-subtitle">Administración de cuentas bancarias, cajas físicas y depósitos de fondos
           </div>
         </div>
       </div>
     </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card card-header-actions mb-4">
+    <div class="card-header">
+      Listado de Depósitos
+      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Depósito
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 w-100" id="tbl" style="font-size: 0.85rem;">
+          <thead class="bg-light text-muted fw-bold">
+            <tr>
+              <th class="border-0 px-3">Descripción</th>
+              <th class="border-0">Código</th>
+              <th class="border-0">Tipo</th>
+              <th class="border-0">Número Cuenta</th>
+              <th class="border-0">Banco</th>
+              <th class="border-0">Moneda</th>
+              <th class="border-0 text-center">Estado</th>
+              <th class="border-0 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" role="dialog" aria-labelledby="modalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formDeposito">
+          <input type="hidden" id="txtIdDeposito">
+
+          <!-- Sección: Datos del Depósito -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-primary">Información del Depósito / Cuenta</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción <span
+                      class="text-danger">*</span></label>
+                  <input class="form-control" id="txtDescripcion" type="text" placeholder="Ej: Cuenta Principal"
+                    required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtCodigo">Código</label>
+                  <input class="form-control" id="txtCodigo" type="text" placeholder="Código" maxlength="20">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="selTipoDeposito">Tipo de Depósito <span
+                      class="text-danger">*</span></label>
+                  <select class="form-select" id="selTipoDeposito" required>
+                    <option value="BANCO">Banco</option>
+                    <option value="CUENTA_CORRIENTE">Cuenta Corriente</option>
+                    <option value="CAJA_FISICA">Caja Física</option>
+                    <option value="OTRO">Otro</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtNumeroCuenta">Número de Cuenta</label>
+                  <input class="form-control" id="txtNumeroCuenta" type="text" placeholder="Número de cuenta"
+                    maxlength="50">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Entidad Bancaria -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-info">Detalles de la Entidad</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtBanco">Banco</label>
+                  <input class="form-control" id="txtBanco" type="text" placeholder="Nombre del banco" maxlength="100">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtRucBanco">RUC del Banco</label>
+                  <input class="form-control" id="txtRucBanco" type="text" placeholder="RUC" maxlength="20">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Configuración -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-secondary">Configuración Adicional</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-0">
+                  <label class="fw-semibold small mb-1" for="selMoneda">Moneda</label>
+                  <select class="form-select" id="selMoneda">
+                    <option value="PYG" selected>Guaraní Paraguayo (PYG)</option>
+                    <option value="USD">Dólar Estadounidense (USD)</option>
+                    <option value="EUR">Euro (EUR)</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-0">
+                  <label class="fw-semibold small mb-1" for="selEstado">Estado <span
+                      class="text-danger">*</span></label>
+                  <select class="form-select" id="selEstado" required>
+                    <option value="A">Activo</option>
+                    <option value="I">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="button" id="btnGuardar">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -101,7 +165,7 @@ Depósitos
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax:'/api/v1/depositos',
+      ajax: '/api/v1/depositos',
       columns: [
         { data: 'descripcion' },
         { data: 'codigo' },
@@ -109,14 +173,18 @@ Depósitos
         { data: 'numero_cuenta' },
         { data: 'banco' },
         { data: 'moneda' },
-        { data: 'estado', render: function(val) {
-            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+        {
+          data: 'estado', className: 'text-center', render: function (val) {
+            return val === 'A' ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
           }
         },
-        { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+        {
+          data: function (row) {
+            return `<div class="text-center">
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>
+                    </div>`
           }
         }
       ]
@@ -124,7 +192,7 @@ Depósitos
   }
 
   const agregar = () => {
-    $('#btnAgregar').on('click', function(){
+    $('#btnAgregar').on('click', function () {
       $('#modalTitle').text("Agregar Depósito");
       $('#txtIdDeposito').val("");
       $('#txtDescripcion').val("");
@@ -135,12 +203,12 @@ Depósitos
       $('#txtRucBanco').val("");
       $('#selMoneda').val("PYG");
       $('#selEstado').val("A");
-      $('#modalFormulario').modal();
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
     });
   }
 
   const guardar = () => {
-    $('#btnGuardar').on('click', function() {
+    $('#btnGuardar').on('click', function () {
       const idDeposito = $('#txtIdDeposito').val();
       const descripcion = $('#txtDescripcion').val();
       const codigo = $('#txtCodigo').val();
@@ -161,15 +229,15 @@ Depósitos
         return;
       }
 
-      const payload = { 
-        descripcion: descripcion, 
+      const payload = {
+        descripcion: descripcion,
         codigo: codigo,
         tipo_deposito: tipoDeposito,
         numero_cuenta: numeroCuenta,
         banco: banco,
         ruc_banco: rucBanco,
         moneda: moneda,
-        estado: estado 
+        estado: estado
       };
 
       const url = idDeposito ? `/api/v1/depositos/${idDeposito}` : '/api/v1/depositos';
@@ -180,26 +248,26 @@ Depósitos
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
         body: JSON.stringify(payload)
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if(data && !data.error && data.success) {
-          tabla.ajax.reload();
-          Swal.fire(idDeposito ? "Actualizado" : "Agregado", 
-                   `El depósito ha sido ${idDeposito ? 'actualizado' : 'agregado'} correctamente.`, 
-                   "success");
-          $('#modalFormulario').modal("hide");
-        } else {
-          Swal.fire("Error", data.error || "No se pudo guardar el depósito.", "error");
-        }
-      }).catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Ocurrió un error.", "error");
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire(idDeposito ? "Actualizado" : "Agregado",
+              `El depósito ha sido ${idDeposito ? 'actualizado' : 'agregado'} correctamente.`,
+              "success");
+            (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+          } else {
+            Swal.fire("Error", data.error || "No se pudo guardar el depósito.", "error");
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error.", "error");
+        });
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
       const idDeposito = $(this).data('id');
       $('#modalTitle').text("Editar Depósito");
       $('#txtIdDeposito').val(idDeposito);
@@ -207,25 +275,25 @@ Depósitos
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if (data.success && data.data) {
-          $('#txtDescripcion').val(data.data.descripcion);
-          $('#txtCodigo').val(data.data.codigo || '');
-          $('#selTipoDeposito').val(data.data.tipo_deposito);
-          $('#txtNumeroCuenta').val(data.data.numero_cuenta || '');
-          $('#txtBanco').val(data.data.banco || '');
-          $('#txtRucBanco').val(data.data.ruc_banco || '');
-          $('#selMoneda').val(data.data.moneda || 'PYG');
-          $('#selEstado').val(data.data.estado);
-          $('#modalFormulario').modal();
-        }
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success && data.data) {
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtCodigo').val(data.data.codigo || '');
+            $('#selTipoDeposito').val(data.data.tipo_deposito);
+            $('#txtNumeroCuenta').val(data.data.numero_cuenta || '');
+            $('#txtBanco').val(data.data.banco || '');
+            $('#txtRucBanco').val(data.data.ruc_banco || '');
+            $('#selMoneda').val(data.data.moneda || 'PYG');
+            $('#selEstado').val(data.data.estado);
+            new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+          }
+        });
     });
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
       const idDeposito = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -238,24 +306,24 @@ Depósitos
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
           })
-          .then(resp => resp.json())
-          .then(data => {
-            if(data && !data.error && data.success) {
-              const tabla = $('#tbl').DataTable();
-              tabla.ajax.reload();
-              Swal.fire("Eliminado", "El depósito ha sido eliminado.", "success");
-            } else {
-              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
-            }
-          }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error.", "error");
-          });
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const tabla = $('#tbl').DataTable();
+                tabla.ajax.reload();
+                Swal.fire("Eliminado", "El depósito ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+              }
+            }).catch(err => {
+              Swal.fire("Error", "Ocurrió un error.", "error");
+            });
         }
       });
     });
   }
 
-  $(function() {
+  $(function () {
     initDatatable();
     agregar();
     guardar();
@@ -264,21 +332,3 @@ Depósitos
   });
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

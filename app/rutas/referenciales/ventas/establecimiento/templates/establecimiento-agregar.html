@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Establecimiento
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">
+            <div class="page-header-icon"><i data-feather="home"></i></div>
+            Registrar Establecimiento
+          </h1>
+          <div class="page-header-subtitle">Configuración de locales comerciales y unidades operativas de la sede</div>
+        </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a class="btn btn-sm btn-light text-primary border-0 shadow-sm"
+            href="{{ url_for('establecimiento.establecimientoIndex') }}">
+            <i class="me-1" data-feather="arrow-left"></i> Volver al Listado
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Formulario Principal -->
+<form id="formEstablecimiento">
+  <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="txtIdEstablecimiento">
+
+  <div class="container-xl px-4 mt-n10">
+    <div class="row">
+      <div class="col-xl-8">
+        <!-- CARD 1: Datos Básicos -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold text-primary">Información del Establecimiento</h6>
+          </div>
+          <div class="card-body">
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="fw-semibold small mb-1" for="selSede">Sede <span class="text-danger">*</span></label>
+                <select class="form-select" id="selSede" required>
+                  <option value="">Seleccione una sede...</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-3 mb-md-0">
+                <label class="fw-semibold small mb-1" for="txtCodigoEstablecimiento">Código <span
+                    class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="txtCodigoEstablecimiento" placeholder="001" maxlength="3"
+                  pattern="[0-9]{3}" required>
+                <div class="small text-muted mt-1" style="font-size: 0.7rem;">3 dígitos (001, 002...)
+                </div>
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="chkEsPrincipal">
+                  <label class="fw-semibold small form-check-label" for="chkEsPrincipal">Es Principal</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="fw-semibold small mb-1" for="txtNombreEstablecimiento">Nombre <span
+                    class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="txtNombreEstablecimiento"
+                  placeholder="Ej: Establecimiento Matriz" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-0">
+                <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción</label>
+                <textarea class="form-control" id="txtDescripcion" rows="3"
+                  placeholder="Descripción del establecimiento..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-4">
+        <!-- CARD 2: Estado -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold text-secondary">Ajustes y Estado</h6>
+          </div>
+          <div class="card-body">
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+                <label class="fw-semibold small form-check-label" for="chkEstado">Establecimiento Activo</label>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-primary" id="btnGuardar">
+                <i class="me-1" data-feather="save"></i> Guardar Establecimiento
+              </button>
+              <a href="{{ url_for('establecimiento.establecimientoIndex') }}" class="btn btn-light border">
+                <i class="me-1" data-feather="x"></i> Cancelar
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  // Obtener ID de establecimiento desde URL si es edición
+  const urlParams = new URLSearchParams(window.location.search);
+  const idEstablecimientoEditar = urlParams.get('id');
+
+  // Cargar sedes en el select
+  const cargarSedes = () => {
+    fetch('/api/v1/sedes', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success && data.data) {
+          const select = $('#selSede');
+          select.empty();
+          select.append('<option value="">Seleccione una sede...</option>');
+          data.data.forEach(sede => {
+            select.append(`<option value="${sede.id}">${sede.descripcion}${sede.empresa ? ' - ' + sede.empresa : ''}</option>`);
+          });
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando sedes:', err);
+      });
+  }
+
+  // Cargar datos si es edición
+  const cargarDatosEdicion = () => {
+    if (idEstablecimientoEditar) {
+      fetch(`/api/v1/establecimientos/${idEstablecimientoEditar}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && data.success && data.data) {
+            const establecimiento = data.data;
+
+            $('#txtIdEstablecimiento').val(establecimiento.id);
+            $('#selSede').val(establecimiento.id_sede);
+            $('#txtCodigoEstablecimiento').val(establecimiento.codigo_establecimiento || '');
+            $('#txtNombreEstablecimiento').val(establecimiento.nombre_establecimiento || '');
+            $('#txtDescripcion').val(establecimiento.descripcion || '');
+            $('#chkEsPrincipal').prop("checked", establecimiento.es_principal || false);
+            $('#chkEstado').prop("checked", establecimiento.estado !== false);
+
+            // Cambiar título
+            $('h3').html('<i class="fas fa-store"></i> Editar Establecimiento');
+          }
+        })
+        .catch(err => {
+          console.error('Error cargando establecimiento:', err);
+        });
+    }
+  }
+
+  // Guardar establecimiento
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idEstablecimiento = $('#txtIdEstablecimiento').val();
+
+      // Validaciones básicas
+      if (!$('#selSede').val() || !$('#txtNombreEstablecimiento').val()) {
+        Swal.fire("Error", "Los campos Sede y Nombre son obligatorios.", "error");
+        return;
+      }
+
+      // Validar código (3 dígitos)
+      const codigo = $('#txtCodigoEstablecimiento').val();
+      if (codigo && !/^\d{3}$/.test(codigo)) {
+        Swal.fire("Error", "El código de establecimiento debe tener exactamente 3 dígitos.", "error");
+        return;
+      }
+
+      const payload = {
+        id_sede: parseInt($('#selSede').val()),
+        codigo_establecimiento: codigo || null,
+        nombre_establecimiento: $('#txtNombreEstablecimiento').val(),
+        descripcion: $('#txtDescripcion').val() || null,
+        es_principal: $('#chkEsPrincipal').is(':checked'),
+        est_establecimiento: $('#chkEstado').is(':checked')
+      };
+
+      const url = idEstablecimiento ? `/api/v1/establecimientos/${idEstablecimiento}` : '/api/v1/establecimientos';
+      const method = idEstablecimiento ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && !data.error && data.success) {
+            Swal.fire({
+              title: idEstablecimiento ? "Actualizado" : "Agregado",
+              text: `El establecimiento ha sido ${idEstablecimiento ? 'actualizado' : 'agregado'} correctamente.`,
+              icon: "success",
+              confirmButtonText: "Aceptar"
+            }).then(() => {
+              window.location.href = "{{ url_for('establecimiento.establecimientoIndex') }}";
+            });
+          } else {
+            Swal.fire("Error", data.error || `No se pudo ${idEstablecimiento ? 'actualizar' : 'guardar'} el establecimiento.`, "error");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error", `Ocurrió un error al ${idEstablecimiento ? 'actualizar' : 'guardar'} el establecimiento.`, "error");
+        });
+    });
+  }
+
+  $(function () {
+    cargarSedes();
+    // Esperar un poco para que se carguen las sedes antes de cargar datos de edición
+    setTimeout(() => {
+      cargarDatosEdicion();
+    }, 300);
+    guardar();
+  });
+</script>
+{% endblock %}

@@ -1,79 +1,128 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Tipos de Items
 {% endblock %}
 
+
 {% block contenido %}
-<div class="container mt-4">
-    <h3>Listar Tipos de Items</h3>
-    <div class="card">
-      <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Tipos de Items
+          </h1>
+          <div class="page-header-subtitle">Administración de categorías de productos, servicios e insumos</div>
+        </div>
       </div>
-      <div class="card-body">
-        <table class="table table-striped" id="tbl">
-          <thead>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header">
+      <span class="fw-semibold">Listado de Tipos de Items</span>
+      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Tipo
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
             <tr>
               <th>Descripción</th>
               <th>Código</th>
               <th>Categoría</th>
-              <th>Requiere Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th class="text-center">Requiere Stock</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
-      </table>
+        </table>
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="modal" id="modalFormulario">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" role="dialog" aria-labelledby="modalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formTipoItem">
+          <input type="hidden" id="txtIdTipoItem">
+
+          <!-- Sección: Datos del Tipo de Item -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-primary">Información del Tipo</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción <span
+                      class="text-danger">*</span></label>
+                  <input class="form-control" id="txtDescripcion" type="text" placeholder="Ej: Consulta Médica"
+                    required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtCodigo">Código</label>
+                  <input class="form-control" id="txtCodigo" type="text" placeholder="Código" maxlength="10">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-8 mb-0">
+                  <label class="fw-semibold small mb-1" for="txtCategoria">Categoría</label>
+                  <select class="form-select" id="txtCategoria">
+                    <option value="">Seleccione...</option>
+                    <option value="CONSULTA">Consulta</option>
+                    <option value="PRODUCTO">Producto</option>
+                    <option value="SERVICIO">Servicio</option>
+                    <option value="INSUMO">Insumo</option>
+                  </select>
+                </div>
+                <div class="col-md-4 mb-0 d-flex align-items-end">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" id="chkRequiereStock" type="checkbox">
+                    <label class="fw-semibold small form-check-label" for="chkRequiereStock">Requiere Stock</label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="modal-body">
-            <input type="hidden" id="txtIdTipoItem">
-            <div class="form-group">
-              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="Ej: Consulta Médica, Producto" id="txtDescripcion" required>
+
+          <!-- Sección: Estado -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-secondary">Estado del Registro</h6>
             </div>
-            <div class="form-group">
-              <label for="txtCodigo">Código:</label>
-              <input type="text" class="form-control" placeholder="Ej: CONSULTA, PRODUCTO" id="txtCodigo" maxlength="10">
-            </div>
-            <div class="form-group">
-              <label for="txtCategoria">Categoría:</label>
-              <select class="form-control" id="txtCategoria">
-                <option value="">Seleccione...</option>
-                <option value="CONSULTA">Consulta</option>
-                <option value="PRODUCTO">Producto</option>
-                <option value="SERVICIO">Servicio</option>
-                <option value="INSUMO">Insumo</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="chkRequiereStock">Requiere Stock:</label><br>
-              <input type="checkbox" id="chkRequiereStock"> (Marcar si requiere control de stock)
-            </div>
-            <div class="form-group">
-              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
-              <select class="form-control" id="selEstado" required>
-                <option value="A">Activo</option>
-                <option value="I">Inactivo</option>
-              </select>
+            <div class="card-body">
+              <div class="mb-0">
+                <label class="fw-semibold small mb-1" for="selEstado">Estado <span class="text-danger">*</span></label>
+                <select class="form-select" id="selEstado" required>
+                  <option value="A">Activo</option>
+                  <option value="I">Inactivo</option>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-          </div>
-        </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="button" id="btnGuardar">Guardar Cambios</button>
       </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -84,23 +133,28 @@ Tipos de Items
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax:'/api/v1/tipos_items',
+      ajax: '/api/v1/tipos_items',
       columns: [
         { data: 'descripcion' },
         { data: 'codigo' },
         { data: 'categoria' },
-        { data: 'requiere_stock', render: function(val) {
-            return val ? '<span class="badge badge-info">Sí</span>' : '<span class="badge badge-secondary">No</span>';
+        {
+          data: 'requiere_stock', className: 'text-center', render: function (val) {
+            return val ? '<span class="badge bg-info-soft text-info">Sí</span>' : '<span class="badge bg-secondary-soft text-secondary">No</span>';
           }
         },
-        { data: 'estado', render: function(val) {
-            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+        {
+          data: 'estado', className: 'text-center', render: function (val) {
+            return val === 'A' ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
           }
         },
-        { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+        {
+          data: function (row) {
+            return `<div class="text-center">
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>
+                    </div>`
           }
         }
       ]
@@ -108,7 +162,7 @@ Tipos de Items
   }
 
   const agregar = () => {
-    $('#btnAgregar').on('click', function(){
+    $('#btnAgregar').on('click', function () {
       $('#modalTitle').text("Agregar Tipo de Item");
       $('#txtIdTipoItem').val("");
       $('#txtDescripcion').val("");
@@ -116,12 +170,12 @@ Tipos de Items
       $('#txtCategoria').val("");
       $('#chkRequiereStock').prop("checked", false);
       $('#selEstado').val("A");
-      $('#modalFormulario').modal();
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
     });
   }
 
   const guardar = () => {
-    $('#btnGuardar').on('click', function() {
+    $('#btnGuardar').on('click', function () {
       const idTipoItem = $('#txtIdTipoItem').val();
       const descripcion = $('#txtDescripcion').val();
       const codigo = $('#txtCodigo').val();
@@ -135,12 +189,12 @@ Tipos de Items
         return;
       }
 
-      const payload = { 
-        descripcion: descripcion, 
+      const payload = {
+        descripcion: descripcion,
         codigo: codigo,
         categoria: categoria,
         requiere_stock: requiereStock,
-        estado: estado 
+        estado: estado
       };
 
       const url = idTipoItem ? `/api/v1/tipos_items/${idTipoItem}` : '/api/v1/tipos_items';
@@ -151,26 +205,26 @@ Tipos de Items
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
         body: JSON.stringify(payload)
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if(data && !data.error && data.success) {
-          tabla.ajax.reload();
-          Swal.fire(idTipoItem ? "Actualizado" : "Agregado", 
-                   `El tipo de item ha sido ${idTipoItem ? 'actualizado' : 'agregado'} correctamente.`, 
-                   "success");
-          $('#modalFormulario').modal("hide");
-        } else {
-          Swal.fire("Error", data.error || "No se pudo guardar el tipo de item.", "error");
-        }
-      }).catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Ocurrió un error.", "error");
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire(idTipoItem ? "Actualizado" : "Agregado",
+              `El tipo de item ha sido ${idTipoItem ? 'actualizado' : 'agregado'} correctamente.`,
+              "success");
+            (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+          } else {
+            Swal.fire("Error", data.error || "No se pudo guardar el tipo de item.", "error");
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error.", "error");
+        });
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
       const idTipoItem = $(this).data('id');
       $('#modalTitle').text("Editar Tipo de Item");
       $('#txtIdTipoItem').val(idTipoItem);
@@ -178,22 +232,22 @@ Tipos de Items
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if (data.success && data.data) {
-          $('#txtDescripcion').val(data.data.descripcion);
-          $('#txtCodigo').val(data.data.codigo || '');
-          $('#txtCategoria').val(data.data.categoria || '');
-          $('#chkRequiereStock').prop("checked", data.data.requiere_stock);
-          $('#selEstado').val(data.data.estado);
-          $('#modalFormulario').modal();
-        }
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success && data.data) {
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtCodigo').val(data.data.codigo || '');
+            $('#txtCategoria').val(data.data.categoria || '');
+            $('#chkRequiereStock').prop("checked", data.data.requiere_stock);
+            $('#selEstado').val(data.data.estado);
+            new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+          }
+        });
     });
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
       const idTipoItem = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -206,24 +260,24 @@ Tipos de Items
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
           })
-          .then(resp => resp.json())
-          .then(data => {
-            if(data && !data.error && data.success) {
-              const tabla = $('#tbl').DataTable();
-              tabla.ajax.reload();
-              Swal.fire("Eliminado", "El tipo de item ha sido eliminado.", "success");
-            } else {
-              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
-            }
-          }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error.", "error");
-          });
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const tabla = $('#tbl').DataTable();
+                tabla.ajax.reload();
+                Swal.fire("Eliminado", "El tipo de item ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+              }
+            }).catch(err => {
+              Swal.fire("Error", "Ocurrió un error.", "error");
+            });
         }
       });
     });
   }
 
-  $(function() {
+  $(function () {
     initDatatable();
     agregar();
     guardar();
@@ -232,21 +286,3 @@ Tipos de Items
   });
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

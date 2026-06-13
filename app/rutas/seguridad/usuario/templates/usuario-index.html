@@ -9,8 +9,8 @@ Usuarios
     <h3><i class="fas fa-users"></i> Gestión de Usuarios</h3>
     
     <!-- Tarjeta principal -->
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
+    <div class="card card-header-actions mb-4 shadow-sm">
+        <div class="card-header">
             <button type="button" class="btn btn-light" id="btnAgregar" style="display: none;">
                 <i class="fas fa-plus-circle"></i> Agregar Nuevo Usuario
             </button>
@@ -21,8 +21,8 @@ Usuarios
 
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered w-100" id="tbl">
-                    <thead class="thead-dark">
+                <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+                    <thead class="table-light">
                         <tr>
                             <th>Username</th>
                             <th>Funcionario</th>
@@ -43,14 +43,12 @@ Usuarios
 </div>
 
 <!-- Modal Principal Formulario -->
-<div class="modal fade" id="modalFormulario" tabindex="-1" data-backdrop="static">
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h4 class="modal-title" id="modalTitle">Registrar Usuario</h4>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="modalTitle">Registrar Usuario</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
@@ -60,13 +58,13 @@ Usuarios
                     <!-- CARD 1: Datos del Funcionario -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">
+                            <h6 class="mb-0 fw-bold text-primary">
                                 <i class="fas fa-user-tie"></i> Datos del Funcionario
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Funcionario <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Funcionario <span class="text-danger">*</span></label>
                                 <select class="form-control" id="id_funcionario" required>
                                     <option value="">Seleccione un funcionario...</option>
                                 </select>
@@ -78,13 +76,13 @@ Usuarios
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Cargo</label>
+                                        <label class="fw-semibold">Cargo</label>
                                         <input type="text" class="form-control" id="txtCargoFuncionario" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Cédula</label>
+                                        <label class="fw-semibold">Cédula</label>
                                         <input type="text" class="form-control" id="txtCedulaFuncionario" readonly>
                                     </div>
                                 </div>
@@ -95,13 +93,13 @@ Usuarios
                     <!-- CARD 2: Datos de Usuario -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">
+                            <h6 class="mb-0 fw-bold text-success">
                                 <i class="fas fa-user"></i> Datos de Usuario
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Username <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Username <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtUsername" placeholder="Ingrese el username" maxlength="30" required>
                                 <small id="usernameFeedback" class="form-text"></small>
                             </div>
@@ -111,7 +109,7 @@ Usuarios
                     <!-- CARD 3: Acceso y Permisos -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">
+                            <h6 class="mb-0 fw-bold text-info">
                                 <i class="fas fa-key"></i> Acceso y Permisos
                             </h6>
                         </div>
@@ -119,14 +117,14 @@ Usuarios
                             <div class="row" id="rowPassword" style="display: none;">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Contraseña <span class="text-danger" id="lblPasswordRequerida">*</span></label>
+                                        <label class="fw-semibold">Contraseña <span class="text-danger" id="lblPasswordRequerida">*</span></label>
                                         <input type="password" class="form-control" id="txtPassword" placeholder="Ingrese la contraseña" minlength="6">
                                         <small id="passwordHelp" class="form-text text-muted">Mínimo 6 caracteres</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Confirmar Contraseña <span class="text-danger" id="lblPasswordConfirmacionRequerida">*</span></label>
+                                        <label class="fw-semibold">Confirmar Contraseña <span class="text-danger" id="lblPasswordConfirmacionRequerida">*</span></label>
                                         <input type="password" class="form-control" id="txtPasswordConfirmacion" placeholder="Confirme la contraseña">
                                     </div>
                                 </div>
@@ -139,7 +137,7 @@ Usuarios
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Rol Principal <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Rol Principal <span class="text-danger">*</span></label>
                                         <select class="form-control" id="id_grupo" required>
                                             <option value="">Seleccione un grupo...</option>
                                         </select>
@@ -150,7 +148,7 @@ Usuarios
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Estado</label>
+                                        <label class="fw-semibold">Estado</label>
                                         <div class="custom-control custom-switch mt-2">
                                             <input type="checkbox" class="custom-control-input" id="chkActivo" checked>
                                             <label class="custom-control-label" for="chkActivo">
@@ -170,7 +168,7 @@ Usuarios
                     <!-- CARD 4: Roles Adicionales (solo en edición) -->
                     <div class="card mb-3 border-0 shadow-sm" id="cardRolesAdicionales" style="display: none;">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-warning">
+                            <h6 class="mb-0 fw-bold text-warning">
                                 <i class="fas fa-user-tag"></i> Roles Adicionales
                             </h6>
                         </div>
@@ -191,7 +189,7 @@ Usuarios
             </div>
             
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Cancelar
                 </button>
                 <button type="button" class="btn btn-success" id="btnGuardar">
@@ -231,7 +229,7 @@ Usuarios
     box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 
@@ -354,7 +352,7 @@ const initDatatable = () => {
       { 
         data: 'grupo',
         render: function(data, type, row) {
-          return `<span class="badge badge-primary"><i class="fas fa-star mr-1"></i>${data || 'Sin grupo'}</span>`;
+          return `<span class="badge bg-primary"><i class="fas fa-star mr-1"></i>${data || 'Sin grupo'}</span>`;
         }
       },
       { 
@@ -362,7 +360,7 @@ const initDatatable = () => {
         render: function(data, type, row) {
           if (data && data.length > 0) {
             const badges = data.map(rol => 
-              `<span class="badge badge-secondary mr-1">${rol}</span>`
+              `<span class="badge bg-secondary-soft text-secondary mr-1">${rol}</span>`
             ).join('');
             return badges;
           }
@@ -373,14 +371,14 @@ const initDatatable = () => {
       { 
         data: function(row) {
           return row.activo 
-            ? '<span class="badge badge-success">Activo</span>' 
-            : '<span class="badge badge-danger">Inactivo</span>';
+            ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>' 
+            : '<span class="badge bg-danger-soft text-danger">Inactivo</span>';
         },
         className: 'text-center'
       },
       { 
         data: function(row) {
-          const badgeClass = row.intentos > 2 ? 'badge-danger' : 'badge-secondary';
+          const badgeClass = row.intentos > 2 ? 'bg-danger' : 'bg-secondary';
           return `<span class="badge ${badgeClass}">${row.intentos}</span>`;
         },
         className: 'text-center'
@@ -397,22 +395,10 @@ const initDatatable = () => {
           const puedeEditar = puedeEditarUsuario(row);
           
           return `
-            <button type="button" name="btn_editar" class="btn btn-warning btn-sm" 
-                    data-id="${row.id_usuario}" ${!puedeEditar ? 'disabled title="No tienes permisos para editar este usuario"' : 'title="Editar"'}
-                    ${!puedeEditar ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}>
-              <i class="fas fa-edit"></i>
-            </button>
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id_usuario}" ${!puedeEditar ? 'disabled title="No tienes permisos para editar este usuario"' : 'title="Editar"'} ${!puedeEditar ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fas fa-edit"></i></button>
             ${row.intentos > 0 ? `
-            <button type="button" name="btn_resetear" class="btn btn-info btn-sm" 
-                    data-id="${row.id_usuario}" title="Resetear intentos">
-              <i class="fas fa-redo"></i>
-            </button>` : ''}
-            <button type="button" name="btn_desactivar" class="btn btn-secondary btn-sm" 
-                    data-id="${row.id_usuario}" data-username="${row.username}" 
-                    ${!puedeEditar ? 'disabled title="No tienes permisos para desactivar este usuario"' : 'title="Desactivar"'}
-                    ${!puedeEditar ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}>
-              <i class="fas fa-ban"></i>
-            </button>
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_resetear" data-id="${row.id_usuario}" title="Resetear intentos"><i class="fas fa-redo"></i></button>` : ''}
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_desactivar" data-id="${row.id_usuario}" data-username="${row.username}" ${!puedeEditar ? 'disabled title="No tienes permisos para desactivar este usuario"' : 'title="Desactivar"'} ${!puedeEditar ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fas fa-ban"></i></button>
           `;
         },
         className: 'text-center',
@@ -650,7 +636,7 @@ const agregar = () => {
     $('#txtPassword').prop('required', true);
     $('#txtPasswordConfirmacion').prop('required', true);
     
-    $('#modalFormulario').modal('show');
+    new bootstrap.Modal(document.getElementById("modalFormulario")).show();
   });
 }
 
@@ -801,7 +787,7 @@ const guardar = () => {
         console.log('✅ Usuario guardado:', data);
         
         $('#tbl').DataTable().ajax.reload();
-        $('#modalFormulario').modal('hide');
+        new bootstrap.Modal(document.getElementById("modalFormulario")).hide();
         
         Swal.fire({
           icon: 'success',
@@ -891,7 +877,7 @@ const editar = () => {
       // Validar username actual
       validarUsername(u.username, u.id_usuario);
       
-      $('#modalFormulario').modal('show');
+      new bootstrap.Modal(document.getElementById("modalFormulario")).show();
     })
     .catch(err => {
       console.error('❌ Error cargando usuario:', err);
@@ -1035,7 +1021,7 @@ const cargarRolesAdicionalesEnFormulario = (idUsuario) => {
           rolesAdicionales.forEach(rol => {
             html += `
               <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                <span class="badge badge-secondary">${rol.des_grupo}</span>
+                <span class="badge bg-secondary-soft text-secondary">${rol.des_grupo}</span>
                 <button type="button" class="btn btn-sm btn-danger" onclick="removerRolAdicional(${idUsuario}, ${rol.id_grupo}, '${rol.des_grupo}')">
                   <i class="fas fa-times"></i> Remover
                 </button>

@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Punto de Expedición
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">
+            <div class="page-header-icon"><i data-feather="monitor"></i></div>
+            Registrar Punto de Expedición
+          </h1>
+          <div class="page-header-subtitle">Configuración de terminales de venta, cajas y puntos de facturación</div>
+        </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a class="btn btn-sm btn-light text-primary border-0 shadow-sm"
+            href="{{ url_for('puntoexpedicion.puntoExpedicionIndex') }}">
+            <i class="me-1" data-feather="arrow-left"></i> Volver al Listado
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Formulario Principal -->
+<form id="formPuntoExpedicion">
+  <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="txtIdPuntoExpedicion">
+
+  <div class="container-xl px-4 mt-n10">
+    <div class="row">
+      <div class="col-xl-8">
+        <!-- CARD 1: Datos Básicos -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold text-primary">Información del Punto de Expedición</h6>
+          </div>
+          <div class="card-body">
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="fw-semibold small mb-1" for="selEstablecimiento">Establecimiento <span
+                    class="text-danger">*</span></label>
+                <select class="form-select" id="selEstablecimiento" required>
+                  <option value="">Seleccione un establecimiento...</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-3 mb-md-0">
+                <label class="fw-semibold small mb-1" for="txtCodigoPuntoExpedicion">Código <span
+                    class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="txtCodigoPuntoExpedicion" placeholder="001" maxlength="3"
+                  pattern="[0-9]{3}" required>
+                <div class="small text-muted mt-1" style="font-size: 0.7rem;">3 dígitos (001, 002...)
+                </div>
+              </div>
+              <div class="col-md-3">
+                <label class="fw-semibold small mb-1" for="selTipoPunto">Tipo de Punto</label>
+                <select class="form-select" id="selTipoPunto">
+                  <option value="caja">Caja</option>
+                  <option value="consultorio">Consultorio</option>
+                  <option value="farmacia">Farmacia</option>
+                  <option value="laboratorio">Laboratorio</option>
+                  <option value="ambulancia">Ambulancia</option>
+                  <option value="virtual">Virtual</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="fw-semibold small mb-1" for="txtNombrePuntoExpedicion">Nombre <span
+                    class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="txtNombrePuntoExpedicion"
+                  placeholder="Ej: Caja 1, Consultorios, Farmacia" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-0">
+                <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción</label>
+                <textarea class="form-control" id="txtDescripcion" rows="3"
+                  placeholder="Descripción del punto de expedición..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-4">
+        <!-- CARD 2: Configuración -->
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold text-secondary">Ajustes y Estado</h6>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkPermiteFacturacion" checked>
+                <label class="fw-semibold small form-check-label" for="chkPermiteFacturacion">Permite
+                  Facturación</label>
+              </div>
+            </div>
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+                <label class="fw-semibold small form-check-label" for="chkEstado">Punto Activo</label>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-primary" id="btnGuardar">
+                <i class="me-1" data-feather="save"></i> Guardar Punto
+              </button>
+              <a href="{{ url_for('puntoexpedicion.puntoExpedicionIndex') }}" class="btn btn-light border">
+                <i class="me-1" data-feather="x"></i> Cancelar
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  // Obtener ID de punto de expedición desde URL si es edición
+  const urlParams = new URLSearchParams(window.location.search);
+  const idPuntoExpedicionEditar = urlParams.get('id');
+
+  // Cargar establecimientos en el select
+  const cargarEstablecimientos = () => {
+    fetch('/api/v1/establecimientos', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success && data.data) {
+          const select = $('#selEstablecimiento');
+          select.empty();
+          select.append('<option value="">Seleccione un establecimiento...</option>');
+          data.data.forEach(establecimiento => {
+            select.append(`<option value="${establecimiento.id}">${establecimiento.nombre_establecimiento}${establecimiento.sede ? ' - ' + establecimiento.sede : ''}</option>`);
+          });
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando establecimientos:', err);
+      });
+  }
+
+  // Cargar datos si es edición
+  const cargarDatosEdicion = () => {
+    if (idPuntoExpedicionEditar) {
+      fetch(`/api/v1/puntos-expedicion/${idPuntoExpedicionEditar}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && data.success && data.data) {
+            const punto = data.data;
+
+            $('#txtIdPuntoExpedicion').val(punto.id);
+            $('#selEstablecimiento').val(punto.id_establecimiento);
+            $('#txtCodigoPuntoExpedicion').val(punto.codigo_punto_expedicion || '');
+            $('#txtNombrePuntoExpedicion').val(punto.nombre_punto_expedicion || '');
+            $('#txtDescripcion').val(punto.descripcion || '');
+            $('#selTipoPunto').val(punto.tipo_punto || 'caja');
+            $('#chkPermiteFacturacion').prop("checked", punto.permite_facturacion !== false);
+            $('#chkEstado').prop("checked", punto.estado !== false);
+
+            // Cambiar título
+            $('h3').html('<i class="fas fa-cash-register"></i> Editar Punto de Expedición');
+          }
+        })
+        .catch(err => {
+          console.error('Error cargando punto de expedición:', err);
+        });
+    }
+  }
+
+  // Guardar punto de expedición
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idPuntoExpedicion = $('#txtIdPuntoExpedicion').val();
+
+      // Validaciones básicas
+      if (!$('#selEstablecimiento').val() || !$('#txtNombrePuntoExpedicion').val()) {
+        Swal.fire("Error", "Los campos Establecimiento y Nombre son obligatorios.", "error");
+        return;
+      }
+
+      // Validar código (3 dígitos)
+      const codigo = $('#txtCodigoPuntoExpedicion').val();
+      if (codigo && !/^\d{3}$/.test(codigo)) {
+        Swal.fire("Error", "El código de punto de expedición debe tener exactamente 3 dígitos.", "error");
+        return;
+      }
+
+      const payload = {
+        id_establecimiento: parseInt($('#selEstablecimiento').val()),
+        codigo_punto_expedicion: codigo || null,
+        nombre_punto_expedicion: $('#txtNombrePuntoExpedicion').val(),
+        descripcion: $('#txtDescripcion').val() || null,
+        tipo_punto: $('#selTipoPunto').val(),
+        permite_facturacion: $('#chkPermiteFacturacion').is(':checked'),
+        est_punto_expedicion: $('#chkEstado').is(':checked')
+      };
+
+      const url = idPuntoExpedicion ? `/api/v1/puntos-expedicion/${idPuntoExpedicion}` : '/api/v1/puntos-expedicion';
+      const method = idPuntoExpedicion ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && !data.error && data.success) {
+            Swal.fire({
+              title: idPuntoExpedicion ? "Actualizado" : "Agregado",
+              text: `El punto de expedición ha sido ${idPuntoExpedicion ? 'actualizado' : 'agregado'} correctamente.`,
+              icon: "success",
+              confirmButtonText: "Aceptar"
+            }).then(() => {
+              window.location.href = "{{ url_for('puntoexpedicion.puntoExpedicionIndex') }}";
+            });
+          } else {
+            Swal.fire("Error", data.error || `No se pudo ${idPuntoExpedicion ? 'actualizar' : 'guardar'} el punto de expedición.`, "error");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error", `Ocurrió un error al ${idPuntoExpedicion ? 'actualizar' : 'guardar'} el punto de expedición.`, "error");
+        });
+    });
+  }
+
+  $(function () {
+    cargarEstablecimientos();
+    // Esperar un poco para que se carguen los establecimientos antes de cargar datos de edición
+    setTimeout(() => {
+      cargarDatosEdicion();
+    }, 300);
+    guardar();
+  });
+</script>
+{% endblock %}

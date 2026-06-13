@@ -5,61 +5,78 @@ Mi Perfil
 {% endblock %}
 
 {% block contenido %}
-<div class="container-fluid">
-    
-    <!-- Encabezado del Perfil -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-user-circle mr-2"></i>Mi Perfil
-        </h1>
-        <div>
-            <button class="btn btn-secondary" onclick="window.history.back()">
-                <i class="fas fa-arrow-left mr-2"></i>Volver
-            </button>
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i class="fas fa-user-circle"></i></div>
+                        Mi Perfil
+                    </h1>
+                    <div class="page-header-subtitle">Gestión de datos personales, estadísticas y configuración de la cuenta</div>
+                </div>
+                <div class="col-12 col-xl-auto mt-4">
+                    <button class="btn btn-sm btn-light text-primary border-0 shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">
+                        <i class="fas fa-edit me-1"></i> Editar Perfil
+                    </button>
+                    <button class="btn btn-sm btn-light text-secondary border-0 shadow-sm" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left me-1"></i> Volver
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+</header>
 
+<div class="container-xl px-4 mt-n10">
     <!-- Tarjeta Principal del Perfil -->
     <div class="row">
         <!-- Columna Izquierda - Foto y Datos Básicos -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-xl-4 mb-4">
+            <div class="card mb-4 border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-primary">Foto de Perfil</h6>
+                </div>
                 <div class="card-body text-center">
                     <!-- Foto de Perfil -->
-                    <div class="mb-4">
+                    <div class="mb-4 position-relative d-inline-block">
                         <img id="fotoPerfil" 
                              src="{{ url_for('static', filename='img/undraw_profile.svg') }}" 
-                             class="rounded-circle img-thumbnail" 
+                             class="rounded-circle shadow-sm border border-4 border-light img-thumbnail" 
                              style="width: 150px; height: 150px; object-fit: cover;"
                              alt="Foto de perfil">
+                        <label for="inputFoto" class="position-absolute bottom-0 end-0 p-2 bg-primary text-white rounded-circle shadow" style="cursor: pointer; right: 5px; bottom: 5px; opacity: 0.9;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="inputFoto" class="d-none" accept="image/*">
                     </div>
                     
                     <!-- Nombre Completo -->
-                    <h4 class="mb-1" id="nombreCompleto">Cargando...</h4>
+                    <h4 class="mb-1 fw-bold text-dark" id="nombreCompleto">Cargando...</h4>
                     
                     <!-- Rol -->
                     <p class="text-muted mb-3">
-                        <span class="badge badge-primary badge-pill px-3 py-2" id="rolUsuario">
-                            <i class="fas fa-shield-alt mr-1"></i>
-                            Cargando...
+                        <span class="badge bg-primary-soft text-primary rounded-pill px-3 py-2" id="rolUsuario">
+                            <i class="fas fa-shield-alt me-1"></i> Cargando...
                         </span>
                     </p>
                     
                     <!-- Estado del Usuario -->
                     <div class="mb-3">
-                        <span class="badge badge-success" id="estadoUsuario">
-                            <i class="fas fa-check-circle mr-1"></i>Activo
+                        <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill" id="estadoUsuario">
+                            <i class="fas fa-check-circle me-1"></i>Activo
                         </span>
                     </div>
                     
-                    <hr>
+                    <hr class="my-4">
                     
                     <!-- Información Rápida -->
-                    <div class="text-left">
+                    <div class="text-start">
                         <div class="mb-2">
-                            <i class="fas fa-user text-primary mr-2"></i>
-                            <strong>Usuario:</strong>
-                            <span id="nombreUsuario" class="text-muted">Cargando...</span>
+                            <i class="fas fa-user-circle text-primary me-2"></i>
+                            <strong class="text-dark">Usuario:</strong>
+                            <span id="nombreUsuario" class="text-muted ms-1">Cargando...</span>
                         </div>
                     </div>
                 </div>
@@ -67,77 +84,81 @@ Mi Perfil
         </div>
 
         <!-- Columna Derecha - Información Detallada -->
-        <div class="col-lg-8 mb-4">
-            
+        <div class="col-xl-8 mb-4">
             <!-- Tabs de Información -->
-            <div class="card shadow-sm">
-                <div class="card-header py-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light pb-0 border-bottom-0">
                     <ul class="nav nav-tabs card-header-tabs" id="perfilTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="datos-tab" data-toggle="tab" href="#datos" role="tab">
-                                <i class="fas fa-id-card mr-1"></i>Datos Personales
+                            <a class="nav-link active text-primary fw-semibold" id="datos-tab" data-bs-toggle="tab" href="#datos" role="tab">
+                                <i class="fas fa-id-card me-1"></i> Datos Personales
                             </a>
                         </li>
                         <li class="nav-item" id="tabProfesional" style="display: none;">
-                            <a class="nav-link" id="profesional-tab" data-toggle="tab" href="#profesional" role="tab">
-                                <i class="fas fa-briefcase mr-1"></i>Datos Profesionales
+                            <a class="nav-link fw-semibold" id="profesional-tab" data-bs-toggle="tab" href="#profesional" role="tab">
+                                <i class="fas fa-user-md me-1"></i> Datos Profesionales
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="sistema-tab" data-toggle="tab" href="#sistema" role="tab">
-                                <i class="fas fa-cog mr-1"></i>Información del Sistema
+                            <a class="nav-link fw-semibold" id="sistema-tab" data-bs-toggle="tab" href="#sistema" role="tab">
+                                <i class="fas fa-cog me-1"></i> Sistema
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold" id="actividad-tab" data-bs-toggle="tab" href="#actividad" role="tab">
+                                <i class="fas fa-chart-line me-1"></i> Actividad
                             </a>
                         </li>
                     </ul>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="tab-content" id="perfilTabsContent">
                         
                         <!-- Tab: Datos Personales -->
                         <div class="tab-pane fade show active" id="datos" role="tabpanel">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">NOMBRE COMPLETO</label>
-                                    <p id="nombrePersona" class="mb-0">Cargando...</p>
+                            <div class="row gx-4 gy-4">
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">NOMBRE COMPLETO</label>
+                                    <p id="nombrePersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">Cargando...</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">CI / RUC</label>
-                                    <p id="rucPersona" class="mb-0">Cargando...</p>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">CI / RUC</label>
+                                    <p id="rucPersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">Cargando...</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">FECHA DE NACIMIENTO</label>
-                                    <p id="fechaNacimiento" class="mb-0">Cargando...</p>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">FECHA DE NACIMIENTO</label>
+                                    <p id="fechaNacimiento" class="mb-0 text-dark fw-medium pb-2 border-bottom">Cargando...</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">GÉNERO</label>
-                                    <p id="generoPersona" class="mb-0">Cargando...</p>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">GÉNERO</label>
+                                    <p id="generoPersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">Cargando...</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">ESTADO CIVIL</label>
-                                    <p id="estadoCivil" class="mb-0">Cargando...</p>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">ESTADO CIVIL</label>
+                                    <p id="estadoCivil" class="mb-0 text-dark fw-medium pb-2 border-bottom">Cargando...</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">CIUDAD</label>
-                                    <p id="ciudadPersona" class="mb-0">Cargando...</p>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">CIUDAD</label>
+                                    <p id="ciudadPersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">Cargando...</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">TELÉFONO</label>
-                                    <p id="telefonoPersona" class="mb-0">
-                                        <i class="fas fa-phone-alt text-primary mr-2"></i>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">TELÉFONO</label>
+                                    <p id="telefonoPersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-phone-alt text-muted me-2"></i>
                                         <span>Cargando...</span>
                                     </p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">EMAIL</label>
-                                    <p id="emailPersona" class="mb-0">
-                                        <i class="fas fa-envelope text-success mr-2"></i>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">EMAIL</label>
+                                    <p id="emailPersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-envelope text-muted me-2"></i>
                                         <span>Cargando...</span>
                                     </p>
                                 </div>
-                                <div class="col-12 mb-3">
-                                    <label class="font-weight-bold text-muted small">DIRECCIÓN</label>
-                                    <p id="direccionPersona" class="mb-0">
-                                        <i class="fas fa-map-marker-alt text-danger mr-2"></i>
+                                <div class="col-12">
+                                    <label class="fw-semibold text-primary small mb-1">DIRECCIÓN</label>
+                                    <p id="direccionPersona" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
                                         <span>Cargando...</span>
                                     </p>
                                 </div>
@@ -146,25 +167,25 @@ Mi Perfil
 
                         <!-- Tab: Datos Profesionales -->
                         <div class="tab-pane fade" id="profesional" role="tabpanel">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">CARGO</label>
-                                    <p id="cargoFuncionario" class="mb-0">
-                                        <i class="fas fa-id-badge text-primary mr-2"></i>
+                            <div class="row gx-4 gy-4">
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">CARGO</label>
+                                    <p id="cargoFuncionario" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-id-badge text-muted me-2"></i>
                                         <span>No especificado</span>
                                     </p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">ESPECIALIDAD</label>
-                                    <p id="especialidadFuncionario" class="mb-0">
-                                        <i class="fas fa-user-md text-success mr-2"></i>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">ESPECIALIDAD</label>
+                                    <p id="especialidadFuncionario" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-user-md text-muted me-2"></i>
                                         <span>No especificado</span>
                                     </p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">MATRÍCULA PROFESIONAL</label>
-                                    <p id="matriculaFuncionario" class="mb-0">
-                                        <i class="fas fa-certificate text-warning mr-2"></i>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">MATRÍCULA PROFESIONAL</label>
+                                    <p id="matriculaFuncionario" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-certificate text-muted me-2"></i>
                                         <span>No especificado</span>
                                     </p>
                                 </div>
@@ -173,24 +194,47 @@ Mi Perfil
 
                         <!-- Tab: Información del Sistema -->
                         <div class="tab-pane fade" id="sistema" role="tabpanel">
+                            <div class="row gx-4 gy-4">
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">NOMBRE DE USUARIO</label>
+                                    <p id="usuarioSistema" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-user-circle text-muted me-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-primary small mb-1">ROL / GRUPO</label>
+                                    <p id="grupoSistema" class="mb-0 text-dark fw-medium pb-2 border-bottom">
+                                        <i class="fas fa-users-cog text-muted me-2"></i>
+                                        <span>Cargando...</span>
+                                    </p>
+                                </div>
+                                <div class="col-12">
+                                    <label class="fw-semibold text-primary small mb-1">ESTADO DE LA CUENTA</label>
+                                    <p id="estadoCuenta" class="mb-0 mt-1">Cargando...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Actividad -->
+                        <div class="tab-pane fade" id="actividad" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">NOMBRE DE USUARIO</label>
-                                    <p id="usuarioSistema" class="mb-0">
-                                        <i class="fas fa-user text-primary mr-2"></i>
-                                        <span>Cargando...</span>
-                                    </p>
+                                <div class="col-12 mb-4">
+                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-chart-pie me-2"></i>Métricas de Uso</h6>
+                                    <div class="row px-2" id="contenedorEstadisticas">
+                                        <div class="col-12 text-center text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Cargando estadísticas...
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-muted small">ROL / GRUPO</label>
-                                    <p id="grupoSistema" class="mb-0">
-                                        <i class="fas fa-users-cog text-success mr-2"></i>
-                                        <span>Cargando...</span>
-                                    </p>
-                                </div>
-                                <div class="col-12 mb-3">
-                                    <label class="font-weight-bold text-muted small">ESTADO DE LA CUENTA</label>
-                                    <p id="estadoCuenta" class="mb-0">Cargando...</p>
+                                <hr class="my-4">
+                                <div class="col-12">
+                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-history me-2"></i>Actividad Reciente</h6>
+                                    <div class="list-group list-group-flush rounded shadow-sm border" id="listaActividad">
+                                        <div class="text-center text-muted py-4">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Cargando actividad...
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -198,15 +242,70 @@ Mi Perfil
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
-
 </div>
+
+<!-- Modal Editar Perfil -->
+<div class="modal fade" id="modalEditarPerfil" tabindex="-1" aria-labelledby="modalEditarPerfilLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="modalEditarPerfilLabel"><i class="fas fa-edit me-2 text-primary"></i>Editar Datos Personales</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formEditarPerfil">
+                    <div class="mb-3">
+                        <label for="editTelefono" class="form-label fw-semibold small">Teléfono <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-phone"></i></span>
+                            <input type="text" class="form-control" id="editTelefono" name="telefono" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label fw-semibold small">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="editEmail" name="email">
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label for="editDireccion" class="form-label fw-semibold small">Dirección</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-map-marker-alt"></i></span>
+                            <textarea class="form-control" id="editDireccion" name="direccion" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-{{ ui.boton_limpiar }} shadow-sm" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Cancelar</button>
+                <button type="button" class="btn btn-{{ ui.boton_guardar }} shadow-sm" id="btnGuardarPerfil"><i class="fas fa-save me-1"></i> Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling for profile image input hover effect */
+    .position-relative:hover label {
+        opacity: 1 !important;
+        transform: scale(1.1);
+        transition: all 0.2s ease-in-out;
+    }
+    label[for="inputFoto"] {
+        opacity: 0;
+        transition: all 0.2s ease-in-out;
+    }
+</style>
+
 {% endblock %}
 
 {% block js %}
 <script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
   // ========================================
   // CARGAR PERFIL COMPLETO
   // ========================================
@@ -216,7 +315,6 @@ Mi Perfil
       method: 'GET',
       dataType: 'json',
       success: function(response) {
-        console.log('Perfil recibido:', response);
         if (response.success && response.data) {
           mostrarDatosPerfil(response.data);
         } else {
@@ -237,7 +335,8 @@ Mi Perfil
     // Foto de perfil
     const rutaFoto = datos.foto_usuario.startsWith('img/') 
       ? "{{ url_for('static', filename='') }}" + datos.foto_usuario
-      : "{{ url_for('static', filename='uploads/perfiles/') }}" + datos.foto_usuario;
+      : "{{ url_for('static', filename='') }}" + datos.foto_usuario; // Backend devolverá rutafoto que incluye uploads/perfiles/
+      
     $('#fotoPerfil').attr('src', rutaFoto);
     
     // Datos del encabezado
@@ -248,19 +347,19 @@ Mi Perfil
     // Estado
     if (datos.est_usuario) {
       $('#estadoUsuario').html('<i class="fas fa-check-circle mr-1"></i>Activo')
-                         .removeClass('badge-danger').addClass('badge-success');
+                         .removeClass('bg-danger').addClass('bg-success');
     } else {
       $('#estadoUsuario').html('<i class="fas fa-times-circle mr-1"></i>Inactivo')
-                         .removeClass('badge-success').addClass('badge-danger');
+                         .removeClass('bg-success').addClass('bg-danger');
     }
     
     // Tab: Datos Personales
     $('#nombrePersona').text(datos.nombre_completo);
     $('#rucPersona').text(datos.ruc_persona || 'No especificado');
     $('#fechaNacimiento').text(formatearFecha(datos.fech_nac) || 'No especificada');
-    $('#generoPersona').text(datos.genero);
-    $('#estadoCivil').text(datos.estado_civil);
-    $('#ciudadPersona').text(datos.ciudad);
+    $('#generoPersona').text(datos.genero || 'No especificado');
+    $('#estadoCivil').text(datos.estado_civil || 'No especificado');
+    $('#ciudadPersona').text(datos.ciudad || 'No especificada');
     $('#telefonoPersona span').text(datos.tel_persona || 'No especificado');
     $('#emailPersona span').text(datos.email_persona || 'No especificado');
     $('#direccionPersona span').text(datos.dir_persona || 'No especificada');
@@ -278,23 +377,196 @@ Mi Perfil
     $('#grupoSistema span').text(datos.rol);
     
     const badgeEstado = datos.est_usuario 
-      ? '<span class="badge badge-success"><i class="fas fa-check mr-1"></i>Cuenta Activa</span>'
-      : '<span class="badge badge-danger"><i class="fas fa-times mr-1"></i>Cuenta Inactiva</span>';
+      ? '<span class="badge bg-success-soft text-success"><i class="fas fa-check mr-1"></i>Cuenta Activa</span>'
+      : '<span class="badge bg-danger-soft text-danger"><i class="fas fa-times mr-1"></i>Cuenta Inactiva</span>';
     $('#estadoCuenta').html(badgeEstado);
   }
 
   // ========================================
-  // FORMATEAR FECHA
+  // GUARDAR PERFIL
+  // ========================================
+  function guardarPerfil() {
+    const data = {
+      telefono: $('#editTelefono').val(),
+      email: $('#editEmail').val(),
+      direccion: $('#editDireccion').val()
+    };
+
+    if(!data.telefono) {
+        Swal.fire('Error', 'El teléfono es obligatorio', 'warning');
+        return;
+    }
+
+    const btn = $('#btnGuardarPerfil');
+    const txtOriginal = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...').prop('disabled', true);
+
+    $.ajax({
+      url: '/api/v1/perfil/update',
+      method: 'POST',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': CSRFToken },
+      data: JSON.stringify(data),
+      success: function(response) {
+        if (response.success) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPerfil'));
+          if (modal) modal.hide();
+          Swal.fire('¡Éxito!', 'Perfil actualizado correctamente', 'success').then(() => {
+            cargarPerfil();
+          });
+        } else {
+          Swal.fire('Error', response.error || 'No se pudo actualizar', 'error');
+        }
+      },
+      error: function(xhr) {
+        let msg = 'Error de conexión';
+        if(xhr.responseJSON && xhr.responseJSON.error) msg = xhr.responseJSON.error;
+        Swal.fire('Error', msg, 'error');
+      },
+      complete: function() {
+        btn.html(txtOriginal).prop('disabled', false);
+      }
+    });
+  }
+
+  // ========================================
+  // SUBIR FOTO
+  // ========================================
+  function subirFoto(archivo) {
+    const formData = new FormData();
+    formData.append('foto', archivo);
+
+    Swal.fire({
+      title: 'Subiendo foto...',
+      html: 'Por favor espere.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    $.ajax({
+      url: '/api/v1/perfil/update-photo',
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-CSRFToken': CSRFToken },
+      success: function(response) {
+        if (response.success) {
+          Swal.fire('¡Éxito!', 'Foto actualizada correctamente', 'success').then(() => {
+            cargarPerfil();
+            if($('.img-profile').length) {
+                $('.img-profile').attr('src', response.ruta_foto); 
+                // Asumiendo que response.ruta_foto ya es correcta para la etiqueta img real
+            }
+          });
+        } else {
+          Swal.fire('Error', response.error || 'No se pudo actualizar la foto', 'error');
+        }
+      },
+      error: function(xhr) {
+        let msg = 'Error al subir la foto';
+        if(xhr.responseJSON && xhr.responseJSON.error) msg = xhr.responseJSON.error;
+        Swal.fire('Error', msg, 'error');
+      }
+    });
+  }
+
+  // ========================================
+  // CARGAR ESTADÍSTICAS
+  // ========================================
+  function cargarEstadisticas() {
+    $.ajax({
+      url: '/api/v1/perfil/estadisticas',
+      method: 'GET',
+      success: function(response) {
+        if (response.success && response.data) {
+          let html = '';
+          const stats = response.data;
+          
+          if (Object.keys(stats).length === 0) {
+              html = '<div class="col-12 text-center text-muted">No hay estadísticas disponibles</div>';
+          } else {
+              for (const [key, value] of Object.entries(stats)) {
+                html += `
+                <div class="col-md-4 mb-3">
+                    <div class="card border-left-primary shadow h-100 py-2" style="border-left: 4px solid var(--primary-color);">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" style="color: var(--primary-color) !important;">${key}</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${value}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+              }
+          }
+          $('#contenedorEstadisticas').html(html);
+        } else {
+          $('#contenedorEstadisticas').html('<div class="col-12 text-center text-muted">No se pudieron cargar las estadísticas</div>');
+        }
+      },
+      error: function() {
+        $('#contenedorEstadisticas').html('<div class="col-12 text-center text-danger">Error de conexión</div>');
+      }
+    });
+  }
+
+  // ========================================
+  // CARGAR ACTIVIDAD RECIENTE
+  // ========================================
+  function cargarActividad() {
+    $.ajax({
+      url: '/api/v1/perfil/actividad-reciente',
+      method: 'GET',
+      success: function(response) {
+        if (response.success && response.data) {
+          let html = '';
+          if (response.data.length === 0) {
+              html = '<div class="text-center text-muted py-3">No hay actividad reciente</div>';
+          } else {
+              response.data.forEach(item => {
+                  html += `
+                  <div class="list-group-item list-group-item-action border-left-primary" style="border-left: 4px solid var(--primary-color) !important;">
+                      <div class="d-flex w-100 justify-content-between">
+                          <h6 class="mb-1 text-primary" style="color: var(--primary-color) !important;"><i class="${item.icono || 'fas fa-info-circle'} mr-2"></i>${item.label}</h6>
+                          <small class="text-muted"><i class="far fa-clock mr-1"></i>${item.fecha_evento || ''}</small>
+                      </div>
+                      <p class="mb-1 text-sm">${item.detalle || ''}</p>
+                  </div>`;
+              });
+          }
+          $('#listaActividad').html(html);
+        } else {
+          $('#listaActividad').html('<div class="text-center text-muted py-3">No se pudo cargar la actividad</div>');
+        }
+      },
+      error: function() {
+        $('#listaActividad').html('<div class="text-center text-danger py-3">Error de conexión</div>');
+      }
+    });
+  }
+
+  // ========================================
+  // FORMATO DE FECHAS
   // ========================================
   function formatearFecha(fecha) {
     if (!fecha) return '';
     const date = new Date(fecha);
-    const opciones = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    };
+    const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('es-ES', opciones);
+  }
+
+  function formatearFechaHora(fechaStr) {
+    if (!fechaStr) return '';
+    const date = new Date(fechaStr);
+    return date.toLocaleString('es-ES');
   }
 
   // ========================================
@@ -302,6 +574,36 @@ Mi Perfil
   // ========================================
   $(function() {
     cargarPerfil();
+    cargarEstadisticas();
+    cargarActividad();
+    
+    // Preparar modal de edición
+    $('#modalEditarPerfil').on('show.bs.modal', function () {
+      let tel = $('#telefonoPersona span').text();
+      let email = $('#emailPersona span').text();
+      let dir = $('#direccionPersona span').text();
+      
+      // Limpiar textos por defecto si están vacíos
+      if(tel === 'No especificado' || tel === 'Cargando...') tel = '';
+      if(email === 'No especificado' || email === 'Cargando...') email = '';
+      if(dir === 'No especificada' || dir === 'Cargando...') dir = '';
+
+      $('#editTelefono').val(tel);
+      $('#editEmail').val(email);
+      $('#editDireccion').val(dir);
+    });
+
+    // Guardar cambios
+    $('#btnGuardarPerfil').click(function() {
+      guardarPerfil();
+    });
+
+    // Cambiar foto
+    $('#inputFoto').change(function() {
+      if (this.files && this.files[0]) {
+        subirFoto(this.files[0]);
+      }
+    });
   });
 </script>
 {% endblock %}

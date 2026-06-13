@@ -1,0 +1,20 @@
+import os
+from datetime import timedelta
+
+def init_settings(app):
+    """Initialize application settings and configuration."""
+    app.secret_key = b'***REMOVED***'
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)
+
+    # WhatsApp Notifications (Ultramsg)
+    app.config['ULTRAMSG_INSTANCE_ID'] = os.getenv('ULTRAMSG_INSTANCE_ID', '***REMOVED***')
+    app.config['ULTRAMSG_TOKEN'] = os.getenv('ULTRAMSG_TOKEN', '***REMOVED***')
+    app.config['ULTRAMSG_API_URL'] = os.getenv('ULTRAMSG_API_URL', 'https://api.ultramsg.com')
+
+    # General configuration
+    app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'Angasys')
+
+    # Path prefixes
+    app.config['MODULO_REFERENCIALES'] = "/referenciales"
+    app.config['MODULO_GESTION'] = "/modulos"
+    app.config['API_V1'] = "/api/v1"

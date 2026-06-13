@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app
 from app.dao.gestionar_personas.paciente.PacienteDao import PacienteDao
+from app.utils.decorators import require_permission
 from flask import send_file
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -449,6 +450,7 @@ def getPacienteParaEditar(pac_id):
 # CREAR NUEVO PACIENTE
 # ============================================
 @pacienteapi.route('/pacientes', methods=['POST'])
+@require_permission('insertar')
 def addPaciente():
     """
     Crea un nuevo paciente con todos sus datos.
@@ -529,6 +531,7 @@ def addPaciente():
 # ACTUALIZAR PACIENTE EXISTENTE
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['PUT'])
+@require_permission('editar')
 def updatePaciente(pac_id):
     data = request.get_json()
     pacientedao = PacienteDao()
@@ -625,6 +628,7 @@ def updatePaciente(pac_id):
 # ELIMINAR PACIENTE
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['DELETE'])
+@require_permission('borrar')
 def deletePaciente(pac_id):
     """
     Elimina un paciente y todos sus datos asociados.

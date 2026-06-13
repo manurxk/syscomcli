@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app, send_file
 from app.dao.modulos.ventas.factura.FacturaDao import FacturaDao
-from app.dao.referenciales.empresa.EmpresaDao import EmpresaDao
-from app.dao.referenciales.timbrado.TimbradoDao import TimbradoDao
+from app.dao.referenciales.ventas.empresa.EmpresaDao import EmpresaDao
+from app.dao.referenciales.ventas.timbrado.TimbradoDao import TimbradoDao
 from app.services.factura_pdf_service import FacturaPDFService
 from app.services.sifen_xml_service import SifenXMLService
 from app.services.sifen_firma_service import SifenFirmaService, SifenFirmaConfig
@@ -56,7 +56,8 @@ def _obtenerDatosEmpresaParaSIFEN(id_empresa=None):
         'telefono': empresa.get('telefono', ''),
         'email': empresa.get('email', ''),
         'website': empresa.get('sitio_web', ''),
-        'actividad_economica': empresa.get('actividad_economica_principal', '')
+        'actividad_economica': empresa.get('actividad_economica_principal', ''),
+        'logo_path': empresa.get('logo_path', '')  # Para PDF automático
     }
 
 @facturaapi.route('/facturas', methods=['GET'])
@@ -429,6 +430,7 @@ def generarPDFFactura(id_factura):
             'factura_impuestos': factura.get('factura_impuestos', 0),
             'factura_descuento': factura.get('factura_descuento', 0),
             'factura_total': factura.get('factura_total', 0),
+            'factura_total_letras': factura.get('factura_total_letras', ''),
             'observaciones': factura.get('observaciones', ''),
             'ruc_emisor': app.config.get('RUC_EMISOR', '0000000-0')
         }
@@ -455,6 +457,71 @@ def generarPDFFactura(id_factura):
         }), 500
 
 
+@facturaapi.route('/facturas/<int:id_factura>/kude', methods=['GET'])
+def descargarKude(id_factura):
+    """Descarga el Representante Gráfico KUDE de la Factura, validando y guardando según política SIFEN."""
+    dao = FacturaDao()
+    from app.services.sifen_kude_service import SifenKudeService
+    import os
+    
+    try:
+        factura = dao.getFacturaById(id_factura)
+        if not factura:
+            return jsonify({'success': False, 'error': 'No se encontró la factura.'}), 404
+            
+        cdc = factura.get('codigo_sifen')
+        
+        # Validar que sea un DE SIFEN y tenga CDC
+        if not cdc:
+            # Si no tiene CDC, es una factura tradicional o no autorizada todavía
+            return jsonify({
+                'success': False, 
+                'error': 'Factura no posee CDC (No es válida o no ha sido sincronizada a SIFEN).'
+            }), 400
+            
+        # Si ya existe path en base de datos, lo retornamos (cache)
+        kude_path = factura.get('factura_kude_path')
+        if kude_path:
+            abs_path = os.path.join(app.root_path, 'static', *kude_path.split('/'))
+            if os.path.exists(abs_path):
+                return send_file(abs_path, as_attachment=True)
+
+        # Si no existe, lo generamos
+        detalle = dao.getFacturaDetalle(id_factura)
+        
+        # Preparar data estructurada como espera _generar_factura_pdf
+        factura_data = {
+            'factura_numero': factura.get('factura_numero', ''),
+            'fecha_factura': str(factura.get('fecha_factura', '')),
+            'codigo_sifen': cdc,
+            'numero_timbrado': factura.get('numero_timbrado', ''),
+            'fecha_inicio_vigencia': factura.get('fecha_inicio_vigencia', '01/01/2024'),
+            'fecha_fin_vigencia': factura.get('fecha_fin_vigencia', '31/12/2024'),
+            'paciente_nombre': factura.get('paciente_nombre', ''),
+            'paciente_cedula': factura.get('paciente_cedula', ''),
+            'paciente_telefono': factura.get('paciente_telefono', ''),
+            'paciente_direccion': factura.get('paciente_direccion', ''),
+            'condicion_venta': factura.get('condicion_venta', 'Contado'),
+            'moneda': factura.get('moneda', 'PYG'),
+            'tipo_operacion': 'Venta de Mercadería',
+            'factura_total': factura.get('factura_total', 0),
+            'factura_total_letras': factura.get('factura_total_letras', ''),
+            'ruc_emisor': app.config.get('RUC_EMISOR', '0000000-0')
+        }
+        
+        config_empresa = _obtenerDatosEmpresaParaSIFEN(factura.get('id_empresa'))
+        
+        # Generamos, guardamos politícamente y actualizamos bd
+        db_path = SifenKudeService.generar_y_guardar_kude(id_factura, factura_data, detalle, config_empresa)
+        
+        abs_path = os.path.join(app.root_path, 'static', *db_path.split('/'))
+        return send_file(abs_path, as_attachment=True)
+            
+    except Exception as e:
+        app.logger.error(f"Error en descarga de KUDE: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'error': f'Ocurrió un error al generar el PDF KUDE: {str(e)}'}), 500
 @facturaapi.route('/facturas/<int:id_factura>/sifen-simulado', methods=['GET'])
 def simularEnvioSifen(id_factura):
     """
@@ -535,4 +602,94 @@ def simularEnvioSifen(id_factura):
             'success': False,
             'error': f'Ocurrió un error en la simulación SIFEN: {str(e)}'
         }), 500
+
+
+@facturaapi.route('/facturas/<int:id_factura>/xml', methods=['GET'])
+def getFacturaXml(id_factura):
+    """Genera y retorna el XML SIFEN (v150) de una factura guardada"""
+    dao = FacturaDao()
+    xml_service = SifenXMLService()
+    
+    try:
+        factura = dao.getFacturaById(id_factura)
+        if not factura:
+            return jsonify({'success': False, 'error': 'No se encontró la factura.'}), 404
+            
+        detalle = dao.getFacturaDetalle(id_factura)
+        
+        # Obtener configuración
+        from app.services.sifen_config_service import SifenConfigService, SifenConfigException
+        try:
+            config_emis = SifenConfigService.get_config_emision(id_empresa=factura.get('id_empresa'))
+        except SifenConfigException as e:
+            # Generar config dummy si falla para evitar que el endpoint caiga en facturas viejas
+            from app.services.sifen_config_service import SifenEmisionConfig
+            config_emis = SifenEmisionConfig(
+                ruc_emisor="80000000", digito_verificador="1", razon_social="EMPRESA PREDETERMINADA",
+                actividad_economica="ACTIVIDAD ECONOMICA", direccion="DIRECCION", numero_casa="0", ciudad="ASUNCION",
+                telefono="000000", email="test@test.com", timbrado_numero="12345678", timbrado_fecha_inicio="2024-01-01",
+                timbrado_fecha_fin="2025-01-01", establecimiento_codigo="001", punto_expedicion_codigo="001", siguiente_numero=1, id_punto_expedicion=1
+            )
+            
+        cdc = factura.get('codigo_sifen')
+        if not cdc:
+            from app.utils.sifen_cdc_utils import SifenCDCUtils
+            # Extraer num doc secuencial
+            num_str = str(factura.get('factura_numero', '0'))
+            num_sec = num_str.split('-')[-1].lstrip('0') or '0'
+            fecha_str = str(factura.get('fecha_factura', ''))[:10].replace('-', '') or '20240101'
+            cdc = SifenCDCUtils.generar_cdc_real(
+                tipo_documento="01", ruc_emisor=config_emis.ruc_emisor, dv_ruc_emisor=config_emis.digito_verificador,
+                establecimiento=config_emis.establecimiento_codigo, punto_expedicion=config_emis.punto_expedicion_codigo,
+                numero_documento=num_sec, tipo_contribuyente="2" if config_emis.ruc_emisor.startswith("8") else "1",
+                fecha_emision_yyyymmdd=fecha_str
+            )
+            
+        xml_bytes = xml_service.generar_xml_v150(factura, detalle, config_emis, cdc)
+        
+        from flask import Response
+        return Response(xml_bytes, mimetype='application/xml')
+        
+    except Exception as e:
+        app.logger.error(f"Error al generar XML de factura: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'error': f'Ocurrió un error: {str(e)}'}), 500
+
+
+@facturaapi.route('/facturas/<int:id_factura>/json', methods=['GET'])
+def getFacturaJson(id_factura):
+    """Retorna la representación JSON de la factura"""
+    dao = FacturaDao()
+    try:
+        factura = dao.getFacturaById(id_factura)
+        if not factura:
+            return jsonify({'success': False, 'error': 'No se encontró la factura.'}), 404
+        detalle = dao.getFacturaDetalle(id_factura)
+        factura['detalle'] = detalle
+        return jsonify(factura), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener JSON de factura: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@facturaapi.route('/facturas/<int:id_factura>/reenviar', methods=['POST'])
+def reenviarFactura(id_factura):
+    """
+    P5 — Reenvío de factura electrónica rechazada.
+    Permite reenviar una factura en estado RECHAZADO a SIFEN.
+    """
+    from app.services.sifen_kude_service import SifenKudeService
+    try:
+        resultado = SifenKudeService.reenviar_factura(id_factura)
+        if resultado.get('success'):
+            return jsonify({'success': True, 'data': resultado, 'error': None}), 200
+        else:
+            return jsonify({'success': False, 'error': resultado.get('mensaje', 'No se pudo reenviar.')}), 400
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 404
+    except Exception as e:
+        app.logger.error(f"Error al reenviar factura {id_factura}: {str(e)}")
+        return jsonify({'success': False, 'error': f'Ocurrió un error interno: {str(e)}'}), 500
+
 

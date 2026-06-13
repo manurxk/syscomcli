@@ -1,6 +1,92 @@
 from flask import current_app as app
+from app.dao.modulos.ventas.libro_ventas.LibroVentasDao import LibroVentasDao
 from app.conexion.Conexion import Conexion
 from datetime import datetime, date, timedelta
+from decimal import Decimal, ROUND_HALF_UP
+
+
+def numero_a_letras(monto) -> str:
+    """Convierte un monto numérico (int o Decimal) a su representación en letras en español paraguayo.
+    Rango soportado: 0 a 999.999.999
+    Ejemplo: 950000 -> 'Novecientos cincuenta mil Guaraníes'
+    """
+    UNIDADES = [
+        '', 'un', 'dos', 'tres', 'cuatro', 'cinco',
+        'seis', 'siete', 'ocho', 'nueve', 'diez',
+        'once', 'doce', 'trece', 'catorce', 'quince',
+        'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve',
+        'veinte', 'veintiún', 'veintidós', 'veintitrés', 'veinticuatro',
+        'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'
+    ]
+    DECENAS = [
+        '', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta',
+        'sesenta', 'setenta', 'ochenta', 'noventa'
+    ]
+    CENTENAS = [
+        '', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos',
+        'seiscientos', 'setecientos', 'ochocientos', 'novecientos'
+    ]
+
+    def _cientos(n: int) -> str:
+        if n == 0:
+            return ''
+        c = n // 100
+        resto = n % 100
+        texto_c = ''
+        if c > 0:
+            if c == 1 and resto > 0:
+                texto_c = 'ciento'
+            elif c == 1:
+                texto_c = 'cien'
+            else:
+                texto_c = CENTENAS[c]
+        texto_r = ''
+        if 1 <= resto <= 29:
+            texto_r = UNIDADES[resto]
+            if resto == 21:
+                texto_r = 'veintiún'
+        elif resto >= 30:
+            d = resto // 10
+            u = resto % 10
+            texto_r = DECENAS[d]
+            if u > 0:
+                texto_r += ' y ' + UNIDADES[u]
+        partes = [p for p in [texto_c, texto_r] if p]
+        return ' '.join(partes)
+
+    monto_int = int(Decimal(str(monto)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+    if monto_int == 0:
+        return 'Cero Guaraníes'
+    if monto_int < 0 or monto_int > 999_999_999:
+        raise ValueError(f'Monto fuera de rango para numero_a_letras: {monto_int}')
+
+    millones = monto_int // 1_000_000
+    miles = (monto_int % 1_000_000) // 1_000
+    resto = monto_int % 1_000
+
+    partes = []
+    if millones > 0:
+        if millones == 1:
+            partes.append('un millón')
+        else:
+            partes.append(_cientos(millones) + ' millones')
+    if miles > 0:
+        if miles == 1:
+            partes.append('mil')
+        else:
+            partes.append(_cientos(miles) + ' mil')
+    if resto > 0:
+        partes.append(_cientos(resto))
+
+    texto = ' '.join(partes)
+    # Sentence case: Primera letra en mayúscula
+    texto = texto[0].upper() + texto[1:] if texto else ''
+    
+    # Pluralidad del Guaraní
+    moneda = 'Guaraní' if monto_int == 1 else 'Guaraníes'
+    return f'{texto} {moneda}'
+
+
 
 class FacturaDao:
     """DAO para gestionar facturas (facturación electrónica)"""
@@ -160,7 +246,9 @@ class FacturaDao:
                 -- Datos de timbrado
                 t.numero_timbrado AS timbrado_numero,
                 -- Datos de punto de expedición
-                pe.nombre_punto_expedicion AS punto_expedicion_nombre
+                pe.nombre_punto_expedicion AS punto_expedicion_nombre,
+                -- Presupuesto de origen (Fase 1)
+                f.id_presupuesto
             FROM facturas f
             JOIN pacientes pac ON f.id_paciente = pac.id_paciente
             JOIN personas pp ON pac.id_persona = pp.id_persona
@@ -222,7 +310,8 @@ class FacturaDao:
                 'empresa_razon_social': fac[33],
                 'empresa_ruc': fac[34],
                 'timbrado_numero': fac[35],
-                'punto_expedicion_nombre': fac[36]
+                'punto_expedicion_nombre': fac[36],
+                'id_presupuesto': fac[37]  # FK de trazabilidad presupuesto (Fase 1)
             }
             
         except Exception as e:
@@ -243,6 +332,7 @@ class FacturaDao:
                 fd.item_descripcion,
                 fd.item_cantidad,
                 fd.item_precio_unitario,
+                fd.item_precio_con_iva,
                 fd.item_descuento,
                 fd.item_subtotal,
                 fd.id_tipo_impuesto,
@@ -273,19 +363,22 @@ class FacturaDao:
                 'id_consulta': d[3],
                 'item_descripcion': d[4],
                 'item_cantidad': d[5],
-                'item_precio_unitario': d[6],
-                'item_descuento': d[7],
-                'item_subtotal': d[8],
-                'id_tipo_impuesto': d[9],
-                'impuesto_porcentaje': float(d[10]) if d[10] else 0,
-                'impuesto_monto': d[11],
-                'item_total': d[12],
-                'tipo_item': d[13] if d[13] else '',
-                'tipo_impuesto': d[14] if d[14] else ''
+                'item_precio_unitario': d[6],         # base sin IVA (campo fiscal)
+                'item_precio_con_iva': d[7] if d[7] else d[6],  # precio c/IVA para pantalla (P4)
+                'item_descuento': d[8],
+                'item_subtotal': d[9],
+                'id_tipo_impuesto': d[10],
+                'impuesto_porcentaje': float(d[11]) if d[11] else 0,
+                'impuesto_monto': d[12],
+                'item_total': d[13],
+                'tipo_item': d[14] if d[14] else '',
+                'tipo_impuesto': d[15] if d[15] else ''
             } for d in detalles]
             
         except Exception as e:
-            app.logger.error(f"Error al obtener detalle de la factura: {str(e)}")
+            app.logger.error(f"Error al obtener detalle de la factura {id_factura}: {str(e)}")
+            import traceback
+            app.logger.error(traceback.format_exc())
             return []
         finally:
             cur.close()
@@ -430,8 +523,14 @@ class FacturaDao:
                       factura_subtotal=0, factura_descuento=0, factura_impuestos=0,
                       factura_total=0, codigo_sifen=None, numero_timbrado=None,
                       observaciones=None, est_factura=1, usuario_creacion='ADMIN',
-                      id_empresa=None, id_timbrado=None, id_punto_expedicion=None):
-        """Guarda una nueva factura"""
+                      id_empresa=None, id_timbrado=None, id_punto_expedicion=None,
+                      id_presupuesto=None):
+        """Guarda una nueva factura.
+        
+        Args:
+            id_presupuesto: FK opcional al presupuesto de origen. Permite
+                trazabilidad directa presupuesto -> factura (Fase 1).
+        """
         
         if not all([id_paciente, id_tipo_comprobante, id_condicion_venta, fecha_factura]):
             app.logger.error("Faltan campos obligatorios para guardar factura")
@@ -446,10 +545,16 @@ class FacturaDao:
                 factura_numero, id_paciente, id_pedido, id_tipo_comprobante,
                 id_condicion_venta, id_moneda, fecha_factura, fecha_vencimiento,
                 factura_subtotal, factura_descuento, factura_impuestos, factura_total,
+                factura_total_letras,
                 codigo_sifen, numero_timbrado, observaciones, est_factura, usuario_creacion,
-                id_empresa, id_timbrado, id_punto_expedicion
+                id_empresa, id_timbrado, id_punto_expedicion,
+                factura_cdc, factura_estado_sifen, factura_xml_generado, factura_timbrado_id,
+                id_presupuesto
             )
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES(
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s
+            )
             RETURNING id_factura
         """
         
@@ -458,16 +563,55 @@ class FacturaDao:
         cur = con.cursor()
         
         try:
-            # Generar número de factura usando punto de expedición (dentro de la misma transacción)
-            resultado = self._generarNumeroFactura(id_punto_expedicion, cur)
-            if isinstance(resultado, tuple):
-                factura_numero, siguiente_num = resultado
-            else:
-                # Retrocompatibilidad: si retorna solo string (formato antiguo)
-                factura_numero = resultado
+            # Obtener configuración de emisión SIFEN (Valida timbrado vigente automáticamente)
+            from app.services.sifen_config_service import SifenConfigService, SifenConfigException
+            from app.utils.sifen_cdc_utils import SifenCDCUtils
+
+            try:
+                config_emis = SifenConfigService.get_config_emision(id_empresa=id_empresa, id_punto_expedicion=id_punto_expedicion)
+                
+                # Asegurar valores desde la config oficial
+                numero_timbrado = config_emis.timbrado_numero
+                id_punto_expedicion = config_emis.id_punto_expedicion
+                id_timbrado_real = config_emis.timbrado_numero # No tenemos el ID del timbrado explicitamente, usar name o buscar
+                
+                factura_numero = f"{config_emis.establecimiento_codigo}-{config_emis.punto_expedicion_codigo}-{str(config_emis.siguiente_numero).zfill(7)}"
+                
+                # Actualizar el último número usado
+                cur.execute("UPDATE puntos_expedicion SET ultimo_numero_usado = %s WHERE id_punto_expedicion = %s", 
+                            (config_emis.siguiente_numero, id_punto_expedicion))
+                
+                # Generar CDC Real
+                if not codigo_sifen:
+                    codigo_sifen = SifenCDCUtils.generar_cdc_real(
+                        tipo_documento="01", # Factura
+                        ruc_emisor=config_emis.ruc_emisor,
+                        dv_ruc_emisor=config_emis.digito_verificador,
+                        establecimiento=config_emis.establecimiento_codigo,
+                        punto_expedicion=config_emis.punto_expedicion_codigo,
+                        numero_documento=str(config_emis.siguiente_numero),
+                        tipo_contribuyente="2" if config_emis.ruc_emisor.startswith("8") else "1",
+                        fecha_emision_yyyymmdd=fecha_factura.replace("-", "")[:8] if isinstance(fecha_factura, str) else fecha_factura.strftime("%Y%m%d")
+                    )
             
+            except SifenConfigException as e:
+                # Todo: SIFEN_REAL: Bloquear si no hay timbrado activo.
+                app.logger.warning(f"Advertencia SIFEN (Puede fallar en PRODUCCION): {str(e)}")
+                # Fallback al sistema anterior temporalmente si la BD no está bien configurada
+                resultado = self._generarNumeroFactura(id_punto_expedicion, cur)
+                if isinstance(resultado, tuple):
+                    factura_numero, _ = resultado
+                else:
+                    factura_numero = resultado
+
             app.logger.info(f"Insertando factura para paciente ID: {id_paciente}, número: {factura_numero}")
-            
+
+            # Generar texto del total en letras (P1)
+            try:
+                total_letras = numero_a_letras(factura_total)
+            except Exception:
+                total_letras = None
+
             cur.execute(insertFacturaSQL, (
                 factura_numero,
                 id_paciente,
@@ -481,6 +625,7 @@ class FacturaDao:
                 factura_descuento,
                 factura_impuestos,
                 factura_total,
+                total_letras,           # factura_total_letras
                 codigo_sifen,
                 numero_timbrado,
                 observaciones,
@@ -488,10 +633,31 @@ class FacturaDao:
                 usuario_creacion,
                 id_empresa,
                 id_timbrado,
-                id_punto_expedicion
+                id_punto_expedicion,
+                codigo_sifen,           # factura_cdc
+                'PENDIENTE',            # factura_estado_sifen
+                None,                   # factura_xml_generado
+                id_timbrado,            # factura_timbrado_id
+                id_presupuesto          # FK de trazabilidad (Fase 1)
             ))
             
             factura_id = cur.fetchone()[0]
+            # Register entry in libro_ventas for reporting
+            try:
+                libro_dao = LibroVentasDao()
+                libro_dao.registrarEntradaLibroVentas(
+                    libro_fecha=fecha_factura,
+                    tipo_comprobante='FACTURA',
+                    numero_comprobante=factura_numero,
+                    id_paciente=id_paciente,
+                    monto_gravado=factura_subtotal,
+                    monto_exento=0,
+                    monto_iva=factura_impuestos,
+                    monto_total=factura_total,
+                    id_factura=factura_id
+                )
+            except Exception as e:
+                app.logger.error(f"Error al registrar entrada en libro de ventas para factura {factura_id}: {str(e)}")
             
             # Generar cuenta a cobrar si es crédito
             self._generarCuentaCobrar(factura_id, id_paciente, factura_total, fecha_vencimiento)
@@ -612,18 +778,36 @@ class FacturaDao:
             app.logger.error("Faltan campos obligatorios para guardar detalle de factura")
             return None
         
-        # Calcular subtotal e impuesto
-        item_subtotal = (item_precio_unitario * item_cantidad) - item_descuento
-        impuesto_monto = int(item_subtotal * (impuesto_porcentaje / 100)) if impuesto_porcentaje > 0 else 0
-        item_total = item_subtotal + impuesto_monto
+        # Calcular descomposición de IVA (El precio unitario ingresado ya contiene IVA)
+        precio_con_iva_orig = Decimal(str(item_precio_unitario))  # precio que el usuario ingresó (con IVA)
+        cantidad = Decimal(str(item_cantidad))
+        descuento = Decimal(str(item_descuento))
+        tasa = Decimal(str(impuesto_porcentaje))
+        
+        # El total de la operación es lo que el cliente paga
+        item_total_dec = (precio_con_iva_orig * cantidad) - descuento
+        
+        # Extraer base e IVA: base = total / (1 + tasa/100)
+        divisor = Decimal('1') + (tasa / Decimal('100'))
+        item_subtotal_dec = (item_total_dec / divisor).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+        impuesto_monto_dec = item_total_dec - item_subtotal_dec
+        
+        # Precio unitario base (sin IVA) — se guarda en item_precio_unitario para la lógica fiscal
+        item_precio_unitario_base = (item_subtotal_dec / cantidad).quantize(Decimal('1'), rounding=ROUND_HALF_UP) if cantidad > 0 else Decimal('0')
+        
+        item_subtotal = int(item_subtotal_dec)
+        impuesto_monto = int(impuesto_monto_dec)
+        item_total = int(item_total_dec)
+        item_precio_unitario_final = int(item_precio_unitario_base)  # base sin IVA (campo fiscal)
+        item_precio_con_iva_int = int(precio_con_iva_orig)           # precio original c/IVA (P4: para pantalla/PDF)
         
         insertDetalleSQL = """
             INSERT INTO factura_detalle(
                 id_factura, id_tipo_item, id_consulta, item_descripcion,
-                item_cantidad, item_precio_unitario, item_descuento, item_subtotal,
+                item_cantidad, item_precio_unitario, item_precio_con_iva, item_descuento, item_subtotal,
                 id_tipo_impuesto, impuesto_porcentaje, impuesto_monto, item_total
             )
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_factura_detalle
         """
         
@@ -638,7 +822,8 @@ class FacturaDao:
                 id_consulta,
                 item_descripcion,
                 item_cantidad,
-                item_precio_unitario,
+                item_precio_unitario_final,    # base sin IVA
+                item_precio_con_iva_int,        # precio original c/IVA (P4)
                 item_descuento,
                 item_subtotal,
                 id_tipo_impuesto,
@@ -648,11 +833,11 @@ class FacturaDao:
             ))
             
             detalle_id = cur.fetchone()[0]
+            con.commit()
             
-            # Actualizar totales de la factura
+            # Actualizar totales de la factura (en nueva transacción)
             self._actualizarTotalesFactura(id_factura)
             
-            con.commit()
             return detalle_id
             
         except Exception as e:
@@ -692,7 +877,18 @@ class FacturaDao:
         try:
             cur.execute(sql, (id_factura, id_factura, id_factura, id_factura))
             con.commit()
-            
+
+            # Actualizar factura_total_letras (P1) después del commit de totales
+            try:
+                cur.execute("SELECT factura_total FROM facturas WHERE id_factura = %s", (id_factura,))
+                row = cur.fetchone()
+                if row and row[0] is not None:
+                    letras = numero_a_letras(row[0])
+                    cur.execute("UPDATE facturas SET factura_total_letras = %s WHERE id_factura = %s", (letras, id_factura))
+                    con.commit()
+            except Exception as e_letras:
+                app.logger.warning(f"No se pudo actualizar factura_total_letras: {str(e_letras)}")
+
             # Actualizar cuenta a cobrar si existe
             self._actualizarCuentaCobrar(id_factura)
         except Exception as e:
@@ -797,64 +993,94 @@ class FacturaDao:
                             item_descuento=None, id_tipo_item=None,
                             id_consulta=None, id_tipo_impuesto=None,
                             impuesto_porcentaje=None):
-        """Actualiza un item del detalle de factura"""
-        
-        campos = []
-        valores = []
-        
-        if item_descripcion:
-            campos.append("item_descripcion = %s")
-            valores.append(item_descripcion)
-        if item_cantidad is not None:
-            campos.append("item_cantidad = %s")
-            valores.append(item_cantidad)
-        if item_precio_unitario is not None:
-            campos.append("item_precio_unitario = %s")
-            valores.append(item_precio_unitario)
-        if item_descuento is not None:
-            campos.append("item_descuento = %s")
-            valores.append(item_descuento)
-        if id_tipo_item is not None:
-            campos.append("id_tipo_item = %s")
-            valores.append(id_tipo_item)
-        if id_consulta is not None:
-            campos.append("id_consulta = %s")
-            valores.append(id_consulta)
-        if id_tipo_impuesto is not None:
-            campos.append("id_tipo_impuesto = %s")
-            valores.append(id_tipo_impuesto)
-        if impuesto_porcentaje is not None:
-            campos.append("impuesto_porcentaje = %s")
-            valores.append(impuesto_porcentaje)
-        
-        if not campos:
-            return False
-        
-        # Recalcular subtotal e impuesto
-        campos.append("item_subtotal = (item_precio_unitario * item_cantidad) - item_descuento")
-        campos.append("impuesto_monto = (item_subtotal * impuesto_porcentaje / 100)")
-        campos.append("item_total = item_subtotal + impuesto_monto")
-        valores.append(id_factura_detalle)
-        
-        updateSQL = f"""
-            UPDATE factura_detalle
-            SET {', '.join(campos)}
-            WHERE id_factura_detalle = %s
-        """
+        """Actualiza un item del detalle de factura con descompocisión de IVA"""
         
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         
         try:
+            # 1. Obtener datos actuales para el cálculo
+            cur.execute("""
+                SELECT item_cantidad, item_precio_unitario, item_descuento, impuesto_porcentaje, item_total
+                FROM factura_detalle WHERE id_factura_detalle = %s
+            """, (id_factura_detalle,))
+            actual = cur.fetchone()
+            if not actual:
+                return False
+                
+            # 2. Determinar valores finales (nuevos o actuales)
+            c_cant = item_cantidad if item_cantidad is not None else actual[0]
+            desc = item_descuento if item_descuento is not None else actual[2]
+            tasa = impuesto_porcentaje if impuesto_porcentaje is not None else actual[3]
+            
+            # Si recibimos un precio nuevo, viene CON IVA. 
+            # Si no recibimos, el que está en la base YA ES BASE (según nueva lógica).
+            if item_precio_unitario is not None:
+                p_con_iva = item_precio_unitario
+            else:
+                # Recalcular p_con_iva original para mantener el total si no se cambió el precio
+                p_con_iva = (int(actual[4]) + int(actual[2])) / int(actual[0]) if actual[0] > 0 else 0
+            
+            # 3. Calcular descompocisión de IVA en Python para precisión
+            from decimal import Decimal, ROUND_HALF_UP
+            d_p = Decimal(str(p_con_iva))
+            d_c = Decimal(str(c_cant))
+            d_d = Decimal(str(desc))
+            d_t = Decimal(str(tasa))
+            
+            total_ope = (d_p * d_c) - d_d
+            divisor = Decimal('1') + (d_t / Decimal('100'))
+            base_total = (total_ope / divisor).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+            iva_monto = total_ope - base_total
+            precio_unit_base = (base_total / d_c).quantize(Decimal('1'), rounding=ROUND_HALF_UP) if d_c > 0 else Decimal('0')
+            
+            # 4. Construir el Update
+            campos = []
+            valores = []
+            
+            if item_descripcion is not None:
+                campos.append("item_descripcion = %s")
+                valores.append(item_descripcion)
+            
+            # Siempre actualizamos los campos de cálculo para mantener consistencia
+            campos.append("item_cantidad = %s")
+            valores.append(int(c_cant))
+            campos.append("item_precio_unitario = %s")
+            valores.append(int(precio_unit_base))
+            campos.append("item_descuento = %s")
+            valores.append(int(desc))
+            campos.append("impuesto_porcentaje = %s")
+            valores.append(int(tasa))
+            campos.append("item_subtotal = %s")
+            valores.append(int(base_total))
+            campos.append("impuesto_monto = %s")
+            valores.append(int(iva_monto))
+            campos.append("item_total = %s")
+            valores.append(int(total_ope))
+            
+            if id_tipo_item is not None:
+                campos.append("id_tipo_item = %s")
+                valores.append(id_tipo_item)
+            if id_consulta is not None:
+                campos.append("id_consulta = %s")
+                valores.append(id_consulta)
+            if id_tipo_impuesto is not None:
+                campos.append("id_tipo_impuesto = %s")
+                valores.append(id_tipo_impuesto)
+            
+            valores.append(id_factura_detalle)
+            
+            updateSQL = f"UPDATE factura_detalle SET {', '.join(campos)} WHERE id_factura_detalle = %s"
             cur.execute(updateSQL, tuple(valores))
-            
-            # Obtener id_factura para actualizar totales
-            cur.execute("SELECT id_factura FROM factura_detalle WHERE id_factura_detalle = %s", (id_factura_detalle,))
-            id_factura = cur.fetchone()[0]
-            self._actualizarTotalesFactura(id_factura)
-            
             con.commit()
+            
+            # 5. Obtener id_factura para actualizar totales de la cabecera
+            cur.execute("SELECT id_factura FROM factura_detalle WHERE id_factura_detalle = %s", (id_factura_detalle,))
+            res_fac = cur.fetchone()
+            if res_fac:
+                self._actualizarTotalesFactura(res_fac[0])
+            
             return True
         except Exception as e:
             app.logger.error(f"Error al actualizar detalle de factura: {str(e)}")

@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from app.dao.BusquedaDao import BusquedaDao
+from app.utils.especialista_helper import obtener_id_especialista_usuario
+from app.conexion.Conexion import Conexion
 
 # Crear blueprint para búsqueda
 busquedaapi = Blueprint('busquedaapi', __name__)
@@ -48,6 +50,39 @@ def buscarGlobal():
             'data': None,
             'error': 'Ocurrió un error al realizar la búsqueda'
         }), 500
+
+@busquedaapi.route('/especialista-actual', methods=['GET'])
+def getEspecialistaActual():
+    """Obtiene datos del especialista logueado para auto-completar formularios"""
+    try:
+        id_especialista = obtener_id_especialista_usuario()
+        if not id_especialista:
+            return jsonify({'success': False, 'error': 'No es especialista'}), 404
+        
+        # Obtener nombre completo
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        cur.execute("""
+            SELECT CONCAT(p.per_nombre, ' ', p.per_apellido) 
+            FROM especialistas e
+            JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+            JOIN personas p ON f.id_persona = p.id_persona
+            WHERE e.id_especialista = %s
+        """, (id_especialista,))
+        nombre = cur.fetchone()
+        cur.close()
+        con.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'id_especialista': id_especialista,
+                'nombre_completo': nombre[0] if nombre else 'Especialista'
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 

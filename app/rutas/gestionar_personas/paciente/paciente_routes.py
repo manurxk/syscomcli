@@ -7,9 +7,10 @@ def pacienteIndex():
     return render_template('paciente-index.html')
 
 @pacientemod.route('/paciente-agregar')
-def pacienteAgregar():
-    """Página para agregar nuevo paciente (formulario completo sin modales)"""
-    return render_template('paciente-agregar.html')
+@pacientemod.route('/paciente-editar/<int:id_paciente>')
+def pacienteAgregar(id_paciente=None):
+    """Página para agregar o editar paciente (formulario completo)"""
+    return render_template('paciente-agregar.html', id_paciente=id_paciente)
 
 @pacientemod.route('/mis-pacientes')
 def misPacientes():

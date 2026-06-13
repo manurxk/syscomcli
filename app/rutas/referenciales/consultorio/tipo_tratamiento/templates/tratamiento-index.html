@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Tipos de Tratamientos
+{% endblock %}
+
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Tipos de Tratamientos
+          </h1>
+          <div class="page-header-subtitle">Administración de categorías de tratamientos médicos para pacientes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card card-header-actions mb-4">
+    <div class="card-header">
+      Listado de Tipos de Tratamientos
+      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Tipo
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" role="dialog" aria-labelledby="modalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formTratamiento">
+          <input type="hidden" id="txtIdTipoTratamiento">
+          <div class="mb-3">
+            <label class="small mb-1" for="txtDescripcion">Descripción <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtDescripcion" type="text"
+              placeholder="Ingrese descripción del tratamiento" required>
+            <div class="small text-muted mt-1">Solo letras, números, espacios y puntos</div>
+          </div>
+          <div class="mb-3">
+            <label class="small mb-1" for="selectEstado">Estado</label>
+            <select class="form-select" id="selectEstado">
+              <option value="A">Activo</option>
+              <option value="I">Inactivo</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light border-top">
+        <button class="btn btn-{{ ui.boton_limpiar }}" type="button" data-bs-dismiss="modal">Cerrar</button>
+        <button class="btn btn-{{ ui.boton_guardar }}" type="button" id="btnGuardar">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/tipos-tratamientos',
+      columns: [
+        { data: 'descripcion' },
+        {
+          data: 'estado', render: function (val) {
+            return val === 'A' ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
+          }
+        },
+        {
+          data: function (row) {
+            return `<button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>`
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function () {
+      $('#modalTitle').text("Agregar un Tipo de Tratamiento");
+      $('#txtIdTipoTratamiento').val("");
+      $('#txtDescripcion').val("");
+      $('#selectEstado').val("A");
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idTipoTratamiento = $('#txtIdTipoTratamiento').val();
+      const nuevaDescripcion = $('#txtDescripcion').val();
+      const estado = $('#selectEstado').val();
+      const tabla = $('#tbl').DataTable();
+
+      if (!nuevaDescripcion.trim()) {
+        Swal.fire("Error", "La descripción no puede estar vacía.", "error");
+        return;
+      }
+
+      const payload = {
+        descripcion: nuevaDescripcion,
+        estado: estado
+      };
+
+      if (idTipoTratamiento) {
+        // update
+        fetch(`/api/v1/tipos-tratamientos/${idTipoTratamiento}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data && !data.error && data.success) {
+              tabla.ajax.reload();
+              Swal.fire("Actualizado", "El tipo de tratamiento ha sido actualizado correctamente.", "success");
+              (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+            } else {
+              Swal.fire("Error", data.error || "No se pudo actualizar el tipo de tratamiento.", "error");
+            }
+          }).catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al actualizar el tipo de tratamiento.", "error");
+          });
+      } else {
+        // insert
+        fetch(`/api/v1/tipos-tratamientos`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(payload)
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data && !data.error && data.success) {
+              tabla.ajax.reload();
+              Swal.fire("Agregado", "El tipo de tratamiento ha sido agregado correctamente.", "success");
+              (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+            } else {
+              Swal.fire("Error", data.error || "No se pudo guardar el tipo de tratamiento.", "error");
+            }
+          }).catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al guardar el tipo de tratamiento.", "error");
+          });
+      }
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
+      Swal.fire({
+        title: "¿Deseas editar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $('#modalTitle').text("Editar un Tipo de Tratamiento");
+
+          const idTipoTratamiento = $(this).data('id');
+          $('#txtIdTipoTratamiento').val(idTipoTratamiento);
+
+          fetch(`/api/v1/tipos-tratamientos/${idTipoTratamiento}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          })
+            .then(resp => resp.json())
+            .then(data => {
+              $('#txtDescripcion').val(data.data.descripcion);
+              $('#selectEstado').val(data.data.estado);
+              new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+            });
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
+      const idTipoTratamiento = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/tipos-tratamientos/${idTipoTratamiento}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
+          })
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const fila = $(this).closest('tr');
+                const tabla = $('#tbl').DataTable();
+                tabla.row(fila).remove().draw();
+                Swal.fire("Eliminado", "El tipo de tratamiento ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar el tipo de tratamiento.", "error");
+              }
+            }).catch(err => {
+              Swal.fire("Error", "Ocurrió un error al eliminar el tipo de tratamiento.", "error");
+            });
+        }
+      });
+    });
+  }
+
+  const addEvents = () => {
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  }
+
+  $(function () {
+    initDatatable();
+    addEvents();
+  });
+</script>
+{% endblock %}

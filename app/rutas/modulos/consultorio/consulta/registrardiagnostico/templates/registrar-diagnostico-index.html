@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Diagnóstico
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Registrar Diagnóstico Médico
+          </h1>
+          <div class="page-header-subtitle">Gestión de consultas disponibles para registro de diagnósticos CIE-10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <!-- Tarjeta principal -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="m-0 fw-bold text-info">Consultas Disponibles</h5>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblConsultas">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Paciente</th>
+              <th>HC</th>
+              <th>Profesional</th>
+              <th>Motivo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .card-header {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, .05);
+  }
+
+  #tblConsultas tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  #tblConsultas tbody tr:hover {
+    background-color: #d1ecf1;
+  }
+
+  @media (max-width: 768px) {
+    .card-body {
+      padding: 1rem;
+    }
+  }
+</style>
+
+{% endblock %}
+
+{% block js %}
+<script>
+  // ==========================================
+  // CONFIGURACIÓN GLOBAL
+  // ==========================================
+  const CSRFToken = "{{ csrf_token() }}" || null;
+  const BASE_AGREGAR_URL = "{{ url_for('registrar_diagnostico.diagnosticoAgregar') }}";
+
+  // ==========================================
+  // DATATABLE DE CONSULTAS
+  // ==========================================
+  const initDatatable = () => {
+    $('#tblConsultas').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: {
+        url: '/api/v1/consultas',
+        dataSrc: function (json) {
+          if (json.success) {
+            return json.data;
+          } else {
+            Swal.fire('Error', json.error || 'Error al cargar consultas', 'error');
+            return [];
+          }
+        },
+        error: function (xhr, error, thrown) {
+          console.error('Error en AJAX:', xhr.responseText);
+          Swal.fire('Error', 'No se pudieron cargar las consultas', 'error');
+        }
+      },
+      columns: [
+        {
+          data: 'consulta_fecha',
+          render: function (data) {
+            return data ? data.split(' ')[0] : 'N/A';
+          }
+        },
+        {
+          data: 'consulta_fecha',
+          render: function (data) {
+            return data ? data.split(' ')[1] : 'N/A';
+          }
+        },
+        { data: 'paciente_nombre' },
+        { data: 'historia_clinica' },
+        { data: 'profesional_nombre' },
+        {
+          data: 'consulta_motivo',
+          render: function (data) {
+            return data.length > 50 ? data.substring(0, 50) + '...' : data;
+          }
+        },
+        {
+          data: 'consulta_estado',
+          render: function (data) {
+            const badges = {
+              'PENDIENTE': '<span class="badge bg-warning text-dark">Pendiente</span>',
+              'EN_ATENCION': '<span class="badge bg-info text-white">En Atención</span>',
+              'FINALIZADA': '<span class="badge bg-success text-white">Finalizada</span>'
+            };
+            return badges[data] || data;
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return `
+            <a href="${BASE_AGREGAR_URL}/${row.id_consulta}" 
+               class="btn btn-info btn-sm" 
+               title="Registrar Diagnóstico">
+              <i class="fas fa-plus me-1"></i> Agregar Diagnóstico
+            </a>
+            `;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[0, 'desc'], [1, 'desc']],
+      responsive: true,
+      pageLength: 10
+    });
+  }
+
+  // ==========================================
+  // INICIALIZACIÓN
+  // ==========================================
+  $(document).ready(function () {
+    console.log('🚀 Inicializando módulo de diagnósticos...');
+    initDatatable();
+    console.log('✅ Módulo de diagnósticos inicializado correctamente');
+  });
+</script>
+{% endblock %}

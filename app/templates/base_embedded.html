@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
+    <title>{% block titulo %}CIN{% endblock %}</title>
+
+    <!-- CSS principal -->
+    <link href="{{ url_for('static', filename='vendor/sb-admin-pro/css/styles.css') }}" rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <script data-search-pseudo-elements defer
+        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f9fa !important;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Ocultar scrollbar externo del iframe */
+        html {
+            overflow-x: hidden;
+        }
+
+        .font-weight-semibold {
+            font-weight: 600;
+        }
+    </style>
+
+    {% block css %}{% endblock %}
+</head>
+
+<body>
+    <div id="embedded-content">
+        {% block contenido %}{% endblock %}
+    </div>
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+    <!-- Bootstrap JS (bundled con Popper) -->
+    <script src="{{ url_for('static', filename='vendor/sb-admin-pro/js/scripts.js') }}"></script>
+    <!-- DataTables -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
+
+    {% block js %}{% endblock %}
+</body>
+
+</html>

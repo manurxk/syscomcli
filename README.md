@@ -1,66 +1,77 @@
-# Sistema de Agendamiento Médico
+# Sistema CIN - Sistema de Gestión Clínica
 
-⚠️ **Estado del proyecto:** *Etapa inicial de desarrollo*.  
-Este sistema se encuentra en sus primeras fases de construcción, por lo que aún puede presentar funcionalidades incompletas, cambios frecuentes y posibles errores.
+## 📚 Documentación Principal
 
-Este es un sistema de agendamiento desarrollado en Python con Flask. Está pensado para consultorios psicológicos que desean organizar de forma digital sus procesos de atención y gestión de pacientes.
+### Sistema de Roles y Superadministrador
 
+**`README_IMPLEMENTACION_ROLES_SUPERADMIN.md`** - Documentación completa del sistema de roles múltiples y Superadministrador.
 
-## 🖼️ Capturas de pantalla
+Incluye:
+- ✅ Guía de instalación y configuración
+- ✅ Arquitectura del sistema
+- ✅ Funcionalidades implementadas
+- ✅ Reglas de negocio
+- ✅ Solución de problemas
 
-### 🔐 Login del sistema
-![Login](https://github.com/user-attachments/assets/17755b04-0372-46b4-b635-56ed2dc9c4ad)
+### Scripts SQL
 
-### 🏠 Pantalla principal
-![Inicio](https://github.com/user-attachments/assets/d3917639-7711-4663-abe9-d5f0fe733de2)
+**`app/varios/SQL/README.md`** - Guía de scripts SQL y fases de instalación.
 
-### 📅 Gestión de citas
+---
 
-![Citas](https://github.com/user-attachments/assets/40da9fb0-d065-4a07-8d48-0e02ed8bec2e)
-![Citas](https://github.com/user-attachments/assets/457d1397-ed30-4780-af3f-a4445134021b)
+## 🚀 Inicio Rápido
 
+### Instalación de Base de Datos
 
+```bash
+# Ejecutar script maestro unificado (recomendado)
+psql -U postgres -f app/varios/SQL/00_SCRIPT_MAESTRO_UNIFICADO.sql
+```
 
+### Ejecutar Aplicación
 
+```bash
+python run.py
+```
 
-## 🧩 Módulos del sistema
+---
 
-### 🔐 Autenticación
-- Login de acceso para usuarios registrados.
+## 📁 Estructura del Proyecto
 
-### 🏠 Inicio
-- Pantalla principal del sistema con acceso a funcionalidades clave.
-- Validaciones.
+```
+clausys/
+├── app/                    # Aplicación principal
+│   ├── auth/              # Autenticación y autorización
+│   ├── dao/               # Data Access Objects
+│   ├── rutas/             # Rutas y controladores
+│   ├── services/          # Servicios de negocio
+│   ├── templates/         # Plantillas HTML
+│   └── utils/             # Utilidades
+├── app/varios/
+│   ├── SQL/               # Scripts SQL
+│   └── MD/                # Documentación adicional
+└── README_IMPLEMENTACION_ROLES_SUPERADMIN.md  # Documentación principal
+```
 
-### 📁 Referenciales
-- Manejo de dias, horas
-- Manejo de Datos de personas, especialistas y pacientes
-- Paises, ciudades y barrios
+---
 
-### ⚙️ Procesos principales
-1. **Agenda médica**  
-   - Registro de disponibilidad por profesional.
-   - Configuración de días y horarios.
-2. **Gestión de citas**
-   - Reserva, confirmación y anulación de citas.
+## 🔐 Roles del Sistema
 
-## ⚙️ Tecnologías utilizadas
-- Python
-- Flask
-- PgAdmin
-- HTML + CSS incluye Bootstrap 
-- JavaScript 
+- **Superadministrador**: Acceso total, único que puede crear usuarios
+- **Administrador**: Acceso completo excepto creación de usuarios
+- **Recepcionista**: Agendamiento y ventas básicas
+- **Especialista**: Consultas médicas y agendamiento
+- **Ventas**: Módulo de ventas completo
 
-## 🚀 Instalación y ejecución
+---
 
-1. Clonar el repositorio:
-   ```bash
-   git clone  https://github.com/manurxk/syscomcli.git
+## 📝 Notas
 
+- Consulta `README_IMPLEMENTACION_ROLES_SUPERADMIN.md` para documentación detallada
+- Los scripts SQL están en `app/varios/SQL/`
+- La documentación adicional está en `app/varios/MD/`
 
+---
 
-Manuel Ramírez
+**Última actualización:** Enero 2025
 
-Estudiante de Lic. en Análisis de Sistemas – UTIC
-
-Contacto: [armanuramirez@gmail.com.com]

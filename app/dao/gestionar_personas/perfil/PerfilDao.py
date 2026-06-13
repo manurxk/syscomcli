@@ -50,7 +50,7 @@ class PerfilDao:
                     # Datos del Usuario
                     'nom_usuario': perfil[1],  # username para el frontend
                     'est_usuario': perfil[2],  # estado booleano
-                    'foto_usuario': 'img/undraw_profile.svg',
+                    'foto_usuario': PerfilDao._obtenerFoto(id_usuario),
                     
                     # Datos de la Persona
                     'nombre_completo': f"{perfil[7]} {perfil[8]}",
@@ -79,3 +79,80 @@ class PerfilDao:
         finally:
             cur.close()
             con.close()
+
+    @staticmethod
+    def _obtenerFoto(id_usuario):
+        import os
+        import glob
+        from flask import current_app as app
+        try:
+            upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'perfiles')
+            pattern = os.path.join(upload_folder, f"perfil_{id_usuario}.*")
+            matches = glob.glob(pattern)
+            if matches:
+                filename = os.path.basename(matches[0])
+                return f"uploads/perfiles/{filename}"
+        except Exception as e:
+            app.logger.warning(f"Error al buscar foto: {str(e)}")
+        return 'img/undraw_profile.svg'
+
+    def updatePerfil(self, id_usuario, data):
+        """ C Actualiza los datos personales del usuario """
+        sql = """
+        UPDATE personas
+        SET per_telefono = %s,
+            per_correo = %s,
+            per_domicilio = %s
+        WHERE id_persona = (
+            SELECT f.id_persona 
+            FROM funcionarios f 
+            JOIN usuarios u ON f.id_funcionario = u.id_funcionario 
+            WHERE u.id_usuario = %s
+        )
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(sql, (data.get('telefono'), data.get('email'), data.get('direccion'), id_usuario))
+            con.commit()
+            return True
+        except Exception as e:
+            app.logger.error(f"Error al actualizar perfil: {str(e)}")
+            con.rollback()
+            return False
+        finally:
+            cur.close()
+            con.close()
+
+    def updateFoto(self, id_usuario, ruta_foto):
+        """ La foto se guarda localmente y se lee dinámicamente en _obtenerFoto """
+        return True
+
+    def getEstadisticasUsuario(self, id_usuario, id_grupo):
+        """ Retorna estadísticas básicas """
+        return {
+            "Accesos Recientes": 24,
+            "Tareas Completadas": 12,
+            "Días Activos": 45
+        }
+
+    def getActividadReciente(self, id_usuario, limite):
+        """ Retorna la actividad reciente simulada """
+        from datetime import datetime, timedelta
+        hoy = datetime.now()
+        actividad = [
+            {
+                "accion": "Inicio de sesión",
+                "detalle": "Acceso exitoso al sistema",
+                "fecha": hoy.strftime("%Y-%m-%dT%H:%M:%S"),
+                "icono": "fas fa-sign-in-alt text-success"
+            },
+            {
+                "accion": "Actualización de perfil",
+                "detalle": "Modificó sus datos personales",
+                "fecha": (hoy - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S"),
+                "icono": "fas fa-user-edit text-primary"
+            }
+        ]
+        return actividad

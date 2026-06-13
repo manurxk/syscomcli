@@ -126,6 +126,7 @@ class ItemServicioDao:
         id_tipo_impuesto=None,
         porcentaje_impuesto=0,
         estado="A",
+        usuario_id=None,
     ):
         if not descripcion or descripcion.strip() == "":
             return False
@@ -157,7 +158,10 @@ class ItemServicioDao:
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            usuario = app.config.get("USUARIO_ACTUAL", "SISTEMA")
+            # Si no viene usuario_id de la sesión, intentar de config o usar 6 (admin)
+            if usuario_id is None:
+                usuario_id = app.config.get("USUARIO_ID", 6)
+
             cur.execute(
                 sql,
                 (
@@ -169,7 +173,7 @@ class ItemServicioDao:
                     id_tipo_impuesto,
                     porcentaje_impuesto or 0,
                     estado,
-                    usuario,
+                    int(usuario_id),
                 ),
             )
             id_item = cur.fetchone()[0]
@@ -194,6 +198,7 @@ class ItemServicioDao:
         id_tipo_impuesto=None,
         porcentaje_impuesto=0,
         estado="A",
+        usuario_id=None,
     ):
         if not descripcion or descripcion.strip() == "":
             return False
@@ -220,7 +225,8 @@ class ItemServicioDao:
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            usuario = app.config.get("USUARIO_ACTUAL", "SISTEMA")
+            if usuario_id is None:
+                usuario_id = app.config.get("USUARIO_ID", 6)
             cur.execute(
                 sql,
                 (
@@ -232,7 +238,7 @@ class ItemServicioDao:
                     id_tipo_impuesto,
                     porcentaje_impuesto or 0,
                     estado,
-                    usuario,
+                    int(usuario_id),
                     id_item,
                 ),
             )

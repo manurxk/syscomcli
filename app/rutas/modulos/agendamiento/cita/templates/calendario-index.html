@@ -1,0 +1,587 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Calendario de Citas
+{% endblock %}
+
+{% block head_extra %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<style>
+    /* Variables personalizadas */
+    :root {
+        --fc-border-color: #f1f5f9;
+        --fc-today-bg-color: #f0f9ff;
+    }
+
+    /* Estilos modernos para FullCalendar */
+    .fc {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+
+    /* Toolbar mejorado */
+    .fc .fc-toolbar {
+        padding: 1rem 0;
+        gap: 1rem;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+
+    /* Botones modernos */
+    .fc .fc-button {
+        font-weight: 500;
+        text-transform: capitalize;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .fc .fc-button-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+    }
+
+    .fc .fc-button-primary:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transform: translateY(-1px);
+    }
+
+    .fc .fc-button-primary:active,
+    .fc .fc-button-primary:focus {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .fc .fc-button-primary:disabled {
+        background: #cbd5e1;
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .fc .fc-button-active {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+    }
+
+    /* Grupo de botones */
+    .fc .fc-button-group {
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .fc .fc-button-group>.fc-button {
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .fc .fc-button-group>.fc-button:first-child {
+        border-radius: 0.75rem 0 0 0.75rem;
+    }
+
+    .fc .fc-button-group>.fc-button:last-child {
+        border-radius: 0 0.75rem 0.75rem 0;
+    }
+
+    /* Encabezados de día mejorados */
+    .fc .fc-col-header-cell {
+        padding: 1rem 0.5rem;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        background: #f8fafc;
+        border-color: #f1f5f9;
+    }
+
+    /* Celdas de día */
+    .fc .fc-daygrid-day {
+        transition: background-color 0.2s;
+    }
+
+    .fc .fc-daygrid-day:hover {
+        background-color: #f8fafc;
+    }
+
+    .fc .fc-daygrid-day-number {
+        padding: 0.5rem;
+        font-weight: 500;
+        color: #475569;
+    }
+
+    /* Día actual destacado */
+    .fc .fc-day-today {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+    }
+
+    .fc .fc-day-today .fc-daygrid-day-number {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border-radius: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    /* Eventos mejorados */
+    .fc .fc-daygrid-event {
+        border-radius: 0.5rem;
+        padding: 0.375rem 0.625rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border: none;
+        margin: 2px 4px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fc .fc-daygrid-event:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        filter: brightness(1.05);
+        cursor: pointer;
+    }
+
+    .fc .fc-timegrid-event {
+        border-radius: 0.5rem;
+        border: none;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+        transition: all 0.2s;
+    }
+
+    .fc .fc-timegrid-event:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    /* Más eventos link */
+    .fc .fc-daygrid-more-link {
+        color: #3b82f6;
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s;
+    }
+
+    .fc .fc-daygrid-more-link:hover {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    /* Scrollbar personalizado */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    }
+
+    /* Bordes suaves */
+    .fc table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .fc td,
+    .fc th {
+        border-color: #f1f5f9;
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fc-event {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Popover mejorado */
+    .fc .fc-popover {
+        border-radius: 0.75rem;
+        border: none;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Calendario de Citas
+                    </h1>
+                    <div class="page-header-subtitle">
+                        <span id="fechaHoy"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-auto mt-4">
+                    <div class="badge bg-white text-primary fs-6 px-3 py-2 shadow-sm">
+                        <i class="fas fa-calendar-check me-1"></i>
+                        Citas del mes: <strong id="totalCitasMes">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+    <!-- Calendario -->
+    <div class="card card-header-actions mb-4">
+        <div class="card-header">
+            Calendario de Agendamientos
+        </div>
+        <div class="card-body">
+            <div id="calendario"></div>
+        </div>
+    </div>
+
+    <!-- Leyenda de estados -->
+    <div class="card mb-4" id="leyendaEstados">
+        <div class="card-header">
+            <i class="fas fa-palette me-2 text-primary"></i> Estados de Citas
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-3">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle de Cita (Bootstrap 5) -->
+<div class="modal fade" id="modalDetalleCita" tabindex="-1" role="dialog" aria-labelledby="modalDetalleTitulo"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="modalDetalleTitulo">
+                    <i class="fas fa-calendar-check me-2"></i> Detalle de la Cita
+                </h5>
+                <button type="button" class="btn-close" id="btnCerrarModal" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contenidoDetalle">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/es.global.min.js'></script>
+
+<script>
+    // Variables globales
+    let calendar = null;
+    let citasData = [];
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function () {
+        inicializarComponentes();
+    });
+
+    // Inicializar todos los componentes
+    function inicializarComponentes() {
+        mostrarFechaHoy();
+        inicializarCalendario();
+        cargarEstadosYFiltros();
+        configurarEventos();
+    }
+
+    // Inicializar FullCalendar
+    function inicializarCalendario() {
+        const calendarEl = document.getElementById('calendario');
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'es',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            buttonText: {
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                day: 'Día'
+            },
+            events: cargarEventos,
+            eventClick: mostrarDetalleCita,
+            eventDidMount: agregarTooltip,
+            height: 'auto',
+            navLinks: true,
+            nowIndicator: true,
+            editable: false,
+            dayMaxEvents: 4,
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }
+        });
+
+        calendar.render();
+    }
+
+    // Cargar eventos desde la API
+    async function cargarEventos(fetchInfo, successCallback, failureCallback) {
+        try {
+            const response = await fetch('/api/v1/citas');
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                citasData = data.data;
+
+                // Actualizar contador
+                document.getElementById('totalCitasMes').textContent = data.data.length;
+
+                const eventos = data.data.map(cita => {
+                    const fechaParts = cita.cita_fecha.split('/');
+                    const fechaFormateada = `${fechaParts[2]}-${fechaParts[1]}-${fechaParts[0]}`;
+
+                    // Iconos por tipo
+                    const iconos = {
+                        'PRIMERA_VEZ': '👤',
+                        'EVALUACION': '📋',
+                        'TRATAMIENTO': '💊',
+                        'SEGUIMIENTO': '🔄'
+                    };
+
+                    const icono = iconos[cita.cita_tipo] || '📅';
+
+                    return {
+                        id: cita.id_cita,
+                        title: `${icono} ${cita.paciente_nombre.split(' ')[0]}`,
+                        start: `${fechaFormateada}T${cita.cita_hora_inicio}`,
+                        end: `${fechaFormateada}T${cita.cita_hora_fin}`,
+                        backgroundColor: cita.estado_color || '#3b82f6',
+                        borderColor: cita.estado_color || '#3b82f6',
+                        textColor: '#ffffff',
+                        extendedProps: { cita }
+                    };
+                });
+
+                successCallback(eventos);
+            } else {
+                successCallback([]);
+            }
+        } catch (error) {
+            console.error('Error cargando citas:', error);
+            successCallback([]);
+        }
+    }
+
+    // Mostrar detalle de cita
+    function mostrarDetalleCita(info) {
+        const cita = info.event.extendedProps.cita;
+
+        const tipoTextos = {
+            'PRIMERA_VEZ': 'Primera Vez',
+            'EVALUACION': 'Evaluación',
+            'TRATAMIENTO': 'Tratamiento',
+            'SEGUIMIENTO': 'Seguimiento'
+        };
+
+        const tipoIconos = {
+            'PRIMERA_VEZ': '👤',
+            'EVALUACION': '📋',
+            'TRATAMIENTO': '💊',
+            'SEGUIMIENTO': '🔄'
+        };
+
+        const html = `
+        <div class="vstack gap-3">
+            <!-- Estado y Paciente -->
+            <div class="d-flex justify-content-between align-items-start p-3 bg-light rounded border">
+                <div>
+                    <p class="text-xs text-muted mb-1 text-uppercase">Paciente</p>
+                    <p class="fs-5 fw-bold mb-0">${cita.paciente_nombre}</p>
+                </div>
+                <span class="badge fs-6 px-3 py-2" style="background-color:${cita.estado_color};color:white;">${cita.estado_nombre}</span>
+            </div>
+
+            <!-- Especialista y Especialidad -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 bg-primary bg-opacity-10 rounded border border-primary border-opacity-25">
+                        <p class="small text-primary fw-semibold text-uppercase mb-1"><i class="fas fa-user-md me-1"></i> Especialista</p>
+                        <p class="fw-bold mb-0">${cita.especialista_nombre}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-secondary bg-opacity-10 rounded border">
+                        <p class="small fw-semibold text-uppercase mb-1"><i class="fas fa-stethoscope me-1"></i> Especialidad</p>
+                        <p class="fw-bold mb-0">${cita.especialidad}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fecha y Hora -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 bg-success bg-opacity-10 rounded border border-success border-opacity-25">
+                        <p class="small text-success fw-semibold text-uppercase mb-1"><i class="fas fa-calendar me-1"></i> Fecha</p>
+                        <p class="fw-bold mb-0">${formatearFecha(cita.cita_fecha)}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-warning bg-opacity-10 rounded border border-warning border-opacity-25">
+                        <p class="small text-warning fw-semibold text-uppercase mb-1"><i class="fas fa-clock me-1"></i> Horario</p>
+                        <p class="fw-bold mb-0">${cita.cita_hora_inicio.substring(0, 5)} - ${cita.cita_hora_fin.substring(0, 5)}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tipo de cita -->
+            <div class="p-3 bg-info bg-opacity-10 rounded border border-info border-opacity-25 d-flex align-items-center gap-3">
+                <span class="fs-3">${tipoIconos[cita.cita_tipo] || '📅'}</span>
+                <div>
+                    <p class="small text-info fw-semibold text-uppercase mb-1">Tipo de Cita</p>
+                    <p class="fw-bold mb-0">${tipoTextos[cita.cita_tipo] || cita.cita_tipo}</p>
+                </div>
+            </div>
+
+            ${cita.cita_motivo ? `
+            <div class="p-3 bg-light rounded border">
+                <p class="small fw-semibold text-uppercase mb-2"><i class="fas fa-file-alt me-1"></i> Motivo de Consulta</p>
+                <p class="mb-0">${cita.cita_motivo}</p>
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+        document.getElementById('contenidoDetalle').innerHTML = html;
+
+        // Mostrar modal BS5
+        const modalEl = document.getElementById('modalDetalleCita');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    // Agregar tooltip a eventos
+    function agregarTooltip(info) {
+        const cita = info.event.extendedProps.cita;
+        const tooltip = `${cita.paciente_nombre}\n${cita.especialista_nombre}\n${cita.cita_hora_inicio.substring(0, 5)} - ${cita.cita_hora_fin.substring(0, 5)}`;
+
+        info.el.title = tooltip;
+    }
+
+    // Cargar estados y llenar leyenda
+    async function cargarEstadosYFiltros() {
+        try {
+            const estadosRes = await fetch('/api/v1/estados-citas');
+            const estadosData = await estadosRes.json();
+
+            if (estadosData.success) {
+                const leyendaContainer = document.getElementById('leyendaEstados').querySelector('.d-flex');
+
+                estadosData.data.forEach(estado => {
+                    const leyendaItem = document.createElement('div');
+                    leyendaItem.className = 'd-flex align-items-center gap-2 px-3 py-2 bg-light rounded border';
+                    leyendaItem.innerHTML = `
+                        <span class="rounded-circle d-inline-block" style="width:14px;height:14px;background:${estado.color};"></span>
+                        <span class="small fw-semibold">${estado.nombre}</span>
+                    `;
+                    leyendaContainer.appendChild(leyendaItem);
+                });
+            }
+
+        } catch (error) {
+            console.error('Error cargando estados:', error);
+        }
+    }
+
+    // Configurar eventos de UI
+    function configurarEventos() {
+        // Bootstrap 5 maneja el cierre del modal automáticamente con data-bs-dismiss
+        // Solo necesitamos el listener de teclado adicional si fuera necesario
+    }
+
+    // Utilidades
+    function mostrarFechaHoy() {
+        const hoy = new Date();
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const fechaFormateada = hoy.toLocaleDateString('es-ES', opciones);
+        // Capitalizar primera letra
+        document.getElementById('fechaHoy').textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+    }
+
+    function formatearFecha(fechaStr) {
+        const partes = fechaStr.split('/');
+        const fecha = new Date(partes[2], partes[1] - 1, partes[0]);
+        const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        // Capitalizar primera letra
+        return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+    }
+
+    function ajustarBrillo(color, porcentaje) {
+        // Convierte color hex a RGB y ajusta el brillo
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * porcentaje);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255))
+            .toString(16).slice(1);
+    }
+
+    // Auto-refresh cada 5 minutos
+    setInterval(() => {
+        if (calendar) {
+            calendar.refetchEvents();
+        }
+    }, 300000);
+</script>
+{% endblock %}

@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Centro de Reportes{% endblock %}
+
+{% block contenido %}
+<style>
+    .report-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .12) !important;
+    }
+
+    .kpi-accent {
+        width: 4px;
+        border-radius: 4px 0 0 4px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+    }
+
+    .kpi-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .header-blob-1,
+    .header-blob-2 {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .header-blob-1 {
+        width: 280px;
+        height: 280px;
+        top: -80px;
+        right: -60px;
+        background: rgba(255, 255, 255, .04);
+    }
+
+    .header-blob-2 {
+        width: 360px;
+        height: 360px;
+        bottom: -140px;
+        left: 35%;
+        background: rgba(255, 255, 255, .03);
+    }
+
+    .mini-stat-val {
+        font-size: .95rem;
+        font-weight: 600;
+    }
+
+    .mini-stat-lbl {
+        font-size: .65rem;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+    }
+
+    .card-report-body {
+        min-height: 210px;
+    }
+</style>
+
+<!-- ───────────── HEADER ───────────── -->
+<header class="page-header page-header-dark pb-10 position-relative overflow-hidden"
+    style="background: linear-gradient(135deg, #0d1b3e 0%, #1a3a6e 55%, #1e4fa0 100%);">
+    <div class="header-blob-1"></div>
+    <div class="header-blob-2"></div>
+
+    <div class="container-xl px-4 position-relative" style="z-index:1;">
+        <div class="page-header-content pt-4">
+
+            <!-- breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('dashboard.index') }}"
+                            class="text-white-50 text-decoration-none">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item active text-white-50" aria-current="page">Centro de Reportes</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-center justify-content-between g-3">
+                <div class="col-auto">
+                    <h1 class="fw-bold text-white mb-1 d-flex align-items-center gap-2"
+                        style="font-size:1.75rem; letter-spacing:-.02em;">
+                        <i data-feather="activity" style="width:22px;height:22px;"></i>
+                        Centro de Reportes
+                    </h1>
+                    <p class="mb-0 text-white-50" style="font-size:.875rem;">
+                        Analítica avanzada y estados financieros del sistema
+                    </p>
+                </div>
+                <div class="col-auto d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('reporte.reporte_ventas') }}"
+                        class="btn btn-light btn-sm fw-semibold shadow-sm d-flex align-items-center gap-1">
+                        <i data-feather="dollar-sign" style="width:14px;height:14px;"></i>
+                        Nueva Auditoría
+                    </a>
+                    <a href="{{ url_for('reporte.reporte_agendamiento') }}"
+                        class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1">
+                        <i data-feather="calendar" style="width:14px;height:14px;"></i>
+                        Estado de Agenda
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- ───────────── CONTENIDO ───────────── -->
+<div class="container-xl px-4 mt-n10">
+
+    <!-- ── KPIs ── -->
+    <div class="row g-3 mb-4">
+
+        <!-- Ventas del Mes -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                <div class="kpi-accent bg-danger"></div>
+                <div class="card-body d-flex align-items-center gap-3 ps-4">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase text-danger fw-semibold mb-1"
+                            style="font-size:.7rem; letter-spacing:.08em;">
+                            Ventas del Mes
+                        </p>
+                        <p class="mb-0 fw-bold" style="font-size:1.25rem;">
+                            ₲ {{ "{:,.0f}".format(metricas.ventas_mes).replace(',', '.') }}
+                        </p>
+                    </div>
+                    <div class="kpi-icon-wrap bg-danger bg-opacity-10 text-danger">
+                        <i data-feather="dollar-sign" style="width:18px;height:18px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Citas del Mes -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                <div class="kpi-accent bg-success"></div>
+                <div class="card-body d-flex align-items-center gap-3 ps-4">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase text-success fw-semibold mb-1"
+                            style="font-size:.7rem; letter-spacing:.08em;">
+                            Citas del Mes
+                        </p>
+                        <p class="mb-0 fw-bold" style="font-size:1.25rem;">{{ metricas.citas_mes }}</p>
+                    </div>
+                    <div class="kpi-icon-wrap bg-success bg-opacity-10 text-success">
+                        <i data-feather="calendar" style="width:18px;height:18px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pacientes Registrados -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                <div class="kpi-accent bg-primary"></div>
+                <div class="card-body d-flex align-items-center gap-3 ps-4">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase text-primary fw-semibold mb-1"
+                            style="font-size:.7rem; letter-spacing:.08em;">
+                            Pacientes Registrados
+                        </p>
+                        <p class="mb-0 fw-bold" style="font-size:1.25rem;">{{ metricas.pacientes_activos }}</p>
+                    </div>
+                    <div class="kpi-icon-wrap bg-primary bg-opacity-10 text-primary">
+                        <i data-feather="users" style="width:18px;height:18px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recaudado Hoy -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                <div class="kpi-accent bg-warning"></div>
+                <div class="card-body d-flex align-items-center gap-3 ps-4">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase text-warning fw-semibold mb-1"
+                            style="font-size:.7rem; letter-spacing:.08em;">
+                            Recaudado Hoy
+                        </p>
+                        <p class="mb-0 fw-bold" style="font-size:1.25rem;">
+                            ₲ {{ "{:,.0f}".format(metricas.recaudado_hoy).replace(',', '.') }}
+                        </p>
+                    </div>
+                    <div class="kpi-icon-wrap bg-warning bg-opacity-10 text-warning">
+                        <i data-feather="briefcase" style="width:18px;height:18px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- /KPIs -->
+
+    <!-- ── Tarjetas de Reportes ── -->
+    <div class="row g-4">
+
+        <!-- Auditoría de Ventas -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100 report-card">
+                <div class="card-body card-report-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="kpi-icon-wrap bg-danger bg-opacity-10 text-danger"
+                            style="width:48px;height:48px;border-radius:12px;">
+                            <i data-feather="trending-up" style="width:22px;height:22px;"></i>
+                        </div>
+                        <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold"
+                            style="font-size:.7rem;letter-spacing:.05em;">
+                            Finanzas
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-2">Auditoría de Ventas</h5>
+                    <p class="text-muted mb-0" style="font-size:.875rem; line-height:1.6;">
+                        Toma el control de la facturación, ingresos diarios y estados de cuentas pendientes con reportes
+                        consolidados.
+                    </p>
+                </div>
+
+                <div class="border-top mx-4 mb-3 opacity-25"></div>
+
+                <!-- Mini stats -->
+                <div class="d-flex gap-3 px-4 pb-3">
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-danger">₲ {{ "{:,.0f}".format(metricas.ventas_mes / 1000000) |
+                            replace(',','.') }}M</div>
+                        <div class="mini-stat-lbl text-muted">Este mes</div>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-success">{{ metricas.porcentaje_cobrado }}%</div>
+                        <div class="mini-stat-lbl text-muted">Cobrado</div>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-danger">{{ metricas.cuentas_pendientes }}</div>
+                        <div class="mini-stat-lbl text-muted">Pendientes</div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 px-4 pb-4">
+                    <a href="{{ url_for('reporte.reporte_ventas') }}"
+                        class="btn btn-danger w-100 fw-semibold d-flex align-items-center justify-content-between">
+                        <span>Gestionar Reportes</span>
+                        <i data-feather="arrow-right" style="width:16px;height:16px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flujo de Agenda -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100 report-card">
+                <div class="card-body card-report-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="kpi-icon-wrap bg-success bg-opacity-10 text-success"
+                            style="width:48px;height:48px;border-radius:12px;">
+                            <i data-feather="calendar" style="width:22px;height:22px;"></i>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success fw-semibold"
+                            style="font-size:.7rem;letter-spacing:.05em;">
+                            Operativo
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-2">Flujo de Agenda</h5>
+                    <p class="text-muted mb-0" style="font-size:.875rem; line-height:1.6;">
+                        Analiza el rendimiento del calendario, tasas de asistencia y eficiencia en la gestión de turnos
+                        médicos.
+                    </p>
+                </div>
+
+                <div class="border-top mx-4 mb-3 opacity-25"></div>
+
+                <!-- Mini stats -->
+                <div class="d-flex gap-3 px-4 pb-3">
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-success">{{ metricas.citas_mes }}</div>
+                        <div class="mini-stat-lbl text-muted">Citas</div>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-success">{{ metricas.porcentaje_asistencia }}%</div>
+                        <div class="mini-stat-lbl text-muted">Asistencia</div>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-warning">{{ metricas.citas_canceladas }}</div>
+                        <div class="mini-stat-lbl text-muted">Canceladas</div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 px-4 pb-4">
+                    <a href="{{ url_for('reporte.reporte_agendamiento') }}"
+                        class="btn btn-success w-100 fw-semibold d-flex align-items-center justify-content-between">
+                        <span>Gestionar Agendas</span>
+                        <i data-feather="arrow-right" style="width:16px;height:16px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas Clínicas -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100 report-card">
+                <div class="card-body card-report-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="kpi-icon-wrap bg-primary bg-opacity-10 text-primary"
+                            style="width:48px;height:48px;border-radius:12px;">
+                            <i data-feather="activity" style="width:22px;height:22px;"></i>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold"
+                            style="font-size:.7rem;letter-spacing:.05em;">
+                            Clínico
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-2">Métricas Clínicas</h5>
+                    <p class="text-muted mb-0" style="font-size:.875rem; line-height:1.6;">
+                        Estadísticas de atenciones, diagnósticos frecuentes y evolución de pacientes registrados en el
+                        sistema.
+                    </p>
+                </div>
+
+                <div class="border-top mx-4 mb-3 opacity-25"></div>
+
+                <!-- Mini stats -->
+                <div class="d-flex gap-3 px-4 pb-3">
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-primary">{{ metricas.pacientes_activos }}</div>
+                        <div class="mini-stat-lbl text-muted">Pacientes</div>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-info">{{ metricas.diagnosticos_frecuentes }}</div>
+                        <div class="mini-stat-lbl text-muted">Dx frecuentes</div>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div class="mini-stat text-center">
+                        <div class="mini-stat-val text-primary">{{ metricas.satisfaccion_paciente }}%</div>
+                        <div class="mini-stat-lbl text-muted">Satisfac.</div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 px-4 pb-4">
+                    <a href="{{ url_for('reporte.reporte_consultorio') }}"
+                        class="btn btn-primary w-100 fw-semibold d-flex align-items-center justify-content-between">
+                        <span>Gestionar Clínicas</span>
+                        <i data-feather="arrow-right" style="width:16px;height:16px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- /Tarjetas -->
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    if (typeof feather !== 'undefined') { feather.replace(); }
+</script>
+{% endblock %}

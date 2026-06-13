@@ -5,10 +5,10 @@ app/routes/seguridad/dashboard.py
 from flask import Blueprint, render_template, jsonify, session, redirect, url_for, current_app as app
 from datetime import date, datetime, timedelta
 from app.conexion.Conexion import Conexion
+from app.dao.DashboardDao import DashboardDao
+from app.dao.AuditoriaDao import AuditoriaDao
 
 dashboard = Blueprint('dashboard', __name__)
-
-
 # ============================================================================
 # FUNCIONES AUXILIARES - CONTROL DE ROLES
 # ============================================================================
@@ -157,7 +157,7 @@ def referenciales():
     Vista consolidada de todos los referenciales del sistema
     Solo para administradores
     """
-    if not es_admin():
+    if not es_admin() and not es_superadmin():
         return redirect(url_for('dashboard.index'))
     
     return render_template('referenciales.html')
@@ -196,6 +196,9 @@ def obtener_estadisticas():
         es_admin_rol = es_admin()
         es_especialista_rol = es_especialista()
         
+        dashboard_dao = DashboardDao()
+        auditoria_dao = AuditoriaDao()
+        
         # ===============================================
         # ADMINISTRADOR Y SUPERADMINISTRADOR - Estadísticas Globales
         # ===============================================
@@ -204,20 +207,59 @@ def obtener_estadisticas():
             cur.execute("SELECT COUNT(*) FROM usuarios WHERE usu_estado = TRUE")
             estadisticas['total_usuarios'] = cur.fetchone()[0]
             
-            # Ingresos del mes actual (simulado: citas completadas * precio promedio)
-            primer_dia_mes = hoy.replace(day=1)
-            cur.execute("""
-                SELECT COUNT(*) 
-                FROM citas c
-                JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-                WHERE c.cita_fecha >= %s
-                  AND (ec.est_cita_nombre = 'COMPLETADA' OR ec.est_cita_nombre = 'ATENDIDA')
-                  AND c.cita_activo = TRUE
-            """, (primer_dia_mes,))
-            citas_completadas = cur.fetchone()[0]
-            estadisticas['ingresos_mes'] = citas_completadas * 150000  # Precio promedio simulado
+            # MÉTRICAS ESTRATÉGICAS
+            # ===============================================
             
-            # Citas de hoy
+            # Métrica base para todos los admin
+            estadisticas['ingresos_mes'] = dashboard_dao.get_ingresos_mes_actual()
+
+            if es_superadmin():
+                # Ingresos mes actual (Real)
+                estadisticas['ingresos_mes'] = dashboard_dao.get_ingresos_mes_actual()
+                
+                # Ingresos mes anterior (Comparativa)
+                primer_dia_mes = hoy.replace(day=1)
+                ultimo_dia_mes_ant = primer_dia_mes - timedelta(days=1)
+                primer_dia_mes_ant = ultimo_dia_mes_ant.replace(day=1)
+                cur.execute("""
+                    SELECT COALESCE(SUM(factura_total), 0.0)
+                    FROM facturas
+                    WHERE fecha_factura >= %s AND fecha_factura <= %s
+                """, (primer_dia_mes_ant, ultimo_dia_mes_ant))
+                estadisticas['ingresos_mes_anterior'] = float(cur.fetchone()[0])
+                
+                # Pacientes nuevos este mes (Real)
+                estadisticas['pacientes_nuevos_mes'] = dashboard_dao.get_pacientes_nuevos_mes()
+
+                # Tasa de ocupación (Real)
+                estadisticas['tasa_ocupacion_mes'] = dashboard_dao.get_tasa_ocupacion()
+                
+                # Alertas de seguridad (Real)
+                estadisticas['alertas_seguridad'] = dashboard_dao.get_alertas_seguridad()
+
+                # Citas por especialidad (Real)
+                estadisticas['citas_por_especialidad'] = dashboard_dao.get_conteo_citas_por_especialidad()
+
+                # Actividad reciente (Real, usando AuditoriaDao)
+                estadisticas['actividad_reciente'] = auditoria_dao.obtener_actividad_sistema(limite=10)
+
+                # Tendencia de citas (Últimos 7 días)
+                tendencia = []
+                for i in range(6, -1, -1):
+                    dia = hoy - timedelta(days=i)
+                    cur.execute("""
+                        SELECT COUNT(*) 
+                        FROM citas 
+                        WHERE cita_fecha = %s AND cita_activo = TRUE
+                    """, (dia,))
+                    count = cur.fetchone()[0]
+                    tendencia.append({
+                        'fecha': dia.strftime('%d/%m'),
+                        'cantidad': count
+                    })
+                estadisticas['tendencia_citas'] = tendencia
+
+            # Citas de hoy (Para Admin mantiene vista operativa, Superadmin usará stats generales)
             cur.execute("""
                 SELECT COUNT(*) 
                 FROM citas 
@@ -239,14 +281,18 @@ def obtener_estadisticas():
             # Si también es especialista, agregar estadísticas de especialista
             if es_especialista_rol:
                 # Obtener ID del especialista asociado al usuario
-                cur.execute("""
-                    SELECT e.id_especialista 
-                    FROM especialistas e
-                    JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
-                    WHERE f.id_usuario = %s
-                """, (usuario_id,))
-                
-                resultado = cur.fetchone()
+                try:
+                    cur.execute("""
+                        SELECT e.id_especialista 
+                        FROM especialistas e
+                        JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+                        JOIN usuarios u ON u.id_funcionario = f.id_funcionario
+                        WHERE u.id_usuario = %s
+                    """, (usuario_id,))
+                    resultado = cur.fetchone()
+                except Exception as e:
+                    app.logger.error(f"Error al obtener id_especialista: {str(e)}")
+                    resultado = None
                 
                 if resultado:
                     id_especialista = resultado[0]
@@ -283,6 +329,30 @@ def obtener_estadisticas():
                           AND c.cita_activo = TRUE
                     """, (id_especialista,))
                     estadisticas['historias_pendientes'] = cur.fetchone()[0]
+
+                    # Si es Admin+Especialista (pero NO Superadmin), le damos el dashboard estratégico personal
+                    if not es_superadmin():
+                        estadisticas['ingresos_mes'] = dashboard_dao.get_ingresos_mes_actual()
+                        estadisticas['pacientes_nuevos_mes'] = dashboard_dao.get_pacientes_nuevos_mes()
+                        estadisticas['tasa_ocupacion_mes'] = dashboard_dao.get_tasa_ocupacion()
+                        estadisticas['alertas_seguridad'] = dashboard_dao.get_alertas_seguridad()
+                        estadisticas['citas_por_especialidad'] = dashboard_dao.get_conteo_citas_por_especialidad()
+                        estadisticas['actividad_reciente'] = auditoria_dao.obtener_actividad_sistema(limite=10)
+
+                        tendencia = []
+                        for i in range(6, -1, -1):
+                            dia = hoy - timedelta(days=i)
+                            cur.execute("""
+                                SELECT COUNT(*) 
+                                FROM citas 
+                                WHERE id_especialista = %s AND cita_fecha = %s AND cita_activo = TRUE
+                            """, (id_especialista, dia))
+                            count = cur.fetchone()[0]
+                            tendencia.append({
+                                'fecha': dia.strftime('%d/%m'),
+                                'cantidad': count
+                            })
+                        estadisticas['tendencia_citas'] = tendencia
         
         # ===============================================
         # RECEPCIONISTA - Estadísticas de Agendamiento
@@ -328,20 +398,51 @@ def obtener_estadisticas():
                   AND cita_activo = TRUE
             """, (seis_meses_atras,))
             estadisticas['pacientes_activos'] = cur.fetchone()[0]
+
+            # ===============================================
+            # MÉTRICAS ESTRATÉGICAS PARA RECEPCIÓN - NUEVO
+            # ===============================================
+
+            estadisticas['ingresos_mes'] = dashboard_dao.get_ingresos_mes_actual()
+            estadisticas['pacientes_nuevos_mes'] = dashboard_dao.get_pacientes_nuevos_mes()
+            estadisticas['tasa_ocupacion_mes'] = dashboard_dao.get_tasa_ocupacion()
+            estadisticas['alertas_seguridad'] = dashboard_dao.get_alertas_seguridad()
+            estadisticas['citas_por_especialidad'] = dashboard_dao.get_conteo_citas_por_especialidad()
+            estadisticas['actividad_reciente'] = auditoria_dao.obtener_actividad_sistema(limite=10)
+            
+            
+            tendencia = []
+            for i in range(6, -1, -1):
+                dia = hoy - timedelta(days=i)
+                cur.execute("""
+                    SELECT COUNT(*) 
+                    FROM citas 
+                    WHERE cita_fecha = %s AND cita_activo = TRUE
+                """, (dia,))
+                count = cur.fetchone()[0]
+                tendencia.append({
+                    'fecha': dia.strftime('%d/%m'),
+                    'cantidad': count
+                })
+            estadisticas['tendencia_citas'] = tendencia
         
         # ===============================================
         # ESPECIALISTA - Estadísticas Clínicas
         # ===============================================
         elif es_especialista_rol:  # ESPECIALISTA (puede ser solo especialista o admin+especialista)
             # Obtener ID del especialista asociado al usuario
-            cur.execute("""
-                SELECT e.id_especialista 
-                FROM especialistas e
-                JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
-                WHERE f.id_usuario = %s
-            """, (usuario_id,))
-            
-            resultado = cur.fetchone()
+            try:
+                cur.execute("""
+                    SELECT e.id_especialista 
+                    FROM especialistas e
+                    JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+                    JOIN usuarios u ON u.id_funcionario = f.id_funcionario
+                    WHERE u.id_usuario = %s
+                """, (usuario_id,))
+                resultado = cur.fetchone()
+            except Exception as e:
+                app.logger.error(f"Error al obtener id_especialista (Especialista block): {str(e)}")
+                resultado = None
             
             if resultado:
                 id_especialista = resultado[0]
@@ -367,7 +468,7 @@ def obtener_estadisticas():
                 """, (id_especialista, seis_meses_atras))
                 estadisticas['pacientes_asignados'] = cur.fetchone()[0]
                 
-                # Historias clínicas pendientes (simulado: citas completadas sin observaciones finales)
+                # Historias clínicas pendientes
                 cur.execute("""
                     SELECT COUNT(*)
                     FROM citas c
@@ -378,6 +479,34 @@ def obtener_estadisticas():
                       AND c.cita_activo = TRUE
                 """, (id_especialista,))
                 estadisticas['historias_pendientes'] = cur.fetchone()[0]
+
+                # ===============================================
+                # MÉTRICAS ESTRATÉGICAS PARA ESPECIALISTA - NUEVO
+                # ===============================================
+
+                estadisticas['ingresos_mes'] = dashboard_dao.get_ingresos_mes_actual()
+                estadisticas['pacientes_nuevos_mes'] = dashboard_dao.get_pacientes_nuevos_mes()
+                estadisticas['tasa_ocupacion_mes'] = dashboard_dao.get_tasa_ocupacion()
+                estadisticas['alertas_seguridad'] = dashboard_dao.get_alertas_seguridad()
+                estadisticas['citas_por_especialidad'] = dashboard_dao.get_conteo_citas_por_especialidad()
+                estadisticas['actividad_reciente'] = auditoria_dao.obtener_actividad_sistema(limite=10)
+
+                # Tendencia de citas (Últimos 7 días) del Especialista
+                tendencia = []
+                for i in range(6, -1, -1):
+                    dia = hoy - timedelta(days=i)
+                    cur.execute("""
+                        SELECT COUNT(*) 
+                        FROM citas 
+                        WHERE id_especialista = %s AND cita_fecha = %s AND cita_activo = TRUE
+                    """, (id_especialista, dia))
+                    count = cur.fetchone()[0]
+                    tendencia.append({
+                        'fecha': dia.strftime('%d/%m'),
+                        'cantidad': count
+                    })
+                estadisticas['tendencia_citas'] = tendencia
+
             else:
                 # Usuario sin especialista asociado
                 estadisticas['citas_hoy'] = 0

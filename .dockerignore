@@ -1,0 +1,7 @@
+.git
+__pycache__
+*.pyc
+.env
+dock/init-db/*.sql
+app/static/
+node_modules/

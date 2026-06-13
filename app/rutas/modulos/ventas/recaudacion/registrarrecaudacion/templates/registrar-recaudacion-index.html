@@ -1,22 +1,33 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Recaudaciones a Depositar
 {% endblock %}
 
 {% block contenido %}
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">
-            <i class="fas fa-money-bill-wave"></i> Recaudaciones a Depositar
-        </h3>
-        <a href="{{ url_for('recaudacion.recaudacionAgregar') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nueva Recaudación
-        </a>
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Recaudaciones a Depositar
+                    </h1>
+                    <div class="page-header-subtitle">Listado y gestión de recaudaciones para depósito bancario</div>
+                </div>
+            </div>
+        </div>
     </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
 
     <!-- Filtros -->
-    <div class="card shadow mb-4">
+    <div class="card card-header-actions mb-4 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="fas fa-filter me-2"></i> Filtros de Búsqueda
+            </h6>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
@@ -30,17 +41,14 @@ Recaudaciones a Depositar
                         </select>
                     </div>
                 </div>
-                <div class="col-md-9">
-                    <div class="form-group">
-                        <label>&nbsp;</label>
-                        <div>
-                            <button type="button" class="btn btn-primary" id="btnAplicarFiltros">
-                                <i class="fas fa-filter"></i> Aplicar Filtros
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
-                                <i class="fas fa-times"></i> Limpiar
-                            </button>
-                        </div>
+                <div class="col-md-9 d-flex align-items-end">
+                    <div class="form-group mb-0">
+                        <button type="button" class="btn btn-primary" id="btnAplicarFiltros">
+                            <i class="fas fa-filter"></i> Aplicar
+                        </button>
+                        <button type="button" class="btn btn-light ms-2" id="btnLimpiarFiltros">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -48,14 +56,17 @@ Recaudaciones a Depositar
     </div>
 
     <!-- Tarjeta principal -->
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Lista de Recaudaciones</h5>
+    <div class="card card-header-actions mb-4 shadow-sm">
+        <div class="card-header">
+            <span class="fw-semibold">Lista de Recaudaciones</span>
+            <a href="{{ url_for('recaudacion.recaudacionAgregar') }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="fas fa-plus me-1"></i> Nueva Recaudación
+            </a>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered w-100" id="tblRecaudaciones">
-                    <thead class="thead-dark">
+                <table class="table table-hover table-bordered align-middle w-100" id="tblRecaudaciones">
+                    <thead class="table-light">
                         <tr>
                             <th>Número</th>
                             <th>Fecha Recaudación</th>
@@ -78,18 +89,17 @@ Recaudaciones a Depositar
 <!-- Modal Ver Detalle -->
 <div class="modal fade" id="modalDetalle" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">Detalle de Recaudación</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">Detalle de Recaudación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body" id="detalleContenido">
                 <!-- Contenido cargado dinámicamente -->
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -98,58 +108,56 @@ Recaudaciones a Depositar
 
 {% block js %}
 <script>
-const CSRFToken = "{{ csrf_token() }}" || null;
-let tablaRecaudaciones = null;
+    const CSRFToken = "{{ csrf_token() }}" || null;
+    let tablaRecaudaciones = null;
 
-// Inicializar DataTable
-const initDatatable = () => {
-    tablaRecaudaciones = $('#tblRecaudaciones').DataTable({
-        language: {
-            url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-        },
-        ajax: {
-            url: '/api/v1/recaudaciones',
-            dataSrc: 'data'
-        },
-        columns: [
-            { data: 'recaudacion_numero' },
-            { data: 'fecha_recaudacion' },
-            { data: 'caja' },
-            { data: 'deposito' },
-            { 
-                data: 'monto_total',
-                render: function(data) {
-                    return formatearMoneda(data);
-                }
+    // Inicializar DataTable
+    const initDatatable = () => {
+        tablaRecaudaciones = $('#tblRecaudaciones').DataTable({
+            language: {
+                url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
             },
-            { 
-                data: 'fecha_deposito',
-                render: function(data) {
-                    return data || '-';
-                }
+            ajax: {
+                url: '/api/v1/recaudaciones',
+                dataSrc: 'data'
             },
-            { 
-                data: 'est_recaudacion',
-                render: function(data) {
-                    const estados = {
-                        'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
-                        'DEPOSITADA': '<span class="badge badge-success">Depositada</span>',
-                        'ANULADA': '<span class="badge badge-danger">Anulada</span>'
-                    };
-                    return estados[data] || data;
-                }
-            },
-            { data: 'usuario' },
-            { 
-                data: function(row) {
-                    let acciones = `
-                        <button type="button" name="btn_ver" class="btn btn-info btn-sm" data-id="${row.id_recaudacion}" title="Ver detalle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+            columns: [
+                { data: 'recaudacion_numero' },
+                { data: 'fecha_recaudacion' },
+                { data: 'caja' },
+                { data: 'deposito' },
+                {
+                    data: 'monto_total',
+                    render: function (data) {
+                        return formatearMoneda(data);
+                    }
+                },
+                {
+                    data: 'fecha_deposito',
+                    render: function (data) {
+                        return data || '-';
+                    }
+                },
+                {
+                    data: 'est_recaudacion',
+                    render: function (data) {
+                        const estados = {
+                            'PENDIENTE': '<span class="badge bg-warning-soft text-warning">Pendiente</span>',
+                            'DEPOSITADA': '<span class="badge bg-success-soft text-success">Depositada</span>',
+                            'ANULADA': '<span class="badge bg-danger-soft text-danger">Anulada</span>'
+                        };
+                        return estados[data] || data;
+                    }
+                },
+                { data: 'usuario' },
+                {
+                    data: function (row) {
+                        let acciones = `
+                        <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_ver" data-id="${row.id_recaudacion}" title="Ver detalle"><i class="fas fa-eye"></i></button>
                     `;
-                    
-                    if (row.est_recaudacion === 'PENDIENTE') {
-                        acciones += `
+
+                        if (row.est_recaudacion === 'PENDIENTE') {
+                            acciones += `
                             <button type="button" name="btn_depositar" class="btn btn-success btn-sm" data-id="${row.id_recaudacion}" title="Marcar como depositada">
                                 <i class="fas fa-check"></i>
                             </button>
@@ -157,50 +165,50 @@ const initDatatable = () => {
                                 <i class="fas fa-ban"></i>
                             </button>
                         `;
+                        }
+
+                        return acciones;
                     }
-                    
-                    return acciones;
                 }
-            }
-        ],
-        order: [[1, 'desc']] // Ordenar por fecha descendente
-    });
-}
-
-// Formatear moneda
-function formatearMoneda(valor) {
-    return new Intl.NumberFormat('es-PY', {
-        style: 'currency',
-        currency: 'PYG',
-        minimumFractionDigits: 0
-    }).format(valor || 0);
-}
-
-// Ver detalle
-const verDetalle = () => {
-    $('#tblRecaudaciones').on('click', 'button[name="btn_ver"]', function(){
-        const idRecaudacion = $(this).data('id');
-        
-        Swal.fire({
-            title: 'Cargando...',
-            text: 'Obteniendo información',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            ],
+            order: [[1, 'desc']] // Ordenar por fecha descendente
         });
-        
-        fetch(`/api/v1/recaudaciones/${idRecaudacion}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(resp => resp.json())
-        .then(data => {
-            Swal.close();
-            if(data && data.success && data.data) {
-                const recaudacion = data.data;
-                
-                const detalleHtml = `
+    }
+
+    // Formatear moneda
+    function formatearMoneda(valor) {
+        return new Intl.NumberFormat('es-PY', {
+            style: 'currency',
+            currency: 'PYG',
+            minimumFractionDigits: 0
+        }).format(valor || 0);
+    }
+
+    // Ver detalle
+    const verDetalle = () => {
+        $('#tblRecaudaciones').on('click', 'button[name="btn_ver"]', function () {
+            const idRecaudacion = $(this).data('id');
+
+            Swal.fire({
+                title: 'Cargando...',
+                text: 'Obteniendo información',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/api/v1/recaudaciones/${idRecaudacion}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    Swal.close();
+                    if (data && data.success && data.data) {
+                        const recaudacion = data.data;
+
+                        const detalleHtml = `
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Información General</h6>
@@ -226,185 +234,167 @@ const verDetalle = () => {
                     </div>
                     ${recaudacion.observaciones ? `<div class="row"><div class="col-md-12"><h6>Observaciones:</h6><p>${recaudacion.observaciones}</p></div></div>` : ''}
                 `;
-                
-                $('#detalleContenido').html(detalleHtml);
-                $('#modalDetalle').modal('show');
-            } else {
-                Swal.fire("Error", "No se pudo cargar la información.", "error");
-            }
-        })
-        .catch(err => {
-            Swal.close();
-            console.error(err);
-            Swal.fire("Error", "Ocurrió un error al cargar la información.", "error");
-        });
-    });
-}
 
-// Marcar como depositada
-const marcarComoDepositada = () => {
-    $('#tblRecaudaciones').on('click', 'button[name="btn_depositar"]', function(){
-        const idRecaudacion = $(this).data('id');
-        
-        Swal.fire({
-            title: 'Fecha de Depósito',
-            html: `
-                <input type="date" id="fechaDeposito" class="form-control" value="${new Date().toISOString().split('T')[0]}">
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'Marcar como Depositada',
-            cancelButtonText: 'Cancelar',
-            didOpen: () => {
-                document.getElementById('fechaDeposito').focus();
-            },
-            preConfirm: () => {
-                const fecha = document.getElementById('fechaDeposito').value;
-                if (!fecha) {
-                    Swal.showValidationMessage('Debe ingresar una fecha de depósito');
-                    return false;
-                }
-                return fecha;
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/api/v1/recaudaciones/${idRecaudacion}/depositar`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': CSRFToken
-                    },
-                    body: JSON.stringify({
-                        fecha_deposito: result.value
-                    })
-                })
-                .then(resp => resp.json())
-                .then(data => {
-                    if(data && data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Depositada',
-                            text: 'La recaudación ha sido marcada como depositada exitosamente',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                        tablaRecaudaciones.ajax.reload();
+                        $('#detalleContenido').html(detalleHtml);
+                        new bootstrap.Modal(document.getElementById("modalDetalle")).show();
                     } else {
-                        Swal.fire("Error", data.error || "No se pudo marcar como depositada.", "error");
+                        Swal.fire("Error", "No se pudo cargar la información.", "error");
                     }
                 })
                 .catch(err => {
+                    Swal.close();
                     console.error(err);
-                    Swal.fire("Error", "Ocurrió un error al marcar como depositada.", "error");
+                    Swal.fire("Error", "Ocurrió un error al cargar la información.", "error");
                 });
-            }
         });
-    });
-}
+    }
 
-// Anular recaudación
-const anularRecaudacion = () => {
-    $('#tblRecaudaciones').on('click', 'button[name="btn_anular"]', function(){
-        const idRecaudacion = $(this).data('id');
-        
-        Swal.fire({
-            title: '¿Anular Recaudación?',
-            text: 'Esta acción no se puede deshacer. ¿Está seguro?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, anular',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Motivo de Anulación',
-                    input: 'text',
-                    inputLabel: 'Ingrese el motivo de la anulación',
-                    inputPlaceholder: 'Motivo...',
-                    showCancelButton: true,
-                    confirmButtonText: 'Anular',
-                    cancelButtonText: 'Cancelar',
-                    inputValidator: (value) => {
-                        if (!value) {
-                            return 'Debe ingresar un motivo';
-                        }
+    // Marcar como depositada
+    const marcarComoDepositada = () => {
+        $('#tblRecaudaciones').on('click', 'button[name="btn_depositar"]', function () {
+            const idRecaudacion = $(this).data('id');
+
+            Swal.fire({
+                title: 'Fecha de Depósito',
+                html: `
+                <input type="date" id="fechaDeposito" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+            `,
+                showCancelButton: true,
+                confirmButtonText: 'Marcar como Depositada',
+                cancelButtonText: 'Cancelar',
+                didOpen: () => {
+                    document.getElementById('fechaDeposito').focus();
+                },
+                preConfirm: () => {
+                    const fecha = document.getElementById('fechaDeposito').value;
+                    if (!fecha) {
+                        Swal.showValidationMessage('Debe ingresar una fecha de depósito');
+                        return false;
                     }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`/api/v1/recaudaciones/${idRecaudacion}/anular`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': CSRFToken
-                            },
-                            body: JSON.stringify({
-                                motivo_anulacion: result.value
-                            })
+                    return fecha;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/api/v1/recaudaciones/${idRecaudacion}/depositar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': CSRFToken
+                        },
+                        body: JSON.stringify({
+                            fecha_deposito: result.value
                         })
+                    })
                         .then(resp => resp.json())
                         .then(data => {
-                            if(data && data.success) {
+                            if (data && data.success) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Anulada',
-                                    text: 'La recaudación ha sido anulada exitosamente',
+                                    title: 'Depositada',
+                                    text: 'La recaudación ha sido marcada como depositada exitosamente',
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
                                 tablaRecaudaciones.ajax.reload();
                             } else {
-                                Swal.fire("Error", data.error || "No se pudo anular la recaudación.", "error");
+                                Swal.fire("Error", data.error || "No se pudo marcar como depositada.", "error");
                             }
                         })
                         .catch(err => {
                             console.error(err);
-                            Swal.fire("Error", "Ocurrió un error al anular.", "error");
+                            Swal.fire("Error", "Ocurrió un error al marcar como depositada.", "error");
                         });
-                    }
-                });
-            }
+                }
+            });
         });
+    }
+
+    // Anular recaudación
+    const anularRecaudacion = () => {
+        $('#tblRecaudaciones').on('click', 'button[name="btn_anular"]', function () {
+            const idRecaudacion = $(this).data('id');
+
+            Swal.fire({
+                title: '¿Anular Recaudación?',
+                text: 'Esta acción no se puede deshacer. ¿Está seguro?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, anular',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Motivo de Anulación',
+                        input: 'text',
+                        inputLabel: 'Ingrese el motivo de la anulación',
+                        inputPlaceholder: 'Motivo...',
+                        showCancelButton: true,
+                        confirmButtonText: 'Anular',
+                        cancelButtonText: 'Cancelar',
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'Debe ingresar un motivo';
+                            }
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/api/v1/recaudaciones/${idRecaudacion}/anular`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': CSRFToken
+                                },
+                                body: JSON.stringify({
+                                    motivo_anulacion: result.value
+                                })
+                            })
+                                .then(resp => resp.json())
+                                .then(data => {
+                                    if (data && data.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Anulada',
+                                            text: 'La recaudación ha sido anulada exitosamente',
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        });
+                                        tablaRecaudaciones.ajax.reload();
+                                    } else {
+                                        Swal.fire("Error", data.error || "No se pudo anular la recaudación.", "error");
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    Swal.fire("Error", "Ocurrió un error al anular.", "error");
+                                });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Aplicar filtros
+    $('#btnAplicarFiltros').on('click', function () {
+        const estado = $('#filtroEstado').val();
+        tablaRecaudaciones.column(6).search(estado);
+        tablaRecaudaciones.draw();
     });
-}
 
-// Aplicar filtros
-$('#btnAplicarFiltros').on('click', function() {
-    const estado = $('#filtroEstado').val();
-    tablaRecaudaciones.column(6).search(estado);
-    tablaRecaudaciones.draw();
-});
+    // Limpiar filtros
+    $('#btnLimpiarFiltros').on('click', function () {
+        $('#filtroEstado').val('');
+        tablaRecaudaciones.search('').columns().search('').draw();
+    });
 
-// Limpiar filtros
-$('#btnLimpiarFiltros').on('click', function() {
-    $('#filtroEstado').val('');
-    tablaRecaudaciones.search('').columns().search('').draw();
-});
-
-// Inicializar cuando el documento esté listo
-$(function() {
-    initDatatable();
-    verDetalle();
-    marcarComoDepositada();
-    anularRecaudacion();
-});
+    // Inicializar cuando el documento esté listo
+    $(function () {
+        initDatatable();
+        verDetalle();
+        marcarComoDepositada();
+        anularRecaudacion();
+    });
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

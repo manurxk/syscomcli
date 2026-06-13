@@ -120,9 +120,21 @@ class ModulosService:
                 'ventas_hoy',
                 'cuentas_cobrar',
             ]
+        },
+        'CAJA': {
+            'modulos': [
+                'dashboard',
+                'gestion_pagos_cobros',
+                'facturacion',
+                'reportes_ventas',
+            ],
+            'widgets_dashboard': [
+                'facturas_mes',
+                'ventas_hoy',
+                'cuentas_cobrar',
+            ]
         }
     }
-    
     # Mapeo de IDs de grupos a nombres (ajustar según tu BD)
     ID_GRUPO_A_NOMBRE = {
         1: 'ADMINISTRADOR',
@@ -130,6 +142,7 @@ class ModulosService:
         3: 'ESPECIALISTA',
         4: 'VENTAS',
         5: 'SUPERADMINISTRADOR',
+        6: 'CAJA',
     }
     
     def __init__(self):
@@ -401,3 +414,7 @@ class ModulosService:
         roles = self.obtener_roles_usuario(id_usuario)
         return any(rol.get('des_grupo', '').upper() == 'VENTAS' for rol in roles)
 
+    def es_caja(self, id_usuario=None) -> bool:
+        """Verifica si el usuario es Caja"""
+        roles = self.obtener_roles_usuario(id_usuario)
+        return any(rol.get('des_grupo', '').upper() == 'CAJA' for rol in roles)

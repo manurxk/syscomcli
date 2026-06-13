@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Consulta Médica
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Registrar Consulta Médica
+          </h1>
+          <div class="page-header-subtitle">Gestión de citas disponibles para inicio de consulta clínica</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <!-- Tarjeta principal -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold">Citas Disponibles para Consulta</span>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblCitas">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Paciente</th>
+              <th>HC</th>
+              <th>Especialista</th>
+              <th>Tipo Cita</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Estilos mejorados */
+  #tblCitas tbody tr {
+    transition: background-color 0.2s;
+  }
+
+  #tblCitas tbody tr:hover {
+    background-color: #d4edda;
+  }
+
+  .card-header {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, .05);
+  }
+
+  .form-group label {
+    margin-bottom: 0.375rem;
+    font-size: 0.9rem;
+  }
+
+  .form-control,
+  .input-group-text {
+    font-size: 0.9rem;
+  }
+
+  .form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+
+  .alert-primary {
+    background-color: #e7f1ff;
+    border-left: 4px solid #007bff;
+  }
+
+  .shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+    h3 {
+      font-size: 1.5rem;
+    }
+
+    .card-header h6 {
+      font-size: 0.95rem;
+    }
+  }
+
+  /* Validación de formularios */
+  .form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+  }
+
+  .form-control.is-valid {
+    border-color: #28a745;
+    background-image: none;
+  }
+
+  .fw-semibold {
+    font-weight: 600;
+  }
+
+  /* Spinner de loading */
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15rem;
+  }
+
+  /* Contador de caracteres */
+  .char-counter {
+    font-size: 0.75rem;
+    color: #6c757d;
+    float: right;
+    margin-top: 0.25rem;
+  }
+
+  .char-counter.warning {
+    color: #ffc107;
+  }
+
+  .char-counter.danger {
+    color: #dc3545;
+  }
+</style>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  // ==========================================
+  // DATATABLE DE CITAS
+  // ==========================================
+  const initDatatable = () => {
+    $('#tblCitas').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: {
+        url: '/api/v1/citas',
+        dataSrc: function (json) {
+          if (json.success) {
+            return json.data;
+          } else {
+            Swal.fire('Error', json.error || 'Error al cargar citas', 'error');
+            return [];
+          }
+        },
+        error: function (xhr, error, thrown) {
+          console.error('Error en AJAX:', xhr.responseText);
+          Swal.fire('Error', 'No se pudieron cargar las citas', 'error');
+        }
+      },
+      columns: [
+        { data: 'cita_fecha', title: 'Fecha' },
+        { data: 'cita_hora_inicio', title: 'Hora' },
+        { data: 'paciente_nombre', title: 'Paciente' },
+        { data: 'historia_clinica', title: 'HC' },
+        { data: 'especialista_nombre', title: 'Especialista' },
+        {
+          data: 'cita_tipo',
+          render: function (data, type, row) {
+            const badges = {
+              'PRIMERA_VEZ': '<span class="badge bg-primary">Primera Vez</span>',
+              'EVALUACION': '<span class="badge bg-info-soft text-info">Evaluación</span>',
+              'TRATAMIENTO': '<span class="badge bg-success-soft text-success">Tratamiento</span>',
+              'SEGUIMIENTO': '<span class="badge bg-warning-soft text-warning">Seguimiento</span>'
+            };
+            return badges[data] || data;
+          },
+          title: 'Tipo',
+          className: 'text-center'
+        },
+        {
+          data: 'estado_nombre',
+          render: function (data, type, row) {
+            return `<span class="badge" style="background-color: ${row.estado_color}">${data}</span>`;
+          },
+          title: 'Estado',
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return `
+            <a href="/consulta/consulta-agregar?id_cita=${row.id_cita}&id_paciente=${row.id_paciente}&id_profesional=${row.id_profesional}" 
+               class="btn btn-success btn-sm"
+               title="Iniciar Consulta">
+              <i class="fas fa-stethoscope"></i> Iniciar Consulta
+            </a>
+          `;
+          },
+          title: 'Acciones',
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[0, 'desc'], [1, 'asc']],
+      responsive: true,
+      pageLength: 10
+    });
+  }
+
+  // ==========================================
+  // INICIALIZACIÓN
+  // ==========================================
+  $(document).ready(function () {
+    console.log('Inicializando módulo de consultas...');
+
+    initDatatable();
+
+    console.log('Módulo de consultas inicializado');
+  });
+
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Agendamiento PDF</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+                color: #555;
+            }
+        }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; color: #333; }
+        .header { border-bottom: 2px solid #198754; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { color: #198754; margin: 0; font-size: 24px; text-transform: uppercase; }
+        .header p { margin: 5px 0 0; font-size: 13px; color: #555; }
+        .kpi-section { width: 100%; margin-bottom: 20px; border-collapse: separate; border-spacing: 10px 0; }
+        .kpi-box { background-color: #f8f9fa; border-left: 4px solid #198754; padding: 10px; border-radius: 4px; width: 25%; }
+        .kpi-title { font-size: 10px; text-transform: uppercase; color: #777; margin: 0 0 5px; }
+        .kpi-value { font-size: 16px; font-weight: bold; color: #222; margin: 0; }
+        table.data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
+        table.data-table th, table.data-table td { border: 1px solid #ddd; padding: 8px; }
+        table.data-table th { background-color: #f1f5f9; color: #333; font-weight: bold; text-transform: uppercase; text-align: left; }
+        .align-right { text-align: right !important; }
+        .align-center { text-align: center !important; }
+        .text-success { color: #1cc88a; }
+        .text-danger { color: #e74a3b; }
+        .text-warning { color: #f6c23e; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Reporte de Agendamiento</h1>
+        <p><strong>Periodo:</strong> {{ fecha_desde }} al {{ fecha_hasta }}</p>
+    </div>
+
+    <table class="kpi-section">
+        <tr>
+            <td class="kpi-box" style="border-color: #198754;">
+                <p class="kpi-title">Total Programadas</p>
+                <p class="kpi-value">{{ totales.total }}</p>
+            </td>
+            <td class="kpi-box" style="border-color: #1cc88a;">
+                <p class="kpi-title">Atendidas</p>
+                <p class="kpi-value text-success">{{ totales.atendidas }}</p>
+            </td>
+            <td class="kpi-box" style="border-color: #e74a3b;">
+                <p class="kpi-title">Canceladas</p>
+                <p class="kpi-value text-danger">{{ totales.canceladas }}</p>
+            </td>
+            <td class="kpi-box" style="border-color: #f6c23e;">
+                <p class="kpi-title">Ausencias</p>
+                <p class="kpi-value text-warning">{{ totales.ausentes }}</p>
+            </td>
+        </tr>
+    </table>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th class="align-center">Atendidas</th>
+                <th class="align-center">Canceladas</th>
+                <th class="align-center">Ausencias</th>
+                <th class="align-right">Total del Día</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in datos %}
+            <tr>
+                <td style="font-weight: bold;">{{ item.fecha }}</td>
+                <td class="align-center text-success">{{ item.cant_atendidas }}</td>
+                <td class="align-center text-danger">{{ item.cant_canceladas }}</td>
+                <td class="align-center text-warning">{{ item.cant_ausencias }}</td>
+                <td class="align-right" style="background-color: #f8f9fa; font-weight: bold;">
+                    {{ item.cant_atendidas + item.cant_canceladas + item.cant_ausencias }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="align-center">No hay datos en el rango seleccionado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="background-color: #e2e8f0; font-weight: bold;">
+                <td>TOTALES</td>
+                <td class="align-center">{{ totales.atendidas }}</td>
+                <td class="align-center">{{ totales.canceladas }}</td>
+                <td class="align-center">{{ totales.ausentes }}</td>
+                <td class="align-right">{{ totales.total }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

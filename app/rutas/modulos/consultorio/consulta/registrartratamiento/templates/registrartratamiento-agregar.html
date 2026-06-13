@@ -1,0 +1,478 @@
+{% if embedded %}
+{% extends 'base_embedded.html' %}
+{% else %}
+{% extends 'base.html' %}
+{% endif %}
+
+{% block titulo %}
+{% if id_tratamiento %}Editar Tratamiento{% else %}Registrar Tratamiento{% endif %}
+{% endblock %}
+
+{% block contenido %}
+{% if not embedded %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">{% if id_tratamiento %}Editar Tratamiento{% else %}Registrar Tratamiento Psicológico{% endif %}
+                    </h1>
+                    <div class="page-header-subtitle">Complete los datos del tratamiento para la consulta médica</div>
+                </div>
+                <div class="col-12 col-xl-auto mt-4">
+                    <a href="{{ url_for('registrartratamiento.tratamientoIndex') }}"
+                        class="btn btn-sm btn-light text-primary fw-500 shadow-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+{% endif %}
+
+<div class="container-xl px-4 {% if not embedded %}mt-n10{% else %}mt-4{% endif %}">
+
+    <!-- Info Consulta (si viene de una consulta) -->
+    <div class="card shadow-sm mb-4 border-0 bg-light" id="seccionInfoConsulta" style="display:none;">
+        <div class="card-header bg-info text-white py-3">
+            <h6 class="m-0 fw-bold"><i class="fas fa-info-circle me-2"></i> Información de la Consulta</h6>
+        </div>
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-3"><small class="text-muted d-block fw-bold">Paciente</small><strong
+                        id="infoPaciente">--</strong></div>
+                <div class="col-md-2"><small class="text-muted d-block fw-bold">HC</small><strong
+                        id="infoHC">--</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block fw-bold">Profesional</small><strong
+                        id="infoProfesional">--</strong></div>
+                <div class="col-md-2"><small class="text-muted d-block fw-bold">Fecha</small><strong
+                        id="infoFecha">--</strong></div>
+                <div class="col-md-2"><small class="text-muted d-block fw-bold">Estado</small><span
+                        id="infoEstado">--</span></div>
+            </div>
+        </div>
+    </div>
+
+    <form id="formTratamiento">
+        <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="id_consulta" value="{{ id_consulta or '' }}">
+        <input type="hidden" id="id_paciente" value="{{ id_paciente or '' }}">
+        <input type="hidden" id="id_tratamiento" value="{{ id_tratamiento or '' }}">
+        <input type="hidden" id="embedded_val" value="{{ 'true' if embedded else 'false' }}">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 fw-bold text-primary">
+                            <i class="fas fa-info-circle me-2"></i> Información Básica del Tratamiento
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row gx-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="id_diagnostico">Diagnóstico a
+                                    Tratar <span class="text-danger">*</span></label>
+                                <select class="form-select" id="id_diagnostico" required>
+                                    <option value="">Seleccione un diagnóstico...</option>
+                                </select>
+                                <small class="form-text text-muted">Seleccione el diagnóstico para el cual se prescribe
+                                    el tratamiento</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="txtTipoTratamiento">Tipo de
+                                    Tratamiento <span class="text-danger">*</span></label>
+                                <input type="hidden" id="id_tipo_tratamiento">
+                                <div class="input-group">
+                                    <input type="text" class="form-control"
+                                        placeholder="Haga clic para buscar tipo de tratamiento" id="txtTipoTratamiento"
+                                        readonly required>
+                                    <button class="btn btn-primary" type="button"
+                                        id="btnBuscarTratamiento">Buscar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted" for="nombre_tratamiento">Nombre del
+                                Tratamiento <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre_tratamiento"
+                                placeholder="Ej: Terapia Cognitiva para Ansiedad, Sesiones de Mindfulness..." required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: OBJETIVOS Y DESCRIPCIÓN -->
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 fw-bold text-success">
+                            <i class="fas fa-bullseye me-2"></i> Objetivos y Metodología
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row gx-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted"
+                                    for="objetivos_terapeuticos">Objetivos Terapéuticos <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control" id="objetivos_terapeuticos" rows="4"
+                                    placeholder="Objetivos específicos a alcanzar en el tratamiento..."
+                                    required></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted"
+                                    for="descripcion_tratamiento">Descripción y Técnicas a Utilizar <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control" id="descripcion_tratamiento" rows="4"
+                                    placeholder="Descripción detallada del tratamiento y técnicas psicológicas a aplicar..."
+                                    required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: PLANIFICACIÓN Y ESTADO -->
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 fw-bold text-info">
+                            <i class="fas fa-calendar-alt me-2"></i> Planificación y Estado
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row gx-3">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="numero_sesiones">Número de
+                                    Sesiones</label>
+                                <input type="number" class="form-control" id="numero_sesiones"
+                                    placeholder="Ej: 8, 12, 16..." min="1">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small fw-bold text-muted"
+                                    for="frecuencia_sesiones">Frecuencia</label>
+                                <select class="form-select" id="frecuencia_sesiones">
+                                    <option value="">Seleccione...</option>
+                                    <option value="SEMANAL">Semanal</option>
+                                    <option value="QUINCENAL">Quincenal</option>
+                                    <option value="BISEMANAL">2 veces por semana</option>
+                                    <option value="MENSUAL">Mensual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="duracion_sesion">Duración
+                                    (min)</label>
+                                <input type="number" class="form-control" id="duracion_sesion" value="60" min="15"
+                                    step="15">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="estado_tratamiento">Estado <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="estado_tratamiento" required>
+                                    <option value="ACTIVO" selected>Activo</option>
+                                    <option value="EN_PAUSA">En Pausa</option>
+                                    <option value="SUSPENDIDO">Suspendido</option>
+                                    <option value="FINALIZADO">Finalizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row gx-3">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="fecha_inicio">Fecha de Inicio
+                                    <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="fecha_inicio" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label small fw-bold text-muted" for="fecha_fin">Fecha de Fin
+                                    Estimada</label>
+                                <input type="date" class="form-control" id="fecha_fin">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label small fw-bold text-muted"
+                                    for="observaciones">Observaciones</label>
+                                <textarea class="form-control" id="observaciones" rows="1"
+                                    placeholder="Observaciones adicionales..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="card shadow-sm mb-5 border-0 bg-transparent">
+                    <div class="card-body p-0 d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Los campos marcados con <span class="text-danger">*</span> son obligatorios.
+                        </div>
+                        <div class="d-flex">
+                            <button class="btn btn-outline-danger me-2" type="button" id="btnDescartarTratamiento">
+                                <i class="fas fa-times me-1"></i> Descartar
+                            </button>
+                            <button class="btn text-white shadow px-5 py-2 fw-bold" type="button"
+                                id="btnGuardarTratamiento" style="background-color: #6f42c1;">
+                                <i class="fas fa-save me-2"></i>
+                                {% if id_tratamiento %}Actualizar Tratamiento{% else %}Registrar Tratamiento{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Buscar Tipo de Tratamiento -->
+<div class="modal fade" id="modalBuscarTratamiento" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background-color: #6f42c1;">
+                <h5 class="modal-title fw-bold">Buscar Tipo de Tratamiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle w-100" id="tblTiposTratamiento">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción del Tratamiento</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --tratamiento-color: #6f42c1;
+    }
+
+    .card {
+        margin-bottom: 1.5rem !important;
+        border: 1px solid #e3e6f0 !important;
+    }
+
+    .card-header {
+        border-bottom: 1px solid #e3e6f0 !important;
+        background-color: #f8f9fc !important;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 42px !important;
+        padding: 12px 1rem !important;
+        border-radius: 6px !important;
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--tratamiento-color) !important;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.15) !important;
+    }
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+    const CSRFToken = "{{ csrf_token() }}";
+    const EMBEDDED_MODE = document.getElementById('embedded_val')?.value === 'true';
+    const idConsultaParam = document.getElementById('id_consulta').value || null;
+    const idPacienteParam = document.getElementById('id_paciente').value || null;
+    const idTratamientoParam = document.getElementById('id_tratamiento').value || null;
+
+    // ==========================================
+    // INIT TIPOS TRATAMIENTO DATATABLE
+    // ==========================================
+    const initTiposTratamientoDatatable = () => {
+        $('#tblTiposTratamiento').DataTable({
+            language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+            ajax: {
+                url: '/api/v1/tipos-tratamientos',
+                dataSrc: function (json) { return json.success && json.data ? json.data : []; }
+            },
+            columns: [
+                { data: 'id', className: 'text-center' },
+                { data: 'descripcion' },
+                {
+                    data: 'estado',
+                    render: d => d === 'A' ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>',
+                    className: 'text-center'
+                },
+                {
+                    data: row => {
+                        const desc = (row.descripcion || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                        return `<button type="button" class="btn btn-success btn-sm btn-select-tratamiento" data-id="${row.id}" data-descripcion="${desc}">Seleccionar</button>`;
+                    },
+                    orderable: false, className: 'text-center'
+                }
+            ],
+            responsive: true, pageLength: 8
+        });
+    };
+
+    // ==========================================
+    // BUSCAR TIPO TRATAMIENTO
+    // ==========================================
+    $('#btnBuscarTratamiento').on('click', function () {
+        new bootstrap.Modal(document.getElementById("modalBuscarTratamiento")).show();
+    });
+
+    $(document).on('click', '.btn-select-tratamiento', function (e) {
+        e.preventDefault();
+        const idTipo = $(this).attr('data-id');
+        const descripcion = $(this).attr('data-descripcion');
+        if (!idTipo || isNaN(parseInt(idTipo))) {
+            Swal.fire('Error', 'ID de tipo tratamiento no válido', 'error');
+            return;
+        }
+        $('#id_tipo_tratamiento').val(parseInt(idTipo));
+        $('#txtTipoTratamiento').val(descripcion).addClass('is-valid');
+        setTimeout(() => { $('#txtTipoTratamiento').removeClass('is-valid'); }, 2000);
+        (bootstrap.Modal.getInstance(document.getElementById("modalBuscarTratamiento"))).hide();
+    });
+
+    // ==========================================
+    // CARGAR DIAGNÓSTICOS DE UNA CONSULTA
+    // ==========================================
+    const cargarDiagnosticosConsulta = (idConsulta) => {
+        fetch(`/api/v1/registro-diagnosticos/consulta/${idConsulta}`)
+            .then(resp => { if (!resp.ok) throw new Error(`HTTP ${resp.status}`); return resp.json(); })
+            .then(data => {
+                if (data.success && data.data.length > 0) {
+                    let html = '<option value="">Seleccione un diagnóstico...</option>';
+                    data.data.forEach(d => {
+                        html += `<option value="${d.id_registro_diagnostico}">${d.codigo_cie10} - ${d.descripcion} (${d.tipo})</option>`;
+                    });
+                    $('#id_diagnostico').html(html);
+                } else {
+                    $('#id_diagnostico').html('<option value="">No hay diagnósticos registrados</option>');
+                }
+            })
+            .catch(() => { $('#id_diagnostico').html('<option value="">Error al cargar</option>'); });
+    };
+
+    // ==========================================
+    // CARGAR INFO CONSULTA
+    // ==========================================
+    const cargarInfoConsulta = (idConsulta) => {
+        fetch(`/api/v1/consultas/${idConsulta}`)
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const c = data.data;
+                    $('#infoPaciente').text(c.paciente_nombre || '--');
+                    $('#infoHC').text(c.historia_clinica || '--');
+                    $('#infoProfesional').text(c.profesional_nombre || '--');
+                    $('#infoFecha').text(c.consulta_fecha || '--');
+                    $('#infoEstado').text(c.consulta_estado || '--');
+                    $('#seccionInfoConsulta').show();
+                }
+            }).catch(err => console.error('Error cargando consulta:', err));
+    };
+
+    // ==========================================
+    // GUARDAR TRATAMIENTO
+    // ==========================================
+    $('#btnGuardarTratamiento').on('click', function () {
+        const idConsulta = parseInt($('#id_consulta').val());
+        const idPaciente = parseInt($('#id_paciente').val());
+        const idDiagnostico = parseInt($('#id_diagnostico').val());
+        const idTipoTratamiento = parseInt($('#id_tipo_tratamiento').val());
+
+        if (!idConsulta || isNaN(idConsulta)) { Swal.fire('Error', 'ID de consulta no válido', 'error'); return; }
+        if (!idDiagnostico || isNaN(idDiagnostico)) { Swal.fire('Atención', 'Debe seleccionar un diagnóstico', 'warning'); return; }
+        if (!idTipoTratamiento || isNaN(idTipoTratamiento)) { Swal.fire('Atención', 'Debe buscar y seleccionar un tipo de tratamiento', 'warning'); return; }
+        if (!$('#nombre_tratamiento').val() || !$('#objetivos_terapeuticos').val() || !$('#descripcion_tratamiento').val() || !$('#fecha_inicio').val()) {
+            Swal.fire('Atención', 'Complete los campos obligatorios', 'warning'); return;
+        }
+
+        const dataTratamiento = {
+            id_consulta: idConsulta,
+            id_paciente: idPaciente,
+            id_registro_diagnostico: idDiagnostico,
+            id_tipo_tratamiento: idTipoTratamiento,
+            des_tratamiento: $('#nombre_tratamiento').val(),
+            tratamiento_objetivos: $('#objetivos_terapeuticos').val() + '\n\nTÉCNICAS:\n' + $('#descripcion_tratamiento').val(),
+            numero_sesiones: parseInt($('#numero_sesiones').val()) || null,
+            frecuencia_sesiones: $('#frecuencia_sesiones').val() || null,
+            duracion_sesion: parseInt($('#duracion_sesion').val()) || null,
+            tratamiento_fecha_inicio: $('#fecha_inicio').val(),
+            tratamiento_fecha_fin: $('#fecha_fin').val() || null,
+            tratamiento_estado: $('#estado_tratamiento').val(),
+            tratamiento_observaciones: $('#observaciones').val() || null,
+            usuario_creacion: 'ADMIN'
+        };
+
+        const modoEdicion = idTratamientoParam !== null;
+        const url = modoEdicion ? `/api/v1/tratamientos/${idTratamientoParam}` : '/api/v1/tratamientos';
+        const method = modoEdicion ? 'PUT' : 'POST';
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+            body: JSON.stringify(dataTratamiento)
+        })
+            .then(resp => { if (!resp.ok) return resp.json().then(e => { throw new Error(e.error || `HTTP ${resp.status}`); }); return resp.json(); })
+            .then(data => {
+                btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar Tratamiento');
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: '¡Tratamiento Registrado!', text: data.data.mensaje || 'El tratamiento ha sido registrado exitosamente', confirmButtonColor: '#6f42c1' })
+                        .then(() => {
+                            if (EMBEDDED_MODE) {
+                                location.reload();
+                            } else {
+                                window.location.href = "{{ url_for('registrartratamiento.tratamientoIndex') }}";
+                            }
+                        });
+                } else {
+                    Swal.fire('Error', data.error || 'No se pudo guardar', 'error');
+                }
+            })
+            .catch(err => {
+                btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar Tratamiento');
+                Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
+            });
+    });
+
+    // ==========================================
+    // INICIALIZACIÓN Y EVENTOS
+    // ==========================================
+    $('#btnDescartarTratamiento').on('click', function () {
+        if (EMBEDDED_MODE) {
+            location.reload();
+        } else {
+            window.location.href = "{{ url_for('registrartratamiento.tratamientoIndex') }}";
+        }
+    });
+
+    $(document).ready(function () {
+        initTiposTratamientoDatatable();
+        const hoy = new Date().toISOString().split('T')[0];
+        if (!$('#fecha_inicio').val()) $('#fecha_inicio').val(hoy);
+
+        if (idConsultaParam) {
+            $('#id_consulta').val(idConsultaParam);
+            if (idPacienteParam) $('#id_paciente').val(idPacienteParam);
+            cargarInfoConsulta(idConsultaParam);
+            cargarDiagnosticosConsulta(idConsultaParam);
+
+            if (EMBEDDED_MODE) {
+                $('#id_consulta').prop('disabled', true);
+                $('#id_paciente').prop('disabled', true);
+            }
+        }
+    });
+</script>
+{% endblock %}

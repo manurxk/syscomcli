@@ -602,6 +602,31 @@ class FuncionarioDao:
             cur.close()
             con.close()
     
+    def getEspecialidadesByEspecialista(self, id_especialista):
+        """Obtiene las especialidades de un especialista"""
+        sql = """
+            SELECT esp.id_especialidad, esp.des_especialidad
+            FROM especialista_especialidades ee
+            JOIN especialidades esp ON ee.id_especialidad = esp.id_especialidad
+            WHERE ee.id_especialista = %s AND esp.est_especialidad = TRUE
+            ORDER BY esp.des_especialidad
+        """
+        
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        
+        try:
+            cur.execute(sql, (id_especialista,))
+            resultados = cur.fetchall()
+            return [{'id_especialidad': r[0], 'des_especialidad': r[1]} for r in resultados]
+        except Exception as e:
+            app.logger.error(f"Error al obtener especialidades de especialista: {str(e)}")
+            return []
+        finally:
+            cur.close()
+            con.close()
+    
     # ==========================================
     # MÉTODOS PARA GESTIÓN DE GRUPOS
     # ==========================================

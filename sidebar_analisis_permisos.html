@@ -1,0 +1,223 @@
+
+<style>
+.section-header { font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;padding:0 }
+.card { background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:12px }
+.badge { display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:500;margin:2px 3px 2px 0 }
+.b-admin   { background:#E6F1FB;color:#0C447C }
+.b-super   { background:#EEEDFE;color:#3C3489 }
+.b-recep   { background:#E1F5EE;color:#085041 }
+.b-esp     { background:#FAEEDA;color:#633806 }
+.b-ventas  { background:#FCEBEB;color:#791F1F }
+.b-perm    { background:#F1EFE8;color:#444441 }
+.item-row  { display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary) }
+.item-row:last-child { border-bottom:none }
+.item-name { font-size:13px;color:var(--color-text-primary);min-width:150px;flex-shrink:0 }
+.item-badges { display:flex;flex-wrap:wrap;align-items:center }
+.risk-chip { display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;margin-left:auto;flex-shrink:0 }
+.r-ok  { background:#EAF3DE;color:#27500A }
+.r-med { background:#FAEEDA;color:#633806 }
+.r-hi  { background:#FCEBEB;color:#791F1F }
+.tab-bar { display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap }
+.tab { font-size:12px;padding:5px 14px;border-radius:20px;border:0.5px solid var(--color-border-secondary);cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .15s }
+.tab.active { background:var(--color-text-primary);color:var(--color-background-primary);border-color:transparent }
+.section-pane { display:none }
+.section-pane.active { display:block }
+.insight-box { background:var(--color-background-secondary);border-left:3px solid;padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:10px;font-size:13px;color:var(--color-text-primary);line-height:1.5 }
+.ins-warn { border-color:#EF9F27 }
+.ins-danger { border-color:#E24B4A }
+.ins-ok { border-color:#639922 }
+.ins-info { border-color:#378ADD }
+.metric-row { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px }
+.metric { background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem;text-align:center }
+.metric .num { font-size:22px;font-weight:500;color:var(--color-text-primary) }
+.metric .lbl { font-size:11px;color:var(--color-text-secondary);margin-top:2px }
+.ux-item { display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary) }
+.ux-item:last-child{border-bottom:none}
+.ux-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px }
+</style>
+<div style="padding:1rem 0">
+
+<div class="tab-bar">
+  <button class="tab active" onclick="show('seguridad')">Seguridad y permisos</button>
+  <button class="tab" onclick="show('ux')">Experiencia de usuario</button>
+  <button class="tab" onclick="show('arq')">Arquitectura y escalabilidad</button>
+</div>
+
+<!-- SEGURIDAD -->
+<div class="section-pane active" id="pane-seguridad">
+  <div class="metric-row">
+    <div class="metric"><div class="num">5</div><div class="lbl">Roles distintos</div></div>
+    <div class="metric"><div class="num">3</div><div class="lbl">Secciones principales</div></div>
+    <div class="metric"><div class="num" style="color:#E24B4A">2</div><div class="lbl">Ítems solo Superadmin</div></div>
+    <div class="metric"><div class="num" style="color:#639922">1</div><div class="lbl">Módulo con permiso granular</div></div>
+  </div>
+
+  <p class="section-header">Mapa de accesos por ítem</p>
+  <div class="card">
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px">1. Gestión del Sistema</div>
+    <div class="item-row"><span class="item-name">Referenciales</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Config. Clínica</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Seguridad</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-med">Revisar</span></div>
+    <div class="item-row"><span class="item-name">Registrar (Pac/Fun)</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Usuarios</span><div class="item-badges"><span class="badge b-super">Solo Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px">2. Atención al Paciente</div>
+    <div class="item-row"><span class="item-name">Agendamiento</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span><span class="badge b-recep">Recepción</span><span class="badge b-esp">Especialista</span><span class="badge b-perm">Permiso módulo</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Mi Agenda</span><div class="item-badges"><span class="badge b-esp">Solo Especialista</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Fichas Médicas</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span><span class="badge b-recep">Recepción</span></div><span class="risk-chip r-med">Revisar</span></div>
+    <div class="item-row"><span class="item-name">Pacientes (recep.)</span><div class="item-badges"><span class="badge b-recep">Recepción</span><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Consulta / Diagnóstico</span><div class="item-badges"><span class="badge b-esp">Especialista</span><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span><span class="badge b-perm">Permiso Consultorios</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Anamnesis / Recetas</span><div class="item-badges"><span class="badge b-esp">Especialista</span><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px">3. Ventas</div>
+    <div class="item-row"><span class="item-name">Registrar Pedido</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span><span class="badge b-ventas">Ventas</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Factura / Cobros</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span><span class="badge b-recep">Recepción</span><span class="badge b-ventas">Ventas</span></div><span class="risk-chip r-med">Revisar</span></div>
+    <div class="item-row"><span class="item-name">Caja (arq./cierre)</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span><span class="badge b-ventas">Ventas</span></div><span class="risk-chip r-ok">Correcto</span></div>
+    <div class="item-row"><span class="item-name">Config. Empresa/Sedes</span><div class="item-badges"><span class="badge b-admin">Admin</span><span class="badge b-super">Superadmin</span></div><span class="risk-chip r-ok">Correcto</span></div>
+  </div>
+
+  <p class="section-header">Hallazgos de seguridad</p>
+  <div class="insight-box ins-danger">
+    <strong>Seguridad (cargos, grupos, módulos)</strong> accesible por Admin y Superadmin. Dado que configura roles y permisos del propio sistema, se recomienda restringir a solo Superadmin, o al menos requerir una confirmación de contraseña adicional.
+  </div>
+  <div class="insight-box ins-warn">
+    <strong>Fichas Médicas accesibles por Recepción.</strong> Dependiendo de la normativa local de privacidad de datos de salud (LGPD/HIPAA), el acceso a fichas clínicas por personal administrativo debería estar auditado o restringido a lectura.
+  </div>
+  <div class="insight-box ins-warn">
+    <strong>Factura + Cobros accesibles por Recepción.</strong> Genera un riesgo de segregación de funciones: el mismo rol puede registrar pacientes y cobrarlos. Considerar al menos registro de auditoría por operación.
+  </div>
+  <div class="insight-box ins-info">
+    <strong>Permiso granular solo en dos módulos</strong> (Agendamiento y Consultorios). El resto usa roles fijos. Esto limita la capacidad de delegar acceso puntual sin elevar el rol completo.
+  </div>
+</div>
+
+<!-- UX -->
+<div class="section-pane" id="pane-ux">
+  <div class="metric-row">
+    <div class="metric"><div class="num">3</div><div class="lbl">Secciones top-level</div></div>
+    <div class="metric"><div class="num" style="color:#EF9F27">5</div><div class="lbl">Roles con vistas distintas</div></div>
+    <div class="metric"><div class="num" style="color:#E24B4A">1</div><div class="lbl">Rol con sidebar mínimo</div></div>
+    <div class="metric"><div class="num">2</div><div class="lbl">Ítems de permiso específico</div></div>
+  </div>
+
+  <p class="section-header">Oportunidades de mejora UX</p>
+  <div class="card">
+    <div class="ux-item">
+      <div class="ux-dot" style="background:#E24B4A"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">Especialista ve items irrelevantes</div>
+        <div style="font-size:12px;color:var(--color-text-secondary)">El sidebar muestra secciones de "Gestión del Sistema" y "Ventas" aunque el especialista no tiene acceso. Mostrar solo lo que le corresponde reduce la carga cognitiva.</div>
+      </div>
+    </div>
+    <div class="ux-item">
+      <div class="ux-dot" style="background:#EF9F27"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">"Mi Agenda" duplica "Agendamiento"</div>
+        <div style="font-size:12px;color:var(--color-text-secondary)">El especialista tiene acceso a Agendamiento general Y a Mi Agenda. Puede generar confusión sobre cuál usar. Podría colapsarse en una vista personalizada según rol.</div>
+      </div>
+    </div>
+    <div class="ux-item">
+      <div class="ux-dot" style="background:#EF9F27"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">Jerarquía de sub-ítems no es uniforme</div>
+        <div style="font-size:12px;color:var(--color-text-secondary)">Algunos ítems tienen sub-ítems explícitos (Agendamiento → Agenda Médica, Citas, Calendario) y otros no. Una estructura homogénea facilita el escaneo visual.</div>
+      </div>
+    </div>
+    <div class="ux-item">
+      <div class="ux-dot" style="background:#639922"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">Buena separación de dominios</div>
+        <div style="font-size:12px;color:var(--color-text-secondary)">Las tres secciones (Sistema, Atención, Ventas) reflejan bien los dominios de negocio. La estructura es intuitiva para el usuario final.</div>
+      </div>
+    </div>
+    <div class="ux-item">
+      <div class="ux-dot" style="background:#639922"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">"Mi Agenda" es un buen patrón para el especialista</div>
+        <div style="font-size:12px;color:var(--color-text-secondary)">El acceso rápido a la agenda personal es correcto; solo necesita diferenciarse mejor visualmente del módulo general.</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-header">Visibilidad del sidebar según rol</p>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;text-align:center">
+      <div style="padding:10px;background:var(--color-background-secondary);border-radius:8px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Superadmin</div>
+        <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">Todo</div>
+      </div>
+      <div style="padding:10px;background:var(--color-background-secondary);border-radius:8px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Admin</div>
+        <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">~90%</div>
+      </div>
+      <div style="padding:10px;background:var(--color-background-secondary);border-radius:8px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Recepción</div>
+        <div style="font-size:18px;font-weight:500;color:#378ADD">Mixto</div>
+      </div>
+      <div style="padding:10px;background:var(--color-background-secondary);border-radius:8px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Especialista</div>
+        <div style="font-size:18px;font-weight:500;color:#EF9F27">Limitado</div>
+      </div>
+      <div style="padding:10px;background:var(--color-background-secondary);border-radius:8px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Ventas</div>
+        <div style="font-size:18px;font-weight:500;color:#E24B4A">Mínimo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARQUITECTURA -->
+<div class="section-pane" id="pane-arq">
+  <div class="metric-row">
+    <div class="metric"><div class="num">2</div><div class="lbl">Mecanismos de control</div></div>
+    <div class="metric"><div class="num" style="color:#EF9F27">~12</div><div class="lbl">Ítems con lógica mixta</div></div>
+    <div class="metric"><div class="num" style="color:#639922">1</div><div class="lbl">Template central (base.html)</div></div>
+    <div class="metric"><div class="num" style="color:#E24B4A">0</div><div class="lbl">Control por UI dinámico</div></div>
+  </div>
+
+  <p class="section-header">Mecanismos de control actuales</p>
+  <div class="card">
+    <div class="item-row">
+      <span class="item-name" style="font-weight:500">Funciones de rol</span>
+      <div class="item-badges"><span class="badge b-admin">es_admin_o_superadmin</span><span class="badge b-esp">es_especialista</span></div>
+      <span class="risk-chip r-med">Acoplado a roles</span>
+    </div>
+    <div class="item-row">
+      <span class="item-name" style="font-weight:500">puede_acceder_modulo()</span>
+      <div class="item-badges"><span class="badge b-perm">Permisos específicos</span></div>
+      <span class="risk-chip r-ok">Más flexible</span>
+    </div>
+  </div>
+
+  <p class="section-header">Hallazgos de arquitectura</p>
+  <div class="insight-box ins-danger">
+    <strong>Lógica de visibilidad centralizada en base.html.</strong> Todo el control del sidebar vive en un solo template. A medida que el sistema crece, este archivo se convierte en un punto de falla único difícil de mantener. Se recomienda extraer la lógica a un context processor o un componente dedicado.
+  </div>
+  <div class="insight-box ins-danger">
+    <strong>Dos mecanismos de control no unificados.</strong> Coexisten funciones de verificación por rol (hardcoded) y puede_acceder_modulo() genérico. Esto crea inconsistencia: agregar un nuevo rol o módulo requiere tocar ambos sistemas.
+  </div>
+  <div class="insight-box ins-warn">
+    <strong>Sin soporte para multi-sede o multi-tenancy.</strong> Los permisos actuales no tienen dimensión de sede. Si el sistema escala a clínicas con múltiples sedes, la arquitectura de permisos necesitará una capa adicional (p.ej. un permiso por sede + módulo).
+  </div>
+  <div class="insight-box ins-warn">
+    <strong>Rol "Ventas" con acceso a módulos de Atención.</strong> Recepción puede facturar. Especialista puede ver agendamiento general. Los roles no son estrictamente ortogonales, lo que dificulta razonar sobre qué puede hacer cada uno.
+  </div>
+  <div class="insight-box ins-ok">
+    <strong>puede_acceder_modulo() es el patrón correcto.</strong> Permite delegar acceso sin elevar el rol. El camino a largo plazo es migrar todos los controles a este mecanismo y eliminar las verificaciones de rol directas del template.
+  </div>
+  <div class="insight-box ins-info">
+    <strong>Recomendación de evolución:</strong> Implementar un sistema RBAC (Role-Based Access Control) con permisos granulares por módulo+acción, desacoplado del template. El sidebar se renderiza dinámicamente consultando esos permisos, sin lógica condicional en HTML.
+  </div>
+</div>
+
+</div>
+<script>
+function show(tab) {
+  document.querySelectorAll('.section-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato de Tratamiento</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm;
+            @frame header {
+                -pdf-frame-content: header_content;
+                top: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 2cm;
+            }
+            @frame footer {
+                -pdf-frame-content: footer_content;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #0d6efd;
+        }
+        .section-title {
+            font-size: 12pt;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 5px 10px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .data-table th, .data-table td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .data-table th {
+            width: 30%;
+            font-weight: bold;
+            color: #495057;
+        }
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 10pt;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: center;
+        }
+        .schedule-table th {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .schedule-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .clauses {
+            text-align: justify;
+            font-size: 10pt;
+        }
+        .clauses li {
+            margin-bottom: 10px;
+        }
+        .signatures {
+            width: 100%;
+            margin-top: 50px;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 250px;
+            margin: 0 auto;
+            text-align: center;
+            padding-top: 5px;
+        }
+        .footer {
+            font-size: 8pt;
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            padding-top: 5px;
+        }
+        .alert-text {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Content repeated on every page -->
+    <div id="header_content">
+        <div class="header">
+            <h2 style="margin: 0;">{{ empresa_nombre|default('Clínica Médica') }}</h2>
+            <p style="margin: 0; font-size: 10pt;">
+                RUC: {{ empresa_ruc|default('---') }} | Tel: {{ empresa_telefono|default('---') }}<br>
+                {{ empresa_direccion|default('---') }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer Content repeated on every page -->
+    <div id="footer_content">
+        <div class="footer">
+            Generado por el Sistema - Fecha de impresión: {{ fecha_impresion }} - Presupuesto #{{ presupuesto.id_presupuesto|default('---') }}
+            <br>
+            Página <pdf:pagenumber> de <pdf:pagecount>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="title">CONTRATO DE PLAN DE TRATAMIENTO</div>
+
+    <p style="text-align: right; font-size: 10pt;">Fecha de Aprobación: {{ fecha_actual }}</p>
+
+    <div class="section-title">1. PARTES INTERVINIENTES</div>
+    <table class="data-table">
+        <tr>
+            <th>Por la Clínica (Especialista):</th>
+            <td>{{ especialista_nombre|default('---') }}</td>
+        </tr>
+        <tr>
+            <th>Especialidad:</th>
+            <td>{{ especialidad_nombre|default('---') }}</td>
+        </tr>
+        <tr>
+            <th>Paciente:</th>
+            <td>{{ paciente_nombre|default('---') }} (C.I. {{ paciente_cedula|default('---') }})</td>
+        </tr>
+    </table>
+
+    <div class="section-title">2. DETALLES DEL TRATAMIENTO Y COSTOS</div>
+    <table class="data-table">
+        <tr>
+            <th>Servicio / Tratamiento:</th>
+            <td>{{ presupuesto.presupuesto_observaciones|default('Plan de Tratamiento') }}</td>
+        </tr>
+        <tr>
+            <th>Cantidad total de Sesiones:</th>
+            <td>{{ cantidad_sesiones|default('0') }}</td>
+        </tr>
+        <tr>
+            <th>Frecuencia Acordada:</th>
+            <td>{{ frecuencia_sugerida|default('---') }}</td>
+        </tr>
+    </table>
+
+    {% if detalles and detalles|length > 0 %}
+    <table class="schedule-table" style="margin-bottom: 20px;">
+        <thead>
+            <tr>
+                <th>Ítem / Procedimiento</th>
+                <th>Cant.</th>
+                <th>Precio Unitario (Gs.)</th>
+                <th>Subtotal (Gs.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in detalles %}
+            <tr>
+                <td style="text-align: left;">{{ d.tipo_procedimiento|default(d.des_item) }}</td>
+                <td>{{ d.cantidad }}</td>
+                <td>{{ "{:,.0f}".format(d.precio_unitario).replace(',', '.') }}</td>
+                <td>{{ "{:,.0f}".format(d.subtotal).replace(',', '.') }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="3" style="text-align: right; font-weight: bold;">TOTAL:</td>
+                <td style="font-weight: bold;">{{ "{:,.0f}".format(total_presupuesto|default(0)).replace(',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="section-title">3. CRONOGRAMA DE SESIONES</div>
+    {% if citas and citas|length > 0 %}
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>N° Sesión</th>
+                <th>Fecha Agendada</th>
+                <th>Horario</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cita in citas %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ cita.fecha }}</td>
+                <td>{{ cita.hora_inicio }} - {{ cita.hora_fin }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p><i>El cronograma detallado de sesiones se adjuntará o coordinará por separado.</i></p>
+    {% endif %}
+
+    <div class="section-title">4. CLÁUSULAS Y CONDICIONES (ACUERDO DEL PACIENTE)</div>
+    <div class="clauses">
+        <p>Al firmar el presente documento, el paciente (o su representante legal) acepta las siguientes normativas de funcionamiento para el tratamiento terapéutico:</p>
+        <ol>
+            <li><b>Asistencia y Puntualidad:</b> Las sesiones tienen una duración preestablecida. El tiempo de retraso no podrá ser recuperado extendiendo el horario de finalización, a fin de respetar el turno del siguiente paciente.</li>
+            <li><b>Ausencias no justificadas:</b> La falta sin aviso previo generará el cobro del <span class="alert-text">{{ multa_ausencia_porcentaje|default('100%') }} del valor</span> de la sesión como multa por ausencia injustificada.</li>
+            <li><b>Cancelaciones y Aviso Previo:</b> Las cancelaciones o reprogramaciones deben realizarse con un mínimo de <span class="alert-text">{{ horas_aviso_cancelacion|default('24') }} horas de anticipación</span>. Las cancelaciones informadas el mismo día de la sesión se considerarán como ausencias no justificadas, aplicando la multa correspondiente.</li>
+            <li><b>Llegadas tardías extremas:</b> Si el paciente llega con un atraso superior a 15 minutos sin previo aviso, el profesional podrá disponer del horario de la sesión y esta se considerará como sesión cancelada tardíamente (generando la multa establecida en la cláusula 2).</li>
+            <li><b>Facturación y Pagos:</b> Los honorarios correspondientes al plan de tratamiento deben abonarse según las modalidades pactadas. En caso de atrasos en cuotas planificadas, la clínica podrá aplicar intereses por mora.</li>
+            <li><b>Validez del Plan:</b> El plan de sesiones tiene una validez que corresponde a la regularidad pactada, extendiéndose excepcionalmente por feriados previstos por la Clínica o licencias médicas prolongadas del profesional tratante.</li>
+        </ol>
+    </div>
+
+    <!-- Force a page break before signatures if needed, but usually signatures fit -->
+    <br><br>
+    
+    <table class="signatures" style="margin-top: 80px;">
+        <tr>
+            <td style="text-align: center; width: 50%;">
+                <div class="signature-line"></div>
+                <br>
+                <b>Firma del Paciente / Tutor</b><br>
+                Aclaración: ________________________<br>
+                C.I. N°: ________________________
+            </td>
+            <td style="text-align: center; width: 50%;">
+                <div class="signature-line"></div>
+                <br>
+                <b>Firma del Profesional</b><br>
+                {{ especialista_nombre|default('---') }}<br>
+                Registro Prof: ________________________
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

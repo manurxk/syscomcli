@@ -1,101 +1,140 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Catálogo de Items/Servicios
 {% endblock %}
 
-{% block contenido %}
-<div class="container mt-4">
-    <h3>Catálogo de Items/Servicios</h3>
 
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <button type="button" class="btn btn-primary" id="btnAgregar">
-            <i class="fas fa-plus"></i> Agregar
-        </button>
-        <small class="text-muted">
-            Usa este catálogo para registrar tus servicios (consultas, evaluaciones, informes, etc.) y productos.
-        </small>
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Catálogo de Items/Servicios
+          </h1>
+          <div class="page-header-subtitle">Gestión centralizada de servicios médicos, productos y consultas</div>
+        </div>
       </div>
-      <div class="card-body">
-        <table class="table table-striped" id="tblItems">
-          <thead>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card card-header-actions mb-4">
+    <div class="card-header">
+      Listado de Items y Servicios
+      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Item
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 w-100" id="tblItems" style="font-size: 0.85rem;">
+          <thead class="bg-light text-muted fw-bold">
             <tr>
-              <th>Código</th>
-              <th>Descripción</th>
-              <th>Unidad</th>
-              <th>Precio Ref. (Gs.)</th>
-              <th>% IVA</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th class="border-0 px-3">Código</th>
+              <th class="border-0">Descripción</th>
+              <th class="border-0">Unidad</th>
+              <th class="border-0">Precio Ref. (Gs.)</th>
+              <th class="border-0">% IVA</th>
+              <th class="border-0 text-center">Estado</th>
+              <th class="border-0 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Modal formulario -->
-    <div class="modal" id="modalFormulario">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" role="dialog" aria-labelledby="modalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formItemServicio">
+          <input type="hidden" id="txtIdItem">
 
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <!-- Sección: Identificación del Item -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-primary">Detalles del Item / Servicio</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="fw-semibold small mb-1" for="txtCodigo">Código Interno</label>
+                <input class="form-control" id="txtCodigo" type="text" placeholder="Ej: CONS-001">
+                <div class="small text-muted mt-1">Opcional, recomendado para reportes</div>
+              </div>
+              <div class="mb-0">
+                <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción <span
+                    class="text-danger">*</span></label>
+                <input class="form-control" id="txtDescripcion" type="text"
+                  placeholder="Ej: Consulta psicológica individual" required>
+              </div>
+            </div>
           </div>
 
-          <div class="modal-body">
-            <input type="hidden" id="txtIdItem">
-
-            <div class="form-group">
-              <label for="txtCodigo">Código interno:</label>
-              <input type="text" class="form-control" id="txtCodigo" placeholder="Ej: CONS-001">
-              <small class="form-text text-muted">Opcional, pero recomendado para reportes.</small>
+          <!-- Sección: Precio e Impuesto -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-info">Configuración Comercial</h6>
             </div>
-
-            <div class="form-group">
-              <label for="txtDescripcion">Descripción del servicio/item: <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="txtDescripcion" placeholder="Ej: Consulta psicológica individual">
-            </div>
-
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label for="txtUnidad">Unidad de medida:</label>
-                <input type="text" class="form-control" id="txtUnidad" value="SESION">
-                <small class="form-text text-muted">Ej: SESION, SERVICIO, UNID.</small>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtUnidad">Unidad de Medida</label>
+                  <input class="form-control" id="txtUnidad" type="text" value="SESION">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtPrecio">Precio Referencial (Gs.)</label>
+                  <input class="form-control" id="txtPrecio" type="number" min="0" value="0">
+                </div>
               </div>
-              <div class="form-group col-md-6">
-                <label for="txtPrecio">Precio referencial (Gs.):</label>
-                <input type="number" class="form-control" id="txtPrecio" min="0" value="0">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label for="txtPorcentajeIva">% IVA:</label>
-                <select class="form-control" id="txtPorcentajeIva">
-                  <option value="0">Exento</option>
-                  <option value="5">5%</option>
-                  <option value="10" selected>10%</option>
-                </select>
-              </div>
-              <div class="form-group col-md-6">
-                <label for="chkEstado">Estado:</label><br>
-                <input type="checkbox" id="chkEstado" checked> Activo
+              <div class="row">
+                <div class="col-md-6 mb-0">
+                  <label class="fw-semibold small mb-1" for="txtPorcentajeIva">% IVA</label>
+                  <select class="form-select" id="txtPorcentajeIva">
+                    <option value="0">Exento</option>
+                    <option value="5">5%</option>
+                    <option value="10" selected>10%</option>
+                  </select>
+                </div>
               </div>
             </div>
-
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          <!-- Sección: Estado -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-secondary">Estado del Registro</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-0 d-flex align-items-center">
+                  <div class="form-check">
+                    <input class="form-check-input" id="chkEstado" type="checkbox" checked>
+                    <label class="fw-semibold small form-check-label" for="chkEstado">Activo</label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-
-        </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="button" id="btnGuardar">Guardar Cambios</button>
       </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -115,20 +154,20 @@ Catálogo de Items/Servicios
         { data: 'unidad_medida' },
         { data: 'precio_referencial', render: val => new Intl.NumberFormat('es-PY').format(val || 0) },
         { data: 'porcentaje_impuesto', render: v => v ? v + '%' : '0%' },
-        { data: 'estado', render: function(val) {
+        {
+          data: 'estado', className: 'text-center', render: function (val) {
             return val === 'A' || val === true
-              ? '<span class="badge badge-success">Activo</span>'
-              : '<span class="badge badge-secondary">Inactivo</span>';
+              ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
           }
         },
-        { data: function(row) {
+        {
+          data: function (row) {
             return `
-              <button type="button" name="btn_editar" class="btn btn-sm btn-primary" data-id="${row.id}">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button type="button" name="btn_eliminar" class="btn btn-sm btn-danger" data-id="${row.id}">
-                <i class="fas fa-trash"></i>
-              </button>`;
+              <div class="text-center">
+                <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>
+              </div>`;
           }
         }
       ]
@@ -136,7 +175,7 @@ Catálogo de Items/Servicios
   };
 
   const abrirModalAgregar = () => {
-    $('#btnAgregar').on('click', function() {
+    $('#btnAgregar').on('click', function () {
       $('#modalTitle').text("Agregar Item/Servicio");
       $('#txtIdItem').val("");
       $('#txtCodigo').val("");
@@ -144,13 +183,13 @@ Catálogo de Items/Servicios
       $('#txtUnidad').val("SESION");
       $('#txtPrecio').val(0);
       $('#txtPorcentajeIva').val(10);
-      $('#chkEstado').prop("checked", true);
-      $('#modalFormulario').modal();
+      $('#selEstado').val('A');
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
     });
   };
 
   const guardarItem = () => {
-    $('#btnGuardar').on('click', function() {
+    $('#btnGuardar').on('click', function () {
       const idItem = $('#txtIdItem').val();
       const descripcion = $('#txtDescripcion').val().trim();
 
@@ -165,7 +204,7 @@ Catálogo de Items/Servicios
         unidad_medida: $('#txtUnidad').val().trim() || 'SESION',
         precio_referencial: parseInt($('#txtPrecio').val() || 0),
         porcentaje_impuesto: parseFloat($('#txtPorcentajeIva').val() || 0),
-        estado: $('#chkEstado').is(':checked')
+        estado: $('#selEstado').val()
       };
 
       const metodo = idItem ? 'PUT' : 'POST';
@@ -179,25 +218,25 @@ Catálogo de Items/Servicios
         },
         body: JSON.stringify(payload)
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if (data && data.success) {
-          $('#tblItems').DataTable().ajax.reload();
-          Swal.fire("Éxito", "El item/servicio se guardó correctamente.", "success");
-          $('#modalFormulario').modal('hide');
-        } else {
-          Swal.fire("Error", data.error || "No se pudo guardar el item/servicio.", "error");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Ocurrió un error al guardar el item/servicio.", "error");
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && data.success) {
+            $('#tblItems').DataTable().ajax.reload();
+            Swal.fire("Éxito", "El item/servicio se guardó correctamente.", "success");
+            (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+          } else {
+            Swal.fire("Error", data.error || "No se pudo guardar el item/servicio.", "error");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al guardar el item/servicio.", "error");
+        });
     });
   };
 
   const editarItem = () => {
-    $('#tblItems').on('click', 'button[name="btn_editar"]', function() {
+    $('#tblItems').on('click', 'button[name="btn_editar"]', function () {
       const idItem = $(this).data('id');
 
       Swal.fire({
@@ -223,8 +262,8 @@ Catálogo de Items/Servicios
             $('#txtUnidad').val(item.unidad_medida || 'SESION');
             $('#txtPrecio').val(item.precio_referencial || 0);
             $('#txtPorcentajeIva').val(item.porcentaje_impuesto || 0);
-            $('#chkEstado').prop("checked", item.estado === 'A' || item.estado === true);
-            $('#modalFormulario').modal();
+            $('#selEstado').val(data.data.estado ? 'A' : 'I'); //  item.estado === 'A' || item.estado === true);
+            new bootstrap.Modal(document.getElementById('modalFormulario')).show();
           })
           .catch(err => {
             console.error(err);
@@ -235,7 +274,7 @@ Catálogo de Items/Servicios
   };
 
   const eliminarItem = () => {
-    $('#tblItems').on('click', 'button[name="btn_eliminar"]', function() {
+    $('#tblItems').on('click', 'button[name="btn_eliminar"]', function () {
       const idItem = $(this).data('id');
 
       Swal.fire({
@@ -253,24 +292,24 @@ Catálogo de Items/Servicios
             'X-CSRFToken': CSRFToken
           }
         })
-        .then(resp => resp.json())
-        .then(data => {
-          if (data && data.success) {
-            $('#tblItems').DataTable().ajax.reload();
-            Swal.fire("Eliminado", "El item/servicio fue eliminado.", "success");
-          } else {
-            Swal.fire("Error", data.error || "No se pudo eliminar el item/servicio.", "error");
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al eliminar el item/servicio.", "error");
-        });
+          .then(resp => resp.json())
+          .then(data => {
+            if (data && data.success) {
+              $('#tblItems').DataTable().ajax.reload();
+              Swal.fire("Eliminado", "El item/servicio fue eliminado.", "success");
+            } else {
+              Swal.fire("Error", data.error || "No se pudo eliminar el item/servicio.", "error");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al eliminar el item/servicio.", "error");
+          });
       });
     });
   };
 
-  $(function() {
+  $(function () {
     initDatatable();
     abrirModalAgregar();
     guardarItem();
@@ -279,7 +318,3 @@ Catálogo de Items/Servicios
   });
 </script>
 {% endblock %}
-
-
-
-

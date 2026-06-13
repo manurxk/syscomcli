@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Auditoría de Agendamiento - AngaSys{% endblock %}
+
+{% block contenido %}
+<style>
+    .report-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .12) !important;
+    }
+
+    .kpi-accent {
+        width: 4px;
+        border-radius: 4px 0 0 4px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+    }
+
+    .kpi-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .header-blob-1,
+    .header-blob-2 {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .header-blob-1 {
+        width: 280px;
+        height: 280px;
+        top: -80px;
+        right: -60px;
+        background: rgba(255, 255, 255, .04);
+    }
+
+    .header-blob-2 {
+        width: 360px;
+        height: 360px;
+        bottom: -140px;
+        left: 35%;
+        background: rgba(255, 255, 255, .03);
+    }
+</style>
+<!-- ───────────── HEADER ───────────── -->
+<header class="page-header page-header-dark pb-10 position-relative overflow-hidden"
+    style="background: linear-gradient(135deg, #0d1b3e 0%, #155724 55%, #198754 100%);">
+    <div class="header-blob-1"></div>
+    <div class="header-blob-2"></div>
+
+    <div class="container-xl px-4 position-relative" style="z-index:1;">
+        <div class="page-header-content pt-4">
+
+            <!-- breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('dashboard.index') }}"
+                            class="text-white-50 text-decoration-none">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('reporte.reportes_index') }}"
+                            class="text-white-50 text-decoration-none">Reportes</a>
+                    </li>
+                    <li class="breadcrumb-item active text-white-50" aria-current="page">Agendamiento</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-center justify-content-between g-3">
+                <div class="col-auto">
+                    <h1 class="fw-bold text-white mb-1 d-flex align-items-center gap-2"
+                        style="font-size:1.75rem; letter-spacing:-.02em;">
+                        <i data-feather="calendar" style="width:22px;height:22px;"></i>
+                        Reporte de Agendamiento
+                    </h1>
+                    <p class="mb-0 text-white-50" style="font-size:.875rem;">
+                        Métricas y evolución de citas médicas
+                    </p>
+                </div>
+                <div class="col-auto d-flex flex-wrap gap-2">
+                    <button onclick="descargarPDF()"
+                        class="btn btn-light btn-sm fw-semibold shadow-sm d-flex align-items-center gap-1">
+                        <i data-feather="file-text" style="width:14px;height:14px;"></i>
+                        Descargar PDF
+                    </button>
+                    <a href="{{ url_for('reporte.reportes_index') }}"
+                        class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1">
+                        <i data-feather="arrow-left" style="width:14px;height:14px;"></i>
+                        Volver
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4 report-card">
+        <div class="card-body p-4">
+            <form id="form-filtros" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label text-uppercase fw-semibold text-muted" style="font-size:.7rem; letter-spacing:.05em;">Fecha Desde</label>
+                    <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-uppercase fw-semibold text-muted" style="font-size:.7rem; letter-spacing:.05em;">Fecha Hasta</label>
+                    <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-success w-100 fw-semibold d-flex align-items-center justify-content-center gap-2">
+                        <i data-feather="refresh-cw" style="width:16px;height:16px;"></i>
+                        Actualizar Reporte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="text-center my-5 d-none">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2 text-muted fw-semibold">Generando reporte...</p>
+    </div>
+
+    <div id="reporte-container">
+        <!-- Tarjetas KPIs -->
+        <div class="row g-3 mb-4">
+            <!-- Total Programadas -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                    <div class="kpi-accent bg-success"></div>
+                    <div class="card-body d-flex align-items-center gap-3 ps-4">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase text-success fw-semibold mb-1"
+                                style="font-size:.7rem; letter-spacing:.08em;">
+                                Total Programadas
+                            </p>
+                            <p class="mb-0 fw-bold" style="font-size:1.25rem;" id="kpi-total">0</p>
+                        </div>
+                        <div class="kpi-icon-wrap bg-success bg-opacity-10 text-success">
+                            <i data-feather="list" style="width:18px;height:18px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atendidas -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                    <div class="kpi-accent bg-success"></div>
+                    <div class="card-body d-flex align-items-center gap-3 ps-4">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase text-success fw-semibold mb-1"
+                                style="font-size:.7rem; letter-spacing:.08em;">
+                                Atendidas
+                            </p>
+                            <p class="mb-0 fw-bold" style="font-size:1.25rem;" id="kpi-atendidas">0</p>
+                        </div>
+                        <div class="kpi-icon-wrap bg-success bg-opacity-10 text-success">
+                            <i data-feather="check-circle" style="width:18px;height:18px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canceladas -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                    <div class="kpi-accent bg-danger"></div>
+                    <div class="card-body d-flex align-items-center gap-3 ps-4">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase text-danger fw-semibold mb-1"
+                                style="font-size:.7rem; letter-spacing:.08em;">
+                                Canceladas
+                            </p>
+                            <p class="mb-0 fw-bold" style="font-size:1.25rem;" id="kpi-canceladas">0</p>
+                        </div>
+                        <div class="kpi-icon-wrap bg-danger bg-opacity-10 text-danger">
+                            <i data-feather="x-circle" style="width:18px;height:18px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ausencias -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card kpi-card border-0 shadow-sm h-100 report-card">
+                    <div class="kpi-accent bg-warning"></div>
+                    <div class="card-body d-flex align-items-center gap-3 ps-4">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase text-warning fw-semibold mb-1"
+                                style="font-size:.7rem; letter-spacing:.08em;">
+                                Ausencias (No-Show)
+                            </p>
+                            <p class="mb-0 fw-bold" style="font-size:1.25rem;" id="kpi-ausentes">0</p>
+                        </div>
+                        <div class="kpi-icon-wrap bg-warning bg-opacity-10 text-warning">
+                            <i data-feather="user-x" style="width:18px;height:18px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm report-card">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                             <i data-feather="bar-chart" class="text-success" style="width:16px;height:16px;"></i>
+                             Evolución Diaria de Citas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="agendamientoChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Datos Diarios -->
+        <div class="card border-0 shadow-sm report-card">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <i data-feather="table" class="text-success" style="width:16px;height:16px;"></i>
+                    Resumen Diario
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabla-diaria">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 border-0" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Fecha</th>
+                                <th class="text-center border-0" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Atendidas</th>
+                                <th class="text-center border-0" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Canceladas</th>
+                                <th class="text-center border-0" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Ausentes</th>
+                                <th class="text-center border-0 pe-4" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            <!-- Llenado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let aChartInstance = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        try { feather.replace(); } catch(e) { console.error("Error cargando íconos feather:", e); }
+        cargarDatos();
+
+        document.getElementById('form-filtros').addEventListener('submit', function(e) {
+            e.preventDefault();
+            cargarDatos();
+        });
+    });
+
+    function descargarPDF() {
+        const d = document.getElementById('fecha_desde').value;
+        const h = document.getElementById('fecha_hasta').value;
+        const url = `{{ url_for('reporte_api.reporte_agendamiento_pdf') }}?fecha_desde=${d}&fecha_hasta=${h}`;
+        window.open(url, '_blank');
+    }
+
+    function cargarDatos() {
+        console.log("Iniciando cargarDatos Agendamiento...");
+        const d_desde = document.getElementById('fecha_desde').value;
+        const d_hasta = document.getElementById('fecha_hasta').value;
+
+        const loadingEl = document.getElementById('loading');
+        const containerEl = document.getElementById('reporte-container');
+
+        if (loadingEl) loadingEl.classList.remove('d-none');
+        if (containerEl) containerEl.classList.add('d-none');
+
+        const queryStr = `?fecha_desde=${d_desde}&fecha_hasta=${d_hasta}`;
+        // Usamos ruta absoluta para asegurar que no se trate como relativa
+        const apiUrl = "/api/v1/reporte/agendamiento-data" + queryStr;
+        console.log("Iniciando fetch Agendamiento:", apiUrl);
+
+        fetch(apiUrl)
+            .then(async response => {
+                console.log("Respuesta Agendamiento recibida:", response.status);
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error("API Error Response:", text);
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("DENTRO DE THEN Agendamiento:", data);
+                if (data.success) {
+                    actualizarKPIs(data.totales);
+                    renderGraph(data.chart_data);
+                    renderTabla(data.datos_diarios);
+                } else {
+                    alert("Error servidor: " + (data.error || "Ocurrió un error."));
+                }
+            })
+            .catch(error => {
+                console.error("DIAGNOSTICO EXCEPCIÓN:", error);
+                alert("DIAGNOSTICO FALLO CONEXIÓN: " + error.message);
+            })
+            .finally(() => {
+                if (loadingEl) loadingEl.classList.add('d-none');
+                if (containerEl) containerEl.classList.remove('d-none');
+                try { 
+                    if (typeof feather !== 'undefined') feather.replace(); 
+                } catch(e) { console.warn("Feather replace falló en finally:", e); }
+            });
+    }
+
+    function actualizarKPIs(totales) {
+        document.getElementById('kpi-total').innerText = totales.total;
+        document.getElementById('kpi-atendidas').innerText = totales.atendidas;
+        document.getElementById('kpi-canceladas').innerText = totales.canceladas;
+        document.getElementById('kpi-ausentes').innerText = totales.ausentes;
+    }
+
+    function renderGraph(chartData) {
+        const ctx = document.getElementById('agendamientoChart').getContext('2d');
+        if (aChartInstance) {
+            aChartInstance.destroy();
+        }
+        
+        aChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                tension: 0.3
+            }
+        });
+
+        // Aplicar color verde (success)
+        if (aChartInstance.data.datasets && aChartInstance.data.datasets.length > 0) {
+            aChartInstance.data.datasets[0].borderColor = '#198754';
+            aChartInstance.data.datasets[0].backgroundColor = 'rgba(25, 135, 84, 0.1)';
+            aChartInstance.data.datasets[0].fill = true;
+            aChartInstance.data.datasets[0].pointBackgroundColor = '#198754';
+            aChartInstance.update();
+        }
+    }
+
+    function renderTabla(datos) {
+        const tbody = document.querySelector('#tabla-diaria tbody');
+        tbody.innerHTML = '';
+        
+        if (datos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No hay datos en el rango seleccionado.</td></tr>';
+            return;
+        }
+
+        datos.forEach(item => {
+            const total = item.cant_atendidas + item.cant_canceladas + item.cant_ausencias;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="fw-bold">${item.fecha}</td>
+                <td class="text-center text-success">${item.cant_atendidas}</td>
+                <td class="text-center text-danger">${item.cant_canceladas}</td>
+                <td class="text-center text-warning">${item.cant_ausencias}</td>
+                <td class="text-center fw-bold bg-light">${total}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+{% endblock %}

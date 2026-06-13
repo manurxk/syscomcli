@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Establecimientos
+{% endblock %}
+
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Establecimientos
+          </h1>
+          <div class="page-header-subtitle">Administración de establecimientos comerciales y puntos de venta principales
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header">
+      <span class="fw-semibold">Listado de Establecimientos</span>
+      <a class="btn btn-sm btn-primary shadow-sm" href="{{ url_for('establecimiento.establecimientoAgregar') }}">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Nuevo Establecimiento
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Sede</th>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/establecimientos',
+      columns: [
+        { data: 'sede' },
+        { data: 'codigo_establecimiento' },
+        { data: 'nombre_establecimiento' },
+        { data: 'descripcion' },
+        {
+          data: 'estado', className: 'text-center',
+          render: function (val) {
+            return val ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
+          }
+        },
+        {
+          data: 'es_principal', className: 'text-center',
+          render: function (val) {
+            return val ? '<span class="badge bg-primary-soft text-primary">Principal</span>' : '';
+          }
+        },
+        {
+          data: function (row) {
+            return `<div class="text-center">
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>
+                    </div>`;
+          }
+        }
+      ]
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
+      const idEstablecimiento = $(this).data('id');
+      window.location.href = "{{ url_for('establecimiento.establecimientoAgregar') }}?id=" + idEstablecimiento;
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
+      const idEstablecimiento = $(this).data('id');
+
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        text: "Esta acción no se puede deshacer.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#d33"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/establecimientos/${idEstablecimiento}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
+          })
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const tabla = $('#tbl').DataTable();
+                tabla.ajax.reload();
+                Swal.fire("Eliminado", "El establecimiento ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar el establecimiento.", "error");
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              Swal.fire("Error", "Ocurrió un error al eliminar el establecimiento.", "error");
+            });
+        }
+      });
+    });
+  }
+
+  $(function () {
+    initDatatable();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}

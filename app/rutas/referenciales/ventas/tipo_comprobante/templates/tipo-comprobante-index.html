@@ -1,84 +1,138 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Tipos de Comprobantes
 {% endblock %}
 
-{% block contenido %}
-<div class="container mt-4">
-    <h3>Listar Tipos de Comprobantes (Facturación Electrónica)</h3>
-    <div class="card">
-      <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
-      </div>
-      <div class="card-body">
-        <table class="table table-striped" id="tbl">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Código</th>
-              <th>Código SIFEN</th>
-              <th>Requiere Timbrado</th>
-              <th>Tipo Documento</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-      </table>
-      </div>
-    </div>
 
-    <div class="modal" id="modalFormulario">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="txtIdTipoComprobante">
-            <div class="form-group">
-              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="Ej: Factura Electrónica" id="txtDescripcion" required>
-            </div>
-            <div class="form-group">
-              <label for="txtCodigo">Código:</label>
-              <input type="text" class="form-control" placeholder="Ej: FACTURA" id="txtCodigo" maxlength="10">
-            </div>
-            <div class="form-group">
-              <label for="txtCodigoSifen">Código SIFEN: <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="Código según SIFEN" id="txtCodigoSifen" required>
-            </div>
-            <div class="form-group">
-              <label for="chkRequiereTimbrado">Requiere Timbrado:</label><br>
-              <input type="checkbox" id="chkRequiereTimbrado" checked> (Marcar si requiere timbrado electrónico)
-            </div>
-            <div class="form-group">
-              <label for="selTipoDocumento">Tipo de Documento:</label>
-              <select class="form-control" id="selTipoDocumento">
-                <option value="">Seleccione...</option>
-                <option value="FACTURA">Factura</option>
-                <option value="RECIBO">Recibo</option>
-                <option value="NOTA_CREDITO">Nota de Crédito</option>
-                <option value="NOTA_DEBITO">Nota de Débito</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
-              <select class="form-control" id="selEstado" required>
-                <option value="A">Activo</option>
-                <option value="I">Inactivo</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-          </div>
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Tipos de Comprobantes
+          </h1>
+          <div class="page-header-subtitle">Administración de documentos electrónicos y preimpresos (Facturación
+            Electrónica SIFEN)</div>
         </div>
       </div>
     </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card card-header-actions mb-4">
+    <div class="card-header">
+      Listado de Tipos de Comprobantes
+      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Tipo
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 w-100" id="tbl" style="font-size: 0.85rem;">
+          <thead class="bg-light text-muted fw-bold">
+            <tr>
+              <th class="border-0 px-3">Descripción</th>
+              <th class="border-0">Código</th>
+              <th class="border-0">Código SIFEN</th>
+              <th class="border-0 text-center">Requiere Timbrado</th>
+              <th class="border-0">Tipo Documento</th>
+              <th class="border-0 text-center">Estado</th>
+              <th class="border-0 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" role="dialog" aria-labelledby="modalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formTipoComprobante">
+          <input type="hidden" id="txtIdTipoComprobante">
+
+          <!-- Sección: Datos del Comprobante -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-primary">Configuración del Comprobante</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción <span
+                      class="text-danger">*</span></label>
+                  <input class="form-control" id="txtDescripcion" type="text" placeholder="Ej: Factura Electrónica"
+                    required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtCodigo">Código</label>
+                  <input class="form-control" id="txtCodigo" type="text" placeholder="Código" maxlength="10">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtCodigoSifen">Código SIFEN <span
+                      class="text-danger">*</span></label>
+                  <input class="form-control" id="txtCodigoSifen" type="text" placeholder="Código SIFEN" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="selTipoDocumento">Tipo de Documento</label>
+                  <select class="form-select" id="selTipoDocumento">
+                    <option value="">Seleccione...</option>
+                    <option value="FACTURA">Factura</option>
+                    <option value="RECIBO">Recibo</option>
+                    <option value="NOTA_CREDITO">Nota de Crédito</option>
+                    <option value="NOTA_DEBITO">Nota de Débito</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Ajustes Avanzados y Estado -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-secondary">Ajustes y Estado</h6>
+            </div>
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-md-12">
+                  <div class="form-check">
+                    <input class="form-check-input" id="chkRequiereTimbrado" type="checkbox" checked>
+                    <label class="fw-semibold small form-check-label" for="chkRequiereTimbrado">Requiere Timbrado
+                      Electrónico</label>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-0">
+                <label class="fw-semibold small mb-1" for="selEstado">Estado <span class="text-danger">*</span></label>
+                <select class="form-select" id="selEstado" required>
+                  <option value="A">Activo</option>
+                  <option value="I">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="button" id="btnGuardar">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -89,24 +143,29 @@ Tipos de Comprobantes
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax:'/api/v1/tipos_comprobantes',
+      ajax: '/api/v1/tipos_comprobantes',
       columns: [
         { data: 'descripcion' },
         { data: 'codigo' },
         { data: 'codigo_sifen' },
-        { data: 'requiere_timbrado', render: function(val) {
-            return val ? '<span class="badge badge-warning">Sí</span>' : '<span class="badge badge-secondary">No</span>';
+        {
+          data: 'requiere_timbrado', className: 'text-center', render: function (val) {
+            return val ? '<span class="badge bg-warning-soft text-warning">Sí</span>' : '<span class="badge bg-secondary-soft text-secondary">No</span>';
           }
         },
         { data: 'tipo_documento' },
-        { data: 'estado', render: function(val) {
-            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+        {
+          data: 'estado', className: 'text-center', render: function (val) {
+            return val === 'A' ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
           }
         },
-        { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+        {
+          data: function (row) {
+            return `<div class="text-center">
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>
+                    </div>`
           }
         }
       ]
@@ -114,7 +173,7 @@ Tipos de Comprobantes
   }
 
   const agregar = () => {
-    $('#btnAgregar').on('click', function(){
+    $('#btnAgregar').on('click', function () {
       $('#modalTitle').text("Agregar Tipo de Comprobante");
       $('#txtIdTipoComprobante').val("");
       $('#txtDescripcion').val("");
@@ -123,12 +182,12 @@ Tipos de Comprobantes
       $('#chkRequiereTimbrado').prop("checked", true);
       $('#selTipoDocumento').val("");
       $('#selEstado').val("A");
-      $('#modalFormulario').modal();
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
     });
   }
 
   const guardar = () => {
-    $('#btnGuardar').on('click', function() {
+    $('#btnGuardar').on('click', function () {
       const idTipoComprobante = $('#txtIdTipoComprobante').val();
       const descripcion = $('#txtDescripcion').val();
       const codigo = $('#txtCodigo').val();
@@ -147,13 +206,13 @@ Tipos de Comprobantes
         return;
       }
 
-      const payload = { 
-        descripcion: descripcion, 
+      const payload = {
+        descripcion: descripcion,
         codigo: codigo,
         codigo_sifen: codigoSifen,
         requiere_timbrado: requiereTimbrado,
         tipo_documento: tipoDocumento,
-        estado: estado 
+        estado: estado
       };
 
       const url = idTipoComprobante ? `/api/v1/tipos_comprobantes/${idTipoComprobante}` : '/api/v1/tipos_comprobantes';
@@ -164,26 +223,26 @@ Tipos de Comprobantes
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
         body: JSON.stringify(payload)
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if(data && !data.error && data.success) {
-          tabla.ajax.reload();
-          Swal.fire(idTipoComprobante ? "Actualizado" : "Agregado", 
-                   `El tipo de comprobante ha sido ${idTipoComprobante ? 'actualizado' : 'agregado'} correctamente.`, 
-                   "success");
-          $('#modalFormulario').modal("hide");
-        } else {
-          Swal.fire("Error", data.error || "No se pudo guardar el tipo de comprobante.", "error");
-        }
-      }).catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Ocurrió un error.", "error");
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire(idTipoComprobante ? "Actualizado" : "Agregado",
+              `El tipo de comprobante ha sido ${idTipoComprobante ? 'actualizado' : 'agregado'} correctamente.`,
+              "success");
+            (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+          } else {
+            Swal.fire("Error", data.error || "No se pudo guardar el tipo de comprobante.", "error");
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error.", "error");
+        });
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
       const idTipoComprobante = $(this).data('id');
       $('#modalTitle').text("Editar Tipo de Comprobante");
       $('#txtIdTipoComprobante').val(idTipoComprobante);
@@ -191,23 +250,23 @@ Tipos de Comprobantes
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if (data.success && data.data) {
-          $('#txtDescripcion').val(data.data.descripcion);
-          $('#txtCodigo').val(data.data.codigo || '');
-          $('#txtCodigoSifen').val(data.data.codigo_sifen || '');
-          $('#chkRequiereTimbrado').prop("checked", data.data.requiere_timbrado);
-          $('#selTipoDocumento').val(data.data.tipo_documento || '');
-          $('#selEstado').val(data.data.estado);
-          $('#modalFormulario').modal();
-        }
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success && data.data) {
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtCodigo').val(data.data.codigo || '');
+            $('#txtCodigoSifen').val(data.data.codigo_sifen || '');
+            $('#chkRequiereTimbrado').prop("checked", data.data.requiere_timbrado);
+            $('#selTipoDocumento').val(data.data.tipo_documento || '');
+            $('#selEstado').val(data.data.estado);
+            new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+          }
+        });
     });
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
       const idTipoComprobante = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -220,24 +279,24 @@ Tipos de Comprobantes
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
           })
-          .then(resp => resp.json())
-          .then(data => {
-            if(data && !data.error && data.success) {
-              const tabla = $('#tbl').DataTable();
-              tabla.ajax.reload();
-              Swal.fire("Eliminado", "El tipo de comprobante ha sido eliminado.", "success");
-            } else {
-              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
-            }
-          }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error.", "error");
-          });
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const tabla = $('#tbl').DataTable();
+                tabla.ajax.reload();
+                Swal.fire("Eliminado", "El tipo de comprobante ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+              }
+            }).catch(err => {
+              Swal.fire("Error", "Ocurrió un error.", "error");
+            });
         }
       });
     });
   }
 
-  $(function() {
+  $(function () {
     initDatatable();
     agregar();
     guardar();
@@ -246,21 +305,3 @@ Tipos de Comprobantes
   });
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

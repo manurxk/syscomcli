@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.gestionar_personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.services.roles_service import RolesService
+from app.utils.decorators import require_permission
 from flask import send_file
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -60,6 +61,31 @@ def getFuncionariosEspecialistas():
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
+        }), 500
+
+
+# ============================================
+# OBTENER ESPECIALIDADES POR ESPECIALISTA
+# ============================================
+@funcionarioapi.route('/funcionarios/especialistas/<int:id_especialista>/especialidades', methods=['GET'])
+def getEspecialidadesEspecialista(id_especialista):
+    """Obtiene las especialidades de un especialista por su id_especialista"""
+    funcionariodao = FuncionarioDao()
+    
+    try:
+        especialidades = funcionariodao.getEspecialidadesByEspecialista(id_especialista)
+        
+        return jsonify({
+            'success': True,
+            'data': especialidades,
+            'error': None
+        }), 200
+    
+    except Exception as e:
+        app.logger.error(f"Error al obtener especialidades del especialista: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error interno.'
         }), 500
 
 
@@ -159,6 +185,7 @@ def getFuncionarioParaEditar(id_funcionario):
 # CREAR NUEVO FUNCIONARIO
 # ============================================
 @funcionarioapi.route('/funcionarios', methods=['POST'])
+@require_permission('insertar')
 def addFuncionario():
     """Crea un nuevo funcionario con todos sus datos"""
     data = request.get_json()
@@ -276,6 +303,7 @@ def addFuncionario():
 # ACTUALIZAR FUNCIONARIO EXISTENTE
 # ============================================
 @funcionarioapi.route('/funcionarios/<int:id_funcionario>', methods=['PUT'])
+@require_permission('editar')
 def updateFuncionario(id_funcionario):
     """Actualiza un funcionario existente con todos sus datos"""
     data = request.get_json()
@@ -401,6 +429,7 @@ def updateFuncionario(id_funcionario):
 # ELIMINAR FUNCIONARIO
 # ============================================
 @funcionarioapi.route('/funcionarios/<int:id_funcionario>', methods=['DELETE'])
+@require_permission('borrar')
 def deleteFuncionario(id_funcionario):
     """Elimina un funcionario y todos sus datos asociados"""
     funcionariodao = FuncionarioDao()

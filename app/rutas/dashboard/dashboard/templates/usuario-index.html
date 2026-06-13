@@ -3,162 +3,177 @@
 {% block titulo %}Usuarios{% endblock %}
 
 {% block contenido %}
-<div class="container mt-4">
-    <h3>Listar Usuarios</h3>
-
-    <!-- tarjeta -->
-    <div class="card">
-        <div class="card-header">
-            <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped" id="tbl">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Funcionario</th>
-                        <th>Cargo</th>
-                        <th>Grupo</th>
-                        <th>Estado</th>
-                        <th>Intentos</th>
-                        <th>Fecha Creación</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        Gestión de Usuarios del Sistema
+                    </h1>
+                    <div class="page-header-subtitle">Administración de accesos y permisos</div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- /tarjeta -->
+</header>
 
-    <!-- Modal formulario -->
-    <div class="modal" id="modalFormulario">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <!-- Modal Header -->
-                <div class="modal-header">
-                    <h4 class="modal-title" id="modalTitle"></h4>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-
-                <!-- Modal body -->
-                <div class="modal-body">
-                    <!-- Wizard Steps -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step col-xs-6">
-                                <button type="button" class="btn btn-primary btn-circle" data-step="1">1</button>
-                                <p><small>Datos de Usuario</small></p>
-                            </div>
-                            <div class="stepwizard-step col-xs-6">
-                                <button type="button" class="btn btn-default btn-circle" data-step="2">2</button>
-                                <p><small>Acceso y Permisos</small></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form id="formUsuario">
-                        <input type="hidden" id="txtIdUsuario" name="id_usuario">
-
-                        <!-- Paso 1: Datos de Usuario -->
-                        <div class="wizard-step" data-step="1">
-                            <h5 class="text-primary mb-3">Selección de Funcionario y Username</h5>
-                            
-                            <div class="form-group">
-                                <label for="id_funcionario">Funcionario <span class="text-danger">*</span></label>
-                                <select class="form-control" id="id_funcionario" name="id_funcionario" required>
-                                    <option value="">Seleccione un funcionario...</option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    Solo se muestran funcionarios sin usuario asignado
-                                </small>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Cargo</label>
-                                        <input type="text" class="form-control" id="txtCargoFuncionario" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Cédula</label>
-                                        <input type="text" class="form-control" id="txtCedulaFuncionario" readonly>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr>
-
-                            <div class="form-group">
-                                <label for="txtUsername">Username <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="txtUsername" name="username" 
-                                       maxlength="30" required>
-                                <small id="usernameFeedback" class="form-text"></small>
-                            </div>
-                        </div>
-
-                        <!-- Paso 2: Acceso y Permisos -->
-                        <div class="wizard-step" data-step="2" style="display: none;">
-                            <h5 class="text-primary mb-3">Configuración de Acceso</h5>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="txtPassword">Contraseña <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control" id="txtPassword" name="password" 
-                                               minlength="6" required>
-                                        <small id="passwordHelp" class="form-text text-muted">
-                                            Mínimo 6 caracteres
-                                        </small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="txtPasswordConfirmacion">Confirmar Contraseña <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control" id="txtPasswordConfirmacion" 
-                                               name="password_confirmacion" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="id_grupo">Grupo de Acceso <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="id_grupo" name="id_grupo" required>
-                                            <option value="">Seleccione un grupo...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="chkActivo">Estado:</label><br>
-                                        <input type="checkbox" id="chkActivo" checked> Activo
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-info mt-3">
-                                <strong>Nota:</strong> El funcionario asociado no podrá ser cambiado una vez creado el usuario.
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Modal footer -->
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="btnAnterior" style="display: none;">Anterior</button>
-                    <button type="button" class="btn btn-primary" id="btnSiguiente">Siguiente</button>
-                    <button type="button" class="btn btn-success" id="btnGuardar" style="display: none;">Guardar</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-                </div>
+<div class="container-xl px-4 mt-n10">
+    <div class="card card-header-actions mb-4">
+        <div class="card-header">
+            Lista de Usuarios
+            <button class="btn btn-sm btn-primary shadow-sm" type="button" id="btnAgregar">
+                <i class="fas fa-plus fa-sm me-1"></i> Agregar Usuario
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 w-100" id="tbl">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Username</th>
+                            <th>Funcionario</th>
+                            <th>Cargo</th>
+                            <th>Grupo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Intentos</th>
+                            <th class="text-center">Fecha Creación</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Wizard Steps -->
+                <div class="stepwizard mb-4">
+                    <div class="stepwizard-row setup-panel">
+                        <div class="stepwizard-step col-xs-6">
+                            <button type="button" class="btn btn-primary btn-circle" data-step="1">1</button>
+                            <p><small>Datos de Usuario</small></p>
+                        </div>
+                        <div class="stepwizard-step col-xs-6">
+                            <button type="button" class="btn btn-secondary btn-circle" data-step="2">2</button>
+                            <p><small>Acceso y Permisos</small></p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formUsuario">
+                    <input type="hidden" id="txtIdUsuario" name="id_usuario">
+
+                    <!-- Paso 1: Datos de Usuario -->
+                    <div class="wizard-step" data-step="1">
+                        <h6 class="fw-bold text-primary mb-3">Selección de Funcionario y Username</h6>
+
+                        <div class="mb-3">
+                            <label for="id_funcionario" class="fw-semibold">Funcionario <span class="text-danger">*</span></label>
+                            <select class="form-control" id="id_funcionario" name="id_funcionario" required>
+                                <option value="">Seleccione un funcionario...</option>
+                            </select>
+                            <small class="form-text text-muted">Solo se muestran funcionarios sin usuario asignado</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="fw-semibold">Cargo</label>
+                                    <input type="text" class="form-control" id="txtCargoFuncionario" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="fw-semibold">Cédula</label>
+                                    <input type="text" class="form-control" id="txtCedulaFuncionario" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="txtUsername" class="fw-semibold">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txtUsername" name="username" maxlength="30" required>
+                            <small id="usernameFeedback" class="form-text"></small>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2: Acceso y Permisos -->
+                    <div class="wizard-step" data-step="2" style="display: none;">
+                        <h6 class="fw-bold text-primary mb-3">Configuración de Acceso</h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="txtPassword" class="fw-semibold">Contraseña <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="txtPassword" name="password" minlength="6" required>
+                                    <small id="passwordHelp" class="form-text text-muted">Mínimo 6 caracteres</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="txtPasswordConfirmacion" class="fw-semibold">Confirmar Contraseña <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="txtPasswordConfirmacion" name="password_confirmacion" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_grupo" class="fw-semibold">Grupo de Acceso <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="id_grupo" name="id_grupo" required>
+                                        <option value="">Seleccione un grupo...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="fw-semibold d-block">Estado</label>
+                                    <div class="form-check form-switch mt-2">
+                                        <input type="checkbox" class="form-check-input" id="chkActivo" checked>
+                                        <label class="form-check-label" for="chkActivo">Activo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info border-0 mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Nota:</strong> El funcionario asociado no podrá ser cambiado una vez creado el usuario.
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary" id="btnAnterior" style="display: none;">
+                    <i class="fas fa-arrow-left me-1"></i> Anterior
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSiguiente">
+                    Siguiente <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardar" style="display: none;">
+                    <i class="fas fa-save me-1"></i> Guardar
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
@@ -203,8 +218,8 @@ const initDatatable = () => {
       { 
         data: function(row) {
           return row.activo 
-            ? '<span class="badge badge-success">Activo</span>' 
-            : '<span class="badge badge-danger">Inactivo</span>';
+            ? '<span class="badge bg-success-soft text-success">Activo</span>' 
+            : '<span class="badge bg-danger-soft text-danger">Inactivo</span>';
         },
         className: 'text-center'
       },
@@ -224,19 +239,10 @@ const initDatatable = () => {
       { 
         data: function(row) {
           return `
-            <button type="button" name="btn_editar" class="btn btn-warning btn-sm" 
-                    data-id="${row.id_usuario}" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id_usuario}" title="Editar"><i class="fas fa-edit"></i></button>
             ${row.intentos > 0 ? `
-            <button type="button" name="btn_resetear" class="btn btn-info btn-sm" 
-                    data-id="${row.id_usuario}" title="Resetear intentos">
-              <i class="fas fa-redo"></i>
-            </button>` : ''}
-            <button type="button" name="btn_desactivar" class="btn btn-secondary btn-sm" 
-                    data-id="${row.id_usuario}" data-username="${row.username}" title="Desactivar">
-              <i class="fas fa-ban"></i>
-            </button>
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_resetear" data-id="${row.id_usuario}" title="Resetear intentos"><i class="fas fa-redo"></i></button>` : ''}
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_desactivar" data-id="${row.id_usuario}" data-username="${row.username}" title="Desactivar"><i class="fas fa-ban"></i></button>
           `;
         },
         className: 'text-center',
@@ -441,7 +447,7 @@ const agregar = () => {
     cargarGrupos();
     currentStep = 1;
     showStep(1);
-    $('#modalFormulario').modal();
+    new bootstrap.Modal(document.getElementById('modalFormulario')).show();
   });
 }
 
@@ -575,7 +581,7 @@ const guardar = () => {
     .then(data => {
       if (data && data.success) {
         tabla.ajax.reload();
-        $('#modalFormulario').modal("hide");
+        new bootstrap.Modal(document.getElementById("modalFormulario")).hide();
         Swal.fire("Éxito", `El usuario ha sido ${idUsuario ? 'actualizado' : 'creado'} correctamente.`, "success");
       } else {
         Swal.fire("Error", data.error || "Ocurrió un error", "error");
@@ -641,7 +647,7 @@ const editar = () => {
           currentStep = 1;
           showStep(1);
           
-          $('#modalFormulario').modal('show');
+          new bootstrap.Modal(document.getElementById("modalFormulario")).show();
         })
         .catch(err => {
           console.error(err);

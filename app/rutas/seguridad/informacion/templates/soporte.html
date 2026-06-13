@@ -3,312 +3,531 @@
 {% block titulo %}Soporte Técnico - AngaSys{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10 col-xl-8">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="h3 mb-3 text-gray-800">
-                    <i class="fas fa-question-circle text-primary mr-2"></i>
-                    Soporte Técnico
+<style>
+    /* ── Variables de Interfaz ── */
+    :root {
+        --pri: #0061f2;
+        --pri-soft: rgba(0, 97, 242, 0.08);
+        --text-main: #1a2340;
+        --text-muted: #5a6a8a;
+    }
+
+    /* ── Utility: Report/Premium Style ── */
+    .report-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        border: none !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .12) !important;
+    }
+
+    .kpi-accent {
+        width: 4px;
+        border-radius: 4px 0 0 4px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+    }
+
+    .kpi-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* ── Typography Rules ── */
+    .mini-stat-lbl {
+        font-size: .62rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    /* ── Header ── */
+    .support-header {
+        background: linear-gradient(135deg, #0d1b3e 0%, #1a3a6e 55%, #1e4fa0 100%);
+        padding: 4.5rem 0 9rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header-blob-1, .header-blob-2 {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .header-blob-1 { width: 320px; height: 320px; top: -100px; right: -80px; background: rgba(255, 255, 255, .04); }
+    .header-blob-2 { width: 400px; height: 400px; bottom: -180px; left: 30%; background: rgba(255, 255, 255, .03); }
+
+    .support-layout {
+        margin-top: -7rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    /* ── Version Card ── */
+    .version-card {
+        background: linear-gradient(135deg, #f0f5ff 0%, #e8f0fe 100%);
+        border: 1px solid #c8d8f8;
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+    }
+
+    /* ── FAQ Search ── */
+    .search-pill {
+        background: #f8faff;
+        border: 1.5px solid #d8e2f0;
+        border-radius: 100px;
+        transition: all 0.2s;
+        padding: 0.35rem 1rem;
+    }
+
+    .search-pill:focus-within {
+        border-color: var(--pri);
+        box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1);
+        background: #fff;
+    }
+
+    /* ── Dark Mode ── */
+    body.dark-mode .report-card,
+    body.dark-mode .card,
+    body.dark-mode .accordion-item {
+        background: #161b22 !important;
+        border: 1px solid #30363d !important;
+        color: #c9d1d9 !important;
+    }
+
+    body.dark-mode .mini-stat-lbl { color: #8b949e; }
+    body.dark-mode .search-pill { background: #0d1117; border-color: #30363d; }
+    body.dark-mode h5, body.dark-mode h4, body.dark-mode h6 { color: #f0f6fc; }
+
+    body.dark-mode .accordion-button {
+        background: #161b22;
+        color: #c9d1d9;
+    }
+
+    body.dark-mode .accordion-button:not(.collapsed) {
+        background: rgba(56, 139, 253, 0.1);
+        color: #58a6ff;
+    }
+
+    body.dark-mode .accordion-body { color: #c9d1d9; }
+</style>
+
+<!-- Header -->
+<header class="support-header">
+    <div class="header-blob-1"></div>
+    <div class="header-blob-2"></div>
+
+    <div class="container-xl px-4 position-relative" style="z-index:1;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
+                        <li class="breadcrumb-item"><a href="{{ url_for('login.inicio') }}" class="text-white-50 text-decoration-none">Inicio</a></li>
+                        <li class="breadcrumb-item active text-white-50" aria-current="page">Soporte</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-bold text-white mb-2">
+                    Centro de Soporte
                 </h1>
-                <p class="text-muted">Estamos aquí para ayudarte</p>
-            </div>
-
-            <!-- Información del Sistema -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-primary text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Acerca de AngaSys
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <p class="text-gray-700 mb-3">
-                        <strong>AngaSys</strong> es un sistema integral de gestión diseñado específicamente 
-                        para consultorios psicológicos y neuropsicológicos. Desarrollado para la 
-                        <strong>Clínica Integral Neuropsicológica (CIN)</strong>, el sistema facilita la 
-                        administración completa de la clínica.
-                    </p>
-                    <p class="text-gray-700 mb-0">
-                        <strong>Versión:</strong> 1.0<br>
-                        <strong>Año:</strong> {{ current_year }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- Funcionalidades Principales -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-primary text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-cogs mr-2"></i>
-                        Funcionalidades del Sistema
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">
-                                <i class="fas fa-user-injured mr-2"></i>
-                                Gestión de Pacientes
-                            </h6>
-                            <ul class="text-gray-700 small">
-                                <li>Registro de pacientes</li>
-                                <li>Historial médico completo</li>
-                                <li>Fichas médicas</li>
-                                <li>Gestión de menores y tutores</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">
-                                <i class="fas fa-calendar-alt mr-2"></i>
-                                Agendamiento
-                            </h6>
-                            <ul class="text-gray-700 small">
-                                <li>Agenda médica</li>
-                                <li>Gestión de citas</li>
-                                <li>Calendario interactivo</li>
-                                <li>Recordatorios automáticos</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">
-                                <i class="fas fa-stethoscope mr-2"></i>
-                                Consultas Médicas
-                            </h6>
-                            <ul class="text-gray-700 small">
-                                <li>Registro de consultas</li>
-                                <li>Diagnósticos</li>
-                                <li>Tratamientos y procedimientos</li>
-                                <li>Anamnesis</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">
-                                <i class="fas fa-file-medical mr-2"></i>
-                                Documentos Médicos
-                            </h6>
-                            <ul class="text-gray-700 small">
-                                <li>Recetas médicas</li>
-                                <li>Órdenes de estudios</li>
-                                <li>Certificados médicos</li>
-                                <li>Presupuestos</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">
-                                <i class="fas fa-cash-register mr-2"></i>
-                                Módulo de Ventas
-                            </h6>
-                            <ul class="text-gray-700 small">
-                                <li>Facturación</li>
-                                <li>Cuentas a cobrar</li>
-                                <li>Cobranzas</li>
-                                <li>Gestión de caja</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">
-                                <i class="fas fa-shield-alt mr-2"></i>
-                                Seguridad
-                            </h6>
-                            <ul class="text-gray-700 small">
-                                <li>Control de acceso</li>
-                                <li>Roles y permisos</li>
-                                <li>Auditoría de operaciones</li>
-                                <li>Gestión de usuarios</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Canales de Soporte -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-primary text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-headset mr-2"></i>
-                        Canales de Soporte
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <div class="d-flex align-items-start">
-                                <div class="icon-circle bg-primary text-white mr-3">
-                                    <i class="fas fa-envelope"></i>
-                                </div>
-                                <div>
-                                    <h6 class="font-weight-bold text-gray-800">Email de Soporte</h6>
-                                    <p class="text-gray-700 mb-2">
-                                        <a href="mailto:armanuramirez16@gmail.com" class="text-primary">
-                                            armanuramirez16@gmail.com
-                                        </a>
-                                    </p>
-                                    <p class="text-gray-600 small mb-0">
-                                        Envíanos un correo con tu consulta y te responderemos a la brevedad.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="d-flex align-items-start">
-                                <div class="icon-circle bg-success text-white mr-3">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                                <div>
-                                    <h6 class="font-weight-bold text-gray-800">Horario de Atención</h6>
-                                    <p class="text-gray-700 mb-2">
-                                        <strong>Lunes a Viernes:</strong> 9:00 - 18:00<br>
-                                        <strong>Sábados y Domingos:</strong> Cerrado
-                                    </p>
-                                    <p class="text-gray-600 small mb-0">
-                                        Nuestro equipo está disponible durante el horario laboral.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Preguntas Frecuentes -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-primary text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-question-circle mr-2"></i>
-                        Preguntas Frecuentes
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="accordion" id="faqAccordion">
-                        <div class="card mb-2">
-                            <div class="card-header" id="faq1">
-                                <h6 class="mb-0">
-                                    <button class="btn btn-link text-left w-100" type="button" 
-                                            data-toggle="collapse" data-target="#collapse1">
-                                        <i class="fas fa-chevron-right mr-2"></i>
-                                        ¿Cómo recupero mi contraseña?
-                                    </button>
-                                </h6>
-                            </div>
-                            <div id="collapse1" class="collapse" data-parent="#faqAccordion">
-                                <div class="card-body text-gray-700">
-                                    Contacta con el administrador del sistema para restablecer tu contraseña. 
-                                    El administrador puede generar una nueva contraseña temporal para tu cuenta.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card mb-2">
-                            <div class="card-header" id="faq2">
-                                <h6 class="mb-0">
-                                    <button class="btn btn-link text-left w-100" type="button" 
-                                            data-toggle="collapse" data-target="#collapse2">
-                                        <i class="fas fa-chevron-right mr-2"></i>
-                                        ¿Cómo agendo una cita para un paciente?
-                                    </button>
-                                </h6>
-                            </div>
-                            <div id="collapse2" class="collapse" data-parent="#faqAccordion">
-                                <div class="card-body text-gray-700">
-                                    Ve al módulo de "Agendamiento" → "Agenda Médica" y selecciona "Nueva Cita". 
-                                    Completa los datos del paciente, especialista, fecha y hora. El sistema 
-                                    validará la disponibilidad automáticamente.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card mb-2">
-                            <div class="card-header" id="faq3">
-                                <h6 class="mb-0">
-                                    <button class="btn btn-link text-left w-100" type="button" 
-                                            data-toggle="collapse" data-target="#collapse3">
-                                        <i class="fas fa-chevron-right mr-2"></i>
-                                        ¿Puedo exportar reportes del sistema?
-                                    </button>
-                                </h6>
-                            </div>
-                            <div id="collapse3" class="collapse" data-parent="#faqAccordion">
-                                <div class="card-body text-gray-700">
-                                    Sí, el sistema permite exportar información en diferentes formatos según 
-                                    el módulo. Consulta con el administrador sobre los reportes disponibles 
-                                    para tu rol.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card mb-2">
-                            <div class="card-header" id="faq4">
-                                <h6 class="mb-0">
-                                    <button class="btn btn-link text-left w-100" type="button" 
-                                            data-toggle="collapse" data-target="#collapse4">
-                                        <i class="fas fa-chevron-right mr-2"></i>
-                                        ¿Qué hago si encuentro un error en el sistema?
-                                    </button>
-                                </h6>
-                            </div>
-                            <div id="collapse4" class="collapse" data-parent="#faqAccordion">
-                                <div class="card-body text-gray-700">
-                                    Reporta el error inmediatamente al equipo de soporte por email, incluyendo 
-                                    una descripción detallada del problema, los pasos para reproducirlo y 
-                                    capturas de pantalla si es posible.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Información de Contacto -->
-            <div class="card shadow mb-4">
-                <div class="card-body text-center bg-light">
-                    <h5 class="text-gray-800 mb-3">¿Necesitas ayuda adicional?</h5>
-                    <p class="text-gray-700 mb-3">
-                        No dudes en contactarnos. Estamos comprometidos con brindarte el mejor soporte.
-                    </p>
-                    <a href="{{ url_for('informacion.contacto') }}" class="btn btn-primary mr-2">
-                        <i class="fas fa-envelope mr-2"></i>Ir a Contacto
-                    </a>
-                    <a href="mailto:armanuramirez16@gmail.com" class="btn btn-outline-primary">
-                        <i class="fas fa-paper-plane mr-2"></i>Enviar Email
-                    </a>
-                </div>
-            </div>
-
-            <!-- Botón de regreso -->
-            <div class="text-center mt-4">
-                <a href="{{ url_for('login.inicio') }}" class="btn btn-primary">
-                    <i class="fas fa-arrow-left mr-2"></i>Volver al Inicio
-                </a>
+                <p class="mb-0 text-white-50" style="font-size:1rem; max-width: 600px;">
+                    Optimiza tu experiencia con AngaSys. Explora las guías de uso, resuelve dudas frecuentes o contacta con el equipo técnico.
+                </p>
             </div>
         </div>
     </div>
-</div>
+</header>
 
-<style>
-.icon-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-</style>
+<!-- Layout principal -->
+<div class="container-xl px-4 support-layout pb-5">
+
+    <!-- ── Acerca de AngaSys ── -->
+    <div class="card shadow-sm border-0 mb-4 px-3">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Acerca de AngaSys</h5>
+            </div>
+            <p class="text-muted mb-4" style="font-size:0.95rem; line-height:1.7;">
+                AngaSys es un sistema integral de gestión diseñado para consultorios psicológicos y neuropsicológicos.
+                Desarrollado para la <strong>Clínica Integral Neuropsicológica (CIN)</strong>, centraliza en una sola
+                plataforma todos los procesos clínicos y administrativos: desde el primer turno de un paciente hasta
+                la emisión de su factura, pasando por el registro de consultas, diagnósticos y documentos médicos.
+                El sistema está pensado para todo el personal de la clínica, con accesos y vistas adaptadas al rol de
+                cada usuario.
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+                <div class="version-card d-flex align-items-center gap-2">
+                    <span class="mini-stat-lbl mb-0">Versión:</span>
+                    <span class="fw-bold text-dark small">{{ system_version | default('2.1.0') }}</span>
+                </div>
+                <div class="version-card d-flex align-items-center gap-2">
+                    <span class="mini-stat-lbl mb-0">Año:</span>
+                    <span class="fw-bold text-dark small">{{ current_year }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Funcionalidades ── -->
+    <div class="mb-5">
+        <div class="d-flex align-items-center mb-4 ps-3">
+            <h5 class="fw-bold mb-0">Funcionalidades del Sistema</h5>
+        </div>
+
+        <div class="row g-4">
+            <!-- Gestión de Pacientes -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="kpi-accent bg-primary"></div>
+                    <div class="card-body p-4">
+                        <div class="mini-stat-lbl">Módulo Operativo</div>
+                        <h6 class="fw-bold mb-2 text-primary">Gestión de Pacientes</h6>
+                        <p class="text-muted small mb-2">Registro y seguimiento integral del paciente desde el primer contacto.</p>
+                        <ul class="ps-3 mb-0 small text-muted" style="font-size: 0.75rem;">
+                            <li>Datos personales, contacto y obra social</li>
+                            <li>Historial médico unificado</li>
+                            <li>Gestión de menores con datos del tutor</li>
+                            <li>Carga y visualización de fichas médicas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agendamiento -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="kpi-accent bg-success"></div>
+                    <div class="card-body p-4">
+                        <div class="mini-stat-lbl">Planificación</div>
+                        <h6 class="fw-bold mb-2 text-success">Agendamiento</h6>
+                        <p class="text-muted small mb-2">Agenda visual completa para la gestión de turnos por especialista.</p>
+                        <ul class="ps-3 mb-0 small text-muted" style="font-size: 0.75rem;">
+                            <li>Vista diaria, semanal y mensual</li>
+                            <li>Creación, modificación y cancelación de citas</li>
+                            <li>Validación automática de disponibilidad</li>
+                            <li>Estados de cita: pendiente, confirmada, atendida</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consultas Médicas -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="kpi-accent bg-info"></div>
+                    <div class="card-body p-4">
+                        <div class="mini-stat-lbl">Clínica</div>
+                        <h6 class="fw-bold mb-2 text-info">Consultas Médicas</h6>
+                        <p class="text-muted small mb-2">Registro clínico detallado vinculado al paciente y al especialista.</p>
+                        <ul class="ps-3 mb-0 small text-muted" style="font-size: 0.75rem;">
+                            <li>Motivo de consulta y anamnesis</li>
+                            <li>Diagnósticos con codificación CIE-10</li>
+                            <li>Tratamientos indicados y evolución</li>
+                            <li>Acceso al historial desde la misma pantalla</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentos Médicos -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="kpi-accent bg-warning"></div>
+                    <div class="card-body p-4">
+                        <div class="mini-stat-lbl">Documentación</div>
+                        <h6 class="fw-bold mb-2 text-warning">Documentos Médicos</h6>
+                        <p class="text-muted small mb-2">Generación de documentación clínica vinculada al historial del paciente.</p>
+                        <ul class="ps-3 mb-0 small text-muted" style="font-size: 0.75rem;">
+                            <li>Recetas médicas</li>
+                            <li>Órdenes de estudios complementarios</li>
+                            <li>Certificados de salud y presupuestos</li>
+                            <li>Disponibles en el historial del paciente</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facturación -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="kpi-accent bg-danger"></div>
+                    <div class="card-body p-4">
+                        <div class="mini-stat-lbl">Administrativo</div>
+                        <h6 class="fw-bold mb-2 text-danger">Módulo de Ventas</h6>
+                        <p class="text-muted small mb-2">Administración financiera completa de las prestaciones de la clínica.</p>
+                        <ul class="ps-3 mb-0 small text-muted" style="font-size: 0.75rem;">
+                            <li>Facturación de consultas y servicios</li>
+                            <li>Gestión de cuentas a cobrar y cobranzas</li>
+                            <li>Control de caja con apertura y cierre</li>
+                            <li>Seguimiento de deuda por paciente</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seguridad -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="kpi-accent bg-dark"></div>
+                    <div class="card-body p-4">
+                        <div class="mini-stat-lbl">Sistema</div>
+                        <h6 class="fw-bold mb-2 text-dark">Seguridad</h6>
+                        <p class="text-muted small mb-2">Acceso controlado y trazabilidad de todas las operaciones del sistema.</p>
+                        <ul class="ps-3 mb-0 small text-muted" style="font-size: 0.75rem;">
+                            <li>Autenticación con usuario e historial</li>
+                            <li>Roles: administrador, especialista, recepción</li>
+                            <li>Registro de auditoría de operaciones</li>
+                            <li>Gestión de usuarios desde panel admin</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── FAQ ── -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <h5 class="fw-bold mb-0">Preguntas Frecuentes</h5>
+            </div>
+            <div class="search-pill d-flex align-items-center gap-2">
+                <i data-feather="search" class="text-muted" style="width:14px;height:14px;"></i>
+                <input type="text" id="faqSearch" class="border-0 bg-transparent small outline-none" placeholder="Buscar duda..." style="outline: none;">
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="accordion accordion-flush" id="faqAccordion">
+                <!-- FAQ 1 -->
+                <div class="accordion-item faq-item" data-faq-text="cómo recupero mi contraseña recuperar contraseña administrador clave temporal">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            ¿Cómo recupero mi contraseña?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Contactá con el administrador del sistema para restablecer tu contraseña. El administrador puede generar una nueva contraseña temporal para tu cuenta desde el panel de gestión de usuarios. Una vez que accedas, te recomendamos cambiarla desde tu perfil de usuario.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="accordion-item faq-item" data-faq-text="cómo agendo una cita paciente agenda turno nueva cita disponibilidad">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            ¿Cómo agendo una cita para un paciente?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Dirigite al módulo de <strong>Agendamiento → Agenda Médica</strong> y seleccioná <strong>"Nueva Cita"</strong>. Completá los datos del paciente, especialista, fecha y hora. El sistema validará automáticamente la disponibilidad horaria para evitar solapamientos. Una vez confirmada, la cita quedará registrada con estado <em>Pendiente</em> hasta que sea atendida.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="accordion-item faq-item" data-faq-text="historial completo paciente ver historial consultas anteriores ficha medica">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            ¿Puedo ver el historial completo de un paciente?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Sí. Desde la ficha del paciente podés acceder a todas sus consultas, documentos generados, citas anteriores y estado de cuenta. El nivel de detalle visible depende de tu rol: los especialistas ven el historial clínico completo, mientras que el personal de recepción accede a los datos generales y de facturación.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="accordion-item faq-item" data-faq-text="cancelar cita por error cancelación deshacer cita cancelada">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            ¿Qué pasa si cancelo una cita por error?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Contactá al administrador del sistema a la brevedad. Las citas canceladas quedan registradas en el historial con su estado y fecha de cancelación, pero no se revierten automáticamente. Será necesario crear una nueva cita si la cancelación fue accidental.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 5 -->
+                <div class="accordion-item faq-item" data-faq-text="funciona celular móvil teléfono tablet dispositivo optimizado">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                            ¿El sistema funciona desde el celular?
+                        </button>
+                    </h2>
+                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            AngaSys está optimizado para computadoras de escritorio. Si bien puede visualizarse en móviles, la experiencia completa (especialmente la agenda y reportes) requiere una pantalla grande. Para un rendimiento óptimo, recomendamos usar navegadores modernos en PC.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 6 -->
+                <div class="accordion-item faq-item" data-faq-text="emitir factura facturación cobro cuentas modulo ventas">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                            ¿Cómo emito una factura?
+                        </button>
+                    </h2>
+                    <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Dirigite al <strong>Módulo de Ventas → Facturación</strong>. Seleccioná el paciente, elegí los conceptos a facturar y completá los datos. El sistema registrará la factura y actualizará el estado de cuenta del paciente automáticamente. Este módulo requiere el rol de Recepción o Administrador.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 7 -->
+                <div class="accordion-item faq-item" data-faq-text="agregar nuevo usuario rol permisos acceso administrador">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                            ¿Cómo agrego un nuevo usuario al sistema?
+                        </button>
+                    </h2>
+                    <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            La creación de usuarios es reservada para el <strong>Administrador</strong>. Desde el panel administrativo, acceda a <strong>Gestión de Usuarios → Nuevo Usuario</strong>, asigne los datos y el rol correspondiente (Admin, Especialista o Recepción) para definir sus permisos automáticos.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 8 (NUEVA) -->
+                <div class="accordion-item faq-item" data-faq-text="exportar reportes PDF informes estadisticas descargar">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                            ¿Cómo puedo exportar informes de facturación o médicos?
+                        </button>
+                    </h2>
+                    <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Casi todos los módulos que generan documentos (Consultas, Facturación, Reportes) disponen de un botón de <strong>"Imprimir"</strong> o <strong>"Exportar"</strong>. Al presionarlo, el sistema genera un archivo PDF listo para descargar o imprimir directamente desde tu navegador.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 9 (NUEVA) -->
+                <div class="accordion-item faq-item" data-faq-text="cargar estudios externos archivos PDF imagenes adjuntar paciente">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                            ¿Se pueden cargar documentos externos a un paciente?
+                        </button>
+                    </h2>
+                    <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Sí, desde la ficha del paciente en la sección de <strong>"Adjuntos"</strong> o <strong>"Estudios Externos"</strong>, puedes subir archivos en formato PDF o imagen. Estos quedarán vinculados permanentemente a la historia clínica para su consulta posterior por el personal médico.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 10 (NUEVA) -->
+                <div class="accordion-item faq-item" data-faq-text="error inesperado reportar fallo sistema no carga soporte tecnico">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                            ¿Qué hago si el sistema muestra un error inesperado?
+                        </button>
+                    </h2>
+                    <div id="faq10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted small">
+                            Si experimentas un comportamiento inusual, intenta recargar la página (F5). Si el problema persiste, toma una captura de pantalla y utiliza el <strong>Formulario de Contacto</strong> en este módulo de soporte técnico para reportar el caso al equipo de desarrollo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sin resultados -->
+            <div class="p-5 text-center text-muted d-none" id="faqNoResults">
+                <i data-feather="search" class="mb-2" style="width:32px;height:32px;opacity:0.3;"></i>
+                <p class="small mb-0">No encontramos resultados para tu búsqueda.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Canales de soporte ── -->
+    <!-- ── Canales de soporte ── -->
+    <div class="row g-3 mb-4 ps-3 pe-3">
+        <div class="col-md-6">
+            <a href="mailto:armanuramirez16@gmail.com" class="card report-card shadow-sm border-0 d-flex flex-row align-items-center gap-3 p-3 text-decoration-none">
+                <div class="kpi-accent bg-primary"></div>
+                <div>
+                    <div class="mini-stat-lbl">Canal Directo</div>
+                    <div class="fw-bold text-dark small">armanuramirez16@gmail.com</div>
+                    <p class="text-muted mb-0 mt-1" style="font-size: 0.7rem;">Reportes, consultas y sugerencias generales.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <div class="card report-card shadow-sm border-0 d-flex flex-row align-items-center gap-3 p-3">
+                <div class="kpi-accent bg-success"></div>
+                <div>
+                    <div class="mini-stat-lbl">Disponibilidad</div>
+                    <div class="fw-bold text-dark small">Lun – Vie · 09:00 – 18:00 hs</div>
+                    <p class="text-muted mb-0 mt-1" style="font-size: 0.7rem;">Respondemos en menos de 24 horas hábiles.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones footer -->
+    <div class="text-center mb-5 d-flex align-items-center justify-content-center gap-3 flex-wrap">
+        <a href="{{ url_for('informacion.contacto') }}" class="btn btn-primary px-4">
+            Ir al Contacto
+        </a>
+        <a href="{{ url_for('login.inicio') }}" class="btn btn-outline-primary px-4">
+            Volver al Inicio
+        </a>
+    </div>
+
+</div><!-- /container -->
+
+<script>
+    (function () {
+        'use strict';
+
+        // ── Búsqueda FAQ en tiempo real ──
+        var searchInput = document.getElementById('faqSearch');
+        var faqItems = document.querySelectorAll('.faq-item');
+        var noResults = document.getElementById('faqNoResults');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                var query = searchInput.value.trim().toLowerCase();
+                var visible = 0;
+
+                faqItems.forEach(function (item) {
+                    var btnText = item.querySelector('.accordion-button').textContent.toLowerCase();
+                    var dataText = (item.getAttribute('data-faq-text') || '').toLowerCase();
+                    var match = !query || btnText.includes(query) || dataText.includes(query);
+
+                    item.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+
+                noResults.classList.toggle('d-none', visible > 0);
+                noResults.classList.toggle('d-block', visible === 0);
+            });
+        }
+
+        // Feather Icons replace
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    })();
+</script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

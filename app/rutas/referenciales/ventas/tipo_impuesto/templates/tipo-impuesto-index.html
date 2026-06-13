@@ -1,76 +1,122 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
 Tipos de Impuestos
 {% endblock %}
 
-{% block contenido %}
-<div class="container mt-4">
-    <h3>Listar Tipos de Impuestos</h3>
-    <div class="card">
-      <div class="card-header">
-        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
-      </div>
-      <div class="card-body">
-        <table class="table table-striped" id="tbl">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Código</th>
-              <th>Porcentaje</th>
-              <th>Tipo Cálculo</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-      </table>
-      </div>
-    </div>
 
-    <div class="modal" id="modalFormulario">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="modalTitle"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="txtIdTipoImpuesto">
-            <div class="form-group">
-              <label for="txtDescripcion">Descripción: <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" placeholder="Ej: IVA, IT" id="txtDescripcion" required>
-            </div>
-            <div class="form-group">
-              <label for="txtCodigo">Código:</label>
-              <input type="text" class="form-control" placeholder="Ej: IVA, IT" id="txtCodigo" maxlength="10">
-            </div>
-            <div class="form-group">
-              <label for="txtPorcentaje">Porcentaje:</label>
-              <input type="number" class="form-control" placeholder="Ej: 10.00" id="txtPorcentaje" step="0.01" min="0" max="100" value="0">
-            </div>
-            <div class="form-group">
-              <label for="selTipoCalculo">Tipo de Cálculo:</label>
-              <select class="form-control" id="selTipoCalculo">
-                <option value="PORCENTAJE">Porcentaje</option>
-                <option value="FIJO">Fijo</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="selEstado">Estado: <span class="text-danger">*</span></label>
-              <select class="form-control" id="selEstado" required>
-                <option value="A">Activo</option>
-                <option value="I">Inactivo</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
-          </div>
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Tipos de Impuestos
+          </h1>
+          <div class="page-header-subtitle">Administración de tasas impositivas y porcentajes de gravamen</div>
         </div>
       </div>
     </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header">
+      <span class="fw-semibold">Listado de Tipos de Impuestos</span>
+      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Tipo
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Descripción</th>
+              <th>Código</th>
+              <th class="text-center">Porcentaje</th>
+              <th class="text-center">Tipo Cálculo</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" role="dialog" aria-labelledby="modalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formTipoImpuesto">
+          <input type="hidden" id="txtIdTipoImpuesto">
+
+          <!-- Sección: Datos del Impuesto -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-primary">Información del Impuesto</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtDescripcion">Descripción <span
+                      class="text-danger">*</span></label>
+                  <input class="form-control" id="txtDescripcion" type="text" placeholder="Ej: IVA" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtCodigo">Código</label>
+                  <input class="form-control" id="txtCodigo" type="text" placeholder="Código" maxlength="10">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="txtPorcentaje">Porcentaje (%)</label>
+                  <input class="form-control" id="txtPorcentaje" type="number" step="0.01" min="0" max="100" value="0">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="fw-semibold small mb-1" for="selTipoCalculo">Tipo de Cálculo</label>
+                  <select class="form-select" id="selTipoCalculo">
+                    <option value="PORCENTAJE">Porcentaje</option>
+                    <option value="FIJO">Fijo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Estado -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-secondary">Estado del Registro</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-0">
+                <label class="fw-semibold small mb-1" for="selEstado">Estado <span class="text-danger">*</span></label>
+                <select class="form-select" id="selEstado" required>
+                  <option value="A">Activo</option>
+                  <option value="I">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="button" id="btnGuardar">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -81,20 +127,24 @@ Tipos de Impuestos
   const initDatatable = () => {
     $('#tbl').DataTable({
       language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax:'/api/v1/tipos_impuestos',
+      ajax: '/api/v1/tipos_impuestos',
       columns: [
         { data: 'descripcion' },
         { data: 'codigo' },
-        { data: 'porcentaje', render: function(val) { return val + '%'; } },
-        { data: 'tipo_calculo' },
-        { data: 'estado', render: function(val) {
-            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+        { data: 'porcentaje', className: 'text-center', render: function (val) { return val + '%'; } },
+        { data: 'tipo_calculo', className: 'text-center' },
+        {
+          data: 'estado', className: 'text-center', render: function (val) {
+            return val === 'A' ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
           }
         },
-        { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary btn-sm" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger btn-sm" data-id="${row.id}">Eliminar</button>`
+        {
+          data: function (row) {
+            return `<div class="text-center">
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id}"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id}"><i class="fas fa-trash-alt"></i></button>
+                    </div>`
           }
         }
       ]
@@ -102,7 +152,7 @@ Tipos de Impuestos
   }
 
   const agregar = () => {
-    $('#btnAgregar').on('click', function(){
+    $('#btnAgregar').on('click', function () {
       $('#modalTitle').text("Agregar Tipo de Impuesto");
       $('#txtIdTipoImpuesto').val("");
       $('#txtDescripcion').val("");
@@ -110,12 +160,12 @@ Tipos de Impuestos
       $('#txtPorcentaje').val("0");
       $('#selTipoCalculo').val("PORCENTAJE");
       $('#selEstado').val("A");
-      $('#modalFormulario').modal();
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
     });
   }
 
   const guardar = () => {
-    $('#btnGuardar').on('click', function() {
+    $('#btnGuardar').on('click', function () {
       const idTipoImpuesto = $('#txtIdTipoImpuesto').val();
       const descripcion = $('#txtDescripcion').val();
       const codigo = $('#txtCodigo').val();
@@ -129,12 +179,12 @@ Tipos de Impuestos
         return;
       }
 
-      const payload = { 
-        descripcion: descripcion, 
+      const payload = {
+        descripcion: descripcion,
         codigo: codigo,
         porcentaje: porcentaje,
         tipo_calculo: tipoCalculo,
-        estado: estado 
+        estado: estado
       };
 
       const url = idTipoImpuesto ? `/api/v1/tipos_impuestos/${idTipoImpuesto}` : '/api/v1/tipos_impuestos';
@@ -145,26 +195,26 @@ Tipos de Impuestos
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
         body: JSON.stringify(payload)
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if(data && !data.error && data.success) {
-          tabla.ajax.reload();
-          Swal.fire(idTipoImpuesto ? "Actualizado" : "Agregado", 
-                   `El tipo de impuesto ha sido ${idTipoImpuesto ? 'actualizado' : 'agregado'} correctamente.`, 
-                   "success");
-          $('#modalFormulario').modal("hide");
-        } else {
-          Swal.fire("Error", data.error || "No se pudo guardar el tipo de impuesto.", "error");
-        }
-      }).catch(err => {
-        console.error(err);
-        Swal.fire("Error", "Ocurrió un error.", "error");
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire(idTipoImpuesto ? "Actualizado" : "Agregado",
+              `El tipo de impuesto ha sido ${idTipoImpuesto ? 'actualizado' : 'agregado'} correctamente.`,
+              "success");
+            (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+          } else {
+            Swal.fire("Error", data.error || "No se pudo guardar el tipo de impuesto.", "error");
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error.", "error");
+        });
     });
   }
 
   const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
       const idTipoImpuesto = $(this).data('id');
       $('#modalTitle').text("Editar Tipo de Impuesto");
       $('#txtIdTipoImpuesto').val(idTipoImpuesto);
@@ -172,22 +222,22 @@ Tipos de Impuestos
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
-      .then(resp => resp.json())
-      .then(data => {
-        if (data.success && data.data) {
-          $('#txtDescripcion').val(data.data.descripcion);
-          $('#txtCodigo').val(data.data.codigo || '');
-          $('#txtPorcentaje').val(data.data.porcentaje);
-          $('#selTipoCalculo').val(data.data.tipo_calculo);
-          $('#selEstado').val(data.data.estado);
-          $('#modalFormulario').modal();
-        }
-      });
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success && data.data) {
+            $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtCodigo').val(data.data.codigo || '');
+            $('#txtPorcentaje').val(data.data.porcentaje);
+            $('#selTipoCalculo').val(data.data.tipo_calculo);
+            $('#selEstado').val(data.data.estado);
+            new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+          }
+        });
     });
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
       const idTipoImpuesto = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -200,24 +250,24 @@ Tipos de Impuestos
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
           })
-          .then(resp => resp.json())
-          .then(data => {
-            if(data && !data.error && data.success) {
-              const tabla = $('#tbl').DataTable();
-              tabla.ajax.reload();
-              Swal.fire("Eliminado", "El tipo de impuesto ha sido eliminado.", "success");
-            } else {
-              Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
-            }
-          }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error.", "error");
-          });
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const tabla = $('#tbl').DataTable();
+                tabla.ajax.reload();
+                Swal.fire("Eliminado", "El tipo de impuesto ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar.", "error");
+              }
+            }).catch(err => {
+              Swal.fire("Error", "Ocurrió un error.", "error");
+            });
         }
       });
     });
   }
 
-  $(function() {
+  $(function () {
     initDatatable();
     agregar();
     guardar();
@@ -226,21 +276,3 @@ Tipos de Impuestos
   });
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

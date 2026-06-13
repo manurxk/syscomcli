@@ -52,7 +52,7 @@ def require_permission(accion='leer'):
                 flash('Debes iniciar sesión primero', 'warning')
                 return redirect(url_for('login.login'))
             
-            from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+            from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
             
             id_grupo = session.get('id_grupo')
             permisos_dao = PermisosDao()
@@ -102,7 +102,7 @@ def admin_only(f):
             flash('Debes iniciar sesión primero', 'warning')
             return redirect(url_for('login.login'))
         
-        from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+        from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
         
         permisos_dao = PermisosDao()
         id_grupo = session.get('id_grupo')
@@ -134,7 +134,7 @@ def superadmin_only(f):
             flash('Debes iniciar sesión primero', 'warning')
             return redirect(url_for('login.login'))
         
-        from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+        from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
         
         permisos_dao = PermisosDao()
         id_grupo = session.get('id_grupo')
@@ -188,7 +188,7 @@ def check_module_access(nombre_modulo):
                 flash('Debes iniciar sesión primero', 'warning')
                 return redirect(url_for('login.login'))
             
-            from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+            from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
             
             id_grupo = session.get('id_grupo')
             permisos_dao = PermisosDao()

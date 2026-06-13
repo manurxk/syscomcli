@@ -1,74 +1,97 @@
 {% from 'macros.html' import modal %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
+    <meta name="description"
+        content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
     <meta name="author" content="CIN">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
 
     <title>{% block titulo %}Sistema CIN{% endblock %}</title>
 
-    <!-- CSS de iconos y fuentes -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    
-    <!-- CSS principal -->
-    <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
-    
-    <!-- CSS de Datatables -->
-    <link href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
-    
+    <!-- CSS principal - SB Admin Pro (Bootstrap 5) -->
+    <link href="{{ url_for('static', filename='vendor/sb-admin-pro/css/styles.css') }}" rel="stylesheet">
+
+    <!-- FontAwesome 6 -->
+    <script data-search-pseudo-elements defer
+        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+
+    <!-- Feather Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts - Nunito -->
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- CSS de Datatables Bootstrap 5 -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 
     <!-- Estilos personalizados adicionales -->
     <style>
         :root {
-            /* Colores primarios (mantenidos para compatibilidad) */
-            --primary-color: #4f46e5;
-            --primary-dark: #4338ca;
-            
-            /* Colores azul cobalto - Color principal del sistema */
+            /* Colores primarios */
+            --primary-color: #0061f2;
+            --primary-dark: #0056d6;
+
+            /* Colores azul cobalto - Para elementos específicos */
             --cobalt-blue: #0047AB;
             --cobalt-blue-dark: #003A8C;
             --cobalt-blue-light: #0056CC;
-            
+
             --sidebar-width: 14rem;
         }
 
-        .sidebar {
-            background: linear-gradient(180deg, var(--cobalt-blue) 0%, var(--cobalt-blue-dark) 100%);
+        /* SIDEBAR LIGHT STYLE - Como SB Admin Pro */
+        .sidenav-light {
+            background-color: #fff;
         }
 
-        .sidebar .nav-link {
-            transition: all 0.3s ease;
+        .sidenav-light .sidenav-menu .nav-link {
+            color: #212832;
         }
 
-        .sidebar .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
+        .sidenav-light .sidenav-menu .nav-link:hover {
+            color: var(--primary-color);
+            background-color: #f2f6fc;
         }
 
-        .sidebar .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-left: 4px solid #fff;
+        .sidenav-light .sidenav-menu .nav-link.active {
+            color: var(--primary-color);
+            background-color: #f2f6fc;
+            font-weight: 600;
         }
 
-        .collapse-item {
-            transition: all 0.2s ease;
-            padding: 0.75rem 1rem;
+        .sidenav-light .sidenav-menu-heading {
+            color: #a7aeb8;
         }
 
-        .collapse-item:hover {
-            background-color: #f3f4f6;
-            padding-left: 1.5rem;
+        .text-muted-soft {
+            color: #bdc3cd !important;
         }
 
-        .topbar {
+        .fw-800 {
+            font-weight: 800 !important;
+        }
+
+        .fw-900 {
+            font-weight: 900 !important;
+        }
+
+        .sidenav-light .sidenav-footer {
+            background-color: #f2f6fc;
+        }
+
+        /* Mejoras generales */
+        .topnav {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
@@ -82,32 +105,21 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .sidebar-brand {
+        .sidenav-brand {
             padding: 1.5rem 1rem;
         }
 
-        .sidebar-divider {
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .sidebar-heading {
-            color: rgba(255, 255, 255, 0.7);
-            font-weight: 800;
-            font-size: 0.65rem;
-            letter-spacing: 0.05em;
-        }
-
         .scroll-to-top {
-            background-color: var(--cobalt-blue);
+            background-color: var(--primary-color);
             transition: all 0.3s ease;
         }
 
         .scroll-to-top:hover {
-            background-color: var(--cobalt-blue-dark);
+            background-color: var(--primary-dark);
             transform: scale(1.1);
         }
 
-        /* Clases utilitarias para azul cobalto */
+        /* Clases utilitarias para azul cobalto (para usar donde sea necesario) */
         .bg-cobalt-blue {
             background-color: var(--cobalt-blue) !important;
         }
@@ -151,7 +163,7 @@
             position: relative;
             left: 0;
             right: 0;
-            background-color: var(--cobalt-blue-dark) !important;
+            background-color: #212832 !important;
         }
 
         footer * {
@@ -181,13 +193,13 @@
                 padding-top: 2rem !important;
                 padding-bottom: 1.5rem !important;
             }
-            
+
             footer .col-lg-4,
             footer .col-lg-2,
             footer .col-md-6 {
                 margin-bottom: 2rem !important;
             }
-            
+
             footer .col-lg-4:last-child,
             footer .col-lg-2:last-child,
             footer .col-md-6:last-child {
@@ -217,13 +229,13 @@
             transform: translateX(3px);
         }
 
-        #content-wrapper {
+        #layoutSidenav_content {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        #content {
+        #layoutSidenav_content main {
             flex: 1;
         }
 
@@ -253,7 +265,7 @@
             font-weight: 600;
             font-size: 0.75rem;
             text-transform: uppercase;
-            color: var(--cobalt-blue);
+            color: var(--primary-color);
             border-bottom: 1px solid #e9ecef;
         }
 
@@ -285,7 +297,7 @@
 
         .search-result-item-icon {
             margin-right: 0.5rem;
-            color: var(--cobalt-blue);
+            color: var(--primary-color);
         }
 
         .search-no-results {
@@ -299,643 +311,762 @@
             text-align: center;
             color: #666;
         }
+
+        /* Modo Oscuro - Variables y Estilos Agresivos */
+        body.dark-mode,
+        body.dark-mode #layoutSidenav,
+        body.dark-mode #layoutSidenav_content {
+            background-color: #0d1117 !important;
+            color: #c9d1d9 !important;
+        }
+
+        body.dark-mode .topnav {
+            background-color: #161b22 !important;
+            border-bottom: 1px solid #30363d !important;
+        }
+
+        body.dark-mode .topnav .navbar-brand {
+            color: #f0f6fc !important;
+        }
+
+        body.dark-mode .topnav .navbar-brand span {
+            color: #58a6ff !important;
+        }
+
+        body.dark-mode .topnav .btn-transparent-dark {
+            color: #8b949e !important;
+        }
+
+        body.dark-mode .topnav .btn-transparent-dark:hover {
+            color: #f0f6fc !important;
+            background-color: #30363d !important;
+        }
+
+        body.dark-mode .sidenav {
+            background-color: #161b22 !important;
+            border-right: 1px solid #30363d !important;
+        }
+
+        body.dark-mode .sidenav-light .sidenav-menu .nav-link {
+            color: #8b949e !important;
+        }
+
+        body.dark-mode .sidenav-light .sidenav-menu .nav-link:hover,
+        body.dark-mode .sidenav-light .sidenav-menu .nav-link.active {
+            color: #58a6ff !important;
+            background-color: #21262d !important;
+        }
+
+        body.dark-mode .sidenav-light .sidenav-menu .nav-link.active .nav-link-icon i {
+            color: #58a6ff !important;
+        }
+
+        body.dark-mode .sidenav-menu-heading {
+            color: #484f58 !important;
+        }
+
+        body.dark-mode .sidenav-footer {
+            background-color: #0d1117 !important;
+            color: #8b949e !important;
+        }
+
+        /* Fuerza la inversión en tarjetas y fondos blancos/claros */
+        body.dark-mode .card,
+        body.dark-mode .bg-white,
+        body.dark-mode .bg-light,
+        body.dark-mode .modal-content,
+        body.dark-mode .card-header,
+        body.dark-mode .card-footer {
+            background-color: #161b22 !important;
+            border-color: #30363d !important;
+            color: #f0f6fc !important;
+        }
+
+        /* Soporte para clases "-soft" de SB Admin Pro en modo oscuro */
+        body.dark-mode .bg-primary-soft {
+            background-color: rgba(56, 139, 253, 0.15) !important;
+            color: #58a6ff !important;
+        }
+
+        body.dark-mode .bg-secondary-soft {
+            background-color: rgba(110, 118, 129, 0.15) !important;
+            color: #8b949e !important;
+        }
+
+        body.dark-mode .bg-success-soft {
+            background-color: rgba(63, 185, 80, 0.15) !important;
+            color: #3fb950 !important;
+        }
+
+        body.dark-mode .bg-info-soft {
+            background-color: rgba(56, 139, 253, 0.15) !important;
+            color: #58a6ff !important;
+        }
+
+        body.dark-mode .bg-warning-soft {
+            background-color: rgba(210, 153, 34, 0.15) !important;
+            color: #d29922 !important;
+        }
+
+        body.dark-mode .bg-danger-soft {
+            background-color: rgba(248, 81, 73, 0.15) !important;
+            color: #f85149 !important;
+        }
+
+        /* Icon Stacks y Visibilidad de Iconos */
+        body.dark-mode .icon-stack {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Fuerza la visibilidad de los iconos Feather en modo oscuro */
+        body.dark-mode .icon-stack i,
+        body.dark-mode .nav-link-icon i {
+            stroke: currentColor !important;
+            fill: none !important;
+        }
+
+        /* Dashboards y Card-based menus */
+        body.dark-mode .referencial-item .card {
+            background-color: #161b22 !important;
+            border-color: #30363d !important;
+        }
+
+        body.dark-mode .referencial-item .card:hover {
+            background-color: #1c2128 !important;
+            border-color: #58a6ff !important;
+        }
+
+        body.dark-mode .card-header-actions .btn-transparent-dark {
+            color: #8b949e !important;
+        }
+
+        body.dark-mode .btn-primary-soft {
+            background-color: rgba(56, 139, 253, 0.15) !important;
+            color: #58a6ff !important;
+            border: 1px solid rgba(56, 139, 253, 0.2) !important;
+        }
+
+        body.dark-mode .btn-success-soft {
+            background-color: rgba(63, 185, 80, 0.15) !important;
+            color: #3fb950 !important;
+            border: 1px solid rgba(63, 185, 80, 0.2) !important;
+        }
+
+        body.dark-mode .btn-info-soft {
+            background-color: rgba(56, 139, 253, 0.15) !important;
+            color: #58a6ff !important;
+            border: 1px solid rgba(56, 139, 253, 0.2) !important;
+        }
+
+        body.dark-mode .btn-warning-soft {
+            background-color: rgba(210, 153, 34, 0.15) !important;
+            color: #d29922 !important;
+            border: 1px solid rgba(210, 153, 34, 0.2) !important;
+        }
+
+        body.dark-mode .btn-danger-soft {
+            background-color: rgba(248, 81, 73, 0.15) !important;
+            color: #f85149 !important;
+            border: 1px solid rgba(248, 81, 73, 0.2) !important;
+        }
+
+        body.dark-mode .text-dark,
+        body.dark-mode .text-muted,
+        body.dark-mode .text-black-50 {
+            color: #8b949e !important;
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode h5,
+        body.dark-mode h6 {
+            color: #f0f6fc !important;
+        }
+
+        /* Soporte para clases sólidas en modo oscuro (Dashboard) */
+        body.dark-mode .bg-primary {
+            background-color: #1f6feb !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .bg-secondary {
+            background-color: #30363d !important;
+            color: #c9d1d9 !important;
+        }
+
+        body.dark-mode .bg-success {
+            background-color: #238636 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .bg-info {
+            background-color: #388bfd !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .bg-warning {
+            background-color: #9e6a03 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .bg-danger {
+            background-color: #da3633 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .bg-dark {
+            background-color: #010409 !important;
+            color: #f0f6fc !important;
+        }
+
+        body.dark-mode .module-card {
+            border: 1px solid #30363d !important;
+        }
+
+        body.dark-mode .module-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+            border-color: #58a6ff !important;
+        }
+
+        /* Inputs y Formularios */
+        body.dark-mode .form-control,
+        body.dark-mode .form-select,
+        body.dark-mode .input-group-text,
+        body.dark-mode .dataTable-selector {
+            background-color: #0d1117 !important;
+            border-color: #30363d !important;
+            color: #c9d1d9 !important;
+        }
+
+        body.dark-mode .form-control:focus,
+        body.dark-mode .form-select:focus {
+            border-color: #388bfd !important;
+            box-shadow: 0 0 0 0.2rem rgba(56, 139, 253, 0.25) !important;
+        }
+
+        /* Tablas */
+        body.dark-mode .table,
+        body.dark-mode .table thead th,
+        body.dark-mode .table td {
+            background-color: transparent !important;
+            color: #c9d1d9 !important;
+            border-color: #30363d !important;
+        }
+
+        body.dark-mode .table-striped>tbody>tr:nth-of-type(odd)>* {
+            background-color: rgba(110, 118, 129, 0.05) !important;
+            color: #c9d1d9 !important;
+        }
+
+        body.dark-mode .table-hover>tbody>tr:hover>* {
+            background-color: rgba(110, 118, 129, 0.1) !important;
+            color: #f0f6fc !important;
+        }
+
+        /* Paginación */
+        body.dark-mode .page-link {
+            background-color: #161b22 !important;
+            border-color: #30363d !important;
+            color: #58a6ff !important;
+        }
+
+        body.dark-mode .page-item.active .page-link {
+            background-color: #1f6feb !important;
+            border-color: #388bfd !important;
+        }
+
+        /* Dropdowns */
+        body.dark-mode .dropdown-menu {
+            background-color: #161b22 !important;
+            border-color: #30363d !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        body.dark-mode .dropdown-item {
+            color: #c9d1d9 !important;
+        }
+
+        body.dark-mode .dropdown-item:hover {
+            background-color: #1f6feb !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .dropdown-divider {
+            border-top-color: #30363d !important;
+        }
+
+        /* Especiales: Badges y Botones (Mantenemos colores pero ajustamos bordes) */
+        body.dark-mode .badge {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Cabeceras de página y Gradientes */
+        body.dark-mode .page-header.bg-gradient-primary-to-secondary,
+        body.dark-mode .bg-gradient-primary-to-secondary {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%) !important;
+        }
+
+        /* Iconos de Dashboard y clases de opacidad */
+        body.dark-mode .text-white-50,
+        body.dark-mode .text-gray-200 {
+            color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        body.dark-mode .feather-xl {
+            width: 3.5rem !important;
+            height: 3.5rem !important;
+            stroke: rgba(255, 255, 255, 0.4) !important;
+        }
+
+        /* ========================================== */
+        /* REGLAS GLOBALES DE MODO OSCURO (REFORZADAS) */
+        /* ========================================== */
+        body.dark-mode {
+            background-color: #1a1a1a !important;
+            color: #e2e8f0 !important;
+        }
+
+        /* Iconos Feather (SVG) - Forzar visibilidad absoluta */
+        body.dark-mode i[data-feather],
+        body.dark-mode svg.feather,
+        body.dark-mode .nav-link-icon i,
+        body.dark-mode .nav-link-icon svg,
+        body.dark-mode .feather-xl {
+            stroke: #cbd5e1 !important;
+            /* Gris claro de alta visibilidad */
+            stroke-width: 2px !important;
+            fill: none !important;
+        }
+
+        /* Iconos Font Awesome - Forzar visibilidad absoluta */
+        body.dark-mode .fas,
+        body.dark-mode .far,
+        body.dark-mode .fab,
+        body.dark-mode .fa-solid,
+        body.dark-mode .fa-regular,
+        body.dark-mode .fa-brands,
+        body.dark-mode i[class*="fa-"] {
+            color: #cbd5e1 !important;
+        }
+
+        /* Refuerzo para icon-stack (Usado en Referenciales y otros módulos) */
+        body.dark-mode .icon-stack {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        body.dark-mode .icon-stack i,
+        body.dark-mode .icon-stack svg {
+            stroke: #cbd5e1 !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Ajustes de Soft Backgrounds en modo oscuro para legibilidad */
+        body.dark-mode .bg-primary-soft {
+            background-color: rgba(0, 97, 242, 0.2) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .bg-success-soft {
+            background-color: rgba(0, 172, 105, 0.2) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .bg-info-soft {
+            background-color: rgba(0, 186, 219, 0.2) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .bg-warning-soft {
+            background-color: rgba(244, 161, 0, 0.2) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .bg-danger-soft {
+            background-color: rgba(232, 21, 0, 0.2) !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Nav y sidebar */
+        body.dark-mode .topnav {
+            background-color: #1a1a1a !important;
+            border-bottom: 1px solid #2d2d2d !important;
+        }
+
+        body.dark-mode .sidenav {
+            background-color: #1a1a1a !important;
+        }
+
+        body.dark-mode .sidenav-menu-heading {
+            color: #64748b !important;
+            font-weight: 600;
+        }
+
+        body.dark-mode .nav-link {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .nav-link:hover {
+            color: #f8fafc !important;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Tarjetas y Contenedores */
+        body.dark-mode .card,
+        body.dark-mode .bg-white {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .card-header,
+        body.dark-mode .card-footer {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+        }
+
+        /* Tablas */
+        body.dark-mode .table {
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .table-light {
+            background-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        body.dark-mode .table-hover tbody tr:hover {
+            background-color: #1e293b !important;
+        }
+
+        /* Scrollbar */
+        body.dark-mode ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 6px;
+            border: 3px solid #0f172a;
+        }
+
+        /* Textos */
+        body.dark-mode .text-dark {
+            color: #f1f5f9 !important;
+        }
+
+        body.dark-mode .text-muted {
+            color: #94a3b8 !important;
+        }
     </style>
 </head>
 
-<body id="page-top">
+<body class="nav-fixed">
+    <!-- Inicialización inmediata del tema para evitar parpadeos y bloqueos -->
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (theme === 'dark' || (!theme && prefersDark)) {
+                    document.body.classList.add('dark-mode');
+                }
+            } catch (e) { }
+        })();
+    </script>
 
-    <!-- Page Wrapper -->
-    <div id="wrapper">
+    <nav class="topnav navbar navbar-expand shadow justify-content-between justify-content-sm-start navbar-light bg-white"
+        id="sidenavAccordion">
+        <!-- Sidenav Toggle Button-->
+        <button class="btn btn-icon btn-transparent-dark order-1 order-lg-0 me-2 ms-lg-2 me-lg-0" id="sidebarToggle"><i
+                data-feather="menu"></i></button>
 
-        <!-- Sidebar -->
-        <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
-
-            <!-- Sidebar - Brand -->
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
-            <div class="sidebar-brand-icon rotate-n-15">
-                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo" style="width: 40px; height: 40px;">
+        <!-- Navbar Brand-->
+        <a class="navbar-brand pe-3 ps-4 ps-lg-2 d-flex align-items-center" href="/">
+            <div style="font-family: 'Nunito', sans-serif; display: flex; align-items: flex-start; line-height: 1;">
+                <span style="color: #212832; font-weight: 850; font-size: 1.65rem; letter-spacing: -1px;">Anga</span>
+                <span
+                    style="color: #212832; font-weight: 800; font-size: 0.85rem; margin-top: 0.2rem; margin-left: 1px;">Sys</span>
             </div>
-            <div class="sidebar-brand-text mx-3">Anga<sup>Sys</sup></div>
         </a>
 
-            <!-- Divider -->
-            <hr class="sidebar-divider my-0">
-
-            <!-- Nav Item - Dashboard -->
-            <!-- <li class="nav-item active">
-                <a class="nav-link" href="/">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li> -->
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Gestión del Sistema
+        <!-- Navbar Search Input-->
+        <form class="form-inline me-auto d-none d-lg-block me-3" id="searchForm">
+            <div class="input-group input-group-joined input-group-solid position-relative">
+                <input class="form-control pe-0" type="search" id="globalSearchInput"
+                    placeholder="Buscar pacientes, especialistas, referenciales..." aria-label="Search"
+                    autocomplete="off">
+                <div class="input-group-text"><i data-feather="search"></i></div>
+                <!-- Dropdown de resultados -->
+                <div id="searchResults" class="search-results-dropdown" style="display: none;"></div>
             </div>
+        </form>
 
-            <!-- ========================================== -->
-            <!-- REFERENCIALES (ADMIN Y SUPERADMIN) -->
-            <!-- ========================================== -->
-            {% if es_admin_o_superadmin() %}
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReferenciales"
-                    aria-expanded="true" aria-controls="collapseReferenciales">
-                    <i class="fas fa-fw fa-database"></i>
-                    <span>Referenciales</span>
-                </a>
-                <div id="collapseReferenciales" class="collapse" aria-labelledby="headingReferenciales" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        
-                        <!-- DATOS GENERALES -->
-                        <h6 class="collapse-header">Datos Generales:</h6>
-                        <a class="collapse-item" href="{{ url_for('ciudad.ciudadIndex') }}">
-                            <i class="fas fa-city fa-sm mr-2"></i>Ciudades
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('genero.generoIndex') }}">
-                            <i class="fas fa-venus-mars fa-sm mr-2"></i>Géneros
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('estado_civil.estadoCivilIndex') }}">
-                            <i class="fas fa-heart fa-sm mr-2"></i>Estados Civiles
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('nivel_instruccion.nivelInstruccionIndex') }}">
-                            <i class="fas fa-graduation-cap fa-sm mr-2"></i>Nivel de Instrucción
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('profesion.profesionIndex') }}">
-                            <i class="fas fa-briefcase fa-sm mr-2"></i>Profesiones
-                        </a>
-                        
-                        <!-- CONFIGURACIÓN CLÍNICA -->
-                        <h6 class="collapse-header mt-3">Configuración Clínica:</h6>
-                        <a class="collapse-item" href="{{ url_for('especialidad.especialidadIndex') }}">
-                            <i class="fas fa-user-md fa-sm mr-2"></i>Especialidades
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('consultorio.consultorioIndex') }}">
-                            <i class="fas fa-clinic-medical fa-sm mr-2"></i>Consultorios
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('dia.diaIndex') }}">
-                            <i class="fas fa-calendar-day fa-sm mr-2"></i>Días Laborables
-                        </a>
-
-                        <!-- CATÁLOGOS MÉDICOS (Comentados - Descomentar si los necesitas) -->
-                        <!--
-                        <h6 class="collapse-header mt-3">Catálogos Médicos:</h6>
-                        <a class="collapse-item" href="{{ url_for('diagnostico.diagnosticoIndex') }}">
-                            <i class="fas fa-stethoscope fa-sm mr-2"></i>Diagnósticos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('medicamento.medicamentoIndex') }}">
-                            <i class="fas fa-pills fa-sm mr-2"></i>Medicamentos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('signo.signoIndex') }}">
-                            <i class="fas fa-heartbeat fa-sm mr-2"></i>Signos Vitales
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('sintoma.sintomaIndex') }}">
-                            <i class="fas fa-notes-medical fa-sm mr-2"></i>Síntomas
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('tipo_analisis.tipoAnalisisIndex') }}">
-                            <i class="fas fa-vial fa-sm mr-2"></i>Tipos de Análisis
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('tipo_estudio.tipoEstudioIndex') }}">
-                            <i class="fas fa-x-ray fa-sm mr-2"></i>Tipos de Estudios
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('tipo_procedimiento.tipoProcedimientoIndex') }}">
-                            <i class="fas fa-procedures fa-sm mr-2"></i>Tipos de Procedimientos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('tipo_tratamiento.tipoTratamientoIndex') }}">
-                            <i class="fas fa-hand-holding-medical fa-sm mr-2"></i>Tipos de Tratamientos
-                        </a>
-                        -->
-                        
-                        <!-- SEGURIDAD -->
-                        <h6 class="collapse-header mt-3">Seguridad:</h6>
-                        <a class="collapse-item" href="{{ url_for('cargo.cargoIndex') }}">
-                            <i class="fas fa-id-badge fa-sm mr-2"></i>Cargos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('grupo.grupoIndex') }}">
-                            <i class="fas fa-users-cog fa-sm mr-2"></i>Grupos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('modulo.moduloIndex') }}">
-                            <i class="fas fa-th-large fa-sm mr-2"></i>Módulos
-                        </a>
-                    </div>
-                </div>
-            </li>
-            {% endif %}
-
-            <!-- ========================================== -->
-            <!-- REGISTRAR PERSONAS (ADMIN Y SUPERADMIN) -->
-            <!-- ========================================== -->
-            {% if es_admin_o_superadmin() %}
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRegistrar"
-                    aria-expanded="true" aria-controls="collapseRegistrar">
-                    <i class="fas fa-fw fa-user-plus"></i>
-                    <span>Registrar</span>
-                </a>
-                <div id="collapseRegistrar" class="collapse" aria-labelledby="headingRegistrar"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Gestión de Personas:</h6>
-                        <a class="collapse-item" href="{{ url_for('paciente.pacienteIndex') }}">
-                            <i class="fas fa-user-injured fa-sm mr-2"></i>Pacientes
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('funcionario.funcionarioIndex') }}">
-                            <i class="fas fa-user-tie fa-sm mr-2"></i>Funcionarios
-                        </a>
-                        {% if es_superadmin() %}
-                        <a class="collapse-item" href="{{ url_for('usuario.usuarioIndex') }}">
-                            <i class="fas fa-users fa-sm mr-2"></i>Usuarios
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endif %}
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Atención al Paciente
-            </div>
-
-            <!-- ========================================== -->
-            <!-- AGENDAMIENTO (ADMIN, SUPERADMIN, RECEPCIÓN Y ESPECIALISTA) -->
-            <!-- ========================================== -->
-            {% if es_admin_o_superadmin() or es_recepcion() or es_especialista() or puede_acceder_modulo('Agendamiento') %}
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAgenda"
-                    aria-expanded="true" aria-controls="collapseAgenda">
-                    <i class="fas fa-fw fa-calendar-alt"></i>
-                    <span>Agendamiento</span>
-                </a>
-                <div id="collapseAgenda" class="collapse" aria-labelledby="headingAgenda"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Gestión de Citas:</h6>
-                        <a class="collapse-item" href="{{ url_for('agenda.agendaIndex') }}">
-                            <i class="fas fa-calendar-plus fa-sm mr-2"></i>Agenda Médica
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('cita.citaIndex') }}">
-                            <i class="fas fa-calendar-check fa-sm mr-2"></i>Citas Médicas
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('cita.calendario') }}">
-                            <i class="fas fa-calendar fa-sm mr-2"></i>Calendario
-                        </a>
-                        {% if es_admin_o_superadmin() or es_recepcion() %}
-                        <a class="collapse-item" href="{{ url_for('fichamedica.fichaMedicaIndex') }}">
-                            <i class="fas fa-file-medical fa-sm mr-2"></i>Fichas Médicas
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endif %}
-
-            <!-- ========================================== -->
-            <!-- CONSULTAS MÉDICAS (ESPECIALISTAS, ADMIN Y SUPERADMIN) -->
-            <!-- ========================================== -->
-            {% if es_admin_o_superadmin() or es_especialista() or puede_acceder_modulo('Consultorios') %}
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseConsultas"
-                    aria-expanded="true" aria-controls="collapseConsultas">
-                    <i class="fas fa-fw fa-stethoscope"></i>
-                    <span>Consultas Médicas</span>
-                </a>
-                <div id="collapseConsultas" class="collapse" aria-labelledby="headingConsultas"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Gestión de Consultas:</h6>
-                        
-                        {% if es_recepcion() or es_admin_o_superadmin() %}
-                        <a class="collapse-item" href="{{ url_for('paciente.pacienteIndex') }}">
-                            <i class="fas fa-user-injured fa-sm mr-2"></i>Pacientes
-                        </a>
-                        {% endif %}
-                        
-                        {% if es_especialista() or es_admin_o_superadmin() %}
-                        <a class="collapse-item" href="{{ url_for('registrarconsulta.consultaIndex') }}">
-                            <i class="fas fa-clipboard-check fa-sm mr-2"></i>Registrar Consulta
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrardiagnostico.diagnosticoIndex') }}">
-                            <i class="fas fa-diagnoses fa-sm mr-2"></i>Registrar Diagnóstico
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrartratamiento.tratamientoIndex') }}">
-                            <i class="fas fa-pills fa-sm mr-2"></i>Registrar Tratamiento
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrarprocedimiento.procedimientoIndex') }}">
-                            <i class="fas fa-procedures fa-sm mr-2"></i>Registrar Procedimiento
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('anamnesis.anamnesisIndex') }}">
-                            <i class="fas fa-file-medical fa-sm mr-2"></i>Anamnesis
-                        </a>
-                        {% endif %}
-                        
-                        <!-- Divider para separar secciones -->
-                        <div class="dropdown-divider"></div>
-                        
-                        <h6 class="collapse-header">Documentos y Gestión:</h6>
-                        
-                        {% if es_especialista() or es_admin_o_superadmin() %}
-                        <a class="collapse-item" href="{{ url_for('registrarpresupuesto.presupuestoIndex') }}">
-                            <i class="fas fa-file-invoice-dollar fa-sm mr-2"></i>Presupuestos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrarreceta.recetaIndex') }}">
-                            <i class="fas fa-prescription fa-sm mr-2"></i>Recetas Médicas
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrarordenestudio.ordenEstudioIndex') }}">
-                            <i class="fas fa-file-medical fa-sm mr-2"></i>Órdenes de Estudios
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrarcertificadomedico.certificadoMedicoIndex') }}">
-                            <i class="fas fa-certificate fa-sm mr-2"></i>Certificados Médicos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('registrarinsumo.insumoIndex') }}">
-                            <i class="fas fa-boxes fa-sm mr-2"></i>Insumos Médicos
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endif %}
-
-            <!-- ========================================== -->
-            <!-- VENTAS (ADMIN, SUPERADMIN, RECEPCIÓN Y GRUPO VENTAS) -->
-            <!-- ========================================== -->
-            {% if es_admin_o_superadmin() or es_recepcion() or es_ventas() %}
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
-                    aria-expanded="true" aria-controls="collapseVentas">
-                    <i class="fas fa-fw fa-cash-register"></i>
-                    <span>Ventas</span>
-                </a>
-                <div id="collapseVentas" class="collapse" aria-labelledby="headingVentas"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Gestión de Ventas:</h6>
-                        {% if es_admin_o_superadmin() or es_ventas() %}
-                        <a class="collapse-item" href="{{ url_for('pedido.pedidoIndex') }}">
-                            <i class="fas fa-shopping-cart fa-sm mr-2"></i>Registrar Pedido
-                        </a>
-                        {% endif %}
-                        <a class="collapse-item" href="{{ url_for('factura.facturaIndex') }}">
-                            <i class="fas fa-file-invoice-dollar fa-sm mr-2"></i>Registrar Factura
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('cuenta_cobrar.cuentaCobrarIndex') }}">
-                            <i class="fas fa-money-check-alt fa-sm mr-2"></i>Cuentas a Cobrar
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('cobranza.cobranzaIndex') }}">
-                            <i class="fas fa-cash-register fa-sm mr-2"></i>Cobranzas
-                        </a>
-                        {% if es_admin_o_superadmin() or es_ventas() %}
-                        <a class="collapse-item" href="{{ url_for('apertura_cierre_caja.aperturaCierreIndex') }}">
-                            <i class="fas fa-door-open fa-sm mr-2"></i>Apertura/Cierre de Caja
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('arqueo_caja.arqueoCajaIndex') }}">
-                            <i class="fas fa-calculator fa-sm mr-2"></i>Arqueo de Caja
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('recaudacion.recaudacionIndex') }}">
-                            <i class="fas fa-money-bill-wave fa-sm mr-2"></i>Recaudaciones
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('nota_credito.notaCreditoIndex') }}">
-                            <i class="fas fa-file-invoice fa-sm mr-2"></i>Notas de Crédito
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('nota_debito.notaDebitoIndex') }}">
-                            <i class="fas fa-file-invoice fa-sm mr-2"></i>Notas de Débito
-                        </a>
-                        {% endif %}
-                        {% if es_admin_o_superadmin() or es_ventas() %}
-                        <a class="collapse-item" href="{{ url_for('libro_ventas.libroVentasIndex') }}">
-                            <i class="fas fa-book fa-sm mr-2"></i>Libro de Ventas
-                        </a>
-                        {% endif %}
-                        
-                        <!-- Divider para separar secciones -->
-                        <div class="dropdown-divider"></div>
-                        
-                        <!-- CONFIGURACIÓN DE VENTAS -->
-                        {% if es_admin_o_superadmin() %}
-                        <h6 class="collapse-header">Configuración de Ventas:</h6>
-                        <a class="collapse-item" href="{{ url_for('empresa.empresaIndex') }}">
-                            <i class="fas fa-building fa-sm mr-2"></i>Empresa
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('sede.sedeIndex') }}">
-                            <i class="fas fa-map-marker-alt fa-sm mr-2"></i>Sedes
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('timbrado.timbradoIndex') }}">
-                            <i class="fas fa-stamp fa-sm mr-2"></i>Timbrados
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('establecimiento.establecimientoIndex') }}">
-                            <i class="fas fa-store fa-sm mr-2"></i>Establecimientos
-                        </a>
-                        <a class="collapse-item" href="{{ url_for('puntoexpedicion.puntoExpedicionIndex') }}">
-                            <i class="fas fa-cash-register fa-sm mr-2"></i>Puntos de Expedición
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endif %}
-
-            <!-- Divider -->
-            <hr class="sidebar-divider d-none d-md-block">
-
-            <!-- Sidebar Toggler (Sidebar) -->
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
-            </div>
-
-        </ul>
-        <!-- End of Sidebar -->
-
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
-
-            <!-- Main Content -->
-            <div id="content">
-
-                <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-                    <!-- Sidebar Toggle (Topbar) -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-
-                    <!-- Topbar Search -->
-                    <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search" id="searchForm">
-                        <div class="input-group position-relative">
-                            <input type="text" 
-                                   class="form-control bg-light border-0 small" 
-                                   id="globalSearchInput"
-                                   placeholder="Buscar pacientes, especialistas, referenciales..." 
-                                   aria-label="Search" 
-                                   aria-describedby="basic-addon2"
-                                   autocomplete="off">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="submit" style="background-color: var(--cobalt-blue); border-color: var(--cobalt-blue);">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
-                            <!-- Dropdown de resultados -->
-                            <div id="searchResults" class="search-results-dropdown" style="display: none;"></div>
+        <!-- Navbar Items-->
+        <ul class="navbar-nav align-items-center ms-auto">
+            <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+            <li class="nav-item dropdown no-caret me-3 d-lg-none">
+                <a class="btn btn-icon btn-transparent-dark dropdown-toggle" id="searchDropdown" href="#" role="button"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                        data-feather="search"></i></a>
+                <!-- Dropdown - Search-->
+                <div class="dropdown-menu dropdown-menu-end p-3 shadow animated--fade-in-up"
+                    aria-labelledby="searchDropdown">
+                    <form class="form-inline me-auto w-100 navbar-search" id="searchFormMobile">
+                        <div class="input-group input-group-joined input-group-solid position-relative">
+                            <input class="form-control pe-0" type="text" id="globalSearchInputMobile"
+                                placeholder="Buscar..." aria-label="Search" autocomplete="off">
+                            <div class="input-group-text"><i data-feather="search"></i></div>
+                            <!-- Dropdown de resultados móvil -->
+                            <div id="searchResultsMobile" class="search-results-dropdown" style="display: none;"></div>
                         </div>
                     </form>
+                </div>
+            </li>
 
-                    <!-- Topbar Navbar -->
-                    <ul class="navbar-nav ml-auto">
+            <!-- Nav Item - Theme Toggle -->
+            <li class="nav-item me-3">
+                <a class="btn btn-icon btn-transparent-dark" id="themeToggle" href="javascript:void(0);"
+                    title="Cambiar tema">
+                    <i id="themeIcon" data-feather="moon"></i>
+                </a>
+            </li>
 
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-                        <li class="nav-item dropdown no-arrow d-sm-none">
-                            <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-search fa-fw"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                                aria-labelledby="searchDropdown">
-                                <form class="form-inline mr-auto w-100 navbar-search" id="searchFormMobile">
-                                    <div class="input-group position-relative">
-                                        <input type="text" 
-                                               class="form-control bg-light border-0 small"
-                                               id="globalSearchInputMobile"
-                                               placeholder="Buscar..." 
-                                               aria-label="Search"
-                                               autocomplete="off">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="submit" style="background-color: var(--cobalt-blue); border-color: var(--cobalt-blue);">
-                                                <i class="fas fa-search fa-sm"></i>
-                                            </button>
-                                        </div>
-                                        <!-- Dropdown de resultados móvil -->
-                                        <div id="searchResultsMobile" class="search-results-dropdown" style="display: none;"></div>
-                                    </div>
-                                </form>
+            <!-- Nav Item - User Information -->
+            <li class="nav-item dropdown no-caret dropdown-user me-3 me-lg-4">
+                <a class="btn btn-icon btn-transparent-dark dropdown-toggle" id="navbarDropdownUserImage"
+                    href="javascript:void(0);" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                    <img class="img-fluid rounded-circle"
+                        src="{{ url_for('static', filename='img/undraw_profile.svg') }}" alt="Perfil"
+                        style="width: 32px; height: 32px;">
+                </a>
+                <div class="dropdown-menu dropdown-menu-end border-0 shadow animated--fade-in-up"
+                    aria-labelledby="navbarDropdownUserImage">
+                    <h6 class="dropdown-header d-flex align-items-center">
+                        <img class="dropdown-user-img" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
+                            alt="Perfil" />
+                        <div class="dropdown-user-details">
+                            <div class="dropdown-user-details-name">{{ session.get('nombre_persona', 'Usuario') }}</div>
+                            <div class="dropdown-user-details-email">
+                                <span class="badge bg-primary">{{
+                                    session.get('grupo', 'Sin rol') }}</span>
                             </div>
-                        </li>
+                        </div>
+                    </h6>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('perfil.perfilIndex') }}">
+                        <div class="dropdown-item-icon"><i data-feather="user"></i></div>
+                        Mi Perfil
+                    </a>
+                    <a class="dropdown-item" href="{{ url_for('login.logout') }}">
+                        <div class="dropdown-item-icon"><i data-feather="log-out"></i></div>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </nav>
 
-                        <div class="topbar-divider d-none d-sm-block"></div>
-
-                        <!-- Nav Item - User Information -->
-                        <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                                    {{ session.get('nombre_persona', 'Usuario') }}
-                                    <span class="badge ml-1" style="background-color: var(--cobalt-blue);">{{ session.get('grupo', 'Sin rol') }}</span>
-                                </span>
-                                <img class="img-profile rounded-circle"
-                                    src="{{ url_for('static', filename='img/undraw_profile.svg') }}" alt="Perfil">
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ url_for('perfil.perfilIndex') }}">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Mi Perfil
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{ url_for('login.logout') }}">
-                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Cerrar Sesión
-                                </a>
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav">
+            <nav class="sidenav shadow-right sidenav-light">
+                <div class="sidenav-menu">
+                    <div class="nav accordion" id="accordionSidenav">
+                        {% for section in sidebar_items %}
+                        {% if section.is_flat %}
+                        {% for group in section.groups %}
+                        <div class="sidenav-menu-heading text-uppercase small fw-800 text-muted-soft"
+                            style="letter-spacing: 0.05rem; padding-top: 1.5rem;">{{ group.heading }}</div>
+                        {% for item in group['items'] %}
+                        <a class="nav-link" href="{{ url_for(item.endpoint) if item.endpoint else '#' }}">
+                            <div class="nav-link-icon">
+                                {% if item.html_icon %}{{ item.html_icon|safe }}{% else %}<i
+                                    data-feather="{{ item.icon }}"></i>{% endif %}
                             </div>
-                        </li>
+                            {{ item.title }}
+                        </a>
+                        {% endfor %}
+                        {% endfor %}
+                        {% else %}<div class="sidenav-menu-heading text-uppercase small fw-800 text-muted-soft"
+                            style="letter-spacing: 0.05rem; padding-top: 1.5rem;">{{ section.heading }}</div>
+                        {% for menu in section.menus %}
+                        <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse"
+                            data-bs-target="#{{ menu.id }}" aria-expanded="false" aria-controls="{{ menu.id }}">
+                            <div class="nav-link-icon"><i data-feather="{{ menu.icon }}"></i></div>
+                            {{ menu.title }}
+                            <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="{{ menu.id }}" data-bs-parent="#accordionSidenav">
+                            <nav class="sidenav-menu-nested nav {% if menu.submenus %}accordion{% endif %}" {% if
+                                menu.submenus %}id="{{ menu.id }}Nested" {% endif %}>
+                                {% if menu.submenus %}
+                                {% for submenu in menu.submenus %}
+                                <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse"
+                                    data-bs-target="#{{ submenu.id }}" aria-expanded="false">
+                                    {{ submenu.title }}
+                                    <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                                </a>
+                                <div class="collapse" id="{{ submenu.id }}" data-bs-parent="#{{ menu.id }}Nested">
+                                    <nav class="sidenav-menu-nested nav">
+                                        {% for link in submenu.links %}
+                                        <a class="nav-link"
+                                            href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
+                                            {% if link.html_icon %}{{ link.html_icon|safe }}{% endif %}{{ link.title }}
+                                        </a>
+                                        {% endfor %}
+                                    </nav>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                                {% if menu.links %}
+                                {% for link in menu.links %}
+                                <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
+                                    {% if link.html_icon %}{{ link.html_icon|safe }}{% endif %}{{ link.title }}
+                                </a>
+                                {% endfor %}
+                                {% endif %}
+                            </nav>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Sidenav Footer-->
+                <div class="sidenav-footer">
+                    <div class="sidenav-footer-content">
+                        <div class="sidenav-footer-subtitle">Sesión iniciada como:</div>
+                        <div class="sidenav-footer-title">{{ session.get('nombre_persona', 'Usuario') }}</div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <!-- End of Sidenav -->
 
-                    </ul>
-
-                </nav>
-                <!-- End of Topbar -->
-
+        <!-- Layout Sidenav Content -->
+        <div id="layoutSidenav_content">
+            <main>
                 <!-- Begin Page Content -->
-                <div class="container-fluid">
+                {% block layout_content %}
+                <!-- Para páginas normales como ciudad -->
+                <div class="container-fluid px-4">
                     {% block contenido %}
                     {% endblock %}
                 </div>
+                {% endblock %}
                 <!-- /.container-fluid -->
+            </main>
+            <!-- Footer -->
 
-            </div>
-            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="footer mt-auto"
+                style="background-color: #212832; color: #a7aeb8; padding-top: 3rem; padding-bottom: 2rem; width: 100%;">
+                <div class="container-fluid px-4 px-lg-5">
+                    <div class="row gx-5 justify-content-between">
+
+                        <!-- Columna 1: Brand & Descripción & Redes -->
+                        <div class="col-lg-5 col-md-6 mb-4 mb-lg-0">
+                            <a href="/" class="d-flex align-items-center mb-3 text-white text-decoration-none">
+                                {% if clinica and clinica.logo_path %}
+                                <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
+                                    style="width: 28px; height: 28px; margin-right: 10px; opacity: 0.9; object-fit: contain;">
+                                {% else %}
+                                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo AngaSys"
+                                    style="width: 28px; height: 28px; margin-right: 10px; opacity: 0.9;">
+                                {% endif %}
+                                <span class="fs-4 fw-bold" style="letter-spacing: 0.05rem;">{{ clinica.nombre if clinica
+                                    else 'AngaSys' }}</span>
+                            </a>
+                            <p class="small mb-4" style="line-height: 1.6; max-width: 320px;">
+                                Sistema de gestión integral para profesionales y consultorios de la salud mental.
+                            </p>
+                            <div class="d-flex gap-3">
+                                <a href="javascript:void(0);" class="text-decoration-none"
+                                    style="color: #a7aeb8; transition: color 0.2s;" aria-label="LinkedIn"><i
+                                        class="fab fa-linkedin fs-5" aria-hidden="true"></i></a>
+                                <a href="javascript:void(0);" class="text-decoration-none"
+                                    style="color: #a7aeb8; transition: color 0.2s;" aria-label="Twitter"><i
+                                        class="fab fa-twitter fs-5" aria-hidden="true"></i></a>
+                                <a href="javascript:void(0);" class="text-decoration-none"
+                                    style="color: #a7aeb8; transition: color 0.2s;" aria-label="Instagram"><i
+                                        class="fab fa-instagram fs-5" aria-hidden="true"></i></a>
+                            </div>
+                        </div>
+
+                        <!-- Columna 2: Soporte & Legal -->
+                        <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                            <h6 class="text-white fw-bold mb-3 text-uppercase"
+                                style="font-size: 0.85rem; letter-spacing: 0.1rem;">Soporte y Legal</h6>
+                            <ul class="list-unstyled mb-0 small" style="line-height: 2;">
+                                <li><a href="{{ url_for('informacion.soporte') }}" class="text-decoration-none"
+                                        style="color: #a7aeb8; transition: color 0.2s;">Soporte Técnico</a></li>
+                                <li><a href="{{ url_for('informacion.contacto') }}" class="text-decoration-none"
+                                        style="color: #a7aeb8; transition: color 0.2s;">Formulario de Contacto</a></li>
+                                <li class="mt-2"><a href="{{ url_for('informacion.privacidad') }}"
+                                        class="text-decoration-none"
+                                        style="color: #a7aeb8; transition: color 0.2s;">Políticas de Privacidad</a></li>
+                                <li><a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none"
+                                        style="color: #a7aeb8; transition: color 0.2s;">armanuramirez16@gmail.com</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <hr class="mt-5 mb-4" style="border-color: rgba(255, 255, 255, 0.1);" />
+
+                    <!-- Bottom Bar -->
+                    <div class="row align-items-center small" style="font-size: 0.8rem;">
+                        <div
+                            class="col-md-6 mb-2 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
+                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'AngaSys' }} {{ current_year if
+                                current_year else '2026' }}</span>
+                            <span class="mx-2 d-none d-md-inline" style="opacity: 0.3;">|</span>
+                            <span>Desarrollado por <strong style="color: rgba(255, 255, 255, 0.6); letter-spacing: 0.5px;">ÑANDESYS</strong></span>
+                        </div>
+                        <div class="col-md-6 text-center text-md-end">
+                            Versión {{ app_version if app_version else '2.1.0' }}
+                        </div>
+                    </div>
+                </div>
+            </footer>
+
+
 
         </div>
-        <!-- End of Content Wrapper -->
-
+        <!-- End of Layout Sidenav Content -->
     </div>
-    <!-- End of Page Wrapper -->
+    <!-- End of Layout Sidenav -->
 
-    <!-- Footer -->
-    <footer class="text-white w-100" style="background-color: var(--cobalt-blue-dark) !important; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; padding-top: 3rem; padding-bottom: 2rem;">
-        <div class="container-fluid px-4" style="background-color: transparent; max-width: 1200px; margin: 0 auto;">
-            <!-- Sección Superior -->
-            <div class="row pb-4 justify-content-center">
-                <!-- Columna 1: Logo y Descripción -->
-                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
-                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
-                        <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo AngaSys" style="width: 50px; height: 50px; margin-right: 12px;">
-                        <h4 class="mb-0 font-weight-bold" style="font-size: 1.5rem;">AngaSys</h4>
-                    </div>
-                    <p class="text-white mb-3 text-center text-md-left" style="opacity: 0.9; font-size: 0.9rem; line-height: 1.6;">
-                        Sistema de gestión de consultorios psicológicos. Ayudamos a profesionales de la salud mental a gestionar eficientemente sus consultorios y brindar una mejor atención a sus pacientes.
-                    </p>
-                    <!-- Redes Sociales -->
-                    <div class="d-flex align-items-center justify-content-center justify-content-md-start" style="gap: 12px;">
-                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            <i class="fab fa-facebook"></i>
-                        </a>
-                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="text-white" style="opacity: 0.8; font-size: 1.2rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            <i class="fab fa-youtube"></i>
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Columna 2: Nuestro Sistema -->
-                {% set tiene_enlaces_sistema = es_admin_o_superadmin() or puede_acceder_modulo('Agendamiento') or puede_acceder_modulo('Consultorios') or es_recepcion() or es_ventas() or es_especialista() %}
-                {% if tiene_enlaces_sistema %}
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
-                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem; letter-spacing: 0.5px;">NUESTRO SISTEMA</h5>
-                    <ul class="list-unstyled" style="line-height: 2.2;">
-                        {% if es_admin_o_superadmin() %}
-                        <li>
-                            <a href="{{ url_for('consultorio.consultorioIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Consultorios
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if es_admin_o_superadmin() or es_recepcion() or es_especialista() or puede_acceder_modulo('Agendamiento') %}
-                        <li>
-                            <a href="{{ url_for('agenda.agendaIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Agendamiento
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if es_admin_o_superadmin() or es_especialista() or puede_acceder_modulo('Consultorios') %}
-                        <li>
-                            <a href="{{ url_for('registrarconsulta.consultaIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Consultas Médicas
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if es_admin_o_superadmin() or es_recepcion() or es_ventas() %}
-                        <li>
-                            <a href="{{ url_for('factura.facturaIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Ventas
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-                {% endif %}
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
 
-                <!-- Columna 3: Servicios -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
-                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem; letter-spacing: 0.5px;">SERVICIOS</h5>
-                    <ul class="list-unstyled" style="line-height: 2.2;">
-                        <li>
-                            <a href="{{ url_for('informacion.soporte') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                <i class="fas fa-question-circle mr-1"></i>Soporte
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('informacion.contacto') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                <i class="fas fa-envelope mr-1"></i>Contacto
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('perfil.perfilIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                <i class="fas fa-user mr-1"></i>Mi Perfil
-                            </a>
-                        </li>
-                        {% if es_superadmin() %}
-                        <li>
-                            <a href="{{ url_for('usuario.usuarioIndex') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.9rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                <i class="fas fa-cog mr-1"></i>Administración
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-
-                <!-- Columna 4: Contáctanos -->
-                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
-                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem; letter-spacing: 0.5px;">CONTÁCTANOS</h5>
-                    <ul class="list-unstyled" style="line-height: 2.2;">
-                        <li class="text-white" style="opacity: 0.9; font-size: 0.9rem;">
-                            <i class="fas fa-building mr-2"></i>
-                            Clínica Integral Neuropsicológica
-                        </li>
-                        <li class="text-white" style="opacity: 0.9; font-size: 0.9rem;">
-                            <i class="fas fa-envelope mr-2"></i>
-                            <a href="mailto:armanuramirez16@gmail.com" class="text-white" style="opacity: 0.9; text-decoration: none; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
-                                armanuramirez16@gmail.com
-                            </a>
-                        </li>
-                        <li class="text-white" style="opacity: 0.9; font-size: 0.9rem;">
-                            <i class="fas fa-clock mr-2"></i>
-                            Lunes a Viernes: 9:00 - 18:00
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Línea Divisoria -->
-            <div class="border-top mb-3 mt-4" style="border-color: rgba(255,255,255,0.2); border-width: 1px !important; width: 100%;"></div>
-
-            <!-- Sección Inferior -->
-            <div class="row align-items-center justify-content-center">
-                <div class="col-md-6 mb-2 mb-md-0 text-center">
-                    <p class="text-white mb-0" style="opacity: 0.8; font-size: 0.85rem;">
-                        <i class="far fa-copyright mr-1"></i>AngaSys {{ current_year if current_year else '2025' }} — Todos los derechos reservados
-                        <span class="ml-2" style="opacity: 0.7;">|</span>
-                        <span class="ml-2" style="opacity: 0.7;">
-                            <i class="fas fa-code-branch mr-1"></i>Versión {{ app_version if app_version else '2.0.0' }}
-                        </span>
-                    </p>
-                </div>
-                <div class="col-md-6 text-center text-md-right">
-                    <div class="d-flex flex-wrap justify-content-center justify-content-md-end align-items-center" style="gap: 8px;">
-                        <a href="{{ url_for('informacion.privacidad') }}" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.85rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            Políticas de Privacidad
-                        </a>
-                        <span class="text-white" style="opacity: 0.5;">•</span>
-                        <a href="#" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.85rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            Políticas de Cookies
-                        </a>
-                        <span class="text-white" style="opacity: 0.5;">•</span>
-                        <a href="#" class="text-white" style="opacity: 0.8; text-decoration: none; font-size: 0.85rem; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            Términos y Condiciones
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <!-- End of Footer -->
-
-    <!-- Scroll to Top Button -->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <!-- Bootstrap core JavaScript -->
+    <!-- jQuery (para compatibilidad con código existente) -->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- Core plugin JavaScript -->
-    <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+    <!-- SB Admin Pro Scripts -->
+    <script src="{{ url_for('static', filename='vendor/sb-admin-pro/js/scripts.js') }}"></script>
 
-    <!-- Custom scripts for all pages -->
-    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+    <!-- Feather Icons (inicializar) -->
+    <script>
+        feather.replace();
+    </script>
 
-    <!-- Datatables -->
+    <!-- Datatables Bootstrap 5 -->
     <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
     <!-- SweetAlert2 -->
     <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
@@ -943,9 +1074,16 @@
     {% block js %}
     {% endblock %}
 
-    <!-- Script de búsqueda global -->
+    <!-- Script de búsqueda global y mejoras de UI -->
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
+            // Fix Sidebar Toggle (Robust Version with Delegation)
+            $(document).on('click', '#sidebarToggle', function (e) {
+                e.preventDefault();
+                $('body').toggleClass('sidenav-toggled');
+                localStorage.setItem('sb|sidebar-toggle', $('body').hasClass('sidenav-toggled'));
+            });
+
             let searchTimeout;
             const minSearchLength = 2;
             const searchDelay = 300; // ms
@@ -964,14 +1102,14 @@
                     url: '/api/v1/busqueda',
                     method: 'GET',
                     data: { q: termino, limite: 20 },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success && response.data) {
                             mostrarResultados(response.data, resultsContainer);
                         } else {
                             mostrarSinResultados(resultsContainer);
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error('Error en búsqueda:', error);
                         resultsContainer.html('<div class="search-no-results">Error al realizar la búsqueda</div>').show();
                     }
@@ -988,7 +1126,7 @@
                     tieneResultados = true;
                     html += '<div class="search-results-section">';
                     html += '<div class="search-results-section-title"><i class="fas fa-user-injured"></i> Pacientes</div>';
-                    data.pacientes.forEach(function(paciente) {
+                    data.pacientes.forEach(function (paciente) {
                         html += `
                             <div class="search-result-item" onclick="window.location.href='${paciente.url}'">
                                 <div class="search-result-item-title">
@@ -1009,7 +1147,7 @@
                     tieneResultados = true;
                     html += '<div class="search-results-section">';
                     html += '<div class="search-results-section-title"><i class="fas fa-user-md"></i> Especialistas</div>';
-                    data.especialistas.forEach(function(especialista) {
+                    data.especialistas.forEach(function (especialista) {
                         html += `
                             <div class="search-result-item" onclick="window.location.href='${especialista.url}'">
                                 <div class="search-result-item-title">
@@ -1031,7 +1169,7 @@
                     tieneResultados = true;
                     html += '<div class="search-results-section">';
                     html += '<div class="search-results-section-title"><i class="fas fa-database"></i> Referenciales</div>';
-                    data.referenciales.forEach(function(ref) {
+                    data.referenciales.forEach(function (ref) {
                         const iconos = {
                             'ciudad': 'fa-city',
                             'especialidad': 'fa-user-md',
@@ -1082,12 +1220,12 @@
             const searchResults = $('#searchResults');
             const searchForm = $('#searchForm');
 
-            searchInput.on('input', function() {
+            searchInput.on('input', function () {
                 const termino = $(this).val().trim();
                 clearTimeout(searchTimeout);
-                
+
                 if (termino.length >= minSearchLength) {
-                    searchTimeout = setTimeout(function() {
+                    searchTimeout = setTimeout(function () {
                         realizarBusqueda(termino, searchResults);
                     }, searchDelay);
                 } else {
@@ -1095,7 +1233,14 @@
                 }
             });
 
-            searchForm.on('submit', function(e) {
+            // Reinicializar Feather Icons después de cargar contenido dinámico
+            $(document).ajaxComplete(function () {
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            });
+
+            searchForm.on('submit', function (e) {
                 e.preventDefault();
                 const termino = searchInput.val().trim();
                 if (termino.length >= minSearchLength) {
@@ -1104,7 +1249,7 @@
             });
 
             // Ocultar resultados al hacer clic fuera
-            $(document).on('click', function(e) {
+            $(document).on('click', function (e) {
                 if (!$(e.target).closest('.navbar-search').length) {
                     searchResults.hide();
                     $('#searchResultsMobile').hide();
@@ -1116,12 +1261,12 @@
             const searchResultsMobile = $('#searchResultsMobile');
             const searchFormMobile = $('#searchFormMobile');
 
-            searchInputMobile.on('input', function() {
+            searchInputMobile.on('input', function () {
                 const termino = $(this).val().trim();
                 clearTimeout(searchTimeout);
-                
+
                 if (termino.length >= minSearchLength) {
-                    searchTimeout = setTimeout(function() {
+                    searchTimeout = setTimeout(function () {
                         realizarBusqueda(termino, searchResultsMobile);
                     }, searchDelay);
                 } else {
@@ -1129,14 +1274,82 @@
                 }
             });
 
-            searchFormMobile.on('submit', function(e) {
+            searchFormMobile.on('submit', function (e) {
                 e.preventDefault();
                 const termino = searchInputMobile.val().trim();
                 if (termino.length >= minSearchLength) {
                     realizarBusqueda(termino, searchResultsMobile);
                 }
             });
-        });
+        }); // Cerramos el $(document).ready() de la búsqueda aquí
+
+        // ==========================================
+        // MODO OSCURO (Lógica de Toggle y Sincronización) 
+        // Totalmente independiente de otros scripts
+        // ==========================================
+        // ==========================================
+        // MODO OSCURO (Motor de Temas Robusto e Independiente)
+        // ==========================================
+        (function () {
+            const applyTheme = (isDark) => {
+                const body = document.body;
+                const sidenav = document.querySelector('.sidenav');
+                const topnav = document.querySelector('.topnav');
+                const themeToggle = document.getElementById('themeToggle');
+
+                if (isDark) {
+                    body.classList.add('dark-mode');
+                    if (sidenav) {
+                        sidenav.classList.remove('sidenav-light');
+                        sidenav.classList.add('sidenav-dark');
+                    }
+                    if (topnav) {
+                        topnav.classList.remove('navbar-light', 'bg-white');
+                        topnav.classList.add('navbar-dark', 'bg-dark');
+                    }
+                    if (themeToggle) {
+                        themeToggle.innerHTML = '<i id="themeIcon" data-feather="sun"></i>';
+                    }
+                } else {
+                    body.classList.remove('dark-mode');
+                    if (sidenav) {
+                        sidenav.classList.remove('sidenav-dark');
+                        sidenav.classList.add('sidenav-light');
+                    }
+                    if (topnav) {
+                        topnav.classList.remove('navbar-dark', 'bg-dark');
+                        topnav.classList.add('navbar-light', 'bg-white');
+                    }
+                    if (themeToggle) {
+                        themeToggle.innerHTML = '<i id="themeIcon" data-feather="moon"></i>';
+                    }
+                }
+
+                // Refrescar iconos Feather si la librería está disponible
+                if (window.feather) {
+                    try { window.feather.replace(); } catch (e) { console.warn('Feather failed to reload'); }
+                }
+            };
+
+            // Listener de ALTA PRIORIDAD (Capture Phase) para el botón de tema
+            window.addEventListener('click', function (e) {
+                const trigger = e.target.closest('#themeToggle');
+                if (trigger) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const isNowDark = !document.body.classList.contains('dark-mode');
+                    applyTheme(isNowDark);
+                    localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
+                }
+            }, true);
+
+            // Sincronización al cargar el DOM
+            document.addEventListener('DOMContentLoaded', function () {
+                const savedTheme = localStorage.getItem('theme');
+                const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                applyTheme(isDark);
+            });
+        })();
     </script>
 
 </body>

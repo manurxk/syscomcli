@@ -25,6 +25,7 @@ def registrar_funciones_template(app):
             es_ventas=es_ventas,
             es_superadmin=es_superadmin,
             es_admin_o_superadmin=es_admin_o_superadmin,  # ← NUEVO
+            es_caja=es_caja,
             
             # Permisos
             puede_acceder_modulo=puede_acceder_modulo,
@@ -173,6 +174,29 @@ def es_superadmin():
         return grupo_nombre == 'SUPERADMINISTRADOR'
 
 
+def es_caja():
+    """
+    Verifica si el usuario actual es Cajero
+    Soporta múltiples roles (verifica si tiene rol de de Caja)
+    
+    Returns:
+        bool: True si es caja, False en caso contrario
+    """
+    try:
+        from app.services.modulos_service import ModulosService
+        modulos_service = ModulosService()
+        return modulos_service.es_caja()
+    except Exception:
+        # Fallback a verificación básica
+        grupo_id = session.get('id_grupo')
+        grupo_nombre = session.get('grupo', '').upper()
+        
+        if grupo_id == 6:
+            return True
+            
+        return grupo_nombre == 'CAJA'
+
+
 def es_admin_o_superadmin():
     """
     Verifica si el usuario es Administrador o Superadministrador
@@ -221,7 +245,7 @@ def puede_acceder_modulo(nombre_modulo):
         
         # Intentar verificar desde la BD como fallback
         try:
-            from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+            from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
             permisos_dao = PermisosDao()
             return permisos_dao.verificar_permiso_modulo(grupo_id, nombre_modulo)
         except Exception:
@@ -256,9 +280,9 @@ def tiene_permiso(ruta):
         return False
     
     try:
-        from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+        from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
         dao = PermisosDao()
-        return dao.tiene_permiso_ruta(grupo_id, ruta)
+        return dao.verificar_permiso_ruta(grupo_id, ruta)
     except Exception as e:
         print(f"Error verificando permiso: {str(e)}")
         return False
@@ -287,7 +311,7 @@ def tiene_permiso_accion(accion, ruta=None):
     if 'id_grupo' not in session:
         return False
     
-    from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+    from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
     
     id_grupo = session.get('id_grupo')
     permisos_dao = PermisosDao()
@@ -371,7 +395,7 @@ def obtener_modulos_usuario():
             return []
         
         try:
-            from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+            from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
             id_grupo = session.get('id_grupo')
             permisos_dao = PermisosDao()
             return permisos_dao.obtener_modulos_permitidos(id_grupo)
@@ -484,7 +508,7 @@ def usuario_autenticado():
 #     if 'id_grupo' not in session:
 #         return False
     
-#     from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+#     from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
     
 #     id_grupo = session.get('id_grupo')
 #     permisos_dao = PermisosDao()
@@ -547,7 +571,7 @@ def usuario_autenticado():
 #     if 'id_grupo' not in session:
 #         return False
     
-#     from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+#     from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
     
 #     id_grupo = session.get('id_grupo')
 #     permisos_dao = PermisosDao()
@@ -571,7 +595,7 @@ def usuario_autenticado():
 #     if 'id_grupo' not in session:
 #         return []
     
-#     from app.dao.referenciales.usuario.permisos_dao import PermisosDao
+#     from app.dao.referenciales.generales.usuario.permisos_dao import PermisosDao
     
 #     id_grupo = session.get('id_grupo')
 #     permisos_dao = PermisosDao()

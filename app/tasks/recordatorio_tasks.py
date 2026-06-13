@@ -5,7 +5,7 @@ Nueva estructura: una fila por cita con columnas booleanas para cada tipo
 """
 from flask import current_app
 from app import app
-from app.dao.modulos.recordatorio.RecordatorioDao import RecordatorioDao
+from app.dao.modulos.agendamiento.recordatorio.RecordatorioDao import RecordatorioDao
 from app.services.UltraMsgService import UltraMsgService
 from datetime import datetime
 
@@ -65,7 +65,8 @@ def procesar_recordatorios_pendientes():
                 )
                 
                 # Preparar datos para el envío
-                telefono = recordatorio['telefono'] or recordatorio.get('paciente_telefono')
+                # Priorizar el teléfono del tutor si el paciente es menor y tiene uno registrado
+                telefono = recordatorio.get('telefono_tutor') or recordatorio.get('telefono') or recordatorio.get('paciente_telefono')
                 nombre_paciente = recordatorio['paciente_nombre_completo'] or recordatorio['paciente_nombre_cache']
                 cita_fecha = recordatorio['cita_fecha']
                 cita_hora = recordatorio['cita_hora_inicio']
@@ -162,7 +163,8 @@ def procesar_recordatorios_pendientes():
                 )
                 
                 # Preparar datos para el envío
-                telefono = recordatorio['telefono'] or recordatorio.get('paciente_telefono')
+                # Priorizar el teléfono del tutor si el paciente es menor y tiene uno registrado
+                telefono = recordatorio.get('telefono_tutor') or recordatorio.get('telefono') or recordatorio.get('paciente_telefono')
                 nombre_paciente = recordatorio['paciente_nombre_completo'] or recordatorio['paciente_nombre_cache']
                 cita_fecha = recordatorio['cita_fecha']
                 cita_hora = recordatorio['cita_hora_inicio']

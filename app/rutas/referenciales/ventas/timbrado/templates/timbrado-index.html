@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Timbrados
+{% endblock %}
+
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Timbrados</h1>
+          <div class="page-header-subtitle">Administración de timbrados para facturación, notas de crédito y otros
+            documentos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card card-header-actions mb-4 shadow-sm">
+    <div class="card-header">
+      <span class="fw-semibold">Listado de Timbrados</span>
+      <a class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" href="{{ url_for('timbrado.timbradoAgregar') }}">
+        <i class="fas fa-plus fa-sm me-1"></i> Nuevo Timbrado
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Empresa</th>
+              <th>Número</th>
+              <th>Inicio Vigencia</th>
+              <th>Fin Vigencia</th>
+              <th>Tipo Documento</th>
+              <th>Tipo Generación</th>
+              <th class="text-center" style="width: 110px;">Estado</th>
+              <th class="text-center" style="width: 100px;">Activo</th>
+              <th class="text-center" style="width: 100px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/timbrados',
+      columns: [
+        { data: 'empresa' },
+        { data: 'numero_timbrado' },
+        {
+          data: 'fecha_inicio',
+          render: function (data) {
+            if (data) {
+              const date = new Date(data);
+              return date.toLocaleDateString('es-PY');
+            }
+            return '';
+          }
+        },
+        {
+          data: 'fecha_vencimiento',
+          render: function (data) {
+            if (data) {
+              const date = new Date(data);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const vencimiento = new Date(date);
+              vencimiento.setHours(0, 0, 0, 0);
+
+              let clase = '';
+              if (vencimiento < today) {
+                clase = 'bg-danger-soft text-danger';
+              } else if ((vencimiento - today) / (1000 * 60 * 60 * 24) <= 30) {
+                clase = 'bg-warning-soft text-warning';
+              }
+
+              const fechaStr = date.toLocaleDateString('es-PY');
+              return clase ? `<span class="badge ${clase}">${fechaStr}</span>` : fechaStr;
+            }
+            return '';
+          }
+        },
+        {
+          data: 'tipo_documento',
+          render: function (data) {
+            const tipos = {
+              'factura': 'Factura',
+              'nota_credito': 'Nota de Crédito',
+              'nota_debito': 'Nota de Débito',
+              'autofactura': 'Autofactura',
+              'nota_remision': 'Nota de Remisión',
+              'comprobante_retencion': 'Comprobante Retención'
+            };
+            return tipos[data] || data;
+          }
+        },
+        {
+          data: 'tipo_generacion',
+          render: function (data) {
+            const tipos = {
+              'electronico': 'Electrónico',
+              'preimpreso': 'Preimpreso',
+              'autoimpreso': 'Autoimpreso',
+              'virtual': 'Virtual'
+            };
+            return tipos[data] || data;
+          }
+        },
+        {
+          data: 'estado', className: 'text-center',
+          render: function (val) {
+            const estados = {
+              'activo': 'bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}',
+              'vencido': 'bg-danger-soft text-danger',
+              'dado_baja': 'bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}',
+              'suspendido': 'bg-warning-soft text-warning'
+            };
+            const clase = estados[val] || 'bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}';
+            return `<span class="badge ${clase}">${val}</span>`;
+          }
+        },
+        {
+          data: 'estado_activo', className: 'text-center',
+          render: function (val) {
+            return val
+              ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
+          }
+        },
+        {
+          className: 'text-center',
+          data: function (row) {
+            return `<button class="btn btn-datatable btn-icon btn-transparent-dark me-1" type="button" name="btn_editar" data-id="${row.id}" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-datatable btn-icon btn-transparent-dark text-danger" type="button" name="btn_eliminar" data-id="${row.id}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`
+          }
+        }
+      ]
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]', function () {
+      const idTimbrado = $(this).data('id');
+      window.location.href = "{{ url_for('timbrado.timbradoAgregar') }}?id=" + idTimbrado;
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function () {
+      const idTimbrado = $(this).data('id');
+
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        text: "Esta acción no se puede deshacer.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#e74a3b"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/timbrados/${idTimbrado}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFToken
+            }
+          })
+            .then(resp => resp.json())
+            .then(data => {
+              if (data && !data.error && data.success) {
+                const tabla = $('#tbl').DataTable();
+                tabla.ajax.reload();
+                Swal.fire("Eliminado", "El timbrado ha sido eliminado.", "success");
+              } else {
+                Swal.fire("Error", data.error || "No se pudo eliminar el timbrado.", "error");
+              }
+            })
+            .catch(() => Swal.fire("Error", "Error de red.", "error"));
+        }
+      });
+    });
+  }
+
+  $(function () {
+    initDatatable();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}

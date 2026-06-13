@@ -1,0 +1,726 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Presupuestos
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Gestión de Presupuestos</h1>
+                    <div class="page-header-subtitle">Administre los presupuestos de la clínica</div>
+                </div>
+                <div class="col-12 col-xl-auto mt-4">
+                    <a href="{{ url_for('registrarpresupuesto.presupuestoAgregar') }}"
+                        class="btn btn-sm btn-white text-primary">
+                        <i class="me-2" data-feather="plus"></i>
+                        Nuevo Presupuesto
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<div class="container-xl px-4 mt-n10">
+
+    <!-- ================================================================
+         TAREA 1: Filtros por estado (pills/chips)
+         El filtrado es en cliente (JS vanilla) sin recargar la página.
+         ================================================================ -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="d-flex flex-wrap gap-2 align-items-center" role="group" aria-label="Filtrar por estado">
+                <span class="text-muted small fw-semibold me-1">Filtrar:</span>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill filtro-estado active"
+                    data-estado="TODOS" aria-pressed="true">Todos</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill filtro-estado"
+                    data-estado="PENDIENTE">Pendiente</button>
+                <button class="btn btn-sm btn-outline-success rounded-pill filtro-estado"
+                    data-estado="APROBADO">Aprobado</button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill filtro-estado"
+                    data-estado="RECHAZADO">Rechazado</button>
+                <button class="btn btn-sm btn-outline-warning rounded-pill filtro-estado"
+                    data-estado="VENCIDO">Vencido</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill filtro-estado"
+                    data-estado="FACTURADO_PARCIAL">Facturado Parcial</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Lista de Presupuestos</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle w-100" id="tblPresupuestos">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Número</th>
+                            <th>Fecha</th>
+                            <th>Paciente</th>
+                            <th>Profesional</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <!-- TAREA 1: Nueva columna de vencimiento -->
+                            <th>Vencimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================
+     TAREA 3: Modal de Rechazo de Presupuesto
+     Visible solo si el estado es PENDIENTE o APROBADO.
+     ================================================================ -->
+<div class="modal fade" id="modalRechazar" tabindex="-1" aria-labelledby="modalRechazarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalRechazarLabel">
+                    <i class="fas fa-times-circle me-2"></i>¿Rechazar presupuesto?
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">
+                    Esta acción es <strong>irreversible</strong>. El presupuesto pasará a estado
+                    RECHAZADO y no podrá reactivarse. Para reusarlo, use "Duplicar y Actualizar".
+                </p>
+                <div class="mb-3">
+                    <label for="motivoRechazo" class="form-label fw-semibold">
+                        Motivo del rechazo <span class="text-danger">*</span>
+                    </label>
+                    <textarea id="motivoRechazo" class="form-control" rows="3"
+                        placeholder="Ej: Precio fuera del presupuesto del paciente..."
+                        aria-required="true" aria-describedby="motivoError"></textarea>
+                    <div id="motivoError" class="invalid-feedback">
+                        El motivo de rechazo es obligatorio.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarRechazo"
+                    aria-label="Confirmar rechazo del presupuesto">
+                    <i class="fas fa-times-circle me-1"></i>Confirmar rechazo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="embedded_val" value="{{ 'true' if embedded else 'false' }}">
+<input type="hidden" id="id_consulta_val" value="{{ id_consulta or '' }}">
+<input type="hidden" id="id_paciente_val" value="{{ id_paciente or '' }}">
+{% endblock %}
+
+{% block js %}
+<script>
+    const CSRFToken = "{{ csrf_token() }}" || null;
+
+    // Parámetros de modo embedded
+    const EMBEDDED_MODE = document.getElementById('embedded_val')?.value === 'true';
+    const EMBEDDED_ID_CONSULTA = document.getElementById('id_consulta_val')?.value || null;
+    const EMBEDDED_ID_PACIENTE = document.getElementById('id_paciente_val')?.value || null;
+
+    // ----------------------------------------------------------------
+    // Helpers de UI
+    // ----------------------------------------------------------------
+
+    /** Retorna el color Bootstrap según el estado del presupuesto */
+    function badgeClass(estado) {
+        const mapa = {
+            'PENDIENTE':         'bg-secondary',
+            'APROBADO':          'bg-success',
+            'RECHAZADO':         'bg-danger',
+            'VENCIDO':           'bg-warning text-dark',
+            'FACTURADO_PARCIAL': 'bg-primary',
+            'FACTURADO':         'bg-info text-dark'
+        };
+        return mapa[estado] || 'bg-secondary';
+    }
+
+    /**
+     * TAREA 1: Calcula el badge de "Días para vencimiento".
+     * Solo aplica para presupuestos en estado PENDIENTE.
+     * Para otros estados retorna "—".
+     */
+    function badgeVencimiento(row) {
+        const estadosTerminales = ['APROBADO', 'RECHAZADO', 'FACTURADO', 'FACTURADO_PARCIAL'];
+        if (!row.fecha_vencimiento || estadosTerminales.includes(row.presupuesto_estado)) {
+            return '<span class="text-muted">—</span>';
+        }
+
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const vence = new Date(row.fecha_vencimiento);
+        vence.setHours(0, 0, 0, 0);
+        const diffMs  = vence - hoy;
+        const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDias < 0) {
+            return `<span class="badge bg-danger">Vencido hace ${Math.abs(diffDias)} día${Math.abs(diffDias) !== 1 ? 's' : ''}</span>`;
+        } else if (diffDias === 0) {
+            return `<span class="badge bg-orange" style="background:#fd7e14;">Vence hoy</span>`;
+        } else {
+            return `<span class="badge bg-warning text-dark">Vence en ${diffDias} día${diffDias !== 1 ? 's' : ''}</span>`;
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // TAREA 1: Filtros de estado (pill buttons — cliente)
+    // ----------------------------------------------------------------
+    let filtroEstadoActual = 'TODOS';
+
+    function initFiltros() {
+        document.querySelectorAll('.filtro-estado').forEach(btn => {
+            btn.addEventListener('click', function () {
+                // Resaltar el activo
+                document.querySelectorAll('.filtro-estado').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+                this.classList.add('active');
+                this.setAttribute('aria-pressed', 'true');
+
+                filtroEstadoActual = this.dataset.estado;
+
+                // Re-dibujar la tabla respetando el filtro activo
+                const dt = $('#tblPresupuestos').DataTable();
+                dt.draw();
+            });
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // DataTable
+    // ----------------------------------------------------------------
+    const initDatatable = () => {
+        const table = $('#tblPresupuestos').DataTable({
+            language: {
+                url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+            },
+            ajax: {
+                url: '/api/v1/presupuestos',
+                dataSrc: 'data'
+            },
+            columns: [
+                { data: 'presupuesto_numero' },
+                {
+                    data: 'presupuesto_fecha',
+                    render: function(data) {
+                        return data || '—';
+                    }
+                },
+                { data: 'paciente_nombre' },
+                { data: 'profesional_nombre' },
+                {
+                    data: 'presupuesto_total',
+                    render: function (data) {
+                        return new Intl.NumberFormat('es-PY', {
+                            style: 'currency', currency: 'PYG', minimumFractionDigits: 0
+                        }).format(data || 0);
+                    }
+                },
+                {
+                    // TAREA 1: Badge de color por estado
+                    data: 'presupuesto_estado',
+                    render: function (data) {
+                        return `<span class="badge ${badgeClass(data)}">${data || '—'}</span>`;
+                    }
+                },
+                {
+                    // TAREA 1: Columna "Días para vencimiento"
+                    data: 'fecha_vencimiento',
+                    render: function (data, type, row) {
+                        return badgeVencimiento(row);
+                    }
+                },
+                {
+                    data: null,
+                    render: function (data, type, row) {
+                        const estado = row.presupuesto_estado;
+                        let actions = `
+                        <button class="btn btn-datatable btn-icon btn-transparent-dark me-1"
+                            type="button" name="btn_ver" data-id="${row.id_presupuesto}" title="Ver Detalle"
+                            aria-label="Ver detalle del presupuesto ${row.presupuesto_numero}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-datatable btn-icon btn-transparent-dark me-1"
+                            type="button" name="btn_editar" data-id="${row.id_presupuesto}" title="Editar"
+                            aria-label="Editar presupuesto ${row.presupuesto_numero}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-datatable btn-icon btn-transparent-dark text-danger me-1"
+                            type="button" name="btn_contrato" data-id="${row.id_presupuesto}" title="Generar Contrato PDF"
+                            aria-label="Generar PDF del presupuesto ${row.presupuesto_numero}">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                        `;
+
+                        if (estado === 'APROBADO' || estado === 'PENDIENTE') {
+                            actions += `
+                            <button class="btn btn-datatable btn-icon btn-transparent-dark text-primary me-1"
+                                type="button" name="btn_agendar"
+                                data-id="${row.id_presupuesto}" data-paciente="${row.id_paciente}"
+                                data-profesional="${row.id_profesional}"
+                                data-sesiones="${row.cantidad_sesiones || 8}"
+                                data-frecuencia="${row.frecuencia_sugerida || 'SEMANAL'}"
+                                title="Agendar Plan de Sesiones"
+                                aria-label="Agendar plan de sesiones del presupuesto ${row.presupuesto_numero}">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>`;
+                        }
+
+                        if (estado === 'APROBADO') {
+                            actions += `
+                            <button class="btn btn-datatable btn-icon btn-transparent-dark text-success me-1"
+                                type="button" name="btn_facturar" data-id="${row.id_presupuesto}"
+                                title="Facturar Presupuesto"
+                                aria-label="Facturar presupuesto ${row.presupuesto_numero}">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </button>`;
+                        }
+
+                        // TAREA 3: Botón Rechazar — visible solo para PENDIENTE o APROBADO
+                        if (estado === 'PENDIENTE' || estado === 'APROBADO') {
+                            actions += `
+                            <button class="btn btn-datatable btn-icon btn-transparent-dark text-danger me-1"
+                                type="button" name="btn_rechazar"
+                                data-id="${row.id_presupuesto}"
+                                data-numero="${row.presupuesto_numero}"
+                                title="Rechazar Presupuesto"
+                                aria-label="Rechazar presupuesto ${row.presupuesto_numero}">
+                                <i class="fas fa-ban"></i>
+                            </button>`;
+                        }
+
+                        // TAREA 4: Botón Duplicar — visible solo para VENCIDO o RECHAZADO
+                        if (estado === 'VENCIDO' || estado === 'RECHAZADO') {
+                            actions += `
+                            <button class="btn btn-datatable btn-icon btn-transparent-dark text-info me-1"
+                                type="button" name="btn_duplicar"
+                                data-id="${row.id_presupuesto}"
+                                title="Duplicar y Actualizar"
+                                aria-label="Duplicar y actualizar el presupuesto ${row.presupuesto_numero}">
+                                <i class="fas fa-copy"></i>
+                            </button>`;
+                        }
+
+                        actions += `
+                        <button class="btn btn-datatable btn-icon btn-transparent-dark"
+                            type="button" name="btn_eliminar" data-id="${row.id_presupuesto}"
+                            title="Eliminar"
+                            aria-label="Eliminar presupuesto ${row.presupuesto_numero}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>`;
+                        return actions;
+                    },
+                    orderable: false,
+                    className: 'text-center'
+                }
+            ],
+            responsive: true,
+            order: [[0, 'desc']],
+            // TAREA 1: Filtrado por estado en cliente (sin round-trip al servidor)
+            drawCallback: function() {
+                // Nada extra necesario, el filtro se aplica en el search()
+            }
+        });
+
+        // Aplicar filtro personalizado por estado en DataTables
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex, rowData) {
+            if (settings.nTable.id !== 'tblPresupuestos') return true;
+            if (filtroEstadoActual === 'TODOS') return true;
+            return (rowData.presupuesto_estado || '') === filtroEstadoActual;
+        });
+    };
+
+    // ----------------------------------------------------------------
+    // Acciones de tabla
+    // ----------------------------------------------------------------
+
+    const editar = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_editar"]', function () {
+            const id = $(this).data('id');
+            window.location.href = `/presupuesto/presupuesto-editar/${id}`;
+        });
+    };
+
+    const verDetalle = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_ver"]', function () {
+            const idPresupuesto = $(this).data('id');
+            Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            fetch(`/api/v1/presupuestos/${idPresupuesto}`, {
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data?.success) { Swal.fire("Error", "No se pudo cargar el presupuesto.", "error"); return; }
+                const p = data.data;
+                let detalleHtml = '';
+
+                if (p.detalle?.length > 0) {
+                    detalleHtml = '<table class="table table-sm mt-3"><thead><tr><th>Ítem</th><th>Cant.</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead><tbody>';
+                    p.detalle.forEach(item => {
+                        detalleHtml += `<tr>
+                            <td>${item.des_item}</td><td>${item.cantidad}</td>
+                            <td>${new Intl.NumberFormat('es-PY',{style:'currency',currency:'PYG',minimumFractionDigits:0}).format(item.precio_unitario)}</td>
+                            <td>${new Intl.NumberFormat('es-PY',{style:'currency',currency:'PYG',minimumFractionDigits:0}).format(item.subtotal)}</td>
+                        </tr>`;
+                    });
+                    detalleHtml += '</tbody></table>';
+                } else {
+                    detalleHtml = '<p class="text-muted">Sin ítems registrados.</p>';
+                }
+
+                // ----------------------------------------------------------------
+                // TAREA 2: Barra de progreso de avance del tratamiento
+                // Decisión: Se calcula en el FRONTEND con los datos del detalle,
+                // ya que los ítems facturados se cargarán del endpoint de factura.
+                // Esto evita una consulta extra al servidor en el caso del detalle
+                // inline. Para reportes formales, calcular en el DAO es más correcto.
+                // ----------------------------------------------------------------
+                const avanceHtml = construirBarraAvance(p);
+
+                Swal.fire({
+                    title: `Presupuesto ${p.presupuesto_numero}`,
+                    html: `
+                        <div class="text-start">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Paciente:</strong> ${p.paciente_nombre}</div>
+                                <div class="col-6"><strong>Profesional:</strong> ${p.profesional_nombre}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Fecha:</strong> ${p.presupuesto_fecha || '—'}</div>
+                                <div class="col-6"><strong>Vence:</strong> ${p.fecha_vencimiento || '—'}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-6"><strong>Estado:</strong>
+                                    <span class="badge ${badgeClass(p.presupuesto_estado)}">${p.presupuesto_estado}</span>
+                                </div>
+                                <div class="col-6"><strong>Total:</strong>
+                                    ${new Intl.NumberFormat('es-PY',{style:'currency',currency:'PYG',minimumFractionDigits:0}).format(p.presupuesto_total||0)}
+                                </div>
+                            </div>
+                            ${avanceHtml}
+                            ${detalleHtml}
+                            ${p.motivo_rechazo ? `<div class="alert alert-danger mt-2"><strong>Motivo rechazo:</strong> ${p.motivo_rechazo}</div>` : ''}
+                        </div>`,
+                    width: '800px',
+                    confirmButtonText: 'Cerrar'
+                });
+            })
+            .catch(err => { console.error(err); Swal.fire("Error", "Error al cargar datos.", "error"); });
+        });
+    };
+
+    /**
+     * TAREA 2: Construye la barra de progreso HTML del avance del tratamiento.
+     * Compara total_facturado (si existe en la respuesta) vs total presupuestado.
+     * Si el backend no devuelve aún el dato facturado, muestra la barra vacía.
+     */
+    function construirBarraAvance(presupuesto) {
+        const totalPres = parseFloat(presupuesto.presupuesto_total) || 0;
+        // total_facturado se calcula en el DAO (getPresupuestoById puede incluirlo en el futuro)
+        const totalFact = parseFloat(presupuesto.total_facturado) || 0;
+
+        if (totalPres === 0) return '';
+
+        const pct = Math.min((totalFact / totalPres) * 100, 100).toFixed(0);
+        const completo = parseInt(pct) >= 100;
+
+        let barColor = 'bg-info';
+        if (completo) barColor = 'bg-success';
+        else if (parseInt(pct) >= 50) barColor = 'bg-primary';
+
+        const checkicono = completo
+            ? `<span class="text-success ms-2"><i class="fas fa-check-circle"></i> COMPLETADO</span>`
+            : '';
+
+        return `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <small class="fw-semibold text-muted">Avance de tratamiento ${checkicono}</small>
+                <small class="fw-semibold">${pct}%</small>
+            </div>
+            <div class="progress" role="progressbar"
+                aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"
+                aria-label="Avance del tratamiento: ${pct}%" style="height: 10px;">
+                <div class="progress-bar ${barColor}" style="width: ${pct}%"></div>
+            </div>
+            <small class="text-muted">
+                ${new Intl.NumberFormat('es-PY',{style:'currency',currency:'PYG',minimumFractionDigits:0}).format(totalFact)}
+                facturado de
+                ${new Intl.NumberFormat('es-PY',{style:'currency',currency:'PYG',minimumFractionDigits:0}).format(totalPres)}
+            </small>
+        </div>`;
+    }
+
+    const eliminar = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_eliminar"]', function () {
+            const id = $(this).data('id');
+            Swal.fire({
+                title: '¿Anular presupuesto?',
+                text: "El presupuesto pasará a estado ANULADO.",
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, anular', cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (!result.isConfirmed) return;
+                fetch(`/api/v1/presupuestos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data?.success) {
+                        $('#tblPresupuestos').DataTable().ajax.reload();
+                        Swal.fire('Anulado', 'El presupuesto fue anulado.', 'success');
+                    } else {
+                        Swal.fire('Error', data.error || 'No se pudo anular', 'error');
+                    }
+                })
+                .catch(err => { console.error(err); Swal.fire('Error', 'Error en la conexión', 'error'); });
+            });
+        });
+    };
+
+    const generarContrato = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_contrato"]', function () {
+            window.open(`/api/v1/presupuestos/${$(this).data('id')}/contrato-pdf`, '_blank');
+        });
+    };
+
+    // ----------------------------------------------------------------
+    // TAREA 3: Rechazar presupuesto
+    // ----------------------------------------------------------------
+    let idPresupuestoARechazar = null;
+
+    const rechazar = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_rechazar"]', function () {
+            idPresupuestoARechazar = $(this).data('id');
+            const numero = $(this).data('numero');
+
+            // Limpiar estado anterior del modal
+            document.getElementById('motivoRechazo').value = '';
+            document.getElementById('motivoRechazo').classList.remove('is-invalid');
+
+            // Mostrar modal Bootstrap
+            const modal = new bootstrap.Modal(document.getElementById('modalRechazar'));
+            document.getElementById('modalRechazarLabel').innerHTML =
+                `<i class="fas fa-times-circle me-2"></i>¿Rechazar presupuesto ${numero}?`;
+            modal.show();
+        });
+
+        document.getElementById('btnConfirmarRechazo').addEventListener('click', function () {
+            const motivo = document.getElementById('motivoRechazo').value.trim();
+
+            // Validación: motivo obligatorio
+            if (!motivo) {
+                document.getElementById('motivoRechazo').classList.add('is-invalid');
+                return;
+            }
+            document.getElementById('motivoRechazo').classList.remove('is-invalid');
+
+            // Cerrar modal y enviar al backend
+            bootstrap.Modal.getInstance(document.getElementById('modalRechazar')).hide();
+
+            fetch(`/api/v1/presupuestos/${idPresupuestoARechazar}/rechazar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+                body: JSON.stringify({ motivo_rechazo: motivo })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data?.success) {
+                    Swal.fire('Rechazado', data.mensaje, 'success').then(() => {
+                        $('#tblPresupuestos').DataTable().ajax.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.error || 'No se pudo rechazar el presupuesto.', 'error');
+                }
+            })
+            .catch(err => { console.error(err); Swal.fire('Error', 'Error de conexión', 'error'); });
+        });
+    };
+
+    // ----------------------------------------------------------------
+    // TAREA 4: Duplicar y Actualizar presupuesto
+    // ----------------------------------------------------------------
+    const duplicar = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_duplicar"]', function () {
+            const id = $(this).data('id');
+            Swal.fire({
+                title: '¿Duplicar este presupuesto?',
+                text: 'Se creará un nuevo presupuesto con los mismos ítems, fecha de hoy y vencimiento a 30 días.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0dcaf0',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-copy me-1"></i> Duplicar y Actualizar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    window.location.href = `/presupuesto/presupuesto-agregar?base=${id}`;
+                }
+            });
+        });
+    };
+
+    // ----------------------------------------------------------------
+    // Plan de Agendamiento (sin cambios respecto al original)
+    // ----------------------------------------------------------------
+    const agendarPlan = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_agendar"]', function () {
+            const btn = $(this);
+            const idPresupuesto = btn.data('id');
+            const idPaciente = btn.data('paciente');
+            const idProfesional = btn.data('profesional');
+            const cantidadSesiones = btn.data('sesiones');
+            const frecuencia = btn.data('frecuencia');
+
+            Swal.fire({
+                title: 'Simular Plan de Sesiones',
+                html: `
+                    <div class="mb-3 text-start">
+                        <label class="form-label">Fecha de Inicio</label>
+                        <input type="date" id="swal-fecha" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3 text-start">
+                            <label class="form-label">Hora Inicio</label>
+                            <input type="time" id="swal-hora-inicio" class="form-control">
+                        </div>
+                        <div class="col-6 mb-3 text-start">
+                            <label class="form-label">Hora Fin</label>
+                            <input type="time" id="swal-hora-fin" class="form-control">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false, showCancelButton: true,
+                confirmButtonText: 'Simular', cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const fecha = document.getElementById('swal-fecha').value;
+                    const horaInicio = document.getElementById('swal-hora-inicio').value;
+                    const horaFin = document.getElementById('swal-hora-fin').value;
+                    if (!fecha || !horaInicio || !horaFin) {
+                        Swal.showValidationMessage('Todos los campos son obligatorios');
+                        return false;
+                    }
+                    if (horaInicio >= horaFin) {
+                        Swal.showValidationMessage('La hora inicio debe ser menor a la hora fin');
+                        return false;
+                    }
+                    return { fecha, horaInicio, horaFin };
+                }
+            }).then(result => {
+                if (!result.isConfirmed) return;
+                const p = result.value;
+                Swal.fire({ title: 'Simulando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                fetch(`/api/v1/presupuestos/${idPresupuesto}/simular-plan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+                    body: JSON.stringify({
+                        id_especialista: idProfesional, id_paciente: idPaciente,
+                        fecha_inicio: p.fecha, hora_inicio: p.horaInicio, hora_fin: p.horaFin,
+                        cantidad_sesiones: cantidadSesiones || 8, frecuencia: frecuencia || 'SEMANAL'
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success && !data.sesiones) {
+                        Swal.fire('Error', data.error || 'No se pudo simular', 'error');
+                        return;
+                    }
+                    let tablaHTML = `
+                    <div class="alert ${data.con_conflictos ? 'alert-warning' : 'alert-success'} mb-3">
+                        ${data.con_conflictos ? 'Se encontraron conflictos. Revisá la lista.' : 'Todas las sesiones pueden agendarse sin problemas.'}
+                    </div>
+                    <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light"><tr><th>#</th><th>Fecha</th><th>Horario</th><th>Estado</th></tr></thead>
+                            <tbody>`;
+                    data.sesiones.forEach(s => {
+                        const rc = s.conflicto ? 'table-danger' : '';
+                        const ic = s.conflicto
+                            ? '<i class="fas fa-exclamation-triangle text-danger"></i>'
+                            : '<i class="fas fa-check-circle text-success"></i>';
+                        tablaHTML += `<tr class="${rc}"><td>${s.numero_sesion}</td><td>${s.fecha}</td><td>${s.hora_inicio} - ${s.hora_fin}</td><td>${ic} ${s.motivo_conflicto}</td></tr>`;
+                    });
+                    tablaHTML += '</tbody></table></div>';
+
+                    Swal.fire({
+                        title: 'Resultado de la Simulación', html: tablaHTML,
+                        width: '800px', showCancelButton: true,
+                        confirmButtonText: 'Confirmar y Agendar Todo',
+                        cancelButtonText: 'Descartar', confirmButtonColor: '#198754'
+                    }).then(conf => {
+                        if (conf.isConfirmed) {
+                            confirmarPlanAgendamiento(idPresupuesto, idProfesional, idPaciente, data.sesiones);
+                        }
+                    });
+                })
+                .catch(err => { console.error(err); Swal.fire('Error', 'Error de conexión', 'error'); });
+            });
+        });
+    };
+
+    const confirmarPlanAgendamiento = (idPresupuesto, idProfesional, idPaciente, sesionesGeneradas) => {
+        Swal.fire({ title: 'Agendando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        fetch(`/api/v1/presupuestos/${idPresupuesto}/confirmar-plan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+            body: JSON.stringify({
+                id_especialista: idProfesional, id_paciente: idPaciente,
+                id_especialidad: 1, sesiones: sesionesGeneradas
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire('Completado', data.mensaje, 'success').then(() => {
+                    $('#tblPresupuestos').DataTable().ajax.reload();
+                });
+            } else {
+                Swal.fire('Error', data.error || 'Hubo problemas al agendar', 'error');
+            }
+        })
+        .catch(err => { console.error(err); Swal.fire('Error', 'Error de red', 'error'); });
+    };
+
+    const facturar = () => {
+        $('#tblPresupuestos').on('click', 'button[name="btn_facturar"]', function () {
+            window.location.href = `/factura/factura-agregar?id_presupuesto=${$(this).data('id')}`;
+        });
+    };
+
+    // ----------------------------------------------------------------
+    // Bootstrap
+    // ----------------------------------------------------------------
+    $(function () {
+        initDatatable();
+        initFiltros();
+        verDetalle();
+        editar();
+        generarContrato();
+        agendarPlan();
+        facturar();
+        eliminar();
+        rechazar();
+        duplicar();
+    });
+</script>
+{% endblock %}

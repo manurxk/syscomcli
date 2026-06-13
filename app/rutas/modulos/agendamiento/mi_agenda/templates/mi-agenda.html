@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mi Agenda — Citas del Día{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Mi Agenda
+                    </h1>
+                    <div class="page-header-subtitle">
+                        Citas de hoy — <span id="fechaHoy"></span>
+                    </div>
+                </div>
+                <div class="col-auto mt-4">
+                    <a href="{{ url_for('cita.calendario') }}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-calendar-alt me-1"></i> Calendario General
+                    </a>
+                    <a href="{{ url_for('cita.citaAgregar') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i> Nueva Cita
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+
+    <!-- Tarjetas de resumen -->
+    <div class="row gx-4 mb-4" id="resumenCards">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-lg border-start-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="small text-muted fw-bold text-uppercase mb-1">Total Citas</div>
+                            <div class="h3 mb-0 fw-bold" id="contTotal">—</div>
+                        </div>
+                        <div class="ms-3 text-primary"><i class="fas fa-calendar-check fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-lg border-start-success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="small text-muted fw-bold text-uppercase mb-1">Confirmadas</div>
+                            <div class="h3 mb-0 fw-bold text-success" id="contConfirmadas">—</div>
+                        </div>
+                        <div class="ms-3 text-success"><i class="fas fa-check-circle fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-lg border-start-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="small text-muted fw-bold text-uppercase mb-1">Pendientes</div>
+                            <div class="h3 mb-0 fw-bold text-warning" id="contPendientes">—</div>
+                        </div>
+                        <div class="ms-3 text-warning"><i class="fas fa-clock fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-lg border-start-info h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="small text-muted fw-bold text-uppercase mb-1">Atendidas</div>
+                            <div class="h3 mb-0 fw-bold text-info" id="contAtendidas">—</div>
+                        </div>
+                        <div class="ms-3 text-info"><i class="fas fa-stethoscope fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de citas -->
+    <div class="row gx-4">
+        <div class="col-12">
+            <div class="card card-header-actions mb-4">
+                <div class="card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-list-ul text-primary"></i>
+                        <span>Listado de Citas</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" id="btnRefrescar" onclick="cargarCitas()">
+                        <i class="fas fa-sync-alt me-1"></i> Refrescar
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Loader -->
+                    <div id="loadingCitas" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-3 text-muted">Cargando tu agenda...</p>
+                    </div>
+
+                    <!-- Sin especialista -->
+                    <div id="sinEspecialista" class="text-center py-5" style="display:none;">
+                        <div style="font-size: 3rem;" class="mb-3">🔍</div>
+                        <h5 class="text-muted">Sin especialista asociado</h5>
+                        <p class="text-muted small">Tu usuario no tiene un perfil de especialista vinculado.</p>
+                    </div>
+
+                    <!-- Sin citas de hoy -->
+                    <div id="sinCitas" class="text-center py-5" style="display:none;">
+                        <div style="font-size: 3rem;" class="mb-3">📅</div>
+                        <h5 class="text-muted">Sin citas para hoy</h5>
+                        <p class="text-muted small">No tenés citas programadas para el día de hoy.</p>
+                        <a href="{{ url_for('cita.citaAgregar') }}" class="btn btn-primary btn-sm mt-2">
+                            <i class="fas fa-plus me-1"></i> Agregar Cita
+                        </a>
+                    </div>
+
+                    <!-- Tabla -->
+                    <div id="tablaCitasWrapper" style="display:none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tblAgenda"
+                                style="font-size: 0.875rem;">
+                                <thead class="bg-light text-muted fw-bold">
+                                    <tr>
+                                        <th class="border-0 px-3" style="width: 90px;">Hora</th>
+                                        <th class="border-0">Paciente</th>
+                                        <th class="border-0" style="width: 80px;">HC</th>
+                                        <th class="border-0" style="width: 110px;">Tipo</th>
+                                        <th class="border-0">Motivo</th>
+                                        <th class="border-0 text-center" style="width: 120px;">Estado</th>
+                                        <th class="border-0 text-center" style="width: 160px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyCitas" class="text-dark"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Detalle Cita -->
+<div class="modal fade" id="modalDetalleCita" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="fas fa-info-circle me-2"></i>Detalle de Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalDetalleBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" id="btnIrFichaModal" class="btn btn-info btn-sm" target="_blank">
+                    <i class="fas fa-file-medical me-1"></i> Ver Ficha
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Timeline-style row highlighting */
+    #tblAgenda tbody tr {
+        transition: background-color 0.15s ease;
+    }
+
+    #tblAgenda tbody tr:hover {
+        background-color: #f0f5ff;
+        cursor: default;
+    }
+
+    /* Hora column — pill style */
+    .hora-pill {
+        display: inline-block;
+        background: linear-gradient(135deg, #4e73df, #36b9cc);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Tipo badge */
+    .badge-tipo-primera {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+        border: 1px solid #90caf9;
+    }
+
+    .badge-tipo-seguimiento {
+        background-color: #f3e5f5;
+        color: #4a148c;
+        border: 1px solid #ce93d8;
+    }
+
+    /* Estado badge with dynamic color */
+    .badge-estado {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        color: white;
+    }
+
+    /* Summary cards spacing */
+    .border-start-lg {
+        border-left: 4px solid transparent !important;
+        border-left-width: 4px !important;
+    }
+
+    /* Motivo truncate */
+    .motivo-text {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+    }
+</style>
+
+<script>
+    // Mostrar la fecha de hoy
+    const hoy = new Date();
+    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('fechaHoy').textContent =
+        hoy.toLocaleDateString('es-ES', opcionesFecha).replace(/^\w/, c => c.toUpperCase());
+
+    let citasData = [];
+
+    function cargarCitas() {
+        // Mostrar loader, ocultar todo lo demás
+        document.getElementById('loadingCitas').style.display = 'block';
+        document.getElementById('sinEspecialista').style.display = 'none';
+        document.getElementById('sinCitas').style.display = 'none';
+        document.getElementById('tablaCitasWrapper').style.display = 'none';
+
+        fetch('/api/v1/mi-agenda/citas-hoy')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('loadingCitas').style.display = 'none';
+
+                if (!data.success) {
+                    mostrarAlertaError('No se pudo cargar la agenda. Intente nuevamente.');
+                    return;
+                }
+
+                if (data.sin_especialista) {
+                    document.getElementById('sinEspecialista').style.display = 'block';
+                    actualizarContadores([]);
+                    return;
+                }
+
+                citasData = data.citas || [];
+                actualizarContadores(citasData);
+
+                if (citasData.length === 0) {
+                    document.getElementById('sinCitas').style.display = 'block';
+                } else {
+                    document.getElementById('tablaCitasWrapper').style.display = 'block';
+                    renderizarTabla(citasData);
+                }
+            })
+            .catch(err => {
+                document.getElementById('loadingCitas').style.display = 'none';
+                console.error('Error al cargar agenda:', err);
+                mostrarAlertaError('Error de conexión. Intente nuevamente.');
+            });
+    }
+
+    function actualizarContadores(citas) {
+        document.getElementById('contTotal').textContent = citas.length;
+
+        const confirmadas = citas.filter(c =>
+            c.estado_nombre && c.estado_nombre.toUpperCase().includes('CONFIRM')
+        ).length;
+        const atendidas = citas.filter(c =>
+            c.estado_nombre && (
+                c.estado_nombre.toUpperCase().includes('COMPLET') ||
+                c.estado_nombre.toUpperCase().includes('ATEND') ||
+                c.estado_nombre.toUpperCase().includes('CONSULT')
+            )
+        ).length;
+        const pendientes = citas.length - confirmadas - atendidas;
+
+        document.getElementById('contConfirmadas').textContent = confirmadas;
+        document.getElementById('contAtendidas').textContent = atendidas;
+        document.getElementById('contPendientes').textContent = Math.max(0, pendientes);
+    }
+
+    function renderizarTabla(citas) {
+        const tbody = document.getElementById('tbodyCitas');
+        tbody.innerHTML = '';
+
+        citas.forEach(c => {
+            const tipoBadge = c.cita_tipo === 'PRIMERA_VEZ'
+                ? `<span class="badge badge-tipo-primera rounded-pill">Primera Vez</span>`
+                : `<span class="badge badge-tipo-seguimiento rounded-pill">Seguimiento${c.numero_sesion ? ' #' + c.numero_sesion : ''}</span>`;
+
+            const estadoColor = c.estado_color || '#6c757d';
+            const estadoBadge = `<span class="badge-estado" style="background-color: ${estadoColor};">${c.estado_nombre || '—'}</span>`;
+
+            const motivo = c.cita_motivo
+                ? `<span class="motivo-text" title="${escapeHtml(c.cita_motivo)}">${escapeHtml(c.cita_motivo)}</span>`
+                : `<span class="text-muted small">—</span>`;
+
+            const fichaUrl = `/ficha-medica/ver/${c.id_paciente}`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+        <td class="px-3">
+          <span class="hora-pill">${c.cita_hora_inicio || '—'}</span>
+          ${c.cita_hora_fin ? `<div class="text-muted small mt-1">hasta ${c.cita_hora_fin}</div>` : ''}
+        </td>
+        <td>
+          <div class="fw-semibold text-dark">${escapeHtml(c.paciente_nombre || '—')}</div>
+          ${c.paciente_telefono ? `<div class="text-muted small"><i class="fas fa-phone fa-xs me-1"></i>${escapeHtml(c.paciente_telefono)}</div>` : ''}
+        </td>
+        <td>
+          <span class="badge bg-light text-dark border">${c.historia_clinica || '—'}</span>
+        </td>
+        <td>${tipoBadge}</td>
+        <td>${motivo}</td>
+        <td class="text-center">${estadoBadge}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-1">
+            ${renderBotonConsulta(c)}
+            <a href="${fichaUrl}" class="btn btn-sm btn-outline-info" title="Ver Ficha Médica"
+              style="font-size: 0.78rem;">
+              <i class="fas fa-file-medical"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-secondary" title="Ver detalle"
+              onclick="verDetalle(${JSON.stringify(c).replace(/"/g, '&quot;')})"
+              style="font-size: 0.78rem;">
+              <i class="fas fa-info"></i>
+            </button>
+          </div>
+        </td>
+      `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    /**
+     * Renderiza el botón "Iniciar Consulta" con data-cita-id.
+     * Deshabilitado para citas con estado CANCELADA o COMPLETADA.
+     */
+    function renderBotonConsulta(c) {
+        const estadoUp = (c.estado_nombre || '').toUpperCase();
+        const bloqueado = estadoUp.includes('CANCEL') || estadoUp.includes('COMPLET');
+
+        if (bloqueado) {
+            return `<button class="btn btn-sm btn-secondary" disabled
+              data-cita-id="${c.id_cita}"
+              title="Esta cita ya fue ${estadoUp.includes('CANCEL') ? 'cancelada' : 'completada'}"
+              style="font-size: 0.78rem; opacity: 0.55;">
+              <i class="fas fa-stethoscope me-1"></i>Consulta
+            </button>`;
+        }
+
+        return `<button class="btn btn-sm btn-primary" title="Iniciar Consulta"
+              data-cita-id="${c.id_cita}"
+              onclick="iniciarConsulta(${c.id_cita})"
+              style="font-size: 0.78rem;">
+              <i class="fas fa-stethoscope me-1"></i>Consulta
+            </button>`;
+    }
+
+    function iniciarConsulta(idCita) {
+        // Fase 2 — Redirige a la Ventana de Consulta Unificada
+        window.location.href = `/consulta/${idCita}`;
+    }
+
+    function verDetalle(cita) {
+        iniciarConsulta(cita.id_cita);
+    }
+
+    function mostrarAlertaError(msg) {
+        const wrapper = document.getElementById('tablaCitasWrapper');
+        wrapper.style.display = 'block';
+        wrapper.innerHTML = `<div class="alert alert-danger m-3"><i class="fas fa-exclamation-circle me-2"></i>${msg}</div>`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // Cargar al iniciar
+    document.addEventListener('DOMContentLoaded', cargarCitas);
+</script>
+{% endblock %}

@@ -175,20 +175,31 @@ class FacturaPDFService:
         actividad_economica = empresa.get('actividad_economica', '')
         ruc_emisor = empresa.get('ruc', factura_data.get('ruc_emisor', '0000000-0'))
 
-        # Logo - convertir a base64
+        # Logo - usar primero el logo guardado en BD, luego fallback a estáticos
         path_logo = ''
         logo_base64 = ''
-        posibles_logos = [
-            os.path.join(base_path, 'app', 'static', 'img', 'logo_clinica.png'),
-            os.path.join(base_path, 'app', 'static', 'img', 'iconoazul.png'),
-            os.path.join(base_path, 'app', 'static', 'img', 'logo.png'),
-            os.path.join(base_path, 'static', 'img', 'logo_clinica.png'),
-        ]
-        for p in posibles_logos:
-            if os.path.exists(p):
-                path_logo = p
-                logo_base64 = self._get_image_base64(p)
-                break
+
+        # 1) Logo desde config_empresa (subido por el Superadmin)
+        if empresa.get('logo_path'):
+            logo_rel = empresa['logo_path']  # Ej: "uploads/logos/logo_1_abc.png"
+            logo_abs = os.path.join(base_path, 'app', 'static', logo_rel)
+            if os.path.exists(logo_abs):
+                path_logo = logo_abs
+                logo_base64 = self._get_image_base64(logo_abs)
+
+        # 2) Fallback a logos estáticos del proyecto
+        if not logo_base64:
+            posibles_logos = [
+                os.path.join(base_path, 'app', 'static', 'img', 'logo_clinica.png'),
+                os.path.join(base_path, 'app', 'static', 'img', 'iconoazul.png'),
+                os.path.join(base_path, 'app', 'static', 'img', 'logo.png'),
+                os.path.join(base_path, 'static', 'img', 'logo_clinica.png'),
+            ]
+            for p in posibles_logos:
+                if os.path.exists(p):
+                    path_logo = p
+                    logo_base64 = self._get_image_base64(p)
+                    break
 
         # Fechas
         fecha_emision = self._formatear_fecha(factura_data.get('fecha_factura', ''))
@@ -385,26 +396,17 @@ class FacturaPDFService:
             '#!#dSubExe#!#': self._formatear_moneda(exentas_total),
             '#!#dSubVta5#!#': self._formatear_moneda(vta_5_total),
             '#!#dSubVta10#!#': self._formatear_moneda(vta_10_total),
-            '#!#dMontoLetras#!#': self._formatear_moneda(total),
+            '#!#dMontoLetras#!#': factura_data.get('factura_total_letras', ''),
             '#!#dTotOpe#!#': self._formatear_moneda(total),
             '#!#dLIva5#!#': self._formatear_moneda(iva_5_monto),
             '#!#dLiva10#!#': self._formatear_moneda(iva_10_monto),
             '#!#dLtotIva#!#': self._formatear_moneda(total_iva),
-            '#!#qrPath#!#': '',  # Espacio reservado para QR (se generará más adelante con CDC de SIFEN)
+            '#!#qrPath#!#': f"data:image/png;base64,{factura_data.get('qr_base64')}" if factura_data.get('qr_base64') else '',
             '#!#CDC#!#': cdc or factura_data.get('codigo_sifen', ''),
         }
 
         for marcador, valor in reemplazos.items():
             html = html.replace(marcador, str(valor) if valor is not None else '')
-        
-        # Reemplazar la imagen del QR por un espacio reservado vacío (mantiene las dimensiones)
-        # El QR se generará más adelante con el CDC de SIFEN
-        html = re.sub(
-            r'<img\s+src=""\s+alt="qr-code"[^>]*>',
-            '<div style="width: 150px; height: 150px; margin: 15px;"></div>',
-            html,
-            flags=re.IGNORECASE
-        )
         
         # Workaround para bug de xhtml2pdf con tablas complejas - CORREGIDO
         # Remover estilos problemáticos del tbody
@@ -418,31 +420,9 @@ class FacturaPDFService:
             '<tbody style="font-size: 7pt;">'
         )
         
-        # Si estamos usando xhtml2pdf, simplificar estilos de la tabla del QR
-        # xhtml2pdf tiene problemas con rowspan y alturas fijas
+        # Si estamos usando xhtml2pdf, simplificar estilos
         if not WEASYPRINT_AVAILABLE:
-            # Simplificar la celda del QR: quitar rowspan y alturas fijas problemáticas
-            # Buscar y reemplazar la celda con rowspan="2" que contiene el QR
-            html = re.sub(
-                r'<td\s+cellpadding="4"\s+rowspan="2"\s+style="[^"]*height:\s*5cm[^"]*"[^>]*>',
-                '<td style="width: 200px; vertical-align: top; padding: 10px;">',
-                html,
-                flags=re.IGNORECASE
-            )
-            # También buscar sin cellpadding
-            html = re.sub(
-                r'<td\s+rowspan="2"\s+style="[^"]*height:\s*5cm[^"]*"[^>]*>',
-                '<td style="width: 200px; vertical-align: top; padding: 10px;">',
-                html,
-                flags=re.IGNORECASE
-            )
-            # Asegurar que la imagen QR tenga dimensiones explícitas y válidas (sin px en width/height para xhtml2pdf)
-            html = re.sub(
-                r'<img\s+src="data:image/png;base64,([^"]+)"\s+alt="qr-code"\s+width="150px"\s+height="150px"[^>]*>',
-                r'<img src="data:image/png;base64,\1" alt="qr-code" width="120" height="120" style="max-width: 120px; max-height: 120px; display: block;" />',
-                html,
-                flags=re.IGNORECASE
-            )
+            # Asegurar que imágenes base64 esten contenidas para xhtml2pdf si es necesario
             # Simplificar alturas fijas en la tabla y otras celdas de la tabla del QR
             html = re.sub(
                 r'style="[^"]*height:\s*5cm[^"]*"',

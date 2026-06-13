@@ -1,6 +1,3 @@
-
-
-
 {% extends 'base.html' %}
 
 {% block titulo %}
@@ -8,501 +5,520 @@ Funcionarios
 {% endblock %}
 
 {% block contenido %}
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">
-            <i class="fas fa-user-tie"></i> Gestión de Funcionarios
-        </h3>
-        <a href="{{ url_for('funcionario.funcionarioAgregar') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nuevo Funcionario
-        </a>
-    </div>
-    
-    <!-- Tarjeta principal -->
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Lista de Funcionarios</h5>
+<!-- Header premium con degradado -->
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">
+            <div class="page-header-icon"><i data-feather="user-tie"></i></div>
+            Gestión de Funcionarios
+          </h1>
+          <div class="page-header-subtitle">Administración de personal, cargos y privilegios del sistema</div>
         </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a href="{{ url_for('funcionario.funcionarioAgregar') }}" class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm">
+            <i class="fas fa-plus me-1"></i> Nuevo Funcionario
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered w-100" id="tbl">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Apellido</th>
-                            <th>Cédula</th>
-                            <th>Cargo</th>
-                            <th>Teléfono</th>
-                            <th>Género</th>
-                            <th>Ciudad</th>
-                            <th>Estado</th>
-                            <th>Matrícula</th>
-                            <th>Especialidades</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+<div class="container-xl px-4 mt-n10">
+
+  <!-- Tarjeta principal -->
+  <div class="card card-header-actions mb-4 shadow-sm">
+    <div class="card-header">
+      <h5 class="mb-0">Lista de Funcionarios</h5>
     </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Cédula</th>
+              <th>Cargo</th>
+              <th>Teléfono</th>
+              <th>Género</th>
+              <th>Ciudad</th>
+              <th>Estado</th>
+              <th>Matrícula</th>
+              <th>Especialidades</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal Principal Formulario -->
-<div class="modal fade" id="modalFormulario" tabindex="-1" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h4 class="modal-title" id="modalTitle">Registrar Funcionario</h4>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Registrar Funcionario</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+        <form id="formFuncionario">
+          <input type="hidden" id="txtIdPersona">
+          <input type="hidden" id="txtIdFuncionario">
+
+          <!-- CARD 1: Datos Personales -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-primary">
+                <i class="fas fa-user"></i> Datos Personales
+              </h6>
             </div>
-            
-            <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
-                <form id="formFuncionario">
-                    <input type="hidden" id="txtIdPersona">
-                    <input type="hidden" id="txtIdFuncionario">
-                    
-                    <!-- CARD 1: Datos Personales -->
-                    <div class="card mb-3 border-0 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">
-                                <i class="fas fa-user"></i> Datos Personales
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="txtNombre" placeholder="Ingrese el nombre" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Apellido <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="txtApellido" placeholder="Ingrese el apellido" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Cédula <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="txtCedula" placeholder="Ingrese la cédula" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Fecha de Nacimiento<span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="txtFecha_nacimiento">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Sexo</label>
-                                        <select class="form-control" id="id_genero">
-                                            <option value="">Seleccione...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Estado Civil</label>
-                                        <select class="form-control" id="id_estado_civil">
-                                            <option value="">Seleccione...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CARD 2: Contacto y Ubicación -->
-                    <div class="card mb-3 border-0 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">
-                                <i class="fas fa-address-card"></i> Contacto y Ubicación
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="txtTelefono" placeholder="Ingrese el teléfono" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Correo Electrónico</label>
-                                        <input type="email" class="form-control" id="txtCorreo" placeholder="Ingrese el correo">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Domicilio</label>
-                                        <input type="text" class="form-control" id="txtDomicilio" placeholder="Ingrese el domicilio">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <input type="hidden" id="id_ciudad">
-                                        <label class="font-weight-semibold">Ciudad de Residencia</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="txtCiudad" placeholder="Haga clic para buscar" readonly>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary" type="button" id="btnBuscarCiudad">
-                                                    <i class="fas fa-search"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <input type="hidden" id="id_ciudad_nacimiento">
-                                        <label class="font-weight-semibold">Ciudad de Nacimiento</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="txtCiudad_nacimiento" placeholder="Haga clic para buscar" readonly>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary" type="button" id="btnBuscarCiudadNacimiento">
-                                                    <i class="fas fa-search"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CARD 3: Formación Profesional -->
-                    <div class="card mb-3 border-0 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">
-                                <i class="fas fa-graduation-cap"></i> Formación Profesional
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Nivel de Instrucción</label>
-                                        <select class="form-control" id="id_nivel_instruccion">
-                                            <option value="">Seleccione...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Profesión/Ocupación</label>
-                                        <select class="form-control" id="id_profesion">
-                                            <option value="">Seleccione...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CARD 4: Datos Laborales -->
-                    <div class="card mb-3 border-0 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-warning">
-                                <i class="fas fa-briefcase"></i> Datos Laborales
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Cargo <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="id_cargo" required>
-                                            <option value="">Seleccione...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="font-weight-semibold">Estado</label>
-                                        <div class="custom-control custom-switch mt-2">
-                                            <input type="checkbox" class="custom-control-input" id="chkActivo" checked>
-                                            <label class="custom-control-label" for="chkActivo">
-                                                <strong>Funcionario Activo</strong>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                           
-                        </div>
-                    </div>
-
-                    <!-- CARD 5: Grupos/Roles Asignados -->
-                    <div class="card mb-3 border-0 shadow-sm">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="mb-0 font-weight-bold">
-                                <i class="fas fa-user-shield"></i> Grupos/Roles Asignados
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info border-0">
-                                <i class="fas fa-info-circle"></i> 
-                                Asigne los grupos/roles que este funcionario podrá utilizar cuando se le cree un usuario en el sistema.
-                                Puede seleccionar múltiples grupos (máximo 3).
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="font-weight-semibold">
-                                    <i class="fas fa-users"></i> Grupos Disponibles
-                                </label>
-                                <small class="form-text text-muted mb-2 d-block">
-                                    Seleccione uno o más grupos/roles. El primer grupo seleccionado será el rol principal.
-                                </small>
-                                <div class="border rounded p-3" id="contenedorGrupos" style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
-                                    <div class="text-center text-muted py-3">
-                                        <i class="fas fa-spinner fa-spin"></i> Cargando grupos...
-                                    </div>
-                                </div>
-                                <small class="form-text text-muted mt-2">
-                                    <i class="fas fa-check-circle text-success"></i> 
-                                    <span id="contadorGrupos">0 grupos seleccionados de 3 máximo</span>
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CARD 6: Datos de Especialista (COLAPSABLE) -->
-                    <div class="collapse" id="collapseEspecialista">
-                        <div class="card mb-3 border-0 shadow-sm">
-                            <div class="card-header text-white" style="background-color: #6f42c1;">
-                                <h6 class="mb-0 font-weight-bold">
-                                    <i class="fas fa-stethoscope"></i> Datos de Especialista (Psicólogo/a)
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="alert alert-info border-0">
-                                    <i class="fas fa-info-circle"></i> Complete estos datos solo si el funcionario es un profesional de la salud mental.
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-semibold">Matrícula Profesional <span class="text-danger" id="lblMatriculaRequerida">*</span></label>
-                                            <input type="text" class="form-control" id="txtMatricula" placeholder="Ej: MAT-PSI-001">
-                                            <small class="form-text text-muted">Número de matrícula del Consejo Profesional</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="font-weight-semibold">Color en Agenda</label>
-                                            <input type="color" class="form-control" id="txtColorAgenda" value="#3498db" style="height: 45px;">
-                                            <small class="form-text text-muted">Color para identificar en el calendario</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label class="font-weight-semibold">
-                                                <i class="fas fa-check-square"></i> Especialidades 
-                                                <span class="text-danger" id="lblEspecialidadesRequeridas">*</span>
-                                            </label>
-                                            <small class="form-text text-muted mb-2 d-block">
-                                                <i class="fas fa-info-circle"></i> Seleccione <strong>una o más especialidades</strong> (mínimo 1). 
-                                                Puede seleccionar múltiples opciones marcando los checkboxes.
-                                            </small>
-                                            <div class="border rounded p-3 mt-2" id="contenedorEspecialidades" style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
-                                                <div class="text-center text-muted py-3">
-                                                    <i class="fas fa-spinner fa-spin"></i> Cargando especialidades...
-                                                </div>
-                                            </div>
-                                            <small class="form-text text-muted mt-2">
-                                                <i class="fas fa-check-circle text-success"></i> 
-                                                <span id="contadorEspecialidades">0 especialidades seleccionadas</span>
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </form>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Nombre <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="txtNombre" placeholder="Ingrese el nombre" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Apellido <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="txtApellido" placeholder="Ingrese el apellido" required>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Cédula <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="txtCedula" placeholder="Ingrese la cédula" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Fecha de Nacimiento<span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="txtFecha_nacimiento">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Sexo</label>
+                    <select class="form-control" id="id_genero">
+                      <option value="">Seleccione...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Estado Civil</label>
+                    <select class="form-control" id="id_estado_civil">
+                      <option value="">Seleccione...</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-success" id="btnGuardar">
-                    <i class="fas fa-save"></i> Guardar Funcionario
-                </button>
+          </div>
+
+          <!-- CARD 2: Contacto y Ubicación -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-success">
+                <i class="fas fa-address-card"></i> Contacto y Ubicación
+              </h6>
             </div>
-        </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Teléfono <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="txtTelefono" placeholder="Ingrese el teléfono" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="txtCorreo" placeholder="Ingrese el correo">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label class="fw-semibold">Domicilio</label>
+                    <input type="text" class="form-control" id="txtDomicilio" placeholder="Ingrese el domicilio">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <input type="hidden" id="id_ciudad">
+                    <label class="fw-semibold">Ciudad de Residencia</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="txtCiudad" placeholder="Haga clic para buscar"
+                        readonly>
+                      <div class="input-group">
+                        <button class="btn btn-primary" type="button" id="btnBuscarCiudad">
+                          <i class="fas fa-search"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <input type="hidden" id="id_ciudad_nacimiento">
+                    <label class="fw-semibold">Ciudad de Nacimiento</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="txtCiudad_nacimiento"
+                        placeholder="Haga clic para buscar" readonly>
+                      <div class="input-group">
+                        <button class="btn btn-primary" type="button" id="btnBuscarCiudadNacimiento">
+                          <i class="fas fa-search"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: Formación Profesional -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-info">
+                <i class="fas fa-graduation-cap"></i> Formación Profesional
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Nivel de Instrucción</label>
+                    <select class="form-control" id="id_nivel_instruccion">
+                      <option value="">Seleccione...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Profesión/Ocupación</label>
+                    <select class="form-control" id="id_profesion">
+                      <option value="">Seleccione...</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 4: Datos Laborales -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 fw-bold text-warning">
+                <i class="fas fa-briefcase"></i> Datos Laborales
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Cargo <span class="text-danger">*</span></label>
+                    <select class="form-control" id="id_cargo" required>
+                      <option value="">Seleccione...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="fw-semibold">Estado</label>
+                    <div class="custom-control custom-switch mt-2">
+                      <input type="checkbox" class="custom-control-input" id="chkActivo" checked>
+                      <label class="custom-control-label" for="chkActivo">
+                        <strong>Funcionario Activo</strong>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- CARD 5: Grupos/Roles Asignados -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-info text-white">
+              <h6 class="mb-0 fw-bold">
+                <i class="fas fa-user-shield"></i> Grupos/Roles Asignados
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info border-0">
+                <i class="fas fa-info-circle"></i>
+                Asigne los grupos/roles que este funcionario podrá utilizar cuando se le cree un usuario en el sistema.
+                Puede seleccionar múltiples grupos (máximo 3).
+              </div>
+
+              <div class="form-group">
+                <label class="fw-semibold">
+                  <i class="fas fa-users"></i> Grupos Disponibles
+                </label>
+                <small class="form-text text-muted mb-2 d-block">
+                  Seleccione uno o más grupos/roles. El primer grupo seleccionado será el rol principal.
+                </small>
+                <div class="border rounded p-3" id="contenedorGrupos"
+                  style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                  <div class="text-center text-muted py-3">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando grupos...
+                  </div>
+                </div>
+                <small class="form-text text-muted mt-2">
+                  <i class="fas fa-check-circle text-success"></i>
+                  <span id="contadorGrupos">0 grupos seleccionados de 3 máximo</span>
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 6: Datos de Especialista (COLAPSABLE) -->
+          <div class="collapse" id="collapseEspecialista">
+            <div class="card mb-3 border-0 shadow-sm">
+              <div class="card-header text-white" style="background-color: #6f42c1;">
+                <h6 class="mb-0 fw-bold">
+                  <i class="fas fa-stethoscope"></i> Datos de Especialista (Psicólogo/a)
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="alert alert-info border-0">
+                  <i class="fas fa-info-circle"></i> Complete estos datos solo si el funcionario es un profesional de la
+                  salud mental.
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="fw-semibold">Matrícula Profesional <span class="text-danger"
+                          id="lblMatriculaRequerida">*</span></label>
+                      <input type="text" class="form-control" id="txtMatricula" placeholder="Ej: MAT-PSI-001">
+                      <small class="form-text text-muted">Número de matrícula del Consejo Profesional</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="fw-semibold">Color en Agenda</label>
+                      <input type="color" class="form-control" id="txtColorAgenda" value="#3498db"
+                        style="height: 45px;">
+                      <small class="form-text text-muted">Color para identificar en el calendario</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="fw-semibold">
+                        <i class="fas fa-check-square"></i> Especialidades
+                        <span class="text-danger" id="lblEspecialidadesRequeridas">*</span>
+                      </label>
+                      <small class="form-text text-muted mb-2 d-block">
+                        <i class="fas fa-info-circle"></i> Seleccione <strong>una o más especialidades</strong> (mínimo
+                        1).
+                        Puede seleccionar múltiples opciones marcando los checkboxes.
+                      </small>
+                      <div class="border rounded p-3 mt-2" id="contenedorEspecialidades"
+                        style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                        <div class="text-center text-muted py-3">
+                          <i class="fas fa-spinner fa-spin"></i> Cargando especialidades...
+                        </div>
+                      </div>
+                      <small class="form-text text-muted mt-2">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span id="contadorEspecialidades">0 especialidades seleccionadas</span>
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-success" id="btnGuardar">
+          <i class="fas fa-save"></i> Guardar Funcionario
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal Buscar Ciudad (reutilizable) -->
 <div class="modal fade" id="modalBuscarCiudad" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="tituloModalCiudad">Seleccionar Ciudad</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-bordered w-100" id="tblCiudad">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Ciudad</th>
-                                <th style="width: 120px;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="tituloModalCiudad">Seleccionar Ciudad</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle w-100" id="tblCiudad">
+            <thead class="table-light">
+              <tr>
+                <th>Ciudad</th>
+                <th style="width: 120px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <style>
-/* Estilos mejorados */
-.modal-body {
+  /* Estilos mejorados */
+  .modal-body {
     padding: 1.5rem;
-}
+  }
 
-.card-header {
+  .card-header {
     padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid rgba(0,0,0,.05);
-}
+    border-bottom: 1px solid rgba(0, 0, 0, .05);
+  }
 
-.form-group label {
+  .form-group label {
     margin-bottom: 0.375rem;
     font-size: 0.9rem;
-}
+  }
 
-.form-control, .input-group-text {
+  .form-control,
+  .input-group-text {
     font-size: 0.9rem;
-}
+  }
 
-.form-control:focus {
+  .form-control:focus {
     border-color: #007bff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
+  }
 
-.shadow-sm {
-    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
-}
+  .shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+  }
 
-.font-weight-semibold {
+  .fw-semibold {
     font-weight: 600;
-}
+  }
 
-/* Estilos para checkboxes de especialidades */
-#contenedorEspecialidades .custom-control {
+  /* Estilos para checkboxes de especialidades */
+  #contenedorEspecialidades .custom-control {
     padding: 8px;
     border-bottom: 1px solid #dee2e6;
-}
+  }
 
-#contenedorEspecialidades .custom-control:hover {
+  #contenedorEspecialidades .custom-control:hover {
     background-color: #e9ecef;
-}
+  }
 
-#contenedorEspecialidades .custom-control:last-child {
+  #contenedorEspecialidades .custom-control:last-child {
     border-bottom: none;
-}
+  }
 
-/* Validación visual */
-.form-control.is-invalid {
+  /* Validación visual */
+  .form-control.is-invalid {
     border-color: #dc3545;
-}
+  }
 
-.form-control.is-valid {
+  .form-control.is-valid {
     border-color: #28a745;
-}
+  }
 
-/* Scrollbar personalizado */
-.modal-body::-webkit-scrollbar,
-#contenedorEspecialidades::-webkit-scrollbar {
+  /* Scrollbar personalizado */
+  .modal-body::-webkit-scrollbar,
+  #contenedorEspecialidades::-webkit-scrollbar {
     width: 8px;
-}
+  }
 
-.modal-body::-webkit-scrollbar-track,
-#contenedorEspecialidades::-webkit-scrollbar-track {
+  .modal-body::-webkit-scrollbar-track,
+  #contenedorEspecialidades::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
-}
+  }
 
-.modal-body::-webkit-scrollbar-thumb,
-#contenedorEspecialidades::-webkit-scrollbar-thumb {
+  .modal-body::-webkit-scrollbar-thumb,
+  #contenedorEspecialidades::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
-}
+  }
 
-.modal-body::-webkit-scrollbar-thumb:hover,
-#contenedorEspecialidades::-webkit-scrollbar-thumb:hover,
-#contenedorGrupos::-webkit-scrollbar-thumb:hover {
+  .modal-body::-webkit-scrollbar-thumb:hover,
+  #contenedorEspecialidades::-webkit-scrollbar-thumb:hover,
+  #contenedorGrupos::-webkit-scrollbar-thumb:hover {
     background: #555;
-}
+  }
 
-#contenedorGrupos .custom-control {
+  #contenedorGrupos .custom-control {
     padding: 8px;
     border-bottom: 1px solid #dee2e6;
-}
+  }
 
-#contenedorGrupos .custom-control:hover {
+  #contenedorGrupos .custom-control:hover {
     background-color: #e9ecef;
-}
+  }
 
-#contenedorGrupos .custom-control:last-child {
+  #contenedorGrupos .custom-control:last-child {
     border-bottom: none;
-}
+  }
 
-#contenedorGrupos::-webkit-scrollbar {
+  #contenedorGrupos::-webkit-scrollbar {
     width: 8px;
-}
+  }
 
-#contenedorGrupos::-webkit-scrollbar-track {
+  #contenedorGrupos::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
-}
+  }
 
-#contenedorGrupos::-webkit-scrollbar-thumb {
+  #contenedorGrupos::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
-}
+  }
 
-/* Responsive */
-@media (max-width: 768px) {
+  /* Responsive */
+  @media (max-width: 768px) {
     .modal-xl {
-        max-width: 95%;
-        margin: 0.5rem auto;
+      max-width: 95%;
+      margin: 0.5rem auto;
     }
-    
+
     .modal-body {
-        padding: 1rem;
-        max-height: 70vh;
+      padding: 1rem;
+      max-height: 70vh;
     }
-    
+
     .card-body {
-        padding: 1rem;
+      padding: 1rem;
     }
-}
+  }
 </style>
 
 {% endblock %}
@@ -511,140 +527,140 @@ Funcionarios
 <script>
 
   // ==========================================
-// CONSTANTES Y CONFIGURACIÓN
-// ==========================================
-const CSRFToken = "{{ csrf_token() }}" || null;
-let especialidadesCargadas = false;
-let gruposCargados = false;
+  // CONSTANTES Y CONFIGURACIÓN
+  // ==========================================
+  const CSRFToken = "{{ csrf_token() }}";
+  const tienePermisoBorrar = "{{ tiene_permiso_accion('borrar', request.path) }}" === "True";
+  let especialidadesCargadas = false;
+  let gruposCargados = false;
 
-// ==========================================
-// DATATABLE PRINCIPAL
-// ==========================================
-const initDatatable = () => {
-  $('#tbl').DataTable({
-    language: {
-      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-    },
-    ajax: {
-      url: '/api/v1/funcionarios',
-      dataSrc: function(json) {
-        if (!json.success) {
-          console.error('Error del servidor:', json.error);
-          return [];
-        }
-        return json.data;
+  // ==========================================
+  // DATATABLE PRINCIPAL
+  // ==========================================
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      error: function(xhr, error, thrown) {
-        console.error('Error en AJAX:', xhr.responseText);
-        Swal.fire('Error', 'Error al cargar los funcionarios', 'error');
-      }
-    },
-    columns: [
-      { data: 'nombre' },
-      { data: 'apellido' },
-      { data: 'cedula' },
-      { data: 'cargo' },
-      { data: 'telefono' },
-      { data: 'genero' },
-      { data: 'ciudad' },
-      { 
-        data: function(row) {
-          return row.activo 
-            ? '<span class="badge badge-success">Activo</span>' 
-            : '<span class="badge badge-secondary">Inactivo</span>';
-        },
-        className: 'text-center'
-      },
-      { 
-        data: function(row) {
-          return row.matricula || '<span class="text-muted">-</span>';
-        }
-      },
-      { 
-        data: function(row) {
-          if (row.especialidades && row.especialidades.length > 50) {
-            return `<span title="${row.especialidades}">${row.especialidades.substring(0, 47)}...</span>`;
+      ajax: {
+        url: '/api/v1/funcionarios',
+        dataSrc: function (json) {
+          if (!json.success) {
+            console.error('Error del servidor:', json.error);
+            return [];
           }
-          return row.especialidades || '<span class="text-muted">-</span>';
+          return json.data;
+        },
+        error: function (xhr, error, thrown) {
+          console.error('Error en AJAX:', xhr.responseText);
+          Swal.fire('Error', 'Error al cargar los funcionarios', 'error');
         }
       },
-      { 
-        data: function(row) {
-          return `
-            <button type="button" name="btn_editar" class="btn btn-warning btn-sm" 
-                    data-id="${row.id_funcionario}" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button type="button" name="btn_eliminar" class="btn btn-secondary btn-sm" 
-                    data-id="${row.id_funcionario}" data-nombre="${row.nombre} ${row.apellido}" title="Eliminar">
-              <i class="fas fa-trash-alt"></i>
-            </button>
+      columns: [
+        { data: 'nombre' },
+        { data: 'apellido' },
+        { data: 'cedula' },
+        { data: 'cargo' },
+        { data: 'telefono' },
+        { data: 'genero' },
+        { data: 'ciudad' },
+        {
+          data: function (row) {
+            return row.activo
+              ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
+              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return row.matricula || '<span class="text-muted">-</span>';
+          }
+        },
+        {
+          data: function (row) {
+            if (row.especialidades && row.especialidades.length > 50) {
+              return `<span title="${row.especialidades}">${row.especialidades.substring(0, 47)}...</span>`;
+            }
+            return row.especialidades || '<span class="text-muted">-</span>';
+          }
+        },
+        {
+          data: function (row) {
+            let acciones = `
+            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id_funcionario}" title="Editar"><i class="fas fa-edit"></i></button>
           `;
-        },
-        className: 'text-center',
-        orderable: false
-      }
-    ],
-    order: [[3, 'asc']]
-  });
-}
 
-// ==========================================
-// CARGAR CATÁLOGOS EN SELECTS
-// ==========================================
-const cargarCatalogos = () => {
-  console.log('📋 Cargando catálogos...');
-  
-  cargarSelect('/api/v1/generos', '#id_genero');
-  cargarSelect('/api/v1/estados-civiles', '#id_estado_civil');
-  cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
-  cargarSelect('/api/v1/profesiones', '#id_profesion');
-  cargarSelect('/api/v1/cargos-permitidos', '#id_cargo'); // Usar endpoint filtrado
-  cargarSelect('/api/v1/ciudades', '#id_ciudad', 'Seleccione ciudad...');
-  cargarSelect('/api/v1/ciudades', '#id_ciudad_nacimiento', 'Seleccione ciudad...');
-  cargarGrupos(); // Cargar grupos para asignación
-}
+            if (tienePermisoBorrar) {
+              acciones += `<button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id_funcionario}" data-nombre="${row.nombre} ${row.apellido}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+            }
 
-const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
-  fetch(url)
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        let html = `<option value="">${placeholder}</option>`;
-        data.data.forEach(item => {
-          html += `<option value="${item.id}">${item.descripcion}</option>`;
-        });
-        $(selector).html(html);
-        console.log(`✅ ${selector} cargado con ${data.data.length} opciones`);
-      }
-    })
-    .catch(err => console.error(`❌ Error cargando ${selector}:`, err));
-}
+            return acciones;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[3, 'asc']]
+    });
+  }
 
-// ==========================================
-// MANEJO DE ESPECIALIDADES
-// ==========================================
-const cargarEspecialidades = () => {
-  // Siempre recargar para asegurar que estén disponibles
-  console.log('📋 Cargando especialidades...');
-  
-  $('#contenedorEspecialidades').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando especialidades...</div>');
-  
-  fetch('/api/v1/especialidades')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success && data.data && data.data.length > 0) {
-        let html = '';
-        data.data.forEach(esp => {
-          const espId = esp.id_especialidad || esp.id;
-          const espDesc = esp.descripcion || esp.des_especialidad || esp.nombre;
-          
-          if (!espId) {
-            console.error('❌ Especialidad sin ID:', esp);
-            return;
-          }
-          
-          html += `
+  // ==========================================
+  // CARGAR CATÁLOGOS EN SELECTS
+  // ==========================================
+  const cargarCatalogos = () => {
+    console.log('📋 Cargando catálogos...');
+
+    cargarSelect('/api/v1/generos', '#id_genero');
+    cargarSelect('/api/v1/estados-civiles', '#id_estado_civil');
+    cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
+    cargarSelect('/api/v1/profesiones', '#id_profesion');
+    cargarSelect('/api/v1/cargos-permitidos', '#id_cargo'); // Usar endpoint filtrado
+    cargarSelect('/api/v1/ciudades', '#id_ciudad', 'Seleccione ciudad...');
+    cargarSelect('/api/v1/ciudades', '#id_ciudad_nacimiento', 'Seleccione ciudad...');
+    cargarGrupos(); // Cargar grupos para asignación
+  }
+
+  const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          let html = `<option value="">${placeholder}</option>`;
+          data.data.forEach(item => {
+            html += `<option value="${item.id}">${item.descripcion}</option>`;
+          });
+          $(selector).html(html);
+          console.log(`✅ ${selector} cargado con ${data.data.length} opciones`);
+        }
+      })
+      .catch(err => console.error(`❌ Error cargando ${selector}:`, err));
+  }
+
+  // ==========================================
+  // MANEJO DE ESPECIALIDADES
+  // ==========================================
+  const cargarEspecialidades = () => {
+    // Siempre recargar para asegurar que estén disponibles
+    console.log('📋 Cargando especialidades...');
+
+    $('#contenedorEspecialidades').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando especialidades...</div>');
+
+    fetch('/api/v1/especialidades')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          let html = '';
+          data.data.forEach(esp => {
+            const espId = esp.id_especialidad || esp.id;
+            const espDesc = esp.descripcion || esp.des_especialidad || esp.nombre;
+
+            if (!espId) {
+              console.error('❌ Especialidad sin ID:', esp);
+              return;
+            }
+
+            html += `
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input especialidad-check" 
                      id="esp_${espId}" value="${espId}" name="especialidades[]">
@@ -653,95 +669,95 @@ const cargarEspecialidades = () => {
               </label>
             </div>
           `;
-        });
-        
-        if (html === '') {
-          html = '<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>';
+          });
+
+          if (html === '') {
+            html = '<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>';
+          }
+
+          $('#contenedorEspecialidades').html(html);
+          especialidadesCargadas = true;
+          console.log(`✅ ${data.data.length} especialidades cargadas y listas para selección múltiple`);
+
+          // Agregar evento para contar especialidades seleccionadas
+          $('.especialidad-check').on('change', function () {
+            const seleccionadas = $('.especialidad-check:checked').length;
+            $('#contadorEspecialidades').text(`${seleccionadas} especialidad${seleccionadas !== 1 ? 'es' : ''} seleccionada${seleccionadas !== 1 ? 's' : ''}`);
+
+            if (seleccionadas > 0) {
+              $('#contadorEspecialidades').removeClass('text-muted').addClass('text-success');
+            } else {
+              $('#contadorEspecialidades').removeClass('text-success').addClass('text-muted');
+            }
+          });
+        } else {
+          $('#contenedorEspecialidades').html('<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>');
         }
-        
-        $('#contenedorEspecialidades').html(html);
-        especialidadesCargadas = true;
-        console.log(`✅ ${data.data.length} especialidades cargadas y listas para selección múltiple`);
-        
-        // Agregar evento para contar especialidades seleccionadas
-        $('.especialidad-check').on('change', function() {
-          const seleccionadas = $('.especialidad-check:checked').length;
-          $('#contadorEspecialidades').text(`${seleccionadas} especialidad${seleccionadas !== 1 ? 'es' : ''} seleccionada${seleccionadas !== 1 ? 's' : ''}`);
-          
-          if (seleccionadas > 0) {
-            $('#contadorEspecialidades').removeClass('text-muted').addClass('text-success');
-          } else {
-            $('#contadorEspecialidades').removeClass('text-success').addClass('text-muted');
-          }
-        });
-      } else {
-        $('#contenedorEspecialidades').html('<div class="alert alert-warning">No hay especialidades disponibles. Contacte al administrador.</div>');
-      }
-    })
-    .catch(err => {
-      console.error('❌ Error cargando especialidades:', err);
-      $('#contenedorEspecialidades').html('<div class="alert alert-danger">Error al cargar especialidades. Intente recargar la página.</div>');
-    });
-}
-
-const limpiarEspecialidades = () => {
-  $('#txtMatricula').val('');
-  $('#txtColorAgenda').val('#3498db');
-  $('.especialidad-check').prop('checked', false);
-}
-
-const getEspecialidadesSeleccionadas = () => {
-  const especialidades = [];
-  $('.especialidad-check:checked').each(function() {
-    const id = parseInt($(this).val());
-    if (!isNaN(id) && id > 0) {
-      especialidades.push(id);
-    }
-  });
-  return especialidades;
-}
-
-const marcarEspecialidades = (ids) => {
-  $('.especialidad-check').prop('checked', false);
-  if (ids && ids.length > 0) {
-    ids.forEach(id => {
-      $(`#esp_${id}`).prop('checked', true);
-    });
+      })
+      .catch(err => {
+        console.error('❌ Error cargando especialidades:', err);
+        $('#contenedorEspecialidades').html('<div class="alert alert-danger">Error al cargar especialidades. Intente recargar la página.</div>');
+      });
   }
-}
 
-// ==========================================
-// MANEJO DE GRUPOS/ROLES
-// ==========================================
-const cargarGrupos = () => {
-  console.log('📋 Cargando grupos/roles permitidos...');
-  
-  $('#contenedorGrupos').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando grupos...</div>');
-  
-  // Cargar solo los grupos que el usuario actual puede asignar
-  fetch('/api/v1/funcionarios/grupos-permitidos')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success && data.data && data.data.length > 0) {
-        let html = '';
-        data.data.forEach(grupo => {
-          const grupoId = grupo.id || grupo.id_grupo;
-          const grupoDesc = grupo.descripcion || grupo.des_grupo;
-          
-          if (!grupoId) {
-            console.error('❌ Grupo sin ID:', grupo);
-            return;
-          }
-          
-          // Validación adicional: excluir Administrador y Superadministrador si no es Superadmin
-          // (aunque el backend ya debería filtrarlos, esto es una capa extra de seguridad)
-          const descLower = (grupoDesc || '').toLowerCase();
-          if (descLower === 'administrador' || descLower === 'superadministrador') {
-            console.warn(`⚠️ Grupo "${grupoDesc}" excluido del listado (solo Superadmin puede asignarlo)`);
-            return;
-          }
-          
-          html += `
+  const limpiarEspecialidades = () => {
+    $('#txtMatricula').val('');
+    $('#txtColorAgenda').val('#3498db');
+    $('.especialidad-check').prop('checked', false);
+  }
+
+  const getEspecialidadesSeleccionadas = () => {
+    const especialidades = [];
+    $('.especialidad-check:checked').each(function () {
+      const id = parseInt($(this).val());
+      if (!isNaN(id) && id > 0) {
+        especialidades.push(id);
+      }
+    });
+    return especialidades;
+  }
+
+  const marcarEspecialidades = (ids) => {
+    $('.especialidad-check').prop('checked', false);
+    if (ids && ids.length > 0) {
+      ids.forEach(id => {
+        $(`#esp_${id}`).prop('checked', true);
+      });
+    }
+  }
+
+  // ==========================================
+  // MANEJO DE GRUPOS/ROLES
+  // ==========================================
+  const cargarGrupos = () => {
+    console.log('📋 Cargando grupos/roles permitidos...');
+
+    $('#contenedorGrupos').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando grupos...</div>');
+
+    // Cargar solo los grupos que el usuario actual puede asignar
+    fetch('/api/v1/funcionarios/grupos-permitidos')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          let html = '';
+          data.data.forEach(grupo => {
+            const grupoId = grupo.id || grupo.id_grupo;
+            const grupoDesc = grupo.descripcion || grupo.des_grupo;
+
+            if (!grupoId) {
+              console.error('❌ Grupo sin ID:', grupo);
+              return;
+            }
+
+            // Validación adicional: excluir Administrador y Superadministrador si no es Superadmin
+            // (aunque el backend ya debería filtrarlos, esto es una capa extra de seguridad)
+            const descLower = (grupoDesc || '').toLowerCase();
+            if (descLower === 'administrador' || descLower === 'superadministrador') {
+              console.warn(`⚠️ Grupo "${grupoDesc}" excluido del listado (solo Superadmin puede asignarlo)`);
+              return;
+            }
+
+            html += `
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input grupo-check" 
                      id="grupo_${grupoId}" value="${grupoId}" name="grupos[]">
@@ -750,479 +766,479 @@ const cargarGrupos = () => {
               </label>
             </div>
           `;
-        });
-        
-        if (html === '') {
-          html = '<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>';
-        }
-        
-        $('#contenedorGrupos').html(html);
-        gruposCargados = true;
-        console.log(`✅ ${data.data.length} grupos cargados y listos para selección múltiple`);
-        
-        // Agregar evento para contar grupos seleccionados y validar máximo
-        $('.grupo-check').on('change', function() {
-          const seleccionados = $('.grupo-check:checked').length;
-          const maxGrupos = 3;
-          
-          // Validar máximo 3 grupos
-          if (seleccionados > maxGrupos) {
-            $(this).prop('checked', false);
-            Swal.fire('Límite alcanzado', `Un funcionario puede tener máximo ${maxGrupos} grupos asignados.`, 'warning');
-            return;
+          });
+
+          if (html === '') {
+            html = '<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>';
           }
-          
-          $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de ${maxGrupos} máximo`);
-          
-          if (seleccionados > 0) {
-            $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-            if (seleccionados >= maxGrupos) {
-              $('#contadorGrupos').addClass('text-warning');
+
+          $('#contenedorGrupos').html(html);
+          gruposCargados = true;
+          console.log(`✅ ${data.data.length} grupos cargados y listos para selección múltiple`);
+
+          // Agregar evento para contar grupos seleccionados y validar máximo
+          $('.grupo-check').on('change', function () {
+            const seleccionados = $('.grupo-check:checked').length;
+            const maxGrupos = 3;
+
+            // Validar máximo 3 grupos
+            if (seleccionados > maxGrupos) {
+              $(this).prop('checked', false);
+              Swal.fire('Límite alcanzado', `Un funcionario puede tener máximo ${maxGrupos} grupos asignados.`, 'warning');
+              return;
             }
-          } else {
-            $('#contadorGrupos').removeClass('text-success text-warning').addClass('text-muted');
-          }
-        });
-      } else {
-        $('#contenedorGrupos').html('<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>');
-      }
-    })
-    .catch(err => {
-      console.error('❌ Error cargando grupos:', err);
-      $('#contenedorGrupos').html('<div class="alert alert-danger">Error al cargar grupos. Intente recargar la página.</div>');
-    });
-}
 
-const getGruposSeleccionados = () => {
-  const grupos = [];
-  $('.grupo-check:checked').each(function() {
-    const id = parseInt($(this).val());
-    if (!isNaN(id) && id > 0) {
-      grupos.push(id);
-    }
-  });
-  return grupos;
-}
+            $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de ${maxGrupos} máximo`);
 
-const marcarGrupos = (ids) => {
-  $('.grupo-check').prop('checked', false);
-  if (ids && ids.length > 0) {
-    ids.forEach(id => {
-      $(`#grupo_${id}`).prop('checked', true);
-    });
-    // Actualizar contador
-    const seleccionados = ids.length;
-    $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de 3 máximo`);
-    if (seleccionados > 0) {
-      $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-    }
-  }
-}
-
-const limpiarGrupos = () => {
-  $('.grupo-check').prop('checked', false);
-  $('#contadorGrupos').text('0 grupos seleccionados de 3 máximo').removeClass('text-success text-warning').addClass('text-muted');
-}
-
-// ==========================================
-// MANEJO DEL COLLAPSE DE ESPECIALISTA
-// ==========================================
-// ❌ ELIMINAR función manejarCollapseEspecialista()
-
-// ✅ AGREGAR detección automática
-let idCargoEspecialista = null; // Se detectará dinámicamente
-
-const detectarEspecialistaPorCargo = () => {
-  const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
-  
-  // Detectar ID del cargo Especialista al cargar los cargos permitidos
-  fetch('/api/v1/cargos-permitidos')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success && data.data) {
-        data.data.forEach(cargo => {
-          const descCargo = (cargo.descripcion || '').toUpperCase();
-          if (descCargo.includes('ESPECIALISTA') || descCargo.includes('ESPECIALIST')) {
-            idCargoEspecialista = cargo.id;
-            console.log(`✅ Cargo Especialista detectado con ID: ${idCargoEspecialista}`);
-          }
-        });
-      }
-    });
-  
-  $('#id_cargo').change(function() {
-    const cargoId = parseInt($(this).val());
-    if (!cargoId || isNaN(cargoId)) {
-      $('#collapseEspecialista').collapse('hide');
-      limpiarEspecialidades();
-      return;
-    }
-    
-    // Verificar si es cargo de Especialista (dinámicamente o por ID hardcodeado)
-    const esEspecialista = (idCargoEspecialista && cargoId === idCargoEspecialista) || 
-                           CARGOS_ESPECIALISTAS.includes(cargoId);
-    
-    if (esEspecialista) {
-      console.log('✅ Cargo Especialista detectado, mostrando sección de especialidades');
-      $('#collapseEspecialista').collapse('show');
-      cargarEspecialidades();
-      $('#txtMatricula').attr('required', true);
-    } else {
-      $('#collapseEspecialista').collapse('hide');
-      limpiarEspecialidades();
-      $('#txtMatricula').attr('required', false).removeClass('is-invalid');
-    }
-  });
-}
-
-// En validarFormulario(), cambiar:
-// ❌ if ($('#chkEsEspecialista').is(':checked'))
-// ✅ if (esCargoEspecialista())
-
-const esCargoEspecialista = () => {
-  const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
-  const cargoId = parseInt($('#id_cargo').val());
-  if (!cargoId || isNaN(cargoId)) {
-    return false;
-  }
-  
-  // Verificar dinámicamente o por fallback
-  return (idCargoEspecialista && cargoId === idCargoEspecialista) || 
-         CARGOS_ESPECIALISTAS.includes(cargoId);
-}
-
-
-// ==========================================
-// CRUD - FUNCIONES PRINCIPALES
-// ==========================================
-// NOTA: La función agregar() ya no es necesaria porque el botón redirige a funcionario-agregar.html
-// const agregar = () => {
-//   // El botón ahora es un enlace que redirige a la página agregar
-// }
-
-const limpiarFormulario = () => {
-  $('#formFuncionario')[0].reset();
-  
-  $('#txtIdPersona').val("");
-  $('#txtIdFuncionario').val("");
-  
-  $('#txtColorAgenda').val('#3498db');
-  
-  $('#collapseEspecialista').collapse('hide');
-  
-  $('.form-control').removeClass('is-invalid is-valid');
-  
-  limpiarEspecialidades();
-  limpiarGrupos();
-}
-
-const validarFormulario = () => {
-  let valido = true;
-  
-  // Validar campos obligatorios básicos
-  const camposObligatorios = ['#txtNombre', '#txtApellido', '#txtCedula', '#txtTelefono', '#id_cargo'];
-  
-  camposObligatorios.forEach(campo => {
-    const valor = $(campo).val();
-    if (!valor || valor === '') {
-      $(campo).addClass('is-invalid');
-      valido = false;
-    } else {
-      $(campo).removeClass('is-invalid').addClass('is-valid');
-    }
-  });
-  
-  // Si es especialista, validar matrícula y especialidades
-  if (esCargoEspecialista()) {
-    const matricula = $('#txtMatricula').val();
-    if (!matricula || matricula === '') {
-      $('#txtMatricula').addClass('is-invalid');
-      Swal.fire('Atención', 'La matrícula es obligatoria para psicólogos', 'warning');
-      valido = false;
-    }
-    
-    const especialidades = getEspecialidadesSeleccionadas();
-    if (especialidades.length === 0) {
-      Swal.fire('Atención', 'Debe seleccionar al menos una especialidad', 'warning');
-      valido = false;
-    }
-  }
-  
-  return valido;
-}
-
-const guardar = () => {
-  $('#btnGuardar').on('click', function() {
-    console.log('🔍 Iniciando validación...');
-    
-    if (!validarFormulario()) {
-      console.log('❌ Validación falló');
-      return;
-    }
-    
-    const esEspecialista = esCargoEspecialista();
-    
-    // Preparar datos APLANADOS (como espera tu backend)
-    const dataFuncionario = {
-      // IDs (para edición)
-      id_persona: $('#txtIdPersona').val() || null,
-      
-      // Datos obligatorios
-      nombre: $('#txtNombre').val().trim(),
-      apellido: $('#txtApellido').val().trim(),
-      cedula: $('#txtCedula').val().trim(),
-      telefono: $('#txtTelefono').val().trim(),
-      id_cargo: parseInt($('#id_cargo').val()),
-      
-      // Datos opcionales
-      fecha_nacimiento: $('#txtFecha_nacimiento').val() || null,
-      correo: $('#txtCorreo').val().trim() || null,
-      domicilio: $('#txtDomicilio').val().trim() || null,
-      
-      // IDs de catálogos (convertir a int o null)
-      id_genero: $('#id_genero').val() ? parseInt($('#id_genero').val()) : null,
-      id_estado_civil: $('#id_estado_civil').val() ? parseInt($('#id_estado_civil').val()) : null,
-      id_ciudad: $('#id_ciudad').val() ? parseInt($('#id_ciudad').val()) : null,
-      id_ciudad_nacimiento: $('#id_ciudad_nacimiento').val() ? parseInt($('#id_ciudad_nacimiento').val()) : null,
-      id_nivel_instruccion: $('#id_nivel_instruccion').val() ? parseInt($('#id_nivel_instruccion').val()) : null,
-      id_profesion: $('#id_profesion').val() ? parseInt($('#id_profesion').val()) : null,
-      
-      // Estado (boolean)
-      activo: $('#chkActivo').is(':checked')
-    };
-    
-    // Si es especialista, agregar datos adicionales
-    if (esEspecialista) {
-      dataFuncionario.esp_matricula = $('#txtMatricula').val().trim();
-      dataFuncionario.esp_color_agenda = $('#txtColorAgenda').val();
-      dataFuncionario.especialidades = getEspecialidadesSeleccionadas();
-      console.log('👨‍⚕️ Es especialista - Especialidades:', dataFuncionario.especialidades);
-    }
-    
-    // Agregar grupos/roles asignados
-    const gruposSeleccionados = getGruposSeleccionados();
-    if (gruposSeleccionados.length > 0) {
-      dataFuncionario.grupos = gruposSeleccionados;
-      // El primer grupo seleccionado será el principal
-      dataFuncionario.grupo_principal = gruposSeleccionados[0];
-      console.log('👥 Grupos asignados:', gruposSeleccionados);
-    }
-    
-    console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));
-    
-    const btn = $(this);
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
-    
-    const esEdicion = $('#txtIdFuncionario').val() !== '';
-    const url = esEdicion ? `/api/v1/funcionarios/${$('#txtIdFuncionario').val()}` : '/api/v1/funcionarios';
-    const method = esEdicion ? 'PUT' : 'POST';
-    
-    fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': CSRFToken
-      },
-      body: JSON.stringify(dataFuncionario)
-    })
-    .then(resp => {
-      console.log('📡 Respuesta del servidor - Status:', resp.status);
-      
-      return resp.text().then(text => {
-        console.log('📄 Respuesta completa del servidor:', text);
-        
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.error('❌ Error parseando JSON:', text);
-          throw new Error('Respuesta del servidor no es JSON válido');
+            if (seleccionados > 0) {
+              $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
+              if (seleccionados >= maxGrupos) {
+                $('#contadorGrupos').addClass('text-warning');
+              }
+            } else {
+              $('#contadorGrupos').removeClass('text-success text-warning').addClass('text-muted');
+            }
+          });
+        } else {
+          $('#contenedorGrupos').html('<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>');
         }
-        
-        if (!resp.ok) {
-          console.error('❌ Error del servidor:', data);
-          throw new Error(data.error || data.message || `HTTP ${resp.status}`);
-        }
-        
-        return data;
+      })
+      .catch(err => {
+        console.error('❌ Error cargando grupos:', err);
+        $('#contenedorGrupos').html('<div class="alert alert-danger">Error al cargar grupos. Intente recargar la página.</div>');
       });
-    })
-    .then(data => {
-      btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
-      
-      if (data.success) {
-        console.log('✅ Funcionario guardado:', data);
-        
-        $('#tbl').DataTable().ajax.reload();
-        $('#modalFormulario').modal('hide');
-        
-        Swal.fire({
-          icon: 'success',
-          title: esEdicion ? '¡Funcionario Actualizado!' : '¡Funcionario Registrado!',
-          text: data.data?.mensaje || 'Operación exitosa',
-          confirmButtonColor: '#007bff'
-        });
-      } else {
-        Swal.fire('Error', data.error || 'No se pudo guardar el funcionario', 'error');
+  }
+
+  const getGruposSeleccionados = () => {
+    const grupos = [];
+    $('.grupo-check:checked').each(function () {
+      const id = parseInt($(this).val());
+      if (!isNaN(id) && id > 0) {
+        grupos.push(id);
       }
-    })
-    .catch(err => {
-      btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
-      console.error('❌ Error guardando funcionario:', err);
-      Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
     });
-  });
-}
+    return grupos;
+  }
 
-const editar = () => {
-  $('#tbl tbody').on('click', 'button[name="btn_editar"]', function() {
-    const idFuncionario = $(this).data('id');
-    console.log('✏️ Editando funcionario:', idFuncionario);
-    
-    // Redirigir a la página de agregar/editar con el ID usando la URL real del blueprint.
-    // Generamos la URL con un ID dummy (0) y lo reemplazamos al final por el ID real.
-    const urlEditarBase = "{{ url_for('funcionario.funcionarioAgregar', id_funcionario=0) }}";
-    const urlFinal = urlEditarBase.replace(/0$/, idFuncionario);
-    window.location.href = urlFinal;
-  });
-}
+  const marcarGrupos = (ids) => {
+    $('.grupo-check').prop('checked', false);
+    if (ids && ids.length > 0) {
+      ids.forEach(id => {
+        $(`#grupo_${id}`).prop('checked', true);
+      });
+      // Actualizar contador
+      const seleccionados = ids.length;
+      $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de 3 máximo`);
+      if (seleccionados > 0) {
+        $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
+      }
+    }
+  }
 
-const eliminar = () => {
-  $('#tbl tbody').on('click', 'button[name="btn_eliminar"]', function() {
-    const idFuncionario = $(this).data('id');
-    const nombre = $(this).data('nombre');
-    
-    Swal.fire({
-      title: '¿Está seguro?',
-      html: `¿Desea eliminar al funcionario <strong>${nombre}</strong>?<br><small>Esta acción no se puede deshacer</small>`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`/api/v1/funcionarios/${idFuncionario}`, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRFToken': CSRFToken
-          }
+  const limpiarGrupos = () => {
+    $('.grupo-check').prop('checked', false);
+    $('#contadorGrupos').text('0 grupos seleccionados de 3 máximo').removeClass('text-success text-warning').addClass('text-muted');
+  }
+
+  // ==========================================
+  // MANEJO DEL COLLAPSE DE ESPECIALISTA
+  // ==========================================
+  // ❌ ELIMINAR función manejarCollapseEspecialista()
+
+  // ✅ AGREGAR detección automática
+  let idCargoEspecialista = null; // Se detectará dinámicamente
+
+  const detectarEspecialistaPorCargo = () => {
+    const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
+
+    // Detectar ID del cargo Especialista al cargar los cargos permitidos
+    fetch('/api/v1/cargos-permitidos')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data) {
+          data.data.forEach(cargo => {
+            const descCargo = (cargo.descripcion || '').toUpperCase();
+            if (descCargo.includes('ESPECIALISTA') || descCargo.includes('ESPECIALIST')) {
+              idCargoEspecialista = cargo.id;
+              console.log(`✅ Cargo Especialista detectado con ID: ${idCargoEspecialista}`);
+            }
+          });
+        }
+      });
+
+    $('#id_cargo').change(function () {
+      const cargoId = parseInt($(this).val());
+      if (!cargoId || isNaN(cargoId)) {
+        $('#collapseEspecialista').collapse('hide');
+        limpiarEspecialidades();
+        return;
+      }
+
+      // Verificar si es cargo de Especialista (dinámicamente o por ID hardcodeado)
+      const esEspecialista = (idCargoEspecialista && cargoId === idCargoEspecialista) ||
+        CARGOS_ESPECIALISTAS.includes(cargoId);
+
+      if (esEspecialista) {
+        console.log('✅ Cargo Especialista detectado, mostrando sección de especialidades');
+        $('#collapseEspecialista').collapse('show');
+        cargarEspecialidades();
+        $('#txtMatricula').attr('required', true);
+      } else {
+        $('#collapseEspecialista').collapse('hide');
+        limpiarEspecialidades();
+        $('#txtMatricula').attr('required', false).removeClass('is-invalid');
+      }
+    });
+  }
+
+  // En validarFormulario(), cambiar:
+  // ❌ if ($('#chkEsEspecialista').is(':checked'))
+  // ✅ if (esCargoEspecialista())
+
+  const esCargoEspecialista = () => {
+    const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
+    const cargoId = parseInt($('#id_cargo').val());
+    if (!cargoId || isNaN(cargoId)) {
+      return false;
+    }
+
+    // Verificar dinámicamente o por fallback
+    return (idCargoEspecialista && cargoId === idCargoEspecialista) ||
+      CARGOS_ESPECIALISTAS.includes(cargoId);
+  }
+
+
+  // ==========================================
+  // CRUD - FUNCIONES PRINCIPALES
+  // ==========================================
+  // NOTA: La función agregar() ya no es necesaria porque el botón redirige a funcionario-agregar.html
+  // const agregar = () => {
+  //   // El botón ahora es un enlace que redirige a la página agregar
+  // }
+
+  const limpiarFormulario = () => {
+    $('#formFuncionario')[0].reset();
+
+    $('#txtIdPersona').val("");
+    $('#txtIdFuncionario').val("");
+
+    $('#txtColorAgenda').val('#3498db');
+
+    $('#collapseEspecialista').collapse('hide');
+
+    $('.form-control').removeClass('is-invalid is-valid');
+
+    limpiarEspecialidades();
+    limpiarGrupos();
+  }
+
+  const validarFormulario = () => {
+    let valido = true;
+
+    // Validar campos obligatorios básicos
+    const camposObligatorios = ['#txtNombre', '#txtApellido', '#txtCedula', '#txtTelefono', '#id_cargo'];
+
+    camposObligatorios.forEach(campo => {
+      const valor = $(campo).val();
+      if (!valor || valor === '') {
+        $(campo).addClass('is-invalid');
+        valido = false;
+      } else {
+        $(campo).removeClass('is-invalid').addClass('is-valid');
+      }
+    });
+
+    // Si es especialista, validar matrícula y especialidades
+    if (esCargoEspecialista()) {
+      const matricula = $('#txtMatricula').val();
+      if (!matricula || matricula === '') {
+        $('#txtMatricula').addClass('is-invalid');
+        Swal.fire('Atención', 'La matrícula es obligatoria para psicólogos', 'warning');
+        valido = false;
+      }
+
+      const especialidades = getEspecialidadesSeleccionadas();
+      if (especialidades.length === 0) {
+        Swal.fire('Atención', 'Debe seleccionar al menos una especialidad', 'warning');
+        valido = false;
+      }
+    }
+
+    return valido;
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      console.log('🔍 Iniciando validación...');
+
+      if (!validarFormulario()) {
+        console.log('❌ Validación falló');
+        return;
+      }
+
+      const esEspecialista = esCargoEspecialista();
+
+      // Preparar datos APLANADOS (como espera tu backend)
+      const dataFuncionario = {
+        // IDs (para edición)
+        id_persona: $('#txtIdPersona').val() || null,
+
+        // Datos obligatorios
+        nombre: $('#txtNombre').val().trim(),
+        apellido: $('#txtApellido').val().trim(),
+        cedula: $('#txtCedula').val().trim(),
+        telefono: $('#txtTelefono').val().trim(),
+        id_cargo: parseInt($('#id_cargo').val()),
+
+        // Datos opcionales
+        fecha_nacimiento: $('#txtFecha_nacimiento').val() || null,
+        correo: $('#txtCorreo').val().trim() || null,
+        domicilio: $('#txtDomicilio').val().trim() || null,
+
+        // IDs de catálogos (convertir a int o null)
+        id_genero: $('#id_genero').val() ? parseInt($('#id_genero').val()) : null,
+        id_estado_civil: $('#id_estado_civil').val() ? parseInt($('#id_estado_civil').val()) : null,
+        id_ciudad: $('#id_ciudad').val() ? parseInt($('#id_ciudad').val()) : null,
+        id_ciudad_nacimiento: $('#id_ciudad_nacimiento').val() ? parseInt($('#id_ciudad_nacimiento').val()) : null,
+        id_nivel_instruccion: $('#id_nivel_instruccion').val() ? parseInt($('#id_nivel_instruccion').val()) : null,
+        id_profesion: $('#id_profesion').val() ? parseInt($('#id_profesion').val()) : null,
+
+        // Estado (boolean)
+        activo: $('#chkActivo').is(':checked')
+      };
+
+      // Si es especialista, agregar datos adicionales
+      if (esEspecialista) {
+        dataFuncionario.esp_matricula = $('#txtMatricula').val().trim();
+        dataFuncionario.esp_color_agenda = $('#txtColorAgenda').val();
+        dataFuncionario.especialidades = getEspecialidadesSeleccionadas();
+        console.log('👨‍⚕️ Es especialista - Especialidades:', dataFuncionario.especialidades);
+      }
+
+      // Agregar grupos/roles asignados
+      const gruposSeleccionados = getGruposSeleccionados();
+      if (gruposSeleccionados.length > 0) {
+        dataFuncionario.grupos = gruposSeleccionados;
+        // El primer grupo seleccionado será el principal
+        dataFuncionario.grupo_principal = gruposSeleccionados[0];
+        console.log('👥 Grupos asignados:', gruposSeleccionados);
+      }
+
+      console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));
+
+      const btn = $(this);
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+
+      const esEdicion = $('#txtIdFuncionario').val() !== '';
+      const url = esEdicion ? `/api/v1/funcionarios/${$('#txtIdFuncionario').val()}` : '/api/v1/funcionarios';
+      const method = esEdicion ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        },
+        body: JSON.stringify(dataFuncionario)
+      })
+        .then(resp => {
+          console.log('📡 Respuesta del servidor - Status:', resp.status);
+
+          return resp.text().then(text => {
+            console.log('📄 Respuesta completa del servidor:', text);
+
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              console.error('❌ Error parseando JSON:', text);
+              throw new Error('Respuesta del servidor no es JSON válido');
+            }
+
+            if (!resp.ok) {
+              console.error('❌ Error del servidor:', data);
+              throw new Error(data.error || data.message || `HTTP ${resp.status}`);
+            }
+
+            return data;
+          });
         })
-        .then(r => r.json())
         .then(data => {
+          btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
+
           if (data.success) {
+            console.log('✅ Funcionario guardado:', data);
+
             $('#tbl').DataTable().ajax.reload();
-            Swal.fire('¡Eliminado!', 'El funcionario ha sido eliminado', 'success');
+            (bootstrap.Modal.getInstance(document.getElementById("modalFormulario")) || new bootstrap.Modal(document.getElementById("modalFormulario"))).hide();
+
+            Swal.fire({
+              icon: 'success',
+              title: esEdicion ? '¡Funcionario Actualizado!' : '¡Funcionario Registrado!',
+              text: data.data?.mensaje || 'Operación exitosa',
+              confirmButtonColor: '#007bff'
+            });
           } else {
-            Swal.fire('Error', data.error || 'No se pudo eliminar', 'error');
+            Swal.fire('Error', data.error || 'No se pudo guardar el funcionario', 'error');
           }
         })
         .catch(err => {
-          console.error('❌ Error eliminando:', err);
-          Swal.fire('Error', 'Error al eliminar el funcionario', 'error');
+          btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
+          console.error('❌ Error guardando funcionario:', err);
+          Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
         });
-      }
     });
-  });
-}
-// ==========================================
-// SISTEMA DE BÚSQUEDA DE CIUDAD (IGUAL A PACIENTES)
-// ==========================================
-let dtCiudad = null;
-let currentCiudadType = 'residencia'; // 'residencia' o 'nacimiento'
-
-const initCiudadDatatable = () => {
-  if (dtCiudad) {
-    return; // Ya está inicializado
   }
-  
-  dtCiudad = $('#tblCiudad').DataTable({
-    language: {
-      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-    },
-    ajax: {
-      url: '/api/v1/ciudades',
-      dataSrc: 'data'
-    },
-    columns: [
-      { data: 'descripcion' },
-      { 
-        data: function(row) {
-          return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
+
+  const editar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_editar"]', function () {
+      const idFuncionario = $(this).data('id');
+      console.log('✏️ Editando funcionario:', idFuncionario);
+
+      // Redirigir a la página de agregar/editar con el ID usando la URL real del blueprint.
+      // Generamos la URL con un ID dummy (0) y lo reemplazamos al final por el ID real.
+      const urlEditarBase = "{{ url_for('funcionario.funcionarioAgregar', id_funcionario=0) }}";
+      const urlFinal = urlEditarBase.replace(/0$/, idFuncionario);
+      window.location.href = urlFinal;
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_eliminar"]', function () {
+      const idFuncionario = $(this).data('id');
+      const nombre = $(this).data('nombre');
+
+      Swal.fire({
+        title: '¿Está seguro?',
+        html: `¿Desea eliminar al funcionario <strong>${nombre}</strong>?<br><small>Esta acción no se puede deshacer</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/funcionarios/${idFuncionario}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRFToken': CSRFToken
+            }
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.success) {
+                $('#tbl').DataTable().ajax.reload();
+                Swal.fire('¡Eliminado!', 'El funcionario ha sido eliminado', 'success');
+              } else {
+                Swal.fire('Error', data.error || 'No se pudo eliminar', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('❌ Error eliminando:', err);
+              Swal.fire('Error', 'Error al eliminar el funcionario', 'error');
+            });
+        }
+      });
+    });
+  }
+  // ==========================================
+  // SISTEMA DE BÚSQUEDA DE CIUDAD (IGUAL A PACIENTES)
+  // ==========================================
+  let dtCiudad = null;
+  let currentCiudadType = 'residencia'; // 'residencia' o 'nacimiento'
+
+  const initCiudadDatatable = () => {
+    if (dtCiudad) {
+      return; // Ya está inicializado
+    }
+
+    dtCiudad = $('#tblCiudad').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: {
+        url: '/api/v1/ciudades',
+        dataSrc: 'data'
+      },
+      columns: [
+        { data: 'descripcion' },
+        {
+          data: function (row) {
+            return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
                     data-id="${row.id}" 
                     data-descripcion="${row.descripcion}">
                     <i class="fa fa-check"></i> Seleccionar
                   </button>`;
+          }
         }
+      ]
+    });
+
+    // Event listener para seleccionar ciudad
+    $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function () {
+      const id = $(this).data('id');
+      const descripcion = $(this).data('descripcion');
+
+      console.log('🏙️ Ciudad seleccionada:', id, descripcion, 'Tipo:', currentCiudadType);
+
+      if (currentCiudadType === 'residencia') {
+        $('#txtCiudad').val(descripcion);
+        $('#id_ciudad').val(id);
+      } else {
+        $('#txtCiudad_nacimiento').val(descripcion);
+        $('#id_ciudad_nacimiento').val(id);
       }
-    ]
-  });
-  
-  // Event listener para seleccionar ciudad
-  $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function() {
-    const id = $(this).data('id');
-    const descripcion = $(this).data('descripcion');
-    
-    console.log('🏙️ Ciudad seleccionada:', id, descripcion, 'Tipo:', currentCiudadType);
-    
-    if (currentCiudadType === 'residencia') {
-      $('#txtCiudad').val(descripcion);
-      $('#id_ciudad').val(id);
-    } else {
-      $('#txtCiudad_nacimiento').val(descripcion);
-      $('#id_ciudad_nacimiento').val(id);
-    }
-    
-    $('#modalBuscarCiudad').modal('hide');
-  });
-};
 
-const bindCiudadSearch = () => {
-  $('#btnBuscarCiudad').on('click', function(e) {
-    e.preventDefault();
-    currentCiudadType = 'residencia';
-    $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
-    $('#modalBuscarCiudad').modal('show');
-  });
-  
-  $('#btnBuscarCiudadNacimiento').on('click', function(e) {
-    e.preventDefault();
-    currentCiudadType = 'nacimiento';
-    $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
-    $('#modalBuscarCiudad').modal('show');
-  });
-  
-  // Permitir clic en inputs para abrir modal
-  $('#txtCiudad').on('click', function() {
-    $('#btnBuscarCiudad').click();
-  });
-  
-  $('#txtCiudad_nacimiento').on('click', function() {
-    $('#btnBuscarCiudadNacimiento').click();
-  });
-};
+      (bootstrap.Modal.getInstance(document.getElementById("modalBuscarCiudad")) || new bootstrap.Modal(document.getElementById("modalBuscarCiudad"))).hide();
+    });
+  };
 
-// ==========================================
-// INICIALIZACIÓN
-// ==========================================
-$(document).ready(function() {
-  console.log('🚀 Inicializando módulo de funcionarios...');
-  
-  initDatatable();
-  cargarCatalogos();
-  initCiudadDatatable(); // ✅ Inicializar DataTable de ciudades
-  
-  // agregar(); // Ya no necesario, el botón redirige a página agregar
-  editar();
-  eliminar();
-  guardar();
-  
-  detectarEspecialistaPorCargo();
-  bindCiudadSearch(); // ✅ Vincular botones de búsqueda
-  
-  console.log('✅ Módulo de funcionarios inicializado correctamente');
-});
+  const bindCiudadSearch = () => {
+    $('#btnBuscarCiudad').on('click', function (e) {
+      e.preventDefault();
+      currentCiudadType = 'residencia';
+      $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
+      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
+    });
+
+    $('#btnBuscarCiudadNacimiento').on('click', function (e) {
+      e.preventDefault();
+      currentCiudadType = 'nacimiento';
+      $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
+      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
+    });
+
+    // Permitir clic en inputs para abrir modal
+    $('#txtCiudad').on('click', function () {
+      $('#btnBuscarCiudad').click();
+    });
+
+    $('#txtCiudad_nacimiento').on('click', function () {
+      $('#btnBuscarCiudadNacimiento').click();
+    });
+  };
+
+  // ==========================================
+  // INICIALIZACIÓN
+  // ==========================================
+  $(document).ready(function () {
+    console.log('🚀 Inicializando módulo de funcionarios...');
+
+    initDatatable();
+    cargarCatalogos();
+    initCiudadDatatable(); // ✅ Inicializar DataTable de ciudades
+
+    // agregar(); // Ya no necesario, el botón redirige a página agregar
+    editar();
+    eliminar();
+    guardar();
+
+    detectarEspecialistaPorCargo();
+    bindCiudadSearch(); // ✅ Vincular botones de búsqueda
+
+    console.log('✅ Módulo de funcionarios inicializado correctamente');
+  });
 
 </script>
 {% endblock %}

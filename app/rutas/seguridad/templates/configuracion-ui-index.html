@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Personalización de Interfaz{% endblock %}
+
+{% block layout_content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Personalización de Interfaz</h1>
+                    <div class="page-header-subtitle">Configura los colores de cada componente visual del sistema</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+    <div class="row">
+
+        <!-- COLUMNA PRINCIPAL: Configuración -->
+        <div class="col-xl-8">
+
+            <!-- SECCIÓN 1: Botones de Acción -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-primary">Botones de Acción</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Define el color de cada botón de acción. Los cambios se aplican en todos los módulos.</p>
+                    {% set botones = {
+                        'boton_agregar':  'Botón Agregar (listas)',
+                        'boton_guardar':  'Botón Guardar (formularios)',
+                        'boton_editar':   'Botón Editar (tablas)',
+                        'boton_eliminar': 'Botón Eliminar (tablas)',
+                        'boton_limpiar':  'Botón Cancelar / Cerrar'
+                    } %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Acción</th>
+                                    <th>Vista Previa</th>
+                                    <th style="width: 180px;">Color</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, label in botones.items() %}
+                                <tr>
+                                    <td><span class="fw-semibold small">{{ label }}</span></td>
+                                    <td>
+                                        <button class="btn btn-{{ preferencias[key] }} btn-sm" id="preview-{{ key }}">
+                                            {{ label.split(' ')[1] }}
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm color-selector" data-componente="{{ key }}" data-tipo="btn">
+                                            {% for color in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] %}
+                                            <option value="{{ color }}" {% if preferencias[key]==color %}selected{% endif %}>{{ color | capitalize }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: Encabezados de Sección -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-success">Encabezados de Sección (Card Headers)</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Colores del texto en los encabezados de las tarjetas de formularios (Datos del Cliente, SIFEN, etc.)</p>
+                    {% set encabezados = {
+                        'color_card_primario':    'Sección Principal (ej: Datos del Cliente)',
+                        'color_card_secundario':  'Sección Secundaria (ej: Datos SIFEN / Empresa)',
+                        'color_card_terciario':   'Sección Terciaria (ej: Datos de Factura)',
+                        'color_card_cuaternario': 'Sección Cuaternaria (ej: Ítems / Detalle)'
+                    } %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sección</th>
+                                    <th>Vista Previa</th>
+                                    <th style="width: 180px;">Color</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, label in encabezados.items() %}
+                                <tr>
+                                    <td><span class="fw-semibold small">{{ label }}</span></td>
+                                    <td>
+                                        <div class="card border-0 shadow-none mb-0" style="max-width: 200px;">
+                                            <div class="card-header bg-light py-1 px-2">
+                                                <span class="fw-bold small text-{{ preferencias[key] }}" id="preview-{{ key }}">Encabezado Ejemplo</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm color-selector" data-componente="{{ key }}" data-tipo="card-header">
+                                            {% for color in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] %}
+                                            <option value="{{ color }}" {% if preferencias[key]==color %}selected{% endif %}>{{ color | capitalize }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: Badges de Estado -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-info">Badges de Estado (Activo / Inactivo)</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Color de los indicadores de estado en las tablas de todos los módulos referenciales.</p>
+                    {% set badges = {
+                        'color_badge_activo':   'Estado Activo',
+                        'color_badge_inactivo': 'Estado Inactivo'
+                    } %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Vista Previa</th>
+                                    <th style="width: 180px;">Color</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, label in badges.items() %}
+                                <tr>
+                                    <td><span class="fw-semibold small">{{ label }}</span></td>
+                                    <td>
+                                        <span class="badge bg-{{ preferencias[key] }}-soft text-{{ preferencias[key] }}" id="preview-{{ key }}">
+                                            {{ label }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm color-selector" data-componente="{{ key }}" data-tipo="badge">
+                                            {% for color in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] %}
+                                            <option value="{{ color }}" {% if preferencias[key]==color %}selected{% endif %}>{{ color | capitalize }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUMNA LATERAL: Información y Previsualización -->
+        <div class="col-xl-4">
+
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-secondary">Información</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-soft-primary py-2 mb-3 small">
+                        Los cambios se guardan <strong>automáticamente</strong> al seleccionar un color. Se aplican de inmediato en todos los módulos.
+                    </div>
+                    <h6 class="fw-semibold small mb-2 text-muted">GUÍA DE COLORES</h6>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% for color in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] %}
+                        <span class="badge bg-{{ color }}">{{ color | capitalize }}</span>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <h6 class="fw-semibold small mb-2 text-muted">VISTA PREVIA RÁPIDA</h6>
+                    <div class="card border-0 bg-light p-0 mb-2">
+                        <div class="card-header bg-light py-2 px-3">
+                            <span class="fw-bold small" id="quickpreview-header" style="color: inherit;">Sección Principal</span>
+                        </div>
+                        <div class="card-body py-2 px-3">
+                            <span class="badge" id="quickpreview-badge-activo">Activo</span>
+                            <span class="badge ms-1" id="quickpreview-badge-inactivo">Inactivo</span>
+                        </div>
+                        <div class="card-footer bg-light py-2 px-3 text-end">
+                            <button class="btn btn-sm" id="quickpreview-btn-agregar">Agregar</button>
+                            <button class="btn btn-sm ms-1" id="quickpreview-btn-guardar">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    const CSRF = '{{ csrf_token() }}';
+
+    // Actualizar vista rápida al cargar
+    function actualizarVistaRapida() {
+        const prefs = {
+            boton_agregar: document.querySelector('[data-componente="boton_agregar"]')?.value,
+            boton_guardar: document.querySelector('[data-componente="boton_guardar"]')?.value,
+            color_card_primario: document.querySelector('[data-componente="color_card_primario"]')?.value,
+            color_badge_activo: document.querySelector('[data-componente="color_badge_activo"]')?.value,
+            color_badge_inactivo: document.querySelector('[data-componente="color_badge_inactivo"]')?.value,
+        };
+
+        const btnAgregar = document.getElementById('quickpreview-btn-agregar');
+        const btnGuardar = document.getElementById('quickpreview-btn-guardar');
+        const header = document.getElementById('quickpreview-header');
+        const badgeActivo = document.getElementById('quickpreview-badge-activo');
+        const badgeInactivo = document.getElementById('quickpreview-badge-inactivo');
+
+        if (btnAgregar) btnAgregar.className = `btn btn-${prefs.boton_agregar} btn-sm`;
+        if (btnGuardar) btnGuardar.className = `btn btn-${prefs.boton_guardar} btn-sm ms-1`;
+        if (header) header.className = `fw-bold small text-${prefs.color_card_primario}`;
+        if (badgeActivo) {
+            badgeActivo.className = `badge bg-${prefs.color_badge_activo}-soft text-${prefs.color_badge_activo}`;
+        }
+        if (badgeInactivo) {
+            badgeInactivo.className = `badge ms-1 bg-${prefs.color_badge_inactivo}-soft text-${prefs.color_badge_inactivo}`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        actualizarVistaRapida();
+
+        const selectors = document.querySelectorAll('.color-selector');
+
+        selectors.forEach(select => {
+            select.addEventListener('change', function () {
+                const componente = this.getAttribute('data-componente');
+                const tipo = this.getAttribute('data-tipo');
+                const colorClase = this.value;
+                const preview = document.getElementById(`preview-${componente}`);
+
+                // Actualizar preview local según el tipo
+                if (preview) {
+                    if (tipo === 'btn') {
+                        preview.className = `btn btn-${colorClase} btn-sm`;
+                    } else if (tipo === 'card-header') {
+                        preview.className = `fw-bold small text-${colorClase}`;
+                    } else if (tipo === 'badge') {
+                        preview.className = `badge bg-${colorClase}-soft text-${colorClase}`;
+                    }
+                }
+
+                // Guardar en servidor
+                fetch('{{ url_for("ui_settings.actualizar") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF
+                    },
+                    body: JSON.stringify({ componente: componente, color_clase: colorClase })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        actualizarVistaRapida();
+                        const Toast = Swal.mixin({
+                            toast: true, position: 'top-end',
+                            showConfirmButton: false, timer: 1800, timerProgressBar: true
+                        });
+                        Toast.fire({ icon: 'success', title: 'Guardado correctamente' });
+                    } else {
+                        Swal.fire('Error', data.error || 'No se pudo guardar', 'error');
+                    }
+                })
+                .catch(() => Swal.fire('Error', 'Error de red', 'error'));
+            });
+        });
+    });
+</script>
+{% endblock %}

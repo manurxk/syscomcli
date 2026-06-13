@@ -1,0 +1,1858 @@
+{% if embedded %}
+{% extends 'base_embedded.html' %}
+{% else %}
+{% extends 'base.html' %}
+{% endif %}
+
+{% block titulo %}
+Presupuestos
+{% endblock %}
+
+{% block contenido %}
+<div class="container-xl px-4 mt-4">
+    <!-- Encabezado de la página -->
+    {% if not embedded %}
+    <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+        <div class="container-xl px-4">
+            <div class="page-header-content pt-4">
+                <div class="row align-items-center justify-content-between">
+                    <div class="col-auto mt-4">
+                        <h1 class="page-header-title">{% if id_presupuesto %}Editar Presupuesto{% else %}Nuevo Presupuesto{% endif %}
+                        </h1>
+                        <div class="page-header-subtitle">Complete los datos para generar el presupuesto de la clínica
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-auto mt-4">
+                        <a href="{{ url_for('registrarpresupuesto.presupuestoIndex') }}"
+                            class="btn btn-sm btn-light text-primary fw-500 shadow-sm">
+                            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    <div class="container-xl px-4 {% if not embedded %}mt-n10{% else %}mt-4{% endif %}">
+
+        <form id="formPresupuesto">
+            <input type="hidden" id="txtIdPresupuesto">
+            <input type="hidden" id="embedded_val" value="{{ 'true' if embedded else 'false' }}">
+            <input type="hidden" id="id_paciente_val" value="{{ id_paciente or '' }}">
+            <input type="hidden" id="id_presupuesto_val" value="{{ id_presupuesto or '' }}">
+            <input type="hidden" id="id_base_val" value="{{ id_base or '' }}">
+            <div class="row justify-content-center">
+                <!-- Contenido del Formulario (Full Width) -->
+                <div class="col-lg-10">
+
+                    <!-- SECCIÓN: Datos Principales -->
+                    <div id="section-principales" class="card shadow-sm mb-4 border-0">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="m-0 fw-bold text-primary">
+                                <i class="fas fa-info-circle me-2"></i> Información General
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row gx-3 mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtPaciente">Paciente <span
+                                            class="text-danger">*</span></label>
+                                    <div class="input-group input-group-modern">
+                                        <input type="hidden" id="id_paciente" required>
+                                        <input type="text" class="form-control bg-white" id="txtPaciente"
+                                            placeholder="Seleccione un paciente" readonly required>
+                                        <button class="btn btn-outline-primary" type="button" id="btnBuscarPaciente">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtProfesional">Profesional
+                                        <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-modern">
+                                        <input type="hidden" id="id_profesional" required>
+                                        <input type="text" class="form-control bg-white" id="txtProfesional"
+                                            placeholder="Seleccione un profesional" readonly required>
+                                        <button class="btn btn-outline-primary" type="button" id="btnBuscarProfesional">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row gx-3 mb-3" id="divEspecialidadContainer" style="display: none;">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="cboEspecialidad">Especialidad para Agendamiento <span class="text-danger">*</span></label>
+                                    <select class="form-select border-primary" id="cboEspecialidad">
+                                        <option value="">Seleccione especialidad...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row gx-3 mb-3" id="divAgendaContainer" style="display: none;">
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="cboAgenda">Turno de Agenda Disponible <span class="text-secondary">(Opcional para auto-completar)</span></label>
+                                    <select class="form-select border-info" id="cboAgenda">
+                                        <option value="">Seleccione un turno...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtDuracionCita">Duración Cita (min)</label>
+                                    <input type="number" class="form-control" id="txtDuracionCita" value="45" min="15" step="15">
+                                </div>
+                                <div class="col-md-4 mb-3" id="divSlotContainer" style="display: none;">
+                                    <label class="form-label small fw-bold text-muted" for="cboSlot">Cupo/Hora Específica</label>
+                                    <select class="form-select border-info" id="cboSlot">
+                                        <option value="">Seleccione un horario...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <div id="agenda-help" class="form-text text-info small">
+                                        <i class="fas fa-info-circle me-1"></i> Seleccione un turno para configurar automáticamente los días y horarios.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row gx-3 mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtFecha">Fecha <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="txtFecha" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtTotalSesiones">Total
+                                        Sesiones
+                                        <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="txtTotalSesiones" value="1" min="1"
+                                        required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtEstado">Estado</label>
+                                    <select class="form-select" id="txtEstado">
+                                        <option value="PENDIENTE">PENDIENTE</option>
+                                        <option value="APROBADO">APROBADO</option>
+                                        <option value="RECHAZADO">RECHAZADO</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row gx-3 mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label small fw-bold text-muted"
+                                        for="txtFrecuenciaSugerida">Frecuencia Sugerida</label>
+                                    <select class="form-select border-primary" id="txtFrecuenciaSugerida">
+                                        <option value="">Seleccione frecuencia...</option>
+                                        <option value="DIARIO">DIARIO</option>
+                                        <option value="SEMANAL">SEMANAL</option>
+                                        <option value="QUINCENAL">QUINCENAL</option>
+                                        <option value="MENSUAL">MENSUAL</option>
+                                        <option value="PERSONALIZADO">PERSONALIZADO (Días)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3" id="divIntervaloPersonalizado" style="display: none;">
+                                    <label class="form-label small fw-bold text-muted" for="txtIntervaloPersonalizado">Días de Intervalo</label>
+                                    <input type="number" class="form-control border-warning" id="txtIntervaloPersonalizado" value="1" min="1">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtHoraInicio">Hora Inicio</label>
+                                    <input type="time" class="form-control" id="txtHoraInicio" value="08:00">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label small fw-bold text-muted" for="txtHoraFin">Hora Fin</label>
+                                    <input type="time" class="form-control" id="txtHoraFin" value="09:00">
+                                </div>
+                            </div>
+
+                            <div class="row gx-3 mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold text-muted" for="txtIdPlanTratamiento">ID
+                                        Plan
+                                        Tratamiento Relacionado</label>
+                                    <input type="number" class="form-control" id="txtIdPlanTratamiento" min="1"
+                                        placeholder="Opcional">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: Items del Presupuesto -->
+                    <div id="section-items" class="card shadow-sm mb-4 border-0">
+                        <div class="card-header">
+                            <h6 class="m-0 fw-bold text-success">
+                                <i class="fas fa-list-ul me-2"></i> Ítems del Presupuesto
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-success shadow-sm" id="btnAgregarItem"
+                                style="display: none;">
+                                <i class="fas fa-plus fa-sm text-white-50"></i> Agregar Ítem
+                            </button>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Mensaje para presupuestos nuevos -->
+                            <div id="divSinItems" class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-clipboard-list fa-3x text-muted opacity-50"></i>
+                                </div>
+                                <h6 class="text-muted">Guarde el encabezado del presupuesto primero para poder agregar
+                                    ítems.</h6>
+                            </div>
+
+                            <!-- Tabla de items (solo visible en edición) -->
+                            <div id="divTablaItems" class="table-responsive" style="display: none;">
+                                <table class="table table-bordered table-hover" id="tblItemsPresupuesto" width="100%"
+                                    cellspacing="0">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Descripción</th>
+                                            <th class="text-center" width="10%">Cantidad</th>
+                                            <th class="text-right" width="15%">Precio Unit.</th>
+                                            <th class="text-right" width="15%">Subtotal</th>
+                                            <th class="text-center" width="15%">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyItems">
+                                        <!-- Items cargados dinámicamente -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-right fw-bold">Subtotal Presupuesto:
+                                            </td>
+                                            <td class="text-right fw-bold" id="lblSubtotal">0 Gs.</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-right fw-bold">Descuento Global (Gs.):
+                                            </td>
+                                            <td class="text-right">
+                                                <input type="number" class="form-control form-control-sm text-right"
+                                                    id="txtDescuento" value="0" min="0">
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <tr class="table-active text-primary">
+                                            <td colspan="3" class="text-right fw-bold h5 mb-0">TOTAL A PAGAR:
+                                            </td>
+                                            <td class="text-right fw-bold h5 mb-0" id="lblTotal">0 Gs.</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: Cronograma Proyectado -->
+                    <div id="section-cronograma" class="card shadow-sm mb-4 border-0" style="display: none;">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 fw-bold text-primary">
+                                <i class="fas fa-calendar-alt me-2"></i> Cronograma Proyectado de Sesiones
+                            </h6>
+                            <div>
+                                <span class="badge bg-primary-soft text-primary me-2" id="lblTotalSesionesProyectadas">0 Sesiones</span>
+                                <button type="button" class="btn btn-sm btn-primary shadow-sm" id="btnRegistrarCitas" style="display: none;">
+                                    <i class="fas fa-check-circle me-1"></i> Confirmar y Registrar Citas
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0" id="tblCronograma">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4">Sesión</th>
+                                            <th>Fecha</th>
+                                            <th>Día</th>
+                                            <th>Horario</th>
+                                            <th class="pe-4">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyCronograma">
+                                        <!-- Se carga dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: Observaciones -->
+                    <div id="section-observaciones" class="card shadow-sm mb-4 border-0">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="m-0 fw-bold text-info">
+                                <i class="fas fa-comment-alt me-2"></i> Observaciones Adicionales
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <textarea class="form-control" id="txtObservaciones" rows="3"
+                                placeholder="Notas internas o aclaraciones para el paciente..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="card shadow-sm mb-5 border-0 bg-transparent">
+                        <div class="card-body p-0 d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span>Los campos marcados con <span class="text-danger">*</span> son
+                                    obligatorios.</span>
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-ghost-danger me-2" type="button" id="btnDescartar">
+                                    <i class="fas fa-times me-1"></i> Descartar
+                                </button>
+                                <button class="btn btn-primary shadow px-5 py-2 fw-bold" type="button" id="btnGuardar">
+                                    <i class="fas fa-save me-2"></i>
+                                    {{ 'Actualizar Presupuesto' if id_presupuesto else 'Generar Presupuesto' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+
+        <!-- Modal Buscar Paciente -->
+        <div class="modal fade" id="modalBuscarPaciente" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold">Buscar Paciente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle w-100" id="tblPacientes">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>HC</th>
+                                        <th>Nombre Completo</th>
+                                        <th>CI</th>
+                                        <th>Teléfono</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Buscar Profesional -->
+        <div class="modal fade" id="modalBuscarProfesional" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold">Seleccionar Profesional</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle w-100" id="tblProfesionales">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre Completo</th>
+                                        <th>Matrícula</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Agregar/Editar Item -->
+        <div class="modal fade" id="modalItem" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold" id="modalItemTitle">Agregar Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="txtIdItem">
+                        <input type="hidden" id="txtIdPresupuestoItem">
+
+                        <div class="form-group">
+                            <label for="txtDescripcionItem">Descripción del Item: <span
+                                    class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtDescripcionItem"
+                                    placeholder="Ej: Sesión de terapia individual" required>
+                                <button class="btn btn-outline-success" type="button" id="btnBuscarCatItem">
+                                    <i class="fas fa-search"></i> Catálogo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="txtCantidadItem">Cantidad: <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="txtCantidadItem" value="1" min="1"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="txtPrecioUnitarioItem">Precio Unitario (Gs.): <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="txtPrecioUnitarioItem" placeholder="0"
+                                        min="0" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtObservacionesItem">Observaciones:</label>
+                            <textarea class="form-control" id="txtObservacionesItem" rows="2"></textarea>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Subtotal:</strong> <span id="previewSubtotalItem">0 Gs.</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top">
+                        <button type="button" class="btn btn-success" id="btnGuardarItem">
+                            <i class="fas fa-save"></i> Guardar Item
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Buscar Item del Catálogo -->
+        <div class="modal fade" id="modalBuscarItemCatalogo" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold">Buscar Servicio / Arancel</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle w-100" id="tblItemsCatalogo">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th>Precio Unitario</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --primary-op-60: rgba(13, 110, 253, 0.6);
+            --secondary-color: #6c757d;
+            --text-muted: #adb5bd;
+            --input-padding-v: 12px;
+            --input-height: 42px;
+            --border-radius: 6px;
+            --section-spacing: 32px;
+            --field-spacing: 16px;
+            --card-padding: 24px;
+        }
+
+        .card {
+            margin-bottom: 2rem !important;
+            border: 1px solid #e3e6f0 !important;
+        }
+
+        .card-header {
+            border-bottom: 1px solid #e3e6f0 !important;
+            background-color: #f8f9fc !important;
+        }
+
+        .form-label {
+            margin-bottom: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: var(--input-height) !important;
+            padding: var(--input-padding-v) 1rem !important;
+            border-radius: var(--border-radius) !important;
+            border: 1px solid #ced4da;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1) !important;
+        }
+
+        .input-group-modern .btn {
+            border-radius: 0 var(--border-radius) var(--border-radius) 0 !important;
+        }
+
+        .btn-ghost-secondary {
+            color: var(--secondary-color);
+            background: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-ghost-secondary:hover {
+            background: #f8f9fa;
+            color: var(--primary-color);
+        }
+
+        .btn-ghost-danger {
+            color: #dc3545;
+            background: transparent;
+            border: none;
+        }
+
+        .btn-ghost-danger:hover {
+            background: #fff5f5;
+        }
+    </style>
+    {% block js %}
+    <script>
+        const CSRFToken = "{{ csrf_token() }}" || null;
+        const EMBEDDED_MODE = document.getElementById('embedded_val')?.value === 'true';
+        const idPacienteParam = document.getElementById('id_paciente_val')?.value || null;
+        const ID_PRESUPUESTO_CARGADO = document.getElementById('id_presupuesto_val')?.value || null;
+        const ID_BASE_CARGADO = document.getElementById('id_base_val')?.value || null;
+
+        const initFormulario = () => {
+            if (ID_PRESUPUESTO_CARGADO) {
+                idPresupuestoActual = ID_PRESUPUESTO_CARGADO;
+                cargarDatosRestauracion(ID_PRESUPUESTO_CARGADO);
+            } else if (ID_BASE_CARGADO) {
+                // TAREA 4: Duplicar presupuesto desde una base
+                cargarFrecuencias();
+                cargarDatosBase(ID_BASE_CARGADO);
+            } else {
+                // Setup for new
+                $('#txtFecha').val(new Date().toISOString().split('T')[0]);
+                $('#txtValidezDias').val(30);
+                $('#txtEstado').val('PENDIENTE');
+                $('#txtDescuento').val(0);
+                $('#divTablaItems').hide();
+                $('#divSinItems').show();
+                $('#btnAgregarItem').hide();
+                idPresupuestoActual = null;
+                
+                cargarFrecuencias();
+
+                // Auto-load patient if provided
+                if (idPacienteParam) {
+                    cargarDatosPaciente(idPacienteParam);
+                }
+            }
+        }
+
+        const cargarDatosBase = (id_base) => {
+            Swal.fire({ title: 'Preparando duplicado...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            fetch(`/api/v1/presupuestos/${id_base}/duplicar`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data && data.success && data.data) {
+                    const base = data.data;
+                    
+                    // Asegurarnos que es un nuevo registro
+                    idPresupuestoActual = null;
+                    $('#txtIdPresupuesto').val('');
+                    
+                    // Setear fechas (hoy y sugerida +30 días)
+                    $('#txtFecha').val(new Date().toISOString().split('T')[0]);
+                    
+                    // Pre-cargar cliente y profesional
+                    if (base.id_paciente) {
+                        $('#id_paciente').val(base.id_paciente);
+                        $('#txtPaciente').val(base.paciente_nombre);
+                    }
+                    if (base.id_profesional) {
+                        $('#id_profesional').val(base.id_profesional);
+                        $('#txtProfesional').val(base.profesional_nombre);
+                        cargarEspecialidades(base.id_profesional);
+                    }
+                    
+                    $('#txtEstado').val('PENDIENTE');
+                    $('#txtDescuento').val(0); // El descuento se reinicia
+                    $('#txtValidezDias').val(30); // 30 días de validez estándar
+                    
+                    if (base.presupuesto_observaciones) {
+                        $('#txtObservaciones').val('Basado en el presupuesto Nro: ' + base.presupuesto_numero_base + ' - ' + base.presupuesto_observaciones);
+                    } else {
+                        $('#txtObservaciones').val('Basado en el presupuesto Nro: ' + base.presupuesto_numero_base);
+                    }
+
+                    // Cargar ítems en memoria SIN ID DE DETALLE
+                    if (base.detalle && base.detalle.length > 0) {
+                        itemsPresupuesto = base.detalle.map(item => ({
+                            // Limpiar IDs para que se inserten como nuevos cuando el usuario guarde
+                            id_presupuesto_detalle: null,
+                            id_presupuesto: null,
+                            des_item: item.des_item,
+                            cantidad: item.cantidad,
+                            precio_unitario: item.precio_unitario,
+                            observaciones: item.observaciones
+                        }));
+                        
+                        // Mostramos la tabla como visualización (no se puede editar cantidad/precio 
+                        // directo acá porque hay que guardar cabecera primero en la lógica actual).
+                        // OJO: Como la lógica actual requiere el "id_presupuesto" para guardar items al BD,
+                        // para un presupuesto nuevo, primero debe guardar la cabecera.
+                        // Modificamos el hook de guardar para que guarde estos items masivos.
+                        renderizarItemsBase();
+                        $('#divTablaItems').show();
+                        $('#divSinItems').hide();
+                        
+                        Swal.fire("Listo", "Se cargaron los datos base. Por favor revise, modifique si es necesario y guarde el presupuesto.", "info");
+                    } else {
+                        Swal.close();
+                    }
+                } else {
+                    Swal.fire("Error", data.error || "No se pudo cargar la base.", "error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire("Error", "Error de red al cargar duplicado.", "error");
+            });
+        };
+
+        const renderizarItemsBase = () => {
+             const tbody = $('#tbodyItems');
+             tbody.empty();
+             if (itemsPresupuesto.length === 0) return;
+
+             itemsPresupuesto.forEach((item, index) => {
+                 const subtotal = (item.precio_unitario || 0) * (item.cantidad || 1);
+                 // No botones de edición reales ya que aún no existen en BD. 
+                 // Tienen que guardar la cabecera primero.
+                 const row = `
+                 <tr class="table-warning">
+                     <td>${item.des_item || ''} <span class="badge bg-warning text-dark ms-1">Pendiente de guardar</span></td>
+                     <td class="text-center">${item.cantidad || 1}</td>
+                     <td class="text-right">${formatearMoneda(item.precio_unitario || 0)}</td>
+                     <td class="text-right"><strong>${formatearMoneda(subtotal)}</strong></td>
+                     <td class="text-center text-muted small">
+                        Requiere guardar cabecera
+                     </td>
+                 </tr>`;
+                 tbody.append(row);
+             });
+             calcularTotales();
+        };
+
+        const cargarDatosPaciente = (id) => {
+            fetch(`/api/v1/pacientes/${id}`)
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data && data.success && data.data) {
+                        $('#id_paciente').val(data.data.id_paciente);
+                        $('#txtPaciente').val(data.data.persona_nombre + ' ' + data.data.persona_apellido);
+                    }
+                });
+        }
+
+        const cargarFrecuencias = (valorSeleccionado = null) => {
+            fetch('/api/v1/presupuestos/frecuencias')
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data && data.success && data.data) {
+                        const select = $('#txtFrecuenciaSugerida');
+                        select.empty();
+                        select.append('<option value="">Seleccione frecuencia...</option>');
+                        data.data.forEach(f => {
+                            const option = $('<option></option>')
+                                .attr('value', f.descripcion)
+                                .text(`${f.descripcion} (cada ${f.dias} días)`);
+                            
+                            if (valorSeleccionado && valorSeleccionado === f.descripcion) {
+                                option.attr('selected', 'selected');
+                            }
+                            select.append(option);
+                        });
+                    }
+                });
+        }
+
+        const cargarDatosRestauracion = (id) => {
+            fetch(`/api/v1/presupuestos/${id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data && data.success && data.data) {
+                        const presupuesto = data.data;
+                        $('#txtIdPresupuesto').val(presupuesto.id_presupuesto);
+                        $('#txtPaciente').val(presupuesto.paciente_nombre);
+                        $('#id_paciente').val(presupuesto.id_paciente);
+                        $('#txtProfesional').val(presupuesto.profesional_nombre);
+                        $('#id_profesional').val(presupuesto.id_profesional);
+                        
+                        // Cargar especialidades y agenda del profesional
+                        if (presupuesto.id_profesional) {
+                            cargarEspecialidades(presupuesto.id_profesional);
+                            cargarAgendaEspecialista(presupuesto.id_profesional);
+                        }
+
+                        $('#txtFecha').val(presupuesto.presupuesto_fecha);
+                        $('#txtTotalSesiones').val(presupuesto.presupuesto_validez_dias || 1);
+                        $('#txtEstado').val(presupuesto.presupuesto_estado);
+                        
+                        cargarFrecuencias(presupuesto.frecuencia_sugerida);
+                        
+                        $('#txtIdPlanTratamiento').val(presupuesto.id_plan_tratamiento || '');
+                        $('#txtDescuento').val(presupuesto.presupuesto_descuento || 0);
+                        $('#txtObservaciones').val(presupuesto.presupuesto_observaciones || '');
+
+                        cargarItemsPresupuesto(id);
+                        $('#divTablaItems').show();
+                        $('#divSinItems').hide();
+                        $('#btnAgregarItem').show();
+                        
+                        // Cargar el cronograma proyectado inmediatamente si hay datos suficientes
+                        setTimeout(simularProyeccionCitas, 1000);
+                    } else {
+                        Swal.fire("Error", "No se pudo cargar el presupuesto.", "error");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire("Error", "Ocurrió un error al cargar el presupuesto.", "error");
+                });
+        }
+
+        // Variables globales para gestión de items
+        let itemsPresupuesto = [];
+        let idPresupuestoActual = null;
+
+        // Guardar presupuesto
+        const guardar = () => {
+            $('#btnGuardar').on('click', function () {
+                const idPresupuesto = $('#txtIdPresupuesto').val();
+                const idPaciente = $('#id_paciente').val();
+                const idProfesional = $('#id_profesional').val();
+                const fecha = $('#txtFecha').val();
+                const totalSesiones = $('#txtTotalSesiones').val() || 1;
+                const estado = $('#txtEstado').val();
+                const descuento = $('#txtDescuento').val() || 0;
+                const observaciones = $('#txtObservaciones').val();
+
+                // Validaciones
+                if (!idPaciente) {
+                    Swal.fire("Error", "Debe seleccionar un paciente.", "error");
+                    return;
+                }
+                if (!idProfesional) {
+                    Swal.fire("Error", "Debe seleccionar un profesional.", "error");
+                    return;
+                }
+                if (!fecha) {
+                    Swal.fire("Error", "Debe ingresar una fecha.", "error");
+                    return;
+                }
+
+                const payload = {
+                    id_paciente: parseInt(idPaciente),
+                    id_profesional: parseInt(idProfesional),
+                    presupuesto_fecha: fecha,
+                    presupuesto_validez_dias: parseInt(totalSesiones), // Usamos total sesiones como validez temporalmente o hardcode 30
+                    presupuesto_estado: estado,
+                    presupuesto_descuento: parseInt(descuento),
+                    presupuesto_observaciones: observaciones || null,
+                    usuario_creacion: 'ADMIN'
+                };
+
+                const tabla = $('#tblPresupuestos').DataTable();
+                const url = idPresupuesto
+                    ? `/api/v1/presupuestos/${idPresupuesto}`
+                    : '/api/v1/presupuestos';
+                const method = idPresupuesto ? 'PUT' : 'POST';
+
+                fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRFToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && !data.error && data.success) {
+                            const nuevoId = data.data.id_presupuesto || idPresupuesto;
+                            idPresupuestoActual = nuevoId;
+
+                            // ----------------------------------------------------
+                            // TAREA 4: Guardado de ítems base en lote al duplicar
+                            // ----------------------------------------------------
+                            if (!idPresupuesto && ID_BASE_CARGADO && itemsPresupuesto.length > 0) {
+                                // Tenemos items pre-cargados que aún no se han enviado al backend
+                                // Hacemos peticiones para cada uno simulando el agregarItem
+                                let promesas = itemsPresupuesto.map(item => {
+                                    return fetch(`/api/v1/presupuestos/${nuevoId}/detalle`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+                                        body: JSON.stringify({
+                                            des_item: item.des_item,
+                                            cantidad: item.cantidad,
+                                            precio_unitario: item.precio_unitario,
+                                            observaciones: item.observaciones
+                                        })
+                                    });
+                                });
+
+                                Promise.all(promesas).then(() => {
+                                    // Recargar para obtener IDs reales formales de los items
+                                    cargarItemsPresupuesto(nuevoId);
+                                    $('#divTablaItems').show();
+                                    $('#divSinItems').hide();
+                                    $('#btnAgregarItem').show();
+                                    
+                                    tabla.ajax.reload();
+                                    Swal.fire("Duplicado", "El presupuesto ha sido duplicado y generado correctamente.", "success")
+                                    .then(() => {
+                                        if (!EMBEDDED_MODE) window.location.href = "/presupuesto/presupuesto-index";
+                                    });
+                                }).catch(err => {
+                                    console.error(err);
+                                    Swal.fire("Advertencia", "Se creó el presupuesto pero falló al copiar los ítems.", "warning");
+                                });
+                                return; // Salir aquí porque la promesa maneja el SweetAlert
+                            }
+
+                            // Flujo normal u edición pura (sin duplicar)
+                            // Si es nuevo normal, cargar ventana para items formales.
+                            if (!idPresupuesto) {
+                                setTimeout(() => {
+                                    cargarItemsPresupuesto(nuevoId);
+                                    $('#divTablaItems').show();
+                                    $('#divSinItems').hide();
+                                    $('#btnAgregarItem').show();
+                                }, 500);
+                            } else {
+                                // Si es edición, recalcular totales
+                                calcularTotales();
+                            }
+
+                            tabla.ajax.reload();
+                            Swal.fire(
+                                idPresupuesto ? "Actualizado" : "Creado",
+                                `El presupuesto ha sido ${idPresupuesto ? 'actualizado' : 'creado'} correctamente.`,
+                                "success"
+                            ).then(() => {
+                                if (EMBEDDED_MODE && !idPresupuesto) {
+                                    // embedded.. stay
+                                } else if (!EMBEDDED_MODE) {
+                                    window.location.href = "{{ url_for('registrarpresupuesto.presupuestoIndex') }}";
+                                }
+                            });
+                        } else {
+                            Swal.fire("Error", data.error || `No se pudo ${idPresupuesto ? 'actualizar' : 'guardar'} el presupuesto.`, "error");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire("Error", "Ocurrió un error al procesar la solicitud.", "error");
+                    });
+            });
+        }
+
+        // ==========================================
+        // GESTIÓN DE ITEMS DEL PRESUPUESTO
+        // ==========================================
+
+        // Cargar items del presupuesto
+        const cargarItemsPresupuesto = (idPresupuesto) => {
+            fetch(`/api/v1/presupuestos/${idPresupuesto}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data && data.success && data.data && data.data.detalle) {
+                        itemsPresupuesto = data.data.detalle || [];
+                        renderizarItems();
+                        calcularTotales();
+                    } else {
+                        itemsPresupuesto = [];
+                        renderizarItems();
+                        calcularTotales();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error cargando items:', err);
+                    itemsPresupuesto = [];
+                    renderizarItems();
+                });
+        }
+
+        // Renderizar tabla de items
+        const renderizarItems = () => {
+            const tbody = $('#tbodyItems');
+            tbody.empty();
+
+            if (itemsPresupuesto.length === 0) {
+                tbody.append('<tr><td colspan="5" class="text-center text-muted">No hay items agregados</td></tr>');
+                return;
+            }
+
+            itemsPresupuesto.forEach((item, index) => {
+                const subtotal = (item.precio_unitario || 0) * (item.cantidad || 1);
+                const row = `
+<tr>
+    <td>${item.des_item || ''}</td>
+    <td class="text-center">${item.cantidad || 1}</td>
+    <td class="text-right">${formatearMoneda(item.precio_unitario || 0)}</td>
+    <td class="text-right"><strong>${formatearMoneda(subtotal)}</strong></td>
+    <td class="text-center">
+        <button type="button" class="btn btn-sm btn-warning btn-editar-item" data-index="${index}" title="Editar">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-danger btn-eliminar-item" data-index="${index}" title="Eliminar">
+            <i class="fas fa-trash"></i>
+        </button>
+    </td>
+</tr>
+`;
+                tbody.append(row);
+            });
+        }
+
+        // Formatear moneda
+        const formatearMoneda = (valor) => {
+            return new Intl.NumberFormat('es-PY', {
+                style: 'currency',
+                currency: 'PYG',
+                minimumFractionDigits: 0
+            }).format(valor || 0);
+        }
+
+        // Calcular totales
+        const calcularTotales = () => {
+            const subtotal = itemsPresupuesto.reduce((sum, item) => {
+                return sum + ((item.precio_unitario || 0) * (item.cantidad || 1));
+            }, 0);
+
+            const descuento = parseInt($('#txtDescuento').val() || 0);
+            const total = Math.max(0, subtotal - descuento);
+
+            $('#lblSubtotal').text(formatearMoneda(subtotal));
+            $('#lblTotal').text(formatearMoneda(total));
+        }
+
+        // Actualizar totales cuando cambia el descuento
+        const actualizarTotalesOnChange = () => {
+            $('#txtDescuento').on('input', function () {
+                calcularTotales();
+            });
+        }
+
+        // Agregar item
+        const agregarItem = () => {
+            $('#btnAgregarItem').on('click', function () {
+                if (!idPresupuestoActual) {
+                    Swal.fire("Atención", "Debe guardar el presupuesto primero antes de agregar items.", "warning");
+                    return;
+                }
+
+                $('#modalItemTitle').text("Agregar Item");
+                $('#txtIdItem').val("");
+                $('#txtIdPresupuestoItem').val(idPresupuestoActual);
+                $('#txtDescripcionItem').val("");
+                
+                // Pre-cargar cantidad con el total de sesiones de la cabecera
+                const totalSesiones = $('#txtTotalSesiones').val() || 1;
+                $('#txtCantidadItem').val(totalSesiones);
+                
+                $('#txtPrecioUnitarioItem').val("");
+                $('#txtObservacionesItem').val("");
+                $('#previewSubtotalItem').text("0 Gs.");
+                new bootstrap.Modal(document.getElementById("modalItem")).show();
+            });
+        }
+
+        // Calcular preview de subtotal en modal item
+        const calcularPreviewSubtotal = () => {
+            $('#txtCantidadItem, #txtPrecioUnitarioItem').on('input', function () {
+                const cantidad = parseInt($('#txtCantidadItem').val() || 0);
+                const precio = parseInt($('#txtPrecioUnitarioItem').val() || 0);
+                const subtotal = cantidad * precio;
+                $('#previewSubtotalItem').text(formatearMoneda(subtotal));
+            });
+        }
+
+        // Guardar item
+        const guardarItem = () => {
+            $('#btnGuardarItem').on('click', function () {
+                const idItem = $('#txtIdItem').val();
+                const idPresupuesto = $('#txtIdPresupuestoItem').val();
+                const descripcion = $('#txtDescripcionItem').val().trim();
+                const cantidad = parseInt($('#txtCantidadItem').val() || 1);
+                const precioUnitario = parseInt($('#txtPrecioUnitarioItem').val() || 0);
+                const observaciones = $('#txtObservacionesItem').val().trim();
+
+                if (!descripcion) {
+                    Swal.fire("Error", "Debe ingresar una descripción del item.", "error");
+                    return;
+                }
+                if (!precioUnitario || precioUnitario <= 0) {
+                    Swal.fire("Error", "Debe ingresar un precio unitario válido.", "error");
+                    return;
+                } const payload = {
+                    des_item: descripcion, cantidad: cantidad, precio_unitario: precioUnitario, observaciones:
+                        observaciones || null
+                }; const url = `/api/v1/presupuestos/${idPresupuesto}/detalle`; fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }, body: JSON.stringify(payload)
+                })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && !data.error && data.success) {
+                            cargarItemsPresupuesto(idPresupuesto);
+                            (bootstrap.Modal.getInstance(document.getElementById("modalItem")) || new
+                                bootstrap.Modal(document.getElementById("modalItem"))).hide();
+                            Swal.fire("Agregado", "El item ha sido agregado correctamente.", "success");
+                        } else {
+                            Swal.fire("Error", data.error || "No se pudo agregar el item.", "error");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire("Error", "Ocurrió un error al agregar el item.", "error");
+                    });
+            });
+        }
+
+        // Editar item
+        const editarItem = () => {
+            $(document).on('click', '.btn-editar-item', function () {
+                const index = $(this).data('index');
+                const item = itemsPresupuesto[index];
+
+                $('#modalItemTitle').text("Editar Item");
+                $('#txtIdItem').val(item.id_presupuesto_detalle);
+                $('#txtIdPresupuestoItem').val(item.id_presupuesto);
+                $('#txtDescripcionItem').val(item.des_item);
+                $('#txtCantidadItem').val(item.cantidad);
+                $('#txtPrecioUnitarioItem').val(item.precio_unitario);
+                $('#txtObservacionesItem').val(item.observaciones || '');
+
+                const subtotal = (item.precio_unitario || 0) * (item.cantidad || 1);
+                $('#previewSubtotalItem').text(formatearMoneda(subtotal));
+
+                new bootstrap.Modal(document.getElementById("modalItem")).show();
+            });
+        }
+
+        // Eliminar item
+        const eliminarItem = () => {
+            $(document).on('click', '.btn-eliminar-item', function () {
+                const index = $(this).data('index');
+                const item = itemsPresupuesto[index];
+
+                Swal.fire({
+                    title: "¿Eliminar este item?",
+                    text: item.des_item,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/api/v1/presupuestos/${item.id_presupuesto}/detalle/${item.id_presupuesto_detalle}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': CSRFToken
+                            }
+                        })
+                            .then(resp => resp.json())
+                            .then(data => {
+                                if (data && !data.error && data.success) {
+                                    cargarItemsPresupuesto(item.id_presupuesto);
+                                    Swal.fire("Eliminado", "El item ha sido eliminado.", "success");
+                                } else {
+                                    Swal.fire("Error", data.error || "No se pudo eliminar el item.", "error");
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                Swal.fire("Error", "Ocurrió un error al eliminar el item.", "error");
+                            });
+                    }
+                });
+            });
+        }
+
+        // Ver detalle del presupuesto
+        const verDetalle = () => {
+            $('#tblPresupuestos').on('click', 'button[name="btn_ver"]', function () {
+                const idPresupuesto = $(this).data('id');
+                Swal.fire({
+                    title: 'Cargando...',
+                    text: 'Obteniendo información del presupuesto',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch(`/api/v1/presupuestos/${idPresupuesto}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && data.success && data.data) {
+                            const presupuesto = data.data;
+                            let detalleHtml = '';
+
+                            if (presupuesto.detalle && presupuesto.detalle.length > 0) {
+                                detalleHtml = '<table class="table table-sm mt-3"><thead><tr><th>Item</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead><tbody>';
+                                presupuesto.detalle.forEach(item => {
+                                    detalleHtml += `<tr>
+                                    <td>${item.des_item}</td>
+                                    <td>${item.cantidad}</td>
+                                    <td>${new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 }).format(item.precio_unitario || 0)}</td>
+                                    <td>${new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 }).format(item.subtotal || 0)}</td>
+                                </tr>`;
+                                });
+                                detalleHtml += '</tbody></table>';
+                            } else {
+                                detalleHtml = '<p class="text-muted">No hay items en este presupuesto.</p>';
+                            }
+
+                            Swal.fire({
+                                title: `Presupuesto ${presupuesto.presupuesto_numero}`,
+                                html: `
+    <div class="text-left">
+        <p><strong>Paciente:</strong> ${presupuesto.paciente_nombre}</p>
+        <p><strong>Profesional:</strong> ${presupuesto.profesional_nombre}</p>
+        <p><strong>Fecha:</strong> ${presupuesto.presupuesto_fecha}</p>
+        <p><strong>Estado:</strong> ${presupuesto.presupuesto_estado}</p>
+        <p><strong>Subtotal:</strong> ${new Intl.NumberFormat('es-PY', {
+                                    style: 'currency', currency: 'PYG',
+                                    minimumFractionDigits: 0
+                                }).format(presupuesto.presupuesto_subtotal || 0)}</p>
+        <p><strong>Descuento:</strong> ${new Intl.NumberFormat('es-PY', {
+                                    style: 'currency', currency: 'PYG',
+                                    minimumFractionDigits: 0
+                                }).format(presupuesto.presupuesto_descuento || 0)}</p>
+        <p><strong>Total:</strong> <strong>${new Intl.NumberFormat('es-PY', {
+                                    style: 'currency', currency: 'PYG',
+                                    minimumFractionDigits: 0
+                                }).format(presupuesto.presupuesto_total || 0)}</strong></p>
+        ${detalleHtml}
+    </div>
+    `,
+                                width: '800px',
+                                confirmButtonText: 'Cerrar'
+                            });
+                        } else {
+                            Swal.fire("Error", "No se pudo cargar el presupuesto.", "error");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire("Error", "Ocurrió un error al cargar el presupuesto.", "error");
+                    });
+            });
+        }
+
+        // Eliminar presupuesto
+        const eliminar = () => {
+            $('#tblPresupuestos').on('click', 'button[name="btn_eliminar"]', function () {
+                const idPresupuesto = $(this).data('id');
+
+                Swal.fire({
+                    title: "¿Deseas eliminar este presupuesto?",
+                    text: "Esta acción no se puede deshacer.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/api/v1/presupuestos/${idPresupuesto}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': CSRFToken
+                            }
+                        })
+                            .then(resp => resp.json())
+                            .then(data => {
+                                if (data && !data.error && data.success) {
+                                    const tabla = $('#tblPresupuestos').DataTable();
+                                    tabla.ajax.reload();
+                                    Swal.fire("Eliminado", "El presupuesto ha sido eliminado.", "success");
+                                } else {
+                                    Swal.fire("Error", data.error || "No se pudo eliminar el presupuesto.", "error");
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                Swal.fire("Error", "Ocurrió un error al eliminar el presupuesto.", "error");
+                            });
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // SIMULACIÓN DE PLAN DE TRATAMIENTO
+        // ==========================================
+        const simularProyeccionCitas = () => {
+            const idPaciente = $('#id_paciente').val();
+            const idEspecialista = $('#id_profesional').val();
+            const idEspecialidad = $('#cboEspecialidad').val();
+            const fechaInicio = $('#txtFecha').val();
+            const totalSesiones = $('#txtTotalSesiones').val();
+            const frecuencia = $('#txtFrecuenciaSugerida').val();
+            const horaInicio = $('#txtHoraInicio').val();
+            const horaFin = $('#txtHoraFin').val();
+
+            if (!idPaciente || !idEspecialista || !idEspecialidad || !fechaInicio || !totalSesiones || !frecuencia || !horaInicio || !horaFin) {
+                return; // Faltan datos para simular
+            }
+
+            const payload = {
+                id_paciente: parseInt(idPaciente),
+                id_especialista: parseInt(idEspecialista),
+                id_especialidad: parseInt(idEspecialidad),
+                fecha_inicio: fechaInicio,
+                cantidad_sesiones: parseInt(totalSesiones),
+                frecuencia: frecuencia,
+                hora_inicio: horaInicio,
+                hora_fin: horaFin,
+                dias_intervalo: frecuencia === 'PERSONALIZADO' ? parseInt($('#txtIntervaloPersonalizado').val() || 1) : 1
+            };
+
+            // Usar endpoint genérico para permitir simulación en presupuestos nuevos (sin ID)
+            const idPresupuesto = $('#txtIdPresupuesto').val() || idPresupuestoActual;
+            const url = idPresupuesto 
+                ? `/api/v1/presupuestos/${idPresupuesto}/simular-plan`
+                : `/api/v1/presupuestos/simular-plan`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+                body: JSON.stringify(payload)
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data && data.success && data.sesiones) {
+                    $('#section-cronograma').show();
+                    const tbody = $('#tbodyCronograma');
+                    tbody.empty();
+                    
+                    $('#lblTotalSesionesProyectadas').text(`${data.sesiones.length} Sesiones`);
+
+                    data.sesiones.forEach((cita, index) => {
+                        const iconHtml = cita.conflicto 
+                            ? `<i class="fas fa-exclamation-triangle me-1"></i>` 
+                            : `<i class="fas fa-check-circle me-1"></i>`;
+                        
+                        const row = `
+                            <tr class="${!cita.conflicto ? '' : 'table-danger'}">
+                                <td class="ps-4">#${index + 1}</td>
+                                <td>${cita.fecha}</td>
+                                <td>${cita.dia_nombre || ''}</td>
+                                <td>${cita.hora_inicio} - ${cita.hora_fin}</td>
+                                <td class="pe-4">
+                                    <span class="badge ${!cita.conflicto ? 'bg-success' : 'bg-danger'}"
+                                          data-bs-toggle="tooltip" data-bs-placement="left"
+                                          title="${cita.motivo_conflicto || ''}">
+                                        ${iconHtml} ${!cita.conflicto ? 'Disponible' : 'Conflicto'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+
+                    // Inicializar los tooltips de Bootstrap
+                    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
+                    // Si hay plan y no hay conflictos críticos, mostrar botón de registro
+                    const tieneConflictos = data.sesiones.some(c => c.conflicto);
+                    if (data.sesiones.length > 0) {
+                        $('#btnRegistrarCitas').show();
+                        if (tieneConflictos) {
+                            $('#btnRegistrarCitas').addClass('btn-warning').removeClass('btn-primary')
+                                .html('<i class="fas fa-exclamation-triangle me-1"></i> Registrar con Conflictos');
+                        } else {
+                            $('#btnRegistrarCitas').addClass('btn-primary').removeClass('btn-warning')
+                                .html('<i class="fas fa-check-circle me-1"></i> Confirmar y Registrar Citas');
+                        }
+                    } else {
+                        $('#btnRegistrarCitas').hide();
+                    }
+                } else if (data && !data.success) {
+                    console.warn('Simulación fallida:', data.error);
+                }
+            })
+            .catch(err => console.error('Error al simular plan:', err));
+        }
+
+        const registrarCitasMasivas = () => {
+            $('#btnRegistrarCitas').on('click', function() {
+                const idPresupuesto = $('#txtIdPresupuesto').val() || idPresupuestoActual;
+                if (!idPresupuesto) {
+                    Swal.fire("Error", "Debe guardar el presupuesto antes de registrar las citas.", "error");
+                    return;
+                }
+
+                const payload = {
+                    id_paciente: parseInt($('#id_paciente').val()),
+                    id_especialista: parseInt($('#id_profesional').val()),
+                    id_especialidad: parseInt($('#cboEspecialidad').val()),
+                    fecha_inicio: $('#txtFecha').val(),
+                    cantidad_sesiones: parseInt($('#txtTotalSesiones').val()),
+                    frecuencia: $('#txtFrecuenciaSugerida').val(),
+                    hora_inicio: $('#txtHoraInicio').val(),
+                    hora_fin: $('#txtHoraFin').val(),
+                    dias_intervalo: $('#txtFrecuenciaSugerida').val() === 'PERSONALIZADO' ? parseInt($('#txtIntervaloPersonalizado').val() || 1) : 1
+                };
+
+                Swal.fire({
+                    title: '¿Confirmar registro masivo?',
+                    text: `Se crearán ${payload.cantidad_sesiones} citas en la agenda.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, registrar todas',
+                    cancelButtonText: 'Cancelar',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return fetch(`/api/v1/presupuestos/${idPresupuesto}/registrar-citas`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+                            body: JSON.stringify(payload)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.error || 'Error en el servidor') });
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Request failed: ${error}`);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed && result.value.success) {
+                        Swal.fire('¡Éxito!', 'Las citas han sido registradas correctamente.', 'success');
+                        $('#btnRegistrarCitas').hide();
+                        // Opcional: Recargar cronograma para ver si algo cambió
+                        simularProyeccionCitas();
+                    }
+                });
+            });
+        }
+
+        const bindSimulacionEvents = () => {
+            $('#id_paciente, #id_profesional, #txtFecha, #txtTotalSesiones, #txtFrecuenciaSugerida, #txtIntervaloPersonalizado, #txtHoraInicio, #txtHoraFin').on('change input', function() {
+                // Si cambió la frecuencia, mostrar/ocultar panel personalizado
+                if ($(this).attr('id') === 'txtFrecuenciaSugerida') {
+                    if ($(this).val() === 'PERSONALIZADO') {
+                        $('#divIntervaloPersonalizado').fadeIn();
+                    } else {
+                        $('#divIntervaloPersonalizado').fadeOut();
+                    }
+                }
+
+                // Si cambió fecha o profesional, recargar slots
+                if ($(this).attr('id') === 'txtFecha' || $(this).attr('id') === 'id_profesional') {
+                    if ($('#id_profesional').val() && $('#txtFecha').val()) {
+                        generarSlots();
+                    }
+                }
+
+                // Debounce para no saturar la API
+                clearTimeout(window.simulationTimeout);
+                window.simulationTimeout = setTimeout(simularProyeccionCitas, 800);
+            });
+
+            // Sincronizar selección de agenda con campos de hora
+            $('#cboAgenda').on('change', function () {
+                const selected = $(this).find('option:selected');
+                const ini = selected.data('ini');
+                const fin = selected.data('fin');
+                const dur = selected.data('duracion') || 45;
+
+                if (ini && fin) {
+                    $('#txtDuracionCita').val(dur);
+                    generarSlots();
+                    $('#divSlotContainer').show();
+                } else {
+                    $('#txtHoraInicio').val('');
+                    $('#txtHoraFin').val('');
+                    $('#divSlotContainer').hide();
+                    simularProyeccionCitas();
+                }
+            });
+
+            $('#txtDuracionCita').on('change', generarSlots);
+
+            $('#cboSlot').on('change', function () {
+                const selected = $(this).find('option:selected');
+                const ini = selected.data('ini');
+                const fin = selected.data('fin');
+
+                if (ini && fin) {
+                    $('#txtHoraInicio').val(ini);
+                    $('#txtHoraFin').val(fin);
+                    simularProyeccionCitas();
+                }
+            });
+        }
+
+        const generarSlots = () => {
+            const selected = $('#cboAgenda option:selected');
+            const idAgenda = selected.val();
+            const idEspecialista = $('#id_profesional').val();
+            const fecha = $('#txtFecha').val();
+            const horaIniStr = selected.data('ini');
+            const horaFinStr = selected.data('fin');
+            const duracion = parseInt($('#txtDuracionCita').val()) || 45;
+
+            if (!idAgenda || !idEspecialista || !fecha) return;
+
+            // Mostrar estado de carga en el select de slots
+            const selectSlot = $('#cboSlot');
+            selectSlot.empty().append('<option value="">Cargando disponibilidad...</option>');
+
+            // Consultar disponibilidad real para esta fecha y agenda
+            fetch(`/api/v1/cupos/especialista/${idEspecialista}?fecha_inicio=${fecha}&fecha_fin=${fecha}`)
+                .then(resp => resp.json())
+                .then(data => {
+                    selectSlot.empty();
+                    selectSlot.append('<option value="">Seleccione un cupo específico...</option>');
+
+                    let cuposOcupados = [];
+                    if (data.success && data.data) {
+                        // El API puede devolver varios registros, filtramos por el id de agenda actual
+                        const agendaHoy = data.data.find(a => parseInt(a.id_agenda_horario) === parseInt(idAgenda));
+                        if (agendaHoy && agendaHoy.cupos_disponibles <= 0) {
+                            // Si el cupo entero está lleno, no hacemos nada o advertimos
+                        }
+                        // Idealmente el API debería decirnos qué slots exactos están pillados.
+                        // Como dividimos manualmente, vamos a simular la lógica de cita-agregar.html
+                    }
+
+                    const [hIni, mIni] = horaIniStr.split(':').map(Number);
+                    const [hFin, mFin] = horaFinStr.split(':').map(Number);
+
+                    let minutosActual = hIni * 60 + mIni;
+                    const minutosFin = hFin * 60 + mFin;
+
+                    while (minutosActual + duracion <= minutosFin) {
+                        const iniSlot = formatearMinutosAHora(minutosActual);
+                        const finSlot = formatearMinutosAHora(minutosActual + duracion);
+                        
+                        // Nota: Aquí se podría integrar la verificación de solapamiento si el API lo permitiera por slot
+                        // Por ahora, generamos todos y la simulación marcará el conflicto si existe.
+                        // PERO ya estamos recargando basándonos en si hay agenda.
+                        
+                        selectSlot.append(`<option value="${iniSlot}" data-ini="${iniSlot}" data-fin="${finSlot}">
+                            ${iniSlot} - ${finSlot} (${duracion} min)
+                        </option>`);
+
+                        minutosActual += duracion;
+                    }
+
+                    if (selectSlot.find('option').length === 2) {
+                        selectSlot.val(selectSlot.find('option:eq(1)').val()).trigger('change');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error al cargar disponibilidad:', err);
+                    selectSlot.empty().append('<option value="">Error al cargar slots</option>');
+                });
+        }
+
+        const formatearMinutosAHora = (minutosTotal) => {
+            const horas = Math.floor(minutosTotal / 60);
+            const minutos = minutosTotal % 60;
+            return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+        }
+
+        // Inicializar eventos
+        const addEvents = () => {
+            guardar();
+            agregarItem();
+            guardarItem();
+            editarItem();
+            eliminarItem();
+            calcularPreviewSubtotal();
+            actualizarTotalesOnChange();
+            bindSimulacionEvents();
+            registrarCitasMasivas();
+        }
+
+        // ==========================================
+        // DATATABLES DE BÚSQUEDA
+        // ==========================================
+        const initPacientesDatatable = () => {
+            if ($.fn.DataTable.isDataTable('#tblPacientes')) {
+                $('#tblPacientes').DataTable().destroy();
+            }
+
+            $('#tblPacientes').DataTable({
+                language: {
+                    url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+                },
+                ajax: {
+                    url: '/api/v1/pacientes',
+                    dataSrc: function (json) {
+                        return json.success ? json.data : [];
+                    }
+                },
+                columns: [
+                    {
+                        data: 'historia_clinica',
+                        title: 'HC',
+                        render: function (data) {
+                            return data || 'N/A';
+                        }
+                    },
+                    {
+                        data: null,
+                        title: 'Nombre Completo',
+                        render: function (data, type, row) {
+                            return `${row.nombre || ''} ${row.apellido || ''}`.trim();
+                        }
+                    },
+                    { data: 'cedula', title: 'CI' },
+                    {
+                        data: 'telefono',
+                        title: 'Teléfono',
+                        render: function (data) {
+                            return data || 'N/A';
+                        }
+                    },
+                    {
+                        data: function (row) {
+                            const nombreCompleto = `${row.nombre || ''} ${row.apellido || ''}`.trim();
+                            return `
+    <button type="button" class="btn btn-success btn-sm btn-select-paciente" data-id="${row.id_paciente}"
+        data-nombre="${nombreCompleto}" data-hc="${row.historia_clinica || 'N/A'}">
+        Seleccionar
+    </button>
+    `;
+                        },
+                        title: 'Acciones',
+                        orderable: false,
+                        className: 'text-center'
+                    }
+                ],
+                responsive: true,
+                pageLength: 8,
+                order: [[1, 'asc']]
+            });
+        }
+
+        const initProfesionalesDatatable = () => {
+            if ($.fn.DataTable.isDataTable('#tblProfesionales')) {
+                $('#tblProfesionales').DataTable().destroy();
+            }
+
+            $('#tblProfesionales').DataTable({
+                language: {
+                    url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+                },
+                ajax: {
+                    url: '/api/v1/especialistas',
+                    dataSrc: function (json) {
+                        return json.success ? json.data : [];
+                    }
+                },
+                columns: [
+                    { data: 'nombre_completo', title: 'Nombre Completo' },
+                    { data: 'matricula', title: 'Matrícula' },
+                    {
+                        data: function (row) {
+                            return `
+    <button type="button" class="btn btn-success btn-sm btn-select-profesional" data-id="${row.id_especialista}"
+        data-nombre="${row.nombre_completo}">
+        Seleccionar
+    </button>
+    `;
+                        },
+                        title: 'Acciones',
+                        orderable: false,
+                        className: 'text-center'
+                    }
+                ],
+                responsive: true,
+                pageLength: 8,
+                order: [[0, 'asc']]
+            });
+        }
+
+        // ==========================================
+        // SELECCIÓN DE PACIENTE Y PROFESIONAL
+        // ==========================================
+        const seleccionarPaciente = () => {
+            $(document).on('click', '#tblPacientes .btn-select-paciente', function () {
+                const data = $(this).data();
+
+                $('#id_paciente').val(data.id);
+                $('#txtPaciente').val(data.nombre);
+                (bootstrap.Modal.getInstance(document.getElementById("modalBuscarPaciente")) || new
+                    bootstrap.Modal(document.getElementById("modalBuscarPaciente"))).hide();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Paciente Seleccionado',
+                    text: data.nombre,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            });
+        }
+
+        const cargarEspecialidades = (idEspecialista, callback = null) => {
+            fetch(`/api/v1/funcionarios/especialistas/${idEspecialista}/especialidades`)
+                .then(resp => resp.json())
+                .then(data => {
+                    const select = $('#cboEspecialidad');
+                    select.empty();
+                    select.append('<option value="">Seleccione especialidad...</option>');
+                    
+                    if (data && data.success && data.data && data.data.length > 0) {
+                        data.data.forEach(e => {
+                            select.append(`<option value="${e.id_especialidad}">${e.des_especialidad}</option>`);
+                        });
+                        
+                        $('#divEspecialidadContainer').show();
+                        
+                        // Si solo tiene una, auto-seleccionarla
+                        if (data.data.length === 1) {
+                            select.val(data.data[0].id_especialidad);
+                        }
+                        
+                        if (callback) callback();
+                    } else {
+                        $('#divEspecialidadContainer').hide();
+                        Swal.fire("Atención", "El profesional seleccionado no tiene especialidades asignadas.", "warning");
+                    }
+                })
+                .catch(err => console.error('Error cargando especialidades:', err));
+        }
+
+        const cargarAgendaEspecialista = (id) => {
+            fetch(`/api/v1/agenda/especialista/${id}`)
+                .then(resp => resp.json())
+                .then(data => {
+                    const select = $('#cboAgenda');
+                    select.empty();
+                    select.append('<option value="">Seleccione un turno...</option>');
+                    
+                    if (data && data.success && data.data && data.data.length > 0) {
+                        data.data.forEach(dia => {
+                            // Dia tiene turno_manana y turno_tarde
+                            if (dia.turno_manana && dia.turno_manana.estado) {
+                                const t = dia.turno_manana;
+                                select.append(`<option value="${t.id_agenda_horario}" data-ini="${t.hora_inicio}" data-fin="${t.hora_fin}" data-dia="${dia.id_dia_semana}" data-duracion="${t.duracion_turno || 45}">
+                                    ${dia.nombre_dia}: ${t.hora_inicio} - ${t.hora_fin} (Mañana) - ${t.consultorio}
+                                </option>`);
+                            }
+                            if (dia.turno_tarde && dia.turno_tarde.estado) {
+                                const t = dia.turno_tarde;
+                                select.append(`<option value="${t.id_agenda_horario}" data-ini="${t.hora_inicio}" data-fin="${t.hora_fin}" data-dia="${dia.id_dia_semana}" data-duracion="${t.duracion_turno || 45}">
+                                    ${dia.nombre_dia}: ${t.hora_inicio} - ${t.hora_fin} (Tarde) - ${t.consultorio}
+                                </option>`);
+                            }
+                        });
+                        $('#divAgendaContainer').show();
+                    } else {
+                        $('#divAgendaContainer').hide();
+                    }
+                })
+                .catch(err => console.error('Error cargando agenda:', err));
+        }
+
+        const seleccionarProfesional = () => {
+            $(document).on('click', '#tblProfesionales .btn-select-profesional', function () {
+                const data = $(this).data();
+
+                $('#id_profesional').val(data.id);
+                $('#txtProfesional').val(data.nombre);
+                (bootstrap.Modal.getInstance(document.getElementById("modalBuscarProfesional")) || new
+                    bootstrap.Modal(document.getElementById("modalBuscarProfesional"))).hide();
+
+                // Cargar especialidades y agenda del profesional seleccionado
+                cargarEspecialidades(data.id);
+                cargarAgendaEspecialista(data.id);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Profesional Seleccionado',
+                    text: data.nombre,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            });
+        }
+
+        // ==========================================
+        // ABRIR MODALES DE BÚSQUEDA
+        // ==========================================
+        const abrirBusquedaPaciente = () => {
+            $('#btnBuscarPaciente').on('click', function () {
+                new bootstrap.Modal(document.getElementById("modalBuscarPaciente")).show();
+                if ($.fn.DataTable.isDataTable('#tblPacientes')) {
+                    $('#tblPacientes').DataTable().ajax.reload();
+                } else {
+                    initPacientesDatatable();
+                }
+            });
+        }
+
+        const abrirBusquedaProfesional = () => {
+            $('#btnBuscarProfesional').on('click', function () {
+                new bootstrap.Modal(document.getElementById("modalBuscarProfesional")).show();
+                if ($.fn.DataTable.isDataTable('#tblProfesionales')) {
+                    $('#tblProfesionales').DataTable().ajax.reload();
+                } else {
+                    initProfesionalesDatatable();
+                }
+            });
+        }
+
+        const abrirBusquedaItemcatalogo = () => {
+            $('#btnBuscarCatItem').on('click', function () {
+                new bootstrap.Modal(document.getElementById("modalBuscarItemCatalogo")).show();
+                if ($.fn.DataTable.isDataTable('#tblItemsCatalogo')) {
+                    $('#tblItemsCatalogo').DataTable().ajax.reload();
+                } else {
+                    initItemsCatalogoDatatable();
+                }
+            });
+        }
+
+        const initItemsCatalogoDatatable = () => {
+            $('#tblItemsCatalogo').DataTable({
+                language: {
+                    url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+                },
+                ajax: {
+                    url: '/api/v1/items_servicios',
+                    dataSrc: function (json) {
+                        return json.success ? json.data : [];
+                    }
+                },
+                columns: [
+                    { data: 'descripcion', title: 'Descripción' },
+                    { 
+                        data: 'precio_referencial', 
+                        title: 'Precio Unitario',
+                        render: function(data) {
+                            return formatearMoneda(data);
+                        }
+                    },
+                    {
+                        data: function (row) {
+                            return `
+                                <button type="button" class="btn btn-success btn-sm btn-select-cat-item" 
+                                    data-id="${row.id}" data-desc="${row.descripcion}" data-precio="${row.precio_referencial}">
+                                    Seleccionar
+                                </button>
+                            `;
+                        },
+                        title: 'Acciones',
+                        orderable: false,
+                        className: 'text-center'
+                    }
+                ],
+                responsive: true,
+                pageLength: 5,
+                order: [[0, 'asc']]
+            });
+        }
+
+        const seleccionarItemCatalogo = () => {
+            $(document).on('click', '#tblItemsCatalogo .btn-select-cat-item', function () {
+                const data = $(this).data();
+
+                $('#txtDescripcionItem').val(data.desc);
+                $('#txtPrecioUnitarioItem').val(data.precio);
+                
+                // Recalcular subtotal
+                const cantidad = parseInt($('#txtCantidadItem').val() || 1);
+                $('#previewSubtotalItem').text(formatearMoneda(cantidad * data.precio));
+
+                (bootstrap.Modal.getInstance(document.getElementById("modalBuscarItemCatalogo")) || new bootstrap.Modal(document.getElementById("modalBuscarItemCatalogo"))).hide();
+            });
+        }
+
+        // ==========================================
+        // INICIALIZACIÓN Y EVENTOS
+        // ==========================================
+        $('#btnDescartar').on('click', function () {
+            if (EMBEDDED_MODE) {
+                location.reload();
+            } else {
+                window.location.href = "{{ url_for('registrarpresupuesto.presupuestoIndex') }}";
+            }
+        });
+
+        $(function () {
+            initFormulario();
+            // addEvents(); // Ya no existe
+            seleccionarPaciente();
+            seleccionarProfesional();
+            abrirBusquedaPaciente();
+            abrirBusquedaProfesional();
+            
+            // Eventos de Items
+            guardar();
+            agregarItem();
+            guardarItem();
+            editarItem();
+            eliminarItem();
+            calcularPreviewSubtotal();
+            actualizarTotalesOnChange();
+            
+            // Catálogo Items
+            abrirBusquedaItemcatalogo();
+            seleccionarItemCatalogo();
+            
+            // Eventos de Simulación
+            bindSimulacionEvents();
+        });
+    </script>
+    {% endblock %}

@@ -5,795 +5,716 @@ Registrar Paciente
 {% endblock %}
 
 {% block contenido %}
-<div class="container-fluid mt-4">
-    <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">
-            <i class="fas fa-user-injured"></i> Registrar Nuevo Paciente
-        </h3>
-        <a href="{{ url_for('paciente.pacienteIndex') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver al Listado
-        </a>
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">{% if id_paciente %}Editar Paciente{% else %}Registrar Nuevo Paciente{% endif %}
+          </h1>
+          <div class="page-header-subtitle">Completa los datos del paciente para su registro en el sistema clínico</div>
+        </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a href="{{ url_for('paciente.pacienteIndex') }}" class="btn btn-sm btn-light text-primary fw-500 shadow-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+          </a>
+        </div>
+      </div>
     </div>
+  </div>
+</header>
 
-    <!-- Formulario Principal -->
-    <form id="formPaciente">
-        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" id="txtIdPersona">
-        <input type="hidden" id="txtIdPaciente">
-        
-        <!-- CARD 1: Datos Personales -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-user"></i> Datos Personales
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtNombre" placeholder="Ingrese el nombre" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Apellido <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtApellido" placeholder="Ingrese el apellido" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Cédula <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtCedula" placeholder="Ingrese la cédula" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">
-                                Fecha de Nacimiento <span class="text-danger">*</span>
-                                <i class="fas fa-info-circle text-info" data-toggle="tooltip" 
-                                   title="El sistema calculará automáticamente la edad"></i>
-                            </label>
-                            <input type="date" class="form-control" id="txtFecha_nacimiento" required>
-                            
-                            <!-- Alerta de edad calculada -->
-                            <div id="alertaEdad" class="mt-2" style="display:none;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Sexo</label>
-                            <select class="form-control" id="id_genero">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Estado Civil</label>
-                            <select class="form-control" id="id_estado_civil">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container-xl px-4 mt-n10">
 
-        <!-- CARD 2: Contacto y Ubicación -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-address-card"></i> Contacto y Ubicación
-                </h5>
+  <form id="formPaciente">
+    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" id="txtIdPersona">
+    <input type="hidden" id="txtIdPaciente">
+
+    <div class="row justify-content-center">
+      <!-- Contenido del Formulario (Full Width) -->
+      <div class="col-lg-10">
+        <!-- SECCIÓN: Datos Personales -->
+        <div id="section-personales" class="card shadow-sm mb-4 border-0">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-primary">
+              <i class="fas fa-user-circle me-2"></i> Información Básica
+            </h6>
+          </div>
+          <div class="card-body p-4">
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="txtNombre">Nombres <span
+                    class="text-danger">*</span></label>
+                <div class="input-group input-group-modern">
+                  <span class="input-group-text"><i class="fas fa-user"></i></span>
+                  <input class="form-control" id="txtNombre" type="text" placeholder="Ej: Juan Pérez" required>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="txtApellido">Apellidos <span
+                    class="text-danger">*</span></label>
+                <input class="form-control" id="txtApellido" type="text" placeholder="Ej: García López" required>
+              </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txtTelefono" placeholder="Ingrese el teléfono" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="txtCorreo" placeholder="Ingrese el correo">
-                        </div>
-                    </div>
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="txtCedula">Cédula de Identidad <span
+                    class="text-danger">*</span></label>
+                <div class="input-group input-group-modern">
+                  <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                  <input class="form-control" id="txtCedula" type="text" placeholder="Número de documento" required>
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Domicilio</label>
-                            <input type="text" class="form-control" id="txtDomicilio" placeholder="Ingrese el domicilio">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <input type="hidden" id="id_ciudad">
-                            <label class="font-weight-semibold">Ciudad de Residencia</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="txtCiudad" placeholder="Haga clic para buscar" readonly>
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" type="button" id="btnBuscarCiudad">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <input type="hidden" id="id_ciudad_nacimiento">
-                            <label class="font-weight-semibold">Ciudad de Nacimiento</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="txtCiudad_nacimiento" placeholder="Haga clic para buscar" readonly>
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" type="button" id="btnBuscarCiudadNacimiento">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="txtFecha_nacimiento">
+                  Fecha de Nacimiento <span class="text-danger">*</span>
+                </label>
+                <input class="form-control" id="txtFecha_nacimiento" type="date" required>
+                <div id="alertaEdad" class="mt-2" style="display:none;"></div>
+              </div>
             </div>
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="id_genero">Género</label>
+                <select class="form-select" id="id_genero">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="id_estado_civil">Estado Civil</label>
+                <select class="form-select" id="id_estado_civil">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- CARD 3: Formación Profesional -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-graduation-cap"></i> Formación Profesional
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Nivel de Instrucción</label>
-                            <select class="form-control" id="id_nivel_instruccion">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Profesión/Ocupación</label>
-                            <select class="form-control" id="id_profesion">
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                    </div>
+        <!-- SECCIÓN: Contacto y Ubicación -->
+        <div id="section-contacto" class="card shadow-sm mb-4 border-0">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-success">
+              <i class="fas fa-map-marker-alt me-2"></i> Ubicación y Contacto
+            </h6>
+          </div>
+          <div class="card-body p-4">
+            <div class="row gx-3 mb-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="txtTelefono">Teléfono / Celular <span
+                    class="text-danger">*</span></label>
+                <div class="input-group input-group-modern">
+                  <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
+                  <input class="form-control" id="txtTelefono" type="text" placeholder="Ej: 0981 123 456" required>
                 </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="txtCorreo">Email</label>
+                <div class="input-group input-group-modern">
+                  <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                  <input class="form-control" id="txtCorreo" type="email" placeholder="ejemplo@correo.com">
+                </div>
+              </div>
             </div>
+            <div class="mb-4">
+              <label class="form-label small fw-bold text-muted" for="txtDomicilio">Dirección de Domicilio</label>
+              <div class="input-group input-group-modern">
+                <span class="input-group-text"><i class="fas fa-home"></i></span>
+                <input class="form-control" id="txtDomicilio" type="text" placeholder="Calle, Nro, Barrio...">
+              </div>
+            </div>
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted">Ciudad de Residencia</label>
+                <div class="autocomplete-container">
+                  <input type="hidden" id="id_ciudad">
+                  <input class="form-control city-autocomplete" id="txtCiudad" type="text"
+                    placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted">Ciudad de Nacimiento</label>
+                <div class="autocomplete-container">
+                  <input type="hidden" id="id_ciudad_nacimiento">
+                  <input class="form-control city-autocomplete" id="txtCiudad_nacimiento" type="text"
+                    placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
+                </div>
+              </div>
+            </div>
+            <datalist id="listCiudades"></datalist>
+          </div>
         </div>
 
-        <!-- CARD 4: Datos del Tutor (COLAPSABLE - solo si es menor) -->
-        <div class="collapse" id="collapseTutor">
-            <div class="card shadow mb-4">
-                <div class="card-header text-white" style="background-color: #ffc107;">
-                    <h5 class="mb-0">
-                        <i class="fas fa-user-shield"></i> Datos del Tutor/Responsable
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning border-0">
-                        <i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> Este paciente es menor de edad. Debe proporcionar al menos el nombre de la madre o del padre.
-                    </div>
-                    
-                    <h6 class="text-primary mb-3"><i class="fas fa-female"></i> Datos de la Madre</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">
-                                    Nombre de la madre <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="txtNomMadre" placeholder="Nombre completo de la madre">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Teléfono de la madre</label>
-                                <input type="text" class="form-control" id="txtTelMadre" placeholder="Teléfono">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <hr>
-                    
-                    <h6 class="text-primary mb-3"><i class="fas fa-male"></i> Datos del Padre</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">
-                                    Nombre del padre <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="txtNomPadre" placeholder="Nombre completo del padre">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Teléfono del padre</label>
-                                <input type="text" class="form-control" id="txtTelPadre" placeholder="Teléfono">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <small class="form-text text-muted mb-3">
-                        <i class="fas fa-info-circle"></i> * Al menos uno de los dos nombres es obligatorio
-                    </small>
-                    
-                    <hr>
-                    
-                    <h6 class="text-primary mb-3"><i class="fas fa-school"></i> Datos Educativos</h6>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Nivel educativo actual</label>
-                                <input type="text" class="form-control" id="txtEducacion" placeholder="Ej: 5to grado primaria">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Colegio/Institución</label>
-                                <input type="text" class="form-control" id="txtColegio" placeholder="Nombre del colegio">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-semibold">Teléfono del colegio</label>
-                                <input type="text" class="form-control" id="txtTelColegio" placeholder="Teléfono">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- SECCIÓN: Formación -->
+        <div id="section-profesional" class="card shadow-sm mb-4 border-0">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-info">
+              <i class="fas fa-graduation-cap me-2"></i> Formación Académica
+            </h6>
+          </div>
+          <div class="card-body p-4">
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="id_nivel_instruccion">Nivel de
+                  Instrucción</label>
+                <select class="form-select" id="id_nivel_instruccion">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted" for="id_profesion">Profesión / Ocupación</label>
+                <select class="form-select" id="id_profesion">
+                  <option value="">Seleccione...</option>
+                </select>
+              </div>
             </div>
+          </div>
         </div>
 
-        <!-- CARD 5: Datos Clínicos -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-notes-medical"></i> Datos Clínicos
-                </h5>
-        </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">
-                                Historia Clínica
-                                <i class="fas fa-info-circle text-info" data-toggle="tooltip" 
-                                   title="Se generará automáticamente: Iniciales + Año + Secuencial (ej: AB-2026-001)"></i>
-        </label>
-                            <input type="text" class="form-control" id="txtHistoria_clinica" readonly>
-                            <small class="form-text text-muted">
-                                Vista previa: <strong id="previewHistoria" class="text-primary">--</strong>
-                                <span class="badge badge-info ml-2">Auto-generada</span>
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-semibold">Observaciones</label>
-                            <textarea class="form-control" rows="3" id="txtObservaciones" placeholder="Observaciones generales del paciente"></textarea>
-                        </div>
-                    </div>
-                </div>
+        <!-- SECCIÓN: Datos de Tutor (MENOR DE EDAD) -->
+        <div id="section-tutor" class="card shadow-sm mb-4 border-0 d-none">
+          <div class="card-body p-4 border-top border-5 border-warning rounded-3">
+            <div class="d-flex align-items-center mb-4">
+              <div class="bg-warning-soft p-3 rounded-circle me-3">
+                <i class="fas fa-user-shield text-warning fs-4"></i>
+              </div>
+              <div>
+                <h5 class="card-title text-warning mb-1">Responsables del Menor</h5>
+                <p class="text-muted small mb-0">Se requiere registrar al menos un tutor para pacientes menores.</p>
+              </div>
             </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <h6 class="small fw-bold text-dark border-bottom pb-2 mb-3">Madre / Tutora</h6>
+                <div class="mb-3">
+                  <label class="form-label small text-muted" for="txtNomMadre">Nombre Completo</label>
+                  <input class="form-control" id="txtNomMadre" type="text">
+                </div>
+                <div>
+                  <label class="form-label small text-muted" for="txtTelMadre">Teléfono</label>
+                  <input class="form-control" id="txtTelMadre" type="text">
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6 class="small fw-bold text-dark border-bottom pb-2 mb-3">Padre / Tutor</h6>
+                <div class="mb-3">
+                  <label class="form-label small text-muted" for="txtNomPadre">Nombre Completo</label>
+                  <input class="form-control" id="txtNomPadre" type="text">
+                </div>
+                <div>
+                  <label class="form-label small text-muted" for="txtTelPadre">Teléfono</label>
+                  <input class="form-control" id="txtTelPadre" type="text">
+                </div>
+              </div>
+            </div>
+
+            <h6 class="small fw-bold text-dark border-bottom pb-2 mb-3">Entorno Educativo</h6>
+            <div class="mb-3">
+              <label class="form-label small text-muted" for="txtEducacion">Grado actual</label>
+              <input class="form-control" id="txtEducacion" type="text" placeholder="Ej: 5to Grado">
+            </div>
+            <div class="row gx-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small text-muted" for="txtColegio">Nombre de la Institución</label>
+                <input class="form-control" id="txtColegio" type="text">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted" for="txtTelColegio">Teléfono Institucional</label>
+                <input class="form-control" id="txtTelColegio" type="text">
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Botones de Acción -->
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('paciente.pacienteIndex') }}'">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary" id="btnGuardar">
-                            <i class="fas fa-save"></i> Guardar Paciente
-                        </button>
-                    </div>
+        <!-- SECCIÓN: Datos Clínicos -->
+        <div id="section-clinicos" class="card shadow-sm mb-4 border-0">
+          <div class="card-header bg-white py-3">
+            <h6 class="m-0 fw-bold text-danger">
+              <i class="fas fa-file-medical me-2"></i> Expediente Clínico
+            </h6>
+          </div>
+          <div class="card-body p-4 border-top border-5 border-danger rounded-3">
+            <div class="row gx-3 mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label small fw-bold text-muted">Registro de Historia Clínica</label>
+                <div class="d-flex align-items-center bg-light p-3 rounded">
+                  <div class="bg-white p-2 rounded shadow-xs me-3">
+                    <i class="fas fa-barcode text-muted fs-4"></i>
+                  </div>
+                  <div>
+                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Código del
+                      Expediente</div>
+                    <div class="h5 mb-0 fw-bold text-primary" id="previewHistoria">-- Generando --</div>
+                    <input type="hidden" id="txtHistoria_clinica">
+                  </div>
                 </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-muted" for="txtObservaciones">Notas Clínicas /
+                  Observaciones</label>
+                <textarea class="form-control" id="txtObservaciones" rows="4"
+                  placeholder="Antecedentes, alergias, condiciones preexistentes..."></textarea>
+              </div>
             </div>
+          </div>
         </div>
-    </form>
-</div>
 
-<!-- Modal Buscar Ciudad (reutilizable) -->
-<div class="modal fade" id="modalBuscarCiudad" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="tituloModalCiudad">Seleccionar Ciudad</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="card shadow-sm mb-5 border-0 bg-transparent">
+          <div class="card-body p-0 d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+              <i class="fas fa-info-circle me-1"></i>
+              <span>Los campos marcados con <span class="text-danger">*</span> son obligatorios.</span>
             </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-bordered w-100" id="tblCiudad">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Ciudad</th>
-                                <th style="width: 120px;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <div class="d-flex">
+              <button class="btn btn-ghost-danger me-2" type="button" id="btnDescartar">
+                <i class="fas fa-times me-1"></i> Descartar
+              </button>
+              <button class="btn btn-primary shadow px-5 py-2 fw-bold" type="button" id="btnGuardar">
+                <i class="fas fa-save me-2"></i>
+                {% if id_paciente %}Actualizar Expediente{% else %}Registrar Paciente{% endif %}
+              </button>
             </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-
-<style>
-.form-group label {
-    margin-bottom: 0.375rem;
-    font-size: 0.9rem;
-}
-
-.form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.font-weight-semibold {
-    font-weight: 600;
-}
-
-.form-control.is-invalid {
-    border-color: #dc3545;
-}
-
-.form-control.is-valid {
-    border-color: #28a745;
-}
-
-#txtHistoria_clinica {
-    background-color: #e9ecef;
-    cursor: not-allowed;
-}
-
-.alerta-menor {
-    background-color: #fff3cd;
-    border: 1px solid #ffc107;
-    border-radius: 5px;
-    padding: 10px;
-    color: #856404;
-}
-
-.alerta-mayor {
-    background-color: #d4edda;
-    border: 1px solid #28a745;
-    border-radius: 5px;
-    padding: 10px;
-    color: #155724;
-}
-
-.alerta-error {
-    background-color: #f8d7da;
-    border: 1px solid #dc3545;
-    border-radius: 5px;
-    padding: 10px;
-    color: #721c24;
-}
-</style>
-
-{% endblock %}
-
-{% block js %}
-<script>
-// ==========================================
-// CONSTANTES Y CONFIGURACIÓN
-// ==========================================
-const CSRFToken = "{{ csrf_token() }}" || null;
-let currentCiudadType = 'residencia';
-
-// ==========================================
-// FUNCIONES AUXILIARES
-// ==========================================
-const calcularEdad = (fechaNacimiento) => {
-  if (!fechaNacimiento) return null;
-  
-  const hoy = new Date();
-  const nacimiento = new Date(fechaNacimiento);
-  
-  if (nacimiento > hoy) {
-    return { error: 'La fecha de nacimiento no puede ser futura' };
-  }
-  
-  let edad = hoy.getFullYear() - nacimiento.getFullYear();
-  const mes = hoy.getMonth() - nacimiento.getMonth();
-  
-  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-    edad--;
-  }
-  
-  if (edad > 120) {
-    return { error: 'La fecha de nacimiento no puede ser mayor a 120 años' };
-  }
-  
-  return { edad, esMenor: edad < 18 };
-};
-
-const generarHistoriaClinica = (nombre, apellido, cedula) => {
-  if (!nombre || !apellido) return '';
-  
-  const inicialNombre = nombre.charAt(0).toUpperCase();
-  const inicialApellido = apellido.charAt(0).toUpperCase();
-  const añoActual = new Date().getFullYear();
-  
-  // Mostrar formato base, el secuencial se asignará en el servidor
-  return `${inicialNombre}${inicialApellido}-${añoActual}-XXX`;
-};
-
-const actualizarPreviewHistoria = () => {
-  const nombre = $('#txtNombre').val();
-  const apellido = $('#txtApellido').val();
-  
-  const historia = generarHistoriaClinica(nombre, apellido);
-  
-  if (historia) {
-    $('#previewHistoria').text(historia).addClass('text-success').removeClass('text-muted');
-    // No establecer el valor directamente, se generará en el servidor
-    $('#txtHistoria_clinica').val('');
-  } else {
-    $('#previewHistoria').text('--').addClass('text-muted').removeClass('text-success');
-    $('#txtHistoria_clinica').val('');
-  }
-};
-
-const mostrarAlertaEdad = (resultado) => {
-  const alertaDiv = $('#alertaEdad');
-  
-  if (resultado.error) {
-    alertaDiv.html(`
-      <div class="alerta-error">
-        <i class="fas fa-exclamation-circle"></i> ${resultado.error}
-      </div>
-    `).show();
-    return;
-  }
-  
-  if (resultado.esMenor) {
-    alertaDiv.html(`
-      <div class="alerta-menor">
-        <i class="fas fa-child"></i> <strong>Menor de edad (${resultado.edad} años)</strong><br>
-        <small>Se habilitará la sección de datos del tutor</small>
-      </div>
-    `).show();
-  } else {
-    alertaDiv.html(`
-      <div class="alerta-mayor">
-        <i class="fas fa-user-check"></i> <strong>Mayor de edad (${resultado.edad} años)</strong>
-      </div>
-    `).show();
-  }
-};
-
-const ajustarFormularioSegunEdad = (esMenor) => {
-  if (esMenor) {
-    $('#collapseTutor').collapse('show');
-  } else {
-    $('#collapseTutor').collapse('hide');
-    limpiarDatosTutor();
-  }
-};
-
-const limpiarDatosTutor = () => {
-  $('#txtNomMadre, #txtTelMadre, #txtNomPadre, #txtTelPadre, #txtEducacion, #txtColegio, #txtTelColegio').val('');
-};
-
-const sanitizeText = (value) => {
-  if (value === undefined || value === null || value === '' || value === 'undefined' || value === 'null') {
-    return null;
-  }
-  return value;
-};
-
-const sanitizeId = (value) => {
-  if (value === '' || value === 'undefined' || value === 'null' || value === undefined || value === null) {
-    return null;
-  }
-  
-  const num = Number(value);
-  
-  if (isNaN(num) || num <= 0) {
-    return null;
-  }
-  
-  return num;
-};
-
-// ==========================================
-// EVENTOS DE CÁLCULO AUTOMÁTICO
-// ==========================================
-const initCalculoEdad = () => {
-  $('#txtFecha_nacimiento').on('change', function() {
-    const fecha = $(this).val();
-    
-    if (!fecha) {
-      $('#alertaEdad').hide();
-      ajustarFormularioSegunEdad(false);
-      return;
+  </form>
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --primary-op-60: rgba(13, 110, 253, 0.6);
+      --secondary-color: #6c757d;
+      --text-muted: #adb5bd;
+      --input-padding-v: 12px;
+      --input-height: 42px;
+      --border-radius: 6px;
+      --section-spacing: 32px;
+      --field-spacing: 16px;
+      --card-padding: 24px;
     }
-    
-    const resultado = calcularEdad(fecha);
-    mostrarAlertaEdad(resultado);
-    
-    if (!resultado.error) {
-      ajustarFormularioSegunEdad(resultado.esMenor);
-    } else {
-      ajustarFormularioSegunEdad(false);
+
+    /* Section Vertical Spacing */
+    .card {
+      margin-bottom: 2rem !important;
+      border: 1px solid #e3e6f0 !important;
     }
-  });
-};
 
-const initPreviewHistoria = () => {
-  $('#txtNombre, #txtApellido, #txtCedula').on('input', actualizarPreviewHistoria);
-};
+    .card-header {
+      border-bottom: 1px solid #e3e6f0 !important;
+      background-color: #f8f9fc !important;
+    }
 
-// ==========================================
-// CARGAR CATÁLOGOS EN SELECTS
-// ==========================================
-const cargarCatalogos = () => {
-  console.log('📋 Cargando catálogos...');
-  
-  cargarSelect('/api/v1/generos', '#id_genero');
-  cargarSelect('/api/v1/estados-civiles', '#id_estado_civil');
-  cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
-  cargarSelect('/api/v1/profesiones', '#id_profesion');
-}
+    /* Form Fields Styling */
+    .form-label {
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
 
-const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
-  fetch(url)
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        let html = `<option value="">${placeholder}</option>`;
-        data.data.forEach(item => {
-          html += `<option value="${item.id}">${item.descripcion}</option>`;
-        });
-        $(selector).html(html);
-        console.log(`✅ ${selector} cargado con ${data.data.length} opciones`);
+    .form-control,
+    .form-select {
+      min-height: var(--input-height) !important;
+      padding: var(--input-padding-v) 1rem !important;
+      border-radius: var(--border-radius) !important;
+      border: 1px solid #ced4da;
+      font-size: 0.95rem;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1) !important;
+      border-width: 2px !important;
+    }
+
+    .input-group-modern .input-group-text {
+      background-color: #f8f9fa;
+      border-color: #ced4da;
+      border-radius: var(--border-radius) 0 0 var(--border-radius) !important;
+      color: var(--secondary-color);
+    }
+
+    /* Sticky behavior fix */
+    @media (max-width: 991.98px) {
+      #form-sections-nav {
+        position: relative !important;
+        top: 0 !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 0.5rem !important;
       }
-    })
-    .catch(err => console.error(`❌ Error cargando ${selector}:`, err));
-}
 
-// ==========================================
-// SISTEMA DE BÚSQUEDA DE CIUDAD
-// ==========================================
-let dtCiudad = null;
-
-const initCiudadDatatable = () => {
-  if (dtCiudad) {
-    return;
-  }
-  
-  dtCiudad = $('#tblCiudad').DataTable({
-    language: {
-      url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-    },
-    ajax: {
-      url: '/api/v1/ciudades',
-      dataSrc: 'data'
-    },
-    columns: [
-      { data: 'descripcion' },
-      { 
-        data: function(row) {
-          return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
-                    data-id="${row.id}" 
-                    data-descripcion="${row.descripcion}">
-                    <i class="fa fa-check"></i> Seleccionar
-                  </button>`;
-        }
-      }
-    ]
-  });
-  
-  $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function() {
-    const id = $(this).data('id');
-    const descripcion = $(this).data('descripcion');
-    
-    if (currentCiudadType === 'residencia') {
-      $('#txtCiudad').val(descripcion);
-      $('#id_ciudad').val(id);
-    } else {
-      $('#txtCiudad_nacimiento').val(descripcion);
-      $('#id_ciudad_nacimiento').val(id);
-    }
-    
-    $('#modalBuscarCiudad').modal('hide');
-  });
-};
-
-const bindCiudadSearch = () => {
-  $('#btnBuscarCiudad').on('click', function() {
-    currentCiudadType = 'residencia';
-    $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
-    $('#modalBuscarCiudad').modal('show');
-  });
-  
-  $('#btnBuscarCiudadNacimiento').on('click', function() {
-    currentCiudadType = 'nacimiento';
-    $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
-    $('#modalBuscarCiudad').modal('show');
-  });
-  
-  $('#txtCiudad').on('click', function() {
-    $('#btnBuscarCiudad').click();
-  });
-  
-  $('#txtCiudad_nacimiento').on('click', function() {
-    $('#btnBuscarCiudadNacimiento').click();
-  });
-};
-
-// ==========================================
-// VALIDACIÓN Y GUARDADO
-// ==========================================
-const validarFormulario = () => {
-  let valido = true;
-  
-  const camposObligatorios = ['#txtNombre', '#txtApellido', '#txtCedula', '#txtTelefono', '#txtFecha_nacimiento'];
-  
-  camposObligatorios.forEach(campo => {
-    const valor = $(campo).val();
-    if (!valor || valor === '') {
-      $(campo).addClass('is-invalid');
-      valido = false;
-    } else {
-      $(campo).removeClass('is-invalid').addClass('is-valid');
-    }
-  });
-  
-  // Validar si es menor
-  const fechaNacimiento = $('#txtFecha_nacimiento').val();
-  if (fechaNacimiento) {
-    const resultado = calcularEdad(fechaNacimiento);
-    if (!resultado.error && resultado.esMenor) {
-      const nomMadre = $('#txtNomMadre').val();
-      const nomPadre = $('#txtNomPadre').val();
-      
-      if (!nomMadre && !nomPadre) {
-        Swal.fire('Atención', 'Para pacientes menores, debe proporcionar al menos el nombre de la madre o del padre', 'warning');
-        valido = false;
+      #form-sections-nav .nav-link {
+        white-space: nowrap !important;
+        margin-right: 0.5rem !important;
+        margin-bottom: 0 !important;
       }
     }
-  }
-  
-  return valido;
-}
 
-const guardar = () => {
-  $('#btnGuardar').on('click', function() {
-    console.log('🔍 Iniciando validación...');
-    
-    if (!validarFormulario()) {
-      console.log('❌ Validación falló');
-      return;
+    /* Ghost Button */
+    .btn-ghost-secondary {
+      color: var(--secondary-color);
+      background: transparent;
+      border: none;
+      transition: all 0.2s;
     }
-    
-    const fechaNacimiento = $('#txtFecha_nacimiento').val();
-    const resultadoEdad = calcularEdad(fechaNacimiento);
-    const esMenor = resultadoEdad && !resultadoEdad.error && resultadoEdad.esMenor;
-    
-    const dataPaciente = {
-      id_persona: $('#txtIdPersona').val() || null,
-      nombre: $('#txtNombre').val().trim(),
-      apellido: $('#txtApellido').val().trim(),
-      cedula: $('#txtCedula').val().trim(),
-      fecha_nacimiento: fechaNacimiento,
-      telefono: $('#txtTelefono').val().trim(),
-      correo: sanitizeText($('#txtCorreo').val()),
-      domicilio: sanitizeText($('#txtDomicilio').val()),
-      id_genero: sanitizeId($('#id_genero').val()),
-      id_estado_civil: sanitizeId($('#id_estado_civil').val()),
-      id_ciudad: sanitizeId($('#id_ciudad').val()),
-      id_ciudad_nacimiento: sanitizeId($('#id_ciudad_nacimiento').val()),
-      id_nivel_instruccion: sanitizeId($('#id_nivel_instruccion').val()),
-      id_profesion: sanitizeId($('#id_profesion').val()),
-      historia_clinica: $('#txtHistoria_clinica').val(),
-      observaciones: sanitizeText($('#txtObservaciones').val())
+
+    .btn-ghost-secondary:hover {
+      background: #f8f9fa;
+      color: var(--primary-color);
+    }
+
+    .btn-ghost-danger {
+      color: #dc3545;
+      background: transparent;
+      border: none;
+    }
+
+    .btn-ghost-danger:hover {
+      background: #fff5f5;
+    }
+
+    /* Validations */
+    .form-control.is-invalid {
+      border-color: #dc3545 !important;
+      background-image: none !important;
+    }
+
+    .bg-warning-soft {
+      background-color: #fff9e6 !important;
+    }
+  </style>
+
+  {% endblock %}
+
+  {% block js %}
+  <script>
+    // ==========================================
+    // CONFIGURACIÓN Y CONSTANTES
+    // ==========================================
+    const CSRFToken = "{{ csrf_token() }}";
+    const AUTO_SAVE_INTERVAL = 30000;
+    const idPaciente = parseInt("{{ id_paciente }}") || null;
+    const pacienteIndexUrl = "{{ url_for('paciente.pacienteIndex') }}";
+
+    // ==========================================
+    // MANEJO DE UI
+    // ==========================================
+    const initUI = () => {
+      if (idPaciente) {
+        console.log('✏️ Modo edición detectado para paciente:', idPaciente);
+      }
     };
-    
-    if (esMenor) {
-      dataPaciente.nom_madre = sanitizeText($('#txtNomMadre').val());
-      dataPaciente.tel_madre = sanitizeText($('#txtTelMadre').val());
-      dataPaciente.nom_padre = sanitizeText($('#txtNomPadre').val());
-      dataPaciente.tel_padre = sanitizeText($('#txtTelPadre').val());
-      dataPaciente.educacion = sanitizeText($('#txtEducacion').val());
-      dataPaciente.colegio = sanitizeText($('#txtColegio').val());
-      dataPaciente.tel_colegio = sanitizeText($('#txtTelColegio').val());
-    }
-    
-    console.log('📤 Datos completos a enviar:', JSON.stringify(dataPaciente, null, 2));
-    
-    const btn = $(this);
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
-    
-    fetch('/api/v1/pacientes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': CSRFToken
-      },
-      body: JSON.stringify(dataPaciente)
-    })
-    .then(resp => {
-      return resp.text().then(text => {
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          throw new Error('Respuesta del servidor no es JSON válido');
-        }
-        
-        if (!resp.ok) {
-          throw new Error(data.error || data.message || `HTTP ${resp.status}`);
-        }
-        
-        return data;
-      });
-    })
-    .then(data => {
-      btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Paciente');
-      
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: '¡Paciente Registrado!',
-          text: data.data?.mensaje || 'Operación exitosa',
-          confirmButtonText: 'Ir al Listado'
-        }).then(() => {
-          window.location.href = "{{ url_for('paciente.pacienteIndex') }}";
+
+    const cargarDatosPaciente = (id) => {
+      fetch(`/api/v1/pacientes/${id}/editar`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            const data = res.data;
+            $('#txtIdPaciente').val(data.id_paciente);
+            $('#txtIdPersona').val(data.id_persona);
+            $('#txtNombre').val(data.nombre);
+            $('#txtApellido').val(data.apellido);
+            $('#txtCedula').val(data.cedula);
+            $('#txtFecha_nacimiento').val(data.fecha_nacimiento).trigger('change');
+            $('#txtTelefono').val(data.telefono);
+            $('#txtCorreo').val(data.correo);
+            $('#txtDomicilio').val(data.domicilio);
+            $('#id_ciudad').val(data.id_ciudad);
+            $('#txtCiudad').val(data.ciudad);
+            $('#id_ciudad_nacimiento').val(data.id_ciudad_nacimiento);
+            $('#txtCiudad_nacimiento').val(data.ciudad_nacimiento);
+
+            // Esperar un poco para que los catálogos se carguen antes de setear selectores
+            setTimeout(() => {
+              $('#id_genero').val(data.id_genero);
+              $('#id_estado_civil').val(data.id_estado_civil);
+              $('#id_nivel_instruccion').val(data.id_nivel_instruccion);
+              $('#id_profesion').val(data.id_profesion);
+            }, 600);
+
+            $('#txtHistoria_clinica').val(data.historia_clinica);
+            $('#previewHistoria').text(data.historia_clinica);
+            $('#txtObservaciones').val(data.observaciones);
+
+            $('#txtNomMadre').val(data.nom_madre);
+            $('#txtTelMadre').val(data.tel_madre);
+            $('#txtNomPadre').val(data.nom_padre);
+            $('#txtTelPadre').val(data.tel_padre);
+            $('#txtEducacion').val(data.educacion);
+            $('#txtColegio').val(data.colegio);
+            $('#txtTelColegio').val(data.tel_colegio);
+          }
         });
-      } else {
-        Swal.fire('Error', data.error || 'No se pudo guardar el paciente', 'error');
+    };
+
+    // ==========================================
+    // AUTOCOMPLETE CIUDADES
+    // ==========================================
+    const initCityAutocomplete = () => {
+      let timeout = null;
+      const datalist = document.getElementById('listCiudades');
+
+      document.querySelectorAll('.city-autocomplete').forEach(input => {
+        input.addEventListener('input', function () {
+          const query = this.value;
+          const targetIdInput = this.id === 'txtCiudad' ? 'id_ciudad' : 'id_ciudad_nacimiento';
+
+          if (!query) document.getElementById(targetIdInput).value = '';
+          if (query.length < 2) return;
+
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            fetch(`/api/v1/ciudades?q=${encodeURIComponent(query)}`)
+              .then(r => r.json())
+              .then(data => {
+                if (data.success) {
+                  datalist.innerHTML = '';
+                  data.data.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.descripcion;
+                    option.dataset.id = city.id;
+                    datalist.appendChild(option);
+                  });
+                }
+              });
+          }, 300);
+        });
+
+        input.addEventListener('change', function () {
+          const query = this.value;
+          const targetIdInput = this.id === 'txtCiudad' ? 'id_ciudad' : 'id_ciudad_nacimiento';
+          const options = datalist.querySelectorAll('option');
+
+          let found = false;
+          options.forEach(opt => {
+            if (opt.value === query) {
+              document.getElementById(targetIdInput).value = opt.dataset.id;
+              found = true;
+            }
+          });
+        });
+      });
+    };
+
+    // ==========================================
+    // CÁLCULO DE EDAD Y LÓGICA DE TUTOR
+    // ==========================================
+    const initAgeLogic = () => {
+      $('#txtFecha_nacimiento').on('change', function () {
+        const fecha = $(this).val();
+        if (!fecha) {
+          $('#alertaEdad').hide();
+          $('#section-tutor').addClass('d-none');
+          return;
+        }
+
+        const hoy = new Date();
+        const cumple = new Date(fecha);
+        let edad = hoy.getFullYear() - cumple.getFullYear();
+        const m = hoy.getMonth() - cumple.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) edad--;
+
+        const alerta = $('#alertaEdad');
+        if (edad < 0) {
+          alerta.html('<div class="alert alert-danger py-2 mb-0">Fecha inválida</div>').show();
+          $('#section-tutor').addClass('d-none');
+        } else {
+          const isMinor = edad < 18;
+          alerta.html(`<div class="alert alert-${isMinor ? 'warning' : 'success'} py-2 mb-0">${edad} años (${isMinor ? 'Menor' : 'Mayor'} de edad)</div>`).show();
+
+          if (isMinor) {
+            $('#section-tutor').removeClass('d-none');
+          } else {
+            $('#section-tutor').addClass('d-none');
+          }
+        }
+      });
+
+      // Trigger initial calculation if editing
+      if ($('#txtFecha_nacimiento').val()) {
+        $('#txtFecha_nacimiento').trigger('change');
       }
-    })
-    .catch(err => {
-      btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Paciente');
-      console.error('❌ Error guardando paciente:', err);
-      Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
+    };
+
+    const initHistoryPreview = () => {
+      const updatePreview = () => {
+        const n = $('#txtNombre').val().charAt(0).toUpperCase();
+        const a = $('#txtApellido').val().charAt(0).toUpperCase();
+        const year = new Date().getFullYear();
+        if (n && a) {
+          $('#previewHistoria').text(`${n}${a}-${year}-XXX`);
+        } else {
+          $('#previewHistoria').text('-- Generando --');
+        }
+      };
+      $('#txtNombre, #txtApellido').on('input', updatePreview);
+      updatePreview();
+    };
+
+    // ==========================================
+    // DRAFT AUTO-SAVE
+    // ==========================================
+    const initAutoSave = () => {
+      const formId = 'paciente_form_draft';
+
+      const draft = localStorage.getItem(formId);
+      if (draft) {
+        Swal.fire({
+          title: '¿Recuperar borrador?',
+          text: 'Se encontró un borrador sin guardar.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Recuperar',
+          cancelButtonText: 'Ignorar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const data = JSON.parse(draft);
+            Object.keys(data).forEach(key => {
+              const el = document.getElementById(key);
+              if (el) el.value = data[key];
+            });
+            $('#txtFecha_nacimiento').trigger('change');
+          } else {
+            localStorage.removeItem(formId);
+          }
+        });
+      }
+
+      setInterval(() => {
+        const data = {};
+        const inputs = document.querySelectorAll('#formPaciente input, #formPaciente select, #formPaciente textarea');
+        inputs.forEach(input => {
+          if (input.id && input.value) data[input.id] = input.value;
+        });
+        if (Object.keys(data).length > 3) {
+          localStorage.setItem(formId, JSON.stringify(data));
+        }
+      }, AUTO_SAVE_INTERVAL);
+
+      // Evento para botón descartar
+      $('#btnDescartar').on('click', function () {
+        window.location.href = pacienteIndexUrl;
+      });
+    };
+
+    // ==========================================
+    // GUARDADO
+    // ==========================================
+    const initSaveAction = () => {
+      $('#btnGuardar').on('click', function () {
+        const form = document.getElementById('formPaciente');
+
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          const invalidInput = form.querySelector(':invalid');
+          if (invalidInput) {
+            invalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            invalidInput.focus();
+          }
+          return;
+        }
+
+        const data = {
+          id_persona: $('#txtIdPersona').val() || null,
+          nombre: $('#txtNombre').val(),
+          apellido: $('#txtApellido').val(),
+          cedula: $('#txtCedula').val(),
+          fecha_nacimiento: $('#txtFecha_nacimiento').val(),
+          telefono: $('#txtTelefono').val(),
+          correo: $('#txtCorreo').val() || null,
+          domicilio: $('#txtDomicilio').val() || null,
+          id_ciudad: $('#id_ciudad').val() || null,
+          id_ciudad_nacimiento: $('#id_ciudad_nacimiento').val() || null,
+          id_genero: $('#id_genero').val() || null,
+          id_estado_civil: $('#id_estado_civil').val() || null,
+          id_nivel_instruccion: $('#id_nivel_instruccion').val() || null,
+          id_profesion: $('#id_profesion').val() || null,
+          observaciones: $('#txtObservaciones').val() || null
+        };
+
+        if (!$('#section-tutor').hasClass('d-none')) {
+          data.nom_madre = $('#txtNomMadre').val();
+          data.tel_madre = $('#txtTelMadre').val();
+          data.nom_padre = $('#txtNomPadre').val();
+          data.tel_padre = $('#txtTelPadre').val();
+          data.educacion = $('#txtEducacion').val();
+          data.colegio = $('#txtColegio').val();
+          data.tel_colegio = $('#txtTelColegio').val();
+        }
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Procesando...');
+
+        const method = idPaciente ? 'PUT' : 'POST';
+        const url = idPaciente ? `/api/v1/pacientes/${idPaciente}` : '/api/v1/pacientes';
+
+        fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRFToken
+          },
+          body: JSON.stringify(data)
+        })
+          .then(r => r.json())
+          .then(res => {
+            if (res.success) {
+              localStorage.removeItem('paciente_form_draft');
+              const msg = idPaciente ? 'Ficha actualizada exitosamente' : 'Paciente registrado correctamente';
+              Swal.fire('Éxito', msg, 'success')
+                .then(() => window.location.href = pacienteIndexUrl);
+            } else {
+              Swal.fire('Error', res.error || 'No se pudo guardar', 'error');
+              btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            Swal.fire('Error', 'Error de conexión', 'error');
+            btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar');
+          });
+      });
+    };
+
+    $(document).ready(function () {
+      initUI();
+      initCityAutocomplete();
+      initAgeLogic();
+      initHistoryPreview();
+      initAutoSave();
+      initSaveAction();
+
+      if (idPaciente) {
+        cargarDatosPaciente(idPaciente);
+      }
+
+      const loadCatalogs = () => {
+        const endpoints = {
+          '#id_genero': '/api/v1/generos',
+          '#id_estado_civil': '/api/v1/estados-civiles',
+          '#id_nivel_instruccion': '/api/v1/niveles-instruccion',
+          '#id_profesion': '/api/v1/profesiones'
+        };
+
+        Object.entries(endpoints).forEach(([selector, url]) => {
+          fetch(url)
+            .then(r => r.json())
+            .then(res => {
+              if (res.success) {
+                const el = $(selector);
+                res.data.forEach(item => {
+                  el.append(new Option(item.descripcion, item.id));
+                });
+              }
+            });
+        });
+      };
+      loadCatalogs();
     });
-  });
-}
-
-// ==========================================
-// INICIALIZACIÓN
-// ==========================================
-$(document).ready(function() {
-  console.log('🚀 Inicializando página de agregar paciente...');
-  
-  cargarCatalogos();
-  initCiudadDatatable();
-  bindCiudadSearch();
-  initCalculoEdad();
-  initPreviewHistoria();
-  guardar();
-  
-  // Inicializar tooltips
-  $('[data-toggle="tooltip"]').tooltip();
-});
-</script>
- {% endblock %} 
-
-
-
+  </script>
+  {% endblock %}

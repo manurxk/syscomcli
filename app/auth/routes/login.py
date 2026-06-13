@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, session, \
     request, redirect, url_for, flash, current_app as app
 from app.auth.services.auth_service import AuthService
+from app.dao.AuditoriaDao import AuditoriaDao
+from app.utils.auditoria_constantes import AuditAccion
 
 logmod = Blueprint('login', __name__, template_folder='../../rutas/seguridad/templates')
 
@@ -37,10 +39,18 @@ def login():
             session.clear()
             session.permanent = True
             session['id_usuario'] = datos_usuario['id_usuario']
+            
+            AuditoriaDao().registrar_evento(
+                id_usuario=datos_usuario['id_usuario'],
+                accion=AuditAccion.LOGIN,
+                detalle=f"Login exitoso desde {request.remote_addr}",
+                ip_origen=request.remote_addr
+            )
             session['usu_nick'] = datos_usuario['usu_nick']
             session['nombre_persona'] = datos_usuario['nombre_completo']
             session['grupo'] = datos_usuario['grupo']
             session['id_grupo'] = datos_usuario['id_grupo']
+            session['id_funcionario'] = datos_usuario.get('id_funcionario')
             session['session_token'] = datos_usuario.get('session_token')
             
             # Mostrar advertencias si existen
@@ -50,6 +60,14 @@ def login():
             
             return redirect(url_for('login.inicio'))
         else:
+            id_usuario_audit = datos_usuario.get('id_usuario', 0) if datos_usuario else 0
+            AuditoriaDao().registrar_evento(
+                id_usuario=id_usuario_audit,
+                accion=AuditAccion.LOGIN_FAILED,
+                detalle=f"Intento fallido (usuario intentado: '{usuario_nombre}')",
+                ip_origen=request.remote_addr
+            )
+            
             # Verificar si requiere cambio de password
             if datos_usuario and 'requiere_cambio_password' in datos_usuario:
                 flash('Debe cambiar su contraseña antes de continuar', 'warning')
@@ -69,6 +87,15 @@ def logout():
     Logout mejorado que cierra sesión en BD
     """
     session_token = session.get('session_token')
+    
+    id_usuario = session.get('id_usuario')
+    if id_usuario:
+        AuditoriaDao().registrar_evento(
+            id_usuario=id_usuario,
+            accion=AuditAccion.LOGOUT,
+            detalle=f"Logout explícito desde {request.remote_addr}",
+            ip_origen=request.remote_addr
+        )
     
     if session_token:
         AuthService.cerrar_sesion(session_token, tipo_cierre='logout')
