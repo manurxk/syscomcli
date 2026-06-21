@@ -1,0 +1,1609 @@
+C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.2) or chardet (7.0.1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+[2026-06-16 12:47:39,710] WARNING in run: No se pudieron configurar tareas de autenticación: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+ * Tip: There are .env files present. Install python-dotenv to use them.
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.91:5000
+Press CTRL+C to quit
+ * Restarting with stat
+C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.2) or chardet (7.0.1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+[2026-06-16 12:47:41,492] WARNING in run: No se pudieron configurar tareas de autenticación: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Debugger is active!
+ * Debugger PIN: 734-718-366
+127.0.0.1 - - [16/Jun/2026 12:48:00] "GET / HTTP/1.1" 302 -
+127.0.0.1 - - [16/Jun/2026 12:48:00] "GET /login HTTP/1.1" 200 -
+Job "procesar_recordatorios_pendientes (trigger: interval[0:10:00], next run at: 2026-06-16 13:07:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\tasks\recordatorio_tasks.py", line 54, in procesar_recordatorios_pendientes
+    recordatorios_24h = recordatorio_dao.obtenerRecordatoriosPendientes24h(limite=100)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\dao\modulos\agendamiento\recordatorio\RecordatorioDao.py", line 250, in obtenerRecordatoriosPendientes24h
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+Job "limpiar_sesiones_expiradas (trigger: interval[0:15:00], next run at: 2026-06-16 13:17:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\tasks\auth_tasks.py", line 20, in limpiar_sesiones_expiradas
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+Job "procesar_recordatorios_pendientes (trigger: interval[0:10:00], next run at: 2026-06-16 13:17:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\tasks\recordatorio_tasks.py", line 54, in procesar_recordatorios_pendientes
+    recordatorios_24h = recordatorio_dao.obtenerRecordatoriosPendientes24h(limite=100)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\dao\modulos\agendamiento\recordatorio\RecordatorioDao.py", line 250, in obtenerRecordatoriosPendientes24h
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+Job "procesar_recordatorios_pendientes (trigger: interval[0:10:00], next run at: 2026-06-16 13:27:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\tasks\recordatorio_tasks.py", line 54, in procesar_recordatorios_pendientes
+    recordatorios_24h = recordatorio_dao.obtenerRecordatoriosPendientes24h(limite=100)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\dao\modulos\agendamiento\recordatorio\RecordatorioDao.py", line 250, in obtenerRecordatoriosPendientes24h
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+Job "limpiar_sesiones_expiradas (trigger: interval[0:15:00], next run at: 2026-06-16 13:32:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\tasks\auth_tasks.py", line 20, in limpiar_sesiones_expiradas
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,096] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,185] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,264] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,350] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,427] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,473] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,541] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,589] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,684] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,733] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,827] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,878] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:07,938] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,017] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,072] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,135] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,228] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,282] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,339] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,400] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,454] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,524] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,550] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:08] "GET /admin/dashboard HTTP/1.1" 404 -
+127.0.0.1 - - [16/Jun/2026 13:18:08] "GET /static/vendor/adminlte4/css/adminlte.min.css HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:18:08] "GET /static/vendor/fontawesome-free/css/all.min.css HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:18:08] "GET /static/vendor/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 -
+[2026-06-16 13:18:08,702] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,781] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,845] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,905] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:08,975] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,006] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,063] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,097] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,151] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,216] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,277] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,339] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,395] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,461] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,510] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,548] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,587] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,630] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,690] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,759] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,849] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,900] WARNING in middleware: Error in improved middleware, using traditional method: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,918] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,950] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:09,965] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:09] "GET /favicon.ico HTTP/1.1" 404 -
+[2026-06-16 13:18:10,035] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,099] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,181] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,276] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,352] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,423] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,465] ERROR in dashboard: Error en es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\rutas\seguridad\dashboard.py", line 50, in es_especialista
+    id_especialista = obtener_id_especialista_usuario()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\utils\especialista_helper.py", line 25, in obtener_id_especialista_usuario
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,510] ERROR in dashboard: Error en fallback es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,576] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,652] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,915] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:10,977] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,060] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,147] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,218] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,247] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,320] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,352] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,419] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,479] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,566] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,661] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,737] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,796] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,856] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:11,930] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,003] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,083] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,145] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,210] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,266] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,349] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,401] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,576] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,651] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,736] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,802] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,880] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:12,944] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,021] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,084] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,136] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,232] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,304] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,394] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,414] WARNING in middleware: Error in improved middleware, using traditional method: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,458] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,467] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,512] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,553] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,600] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,643] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,676] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,744] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,751] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,824] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,857] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,912] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,929] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:13,969] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,004] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,039] ERROR in dashboard: Error en es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\rutas\seguridad\dashboard.py", line 50, in es_especialista
+    id_especialista = obtener_id_especialista_usuario()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\utils\especialista_helper.py", line 25, in obtener_id_especialista_usuario
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,074] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,087] ERROR in dashboard: Error en fallback es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,126] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,153] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,220] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,254] WARNING in middleware: Error in improved middleware, using traditional method: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,255] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,297] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,357] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,401] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,402] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,418] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,493] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,511] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,527] WARNING in middleware: Error in improved middleware, using traditional method: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,527] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,569] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,582] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,611] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,615] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,665] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,684] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,708] WARNING in middleware: Error in improved middleware, using traditional method: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,710] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,715] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,749] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,753] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,768] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,770] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,817] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,866] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,868] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,878] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,882] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,884] WARNING in middleware: Error in improved middleware, using traditional method: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,884] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,926] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,932] ERROR in dashboard: Error en es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\rutas\seguridad\dashboard.py", line 50, in es_especialista
+    id_especialista = obtener_id_especialista_usuario()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\utils\especialista_helper.py", line 25, in obtener_id_especialista_usuario
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,933] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,935] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,955] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,963] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,966] ERROR in dashboard: Error en fallback es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,971] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:14,993] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,004] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,005] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,008] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,038] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,049] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,061] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,075] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,079] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,079] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,106] ERROR in dashboard: Error en es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\rutas\seguridad\dashboard.py", line 50, in es_especialista
+    id_especialista = obtener_id_especialista_usuario()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\utils\especialista_helper.py", line 25, in obtener_id_especialista_usuario
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,110] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,112] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,127] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,136] ERROR in dashboard: Error en fallback es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,139] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,168] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,170] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,182] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,190] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,196] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,208] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,229] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,231] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,236] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,241] ERROR in dashboard: Error en es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\rutas\seguridad\dashboard.py", line 50, in es_especialista
+    id_especialista = obtener_id_especialista_usuario()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\utils\especialista_helper.py", line 25, in obtener_id_especialista_usuario
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,243] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,244] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,262] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,270] ERROR in dashboard: Error en fallback es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,307] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,312] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,314] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,315] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,335] ERROR in dashboard: Error en es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\rutas\seguridad\dashboard.py", line 50, in es_especialista
+    id_especialista = obtener_id_especialista_usuario()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\utils\especialista_helper.py", line 25, in obtener_id_especialista_usuario
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,345] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,357] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,360] ERROR in dashboard: Error en fallback es_especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,366] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,374] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,380] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,384] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,411] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,428] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,437] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,438] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,439] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,463] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,474] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,480] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,505] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,507] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,508] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,513] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,545] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,545] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,546] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,562] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,564] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,582] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,590] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,598] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,609] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,615] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,621] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,624] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,635] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,653] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,658] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,666] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,693] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,694] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,703] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,716] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,717] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,731] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,736] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,739] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,744] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,746] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,746] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:15] "GET /dashboard HTTP/1.1" 200 -
+[2026-06-16 13:18:15,818] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,819] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,832] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,853] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,854] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,870] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,898] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,898] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,911] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,917] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,939] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,953] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,968] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,980] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:15,985] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,019] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,031] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,038] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,063] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,063] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,101] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,112] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,114] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,151] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,155] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,171] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,200] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,212] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,262] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,271] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,283] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,301] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,338] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,352] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,377] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,421] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,452] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,466] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,472] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,719] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,720] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,734] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,740] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,768] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,787] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,826] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,837] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,844] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,850] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,852] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,911] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,920] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,923] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,929] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,968] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:16,981] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,044] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,044] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,053] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,058] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,063] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,073] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,111] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,127] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,156] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,160] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,181] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,183] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,194] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,220] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,246] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,248] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,249] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,250] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,260] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,285] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,302] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,368] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,378] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,379] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,386] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,390] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,396] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,399] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,446] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,448] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,458] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,463] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,467] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,492] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,507] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,517] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,530] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,538] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,560] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,562] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,578] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,594] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,597] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,615] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,618] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,630] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,647] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,689] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,701] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,704] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,705] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,717] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,718] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,728] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,736] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,799] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,803] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,806] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,828] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,831] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,834] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,839] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,844] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,848] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,902] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,908] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,915] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,923] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,933] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,952] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,964] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,966] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:17,981] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,012] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,029] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,046] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,051] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,055] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,067] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,068] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,104] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,122] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,140] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,151] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,155] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,203] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,214] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,230] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,239] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,260] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,301] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,324] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,339] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,358] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,369] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,374] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,385] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,387] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,392] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,435] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,439] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,467] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,470] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,485] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,502] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,523] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,523] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,526] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,538] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,547] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,581] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,582] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,589] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,595] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,606] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,620] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,620] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,648] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,664] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,666] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,687] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,725] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,745] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,754] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,768] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,777] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,790] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,799] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,825] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,848] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,850] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,857] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,869] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,871] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:18] "GET /login?next=http://127.0.0.1:5000/admin/dashboard HTTP/1.1" 200 -
+[2026-06-16 13:18:18,900] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,929] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,929] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,937] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,946] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,968] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,986] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:18,995] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,016] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,023] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,041] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,048] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,086] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,102] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,111] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,133] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,139] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,164] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,183] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,197] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,201] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,218] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,227] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,237] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,268] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,287] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,293] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,299] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,307] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,311] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,336] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,353] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,375] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,383] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,400] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,403] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,404] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,426] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,473] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,481] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,486] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,491] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,494] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,528] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,535] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,537] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,588] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,604] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,605] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,605] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,606] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,629] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,635] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:19] "GET /login HTTP/1.1" 200 -
+[2026-06-16 13:18:19,703] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,705] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,707] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,750] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,770] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,773] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,785] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,789] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,822] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,834] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,885] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,889] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,892] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,898] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,899] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,945] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:19,978] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,002] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,008] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,011] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,017] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,058] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,068] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,069] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,093] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,118] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,123] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,125] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,142] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,151] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,169] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,181] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,218] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,219] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,222] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,232] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,233] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,260] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,260] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,274] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:20] "GET /login HTTP/1.1" 200 -
+[2026-06-16 13:18:20,293] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,304] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,333] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,350] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,362] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,396] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,397] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:20] "GET /static/img/iconoa.png HTTP/1.1" 200 -
+[2026-06-16 13:18:20,426] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,445] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,473] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,521] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,539] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,554] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,662] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,718] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,798] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:20,911] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:20] "GET /dashboard HTTP/1.1" 200 -
+[2026-06-16 13:18:20,977] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,057] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,151] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,156] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,270] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,271] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,304] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,341] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,343] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,435] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,455] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,505] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,517] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,622] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,630] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,665] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,689] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,714] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,788] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,814] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,828] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,852] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,895] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:21,972] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,004] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,005] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,066] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,172] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,172] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,231] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,238] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,260] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,336] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,338] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,361] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,439] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,518] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,540] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,556] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,649] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,667] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,730] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,815] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:22] "GET /dashboard HTTP/1.1" 200 -
+[2026-06-16 13:18:22,901] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,905] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,989] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:22,989] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,055] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,059] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,150] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,181] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,272] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:23] "GET /dashboard HTTP/1.1" 200 -
+[2026-06-16 13:18:23,306] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,411] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,455] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,547] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,577] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,633] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+[2026-06-16 13:18:23,702] ERROR in modulos_service: Error verificando si es especialista: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:23] "GET /dashboard HTTP/1.1" 200 -
+[2026-06-16 13:18:23,755] ERROR in modulos_service: Error al obtener roles del usuario 1: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:18:23] "GET /dashboard HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:18:43] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:18:43] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:43] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:18:43] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:45] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:18:45] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:45] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:45] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:47] "GET /consultorio/sala-espera HTTP/1.1" 404 -
+127.0.0.1 - - [16/Jun/2026 13:18:47] "GET /static/vendor/fontawesome-free/css/all.min.css HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:47] "GET /static/vendor/adminlte4/css/adminlte.min.css HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:18:47] "GET /static/vendor/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:20:30] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:20:30] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:20:30] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:20:30] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:20:31] "GET /dashboard HTTP/1.1" 302 -
+127.0.0.1 - - [16/Jun/2026 13:20:32] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:20:32] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:20:32] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:26:24] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:26:24] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:26:24] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:26:25] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+Job "procesar_recordatorios_pendientes (trigger: interval[0:10:00], next run at: 2026-06-16 13:37:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\tasks\recordatorio_tasks.py", line 54, in procesar_recordatorios_pendientes
+    recordatorios_24h = recordatorio_dao.obtenerRecordatoriosPendientes24h(limite=100)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\dao\modulos\agendamiento\recordatorio\RecordatorioDao.py", line 250, in obtenerRecordatoriosPendientes24h
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:28:08] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:28:08] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:28:08] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:28:08] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:28:17] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:28:17] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:28:17] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:28:17] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+Job "limpiar_sesiones_expiradas (trigger: interval[0:15:00], next run at: 2026-06-16 13:47:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\tasks\auth_tasks.py", line 20, in limpiar_sesiones_expiradas
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+Job "procesar_recordatorios_pendientes (trigger: interval[0:10:00], next run at: 2026-06-16 13:47:41 -03)" raised an exception
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\apscheduler\executors\base.py", line 131, in run_job
+    retval = job.func(*job.args, **job.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\tasks\recordatorio_tasks.py", line 54, in procesar_recordatorios_pendientes
+    recordatorios_24h = recordatorio_dao.obtenerRecordatoriosPendientes24h(limite=100)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\dao\modulos\agendamiento\recordatorio\RecordatorioDao.py", line 250, in obtenerRecordatoriosPendientes24h
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:37:46] "GET / HTTP/1.1" 302 -
+127.0.0.1 - - [16/Jun/2026 13:37:46] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:37:46] "GET /static/img/iconoa.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:37:46] "GET /static/img/modern_clinic_bg.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:37:54] "POST /login HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\routes\login.py", line 32, in login
+    exitoso, datos_usuario, mensaje = AuthService.login(
+                                      ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\services\auth_service.py", line 231, in login
+    usuario = AuthService.buscar_usuario_seguridad(usuario_nombre)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\services\auth_service.py", line 48, in buscar_usuario_seguridad
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:37:54] "GET /login?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:37:54] "GET /login?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:37:55] "GET /login?__debugger__=yes&cmd=resource&f=console.png&s=Irs8eSquLGj1oyqs6eqQ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Jun/2026 13:37:55] "GET /login?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:38:01] "POST /login HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\routes\login.py", line 32, in login
+    exitoso, datos_usuario, mensaje = AuthService.login(
+                                      ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\services\auth_service.py", line 231, in login
+    usuario = AuthService.buscar_usuario_seguridad(usuario_nombre)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\auth\services\auth_service.py", line 48, in buscar_usuario_seguridad
+    conexion = Conexion()
+               ^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 26, in __init__
+    raise e
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\app\conexion\Conexion.py", line 17, in __init__
+    self.con = psycopg2.connect(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\MANUEL RAMIREZ\Documents\GIT\syscomcli\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: FATAL:  database "clinicain" does not exist
+
+127.0.0.1 - - [16/Jun/2026 13:38:01] "GET /login?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:38:01] "GET /login?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:38:01] "GET /login?__debugger__=yes&cmd=resource&f=console.png&s=Irs8eSquLGj1oyqs6eqQ HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:38:02] "GET /login?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 304 -
+127.0.0.1 - - [16/Jun/2026 13:43:12] "GET /login HTTP/1.1" 200 -

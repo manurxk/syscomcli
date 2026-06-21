@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Ficha Médica de Pacientes
@@ -81,7 +81,7 @@ Ficha Médica de Pacientes
                                         <i class="fas fa-map-marker-alt text-primary"></i> <span id="domicilioPaciente">---</span>
                                     </p>
                                 </div>
-                                <div class="col-md-4 text-right">
+                                <div class="col-md-4 text-end">
                                     <button type="button" class="btn btn-warning btn-sm btn-block mb-2" id="btnEditarFicha">
                                         <i class="fas fa-edit"></i> Editar Ficha
                                     </button>
@@ -104,9 +104,9 @@ Ficha Médica de Pacientes
                             <div class="card border-left-primary shadow h-100">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Consultas</div>
-                                            <div class="h5 mb-0 font-weight-bold" id="totalConsultas">0</div>
+                                        <div class="col me-2">
+                                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Consultas</div>
+                                            <div class="h5 mb-0 fw-bold" id="totalConsultas">0</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-stethoscope fa-2x text-gray-300"></i>
@@ -120,9 +120,9 @@ Ficha Médica de Pacientes
                             <div class="card border-left-success shadow h-100">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tratamientos Activos</div>
-                                            <div class="h5 mb-0 font-weight-bold" id="tratamientosActivos">0</div>
+                                        <div class="col me-2">
+                                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Tratamientos Activos</div>
+                                            <div class="h5 mb-0 fw-bold" id="tratamientosActivos">0</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-pills fa-2x text-gray-300"></i>
@@ -136,9 +136,9 @@ Ficha Médica de Pacientes
                             <div class="card border-left-info shadow h-100">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Diagnósticos</div>
-                                            <div class="h5 mb-0 font-weight-bold" id="totalDiagnosticos">0</div>
+                                        <div class="col me-2">
+                                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Diagnósticos</div>
+                                            <div class="h5 mb-0 fw-bold" id="totalDiagnosticos">0</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-notes-medical fa-2x text-gray-300"></i>
@@ -152,9 +152,9 @@ Ficha Médica de Pacientes
                             <div class="card border-left-warning shadow h-100">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Próxima Cita</div>
-                                            <div class="h6 mb-0 font-weight-bold text-truncate" id="proximaCita">---</div>
+                                        <div class="col me-2">
+                                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Próxima Cita</div>
+                                            <div class="h6 mb-0 fw-bold text-truncate" id="proximaCita">---</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
@@ -625,7 +625,7 @@ const initDatatable = () => {
                     return `${row.nombre} ${row.apellido}`;
                 },
                 render: function(data, type, row) {
-                    const esMenor = row.es_menor ? '<span class="badge badge-info badge-sm ml-1">Menor</span>' : '';
+                    const esMenor = row.es_menor ? '<span class="badge bg-info badge-sm ms-1">Menor</span>' : '';
                     return data + esMenor;
                 }
             },
@@ -774,7 +774,7 @@ const renderizarAnamnesis = (anamnesis) => {
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i> 
                 Este paciente no tiene una anamnesis registrada.
-                <button type="button" class="btn btn-primary btn-sm ml-3" onclick="crearNuevaAnamnesis()">
+                <button type="button" class="btn btn-primary btn-sm ms-3" onclick="crearNuevaAnamnesis()">
                     <i class="fas fa-plus"></i> Crear Anamnesis
                 </button>
             </div>
@@ -900,7 +900,7 @@ const renderizarAnamnesis = (anamnesis) => {
                 <div class="card">
                     <div class="card-header" id="heading${seccion.id}">
                         <h2 class="mb-0">
-                            <button class="btn btn-link btn-block text-left collapsed" type="button" 
+                            <button class="btn btn-link btn-block text-start collapsed" type="button" 
                                     data-toggle="collapse" data-target="#collapse${seccion.id}">
                                 ${seccion.titulo}
                             </button>
@@ -950,7 +950,7 @@ const renderizarAnamnesis = (anamnesis) => {
             html += `
                 <p><strong>Evaluaciones:</strong></p>
                 <ul>
-                    ${evaluaciones.map(e => `<li><span class="badge badge-info">${e}</span></li>`).join('')}
+                    ${evaluaciones.map(e => `<li><span class="badge bg-info">${e}</span></li>`).join('')}
                 </ul>
             `;
         }
@@ -959,7 +959,7 @@ const renderizarAnamnesis = (anamnesis) => {
             html += `
                 <p><strong>Terapias:</strong></p>
                 <ul>
-                    ${terapias.map(t => `<li><span class="badge badge-success">${t}</span></li>`).join('')}
+                    ${terapias.map(t => `<li><span class="badge bg-success">${t}</span></li>`).join('')}
                 </ul>
             `;
         }
@@ -988,7 +988,7 @@ const renderizarAnamnesis = (anamnesis) => {
     if (anamnesis.elaborado_por_nombre) {
         html += `
             <div class="card card-anamnesis">
-                <div class="card-body text-muted text-right">
+                <div class="card-body text-muted text-end">
                     <small>
                         <i class="fas fa-user-md"></i> Elaborado por: <strong>${anamnesis.elaborado_por_nombre}</strong>
                     </small>
@@ -1037,7 +1037,7 @@ const renderizarTimeline = (timeline) => {
                                 <i class="fas fa-user-md"></i> ${evento.profesional}
                             </small>
                         </div>
-                        <span class="badge badge-secondary">${evento.fecha}</span>
+                        <span class="badge bg-secondary">${evento.fecha}</span>
                     </div>
                     ${evento.detalle ? `<p class="mt-2 mb-0 text-muted"><small>${evento.detalle}</small></p>` : ''}
                 </div>
@@ -1099,13 +1099,13 @@ const renderizarTratamientos = (tratamientos) => {
                             
                             ${trat.diagnostico ? `
                                 <div class="mt-2">
-                                    <span class="badge badge-info">${trat.codigo_cie10 || 'N/A'}</span>
+                                    <span class="badge bg-info">${trat.codigo_cie10 || 'N/A'}</span>
                                     <small>${trat.diagnostico}</small>
                                 </div>
                             ` : ''}
                         </div>
-                        <div class="ml-3">
-                            <span class="badge badge-${estadoColor} badge-pill">${trat.estado}</span>
+                        <div class="ms-3">
+                            <span class="badge badge-${estadoColor} rounded-pill">${trat.estado}</span>
                         </div>
                     </div>
                 </div>
@@ -1140,7 +1140,7 @@ const renderizarDiagnosticos = (diagnosticos) => {
             'LEVE': 'badge-gravedad-leve',
             'MODERADO': 'badge-gravedad-moderado',
             'GRAVE': 'badge-gravedad-grave'
-        }[diag.gravedad] || 'badge-secondary';
+        }[diag.gravedad] || 'bg-secondary';
         
         html += `
             <tr class="fade-in">
@@ -1149,7 +1149,7 @@ const renderizarDiagnosticos = (diagnosticos) => {
                     <strong>${diag.diagnostico}</strong>
                     ${diag.descripcion_especifica ? `<br><small class="text-muted">${diag.descripcion_especifica}</small>` : ''}
                 </td>
-                <td><span class="badge badge-dark">${diag.codigo_cie10}</span></td>
+                <td><span class="badge bg-dark">${diag.codigo_cie10}</span></td>
                 <td><span class="badge badge-${tipoColor}">${diag.tipo}</span></td>
                 <td><span class="badge ${gravedadClass}">${diag.gravedad || 'N/A'}</span></td>
                 <td><small>${diag.profesional}</small></td>
@@ -1191,10 +1191,10 @@ const renderizarConsultas = (consultas) => {
                 <td><span class="badge badge-${estadoColor}">${cons.estado}</span></td>
                 <td><small>${cons.profesional}<br><span class="text-muted">Mat: ${cons.matricula}</span></small></td>
                 <td class="text-center">
-                    <span class="badge badge-info">${cons.total_diagnosticos || 0}</span>
+                    <span class="badge bg-info">${cons.total_diagnosticos || 0}</span>
                 </td>
                 <td class="text-center">
-                    <span class="badge badge-success">${cons.total_procedimientos || 0}</span>
+                    <span class="badge bg-success">${cons.total_procedimientos || 0}</span>
                 </td>
             </tr>
         `;
@@ -1224,7 +1224,7 @@ const renderizarProcedimientos = (procedimientos) => {
                 <td>${proc.descripcion || '-'}</td>
                 <td class="text-center">${proc.duracion ? proc.duracion + ' min' : '-'}</td>
                 <td>
-                    ${proc.resultado ? `<span class="badge badge-info">${proc.resultado}</span>` : '-'}
+                    ${proc.resultado ? `<span class="badge bg-info">${proc.resultado}</span>` : '-'}
                 </td>
                 <td><small>${proc.profesional}</small></td>
             </tr>
@@ -1262,7 +1262,7 @@ const renderizarCitas = (citas) => {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-calendar-day fa-2x text-primary mr-3"></i>
+                                <i class="fas fa-calendar-day fa-2x text-primary me-3"></i>
                                 <div>
                                     <h5 class="mb-0">${cita.fecha}</h5>
                                     <span class="text-muted">${cita.hora_inicio} - ${cita.hora_fin}</span>
@@ -1280,10 +1280,10 @@ const renderizarCitas = (citas) => {
                                     <i class="fas fa-clipboard"></i> ${cita.motivo || 'Sin motivo especificado'}
                                 </p>
                                 <span class="badge badge-${cita.estado_color || 'primary'}">${cita.estado}</span>
-                                <span class="badge badge-secondary ml-2">${cita.tipo}</span>
+                                <span class="badge bg-secondary ms-2">${cita.tipo}</span>
                             </div>
                         </div>
-                        <div class="ml-3 text-center">
+                        <div class="ms-3 text-center">
                             <div class="alert alert-${cita.dias_hasta_cita <= 1 ? 'danger' : 'warning'} mb-0">
                                 <strong>${diasTexto}</strong>
                             </div>
@@ -1416,7 +1416,7 @@ const guardarEdicionFicha = () => {
     // Deshabilitar botón mientras se envía
     const btn = $('#btnGuardarEdicion');
     const btnTextOriginal = btn.html();
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
     
     // Enviar actualización
     fetch(`/api/v1/anamnesis/${anamnesisActualId}`, {
@@ -1496,7 +1496,7 @@ const exportarPDF = () => {
     // Deshabilitar botón mientras se genera
     const btn = $('#btnExportarPDF');
     const btnTextOriginal = btn.html();
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Generando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Generando...');
     
     // Hacer petición para descargar el PDF
     fetch(`/api/v1/ficha-medica/${pacienteActualId}/pdf`)

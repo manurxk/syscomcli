@@ -6,7 +6,7 @@ __version__ = "2.1.0"
 __version_info__ = (2, 1, 0)
 
 # Información adicional de la versión
-VERSION_NAME = "AngaSys"
+VERSION_NAME = "Sysclin"
 VERSION_FULL = f"{VERSION_NAME} v{__version__}"
 
 # Fecha de lanzamiento de la versión actual

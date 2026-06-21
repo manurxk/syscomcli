@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Pedidos
@@ -172,7 +172,7 @@ Pedidos
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3" class="text-right">
+                                    <td colspan="3" class="text-end">
                                         <button type="button" class="btn btn-success btn-sm" id="btnAgregarItemInline" style="display: none;">
                                             <i class="fas fa-plus"></i> Agregar Item
                                         </button>
@@ -180,17 +180,17 @@ Pedidos
                                     <td colspan="2"></td>
                                 </tr>
                                 <tr>
-                                    <th colspan="3" class="text-right">Subtotal:</th>
+                                    <th colspan="3" class="text-end">Subtotal:</th>
                                     <th id="totalSubtotal">0 Gs.</th>
                                     <th></th>
                                 </tr>
                                 <tr>
-                                    <th colspan="3" class="text-right">Descuento:</th>
+                                    <th colspan="3" class="text-end">Descuento:</th>
                                     <th id="totalDescuento">0 Gs.</th>
                                     <th></th>
                                 </tr>
                                 <tr class="table-primary">
-                                    <th colspan="3" class="text-right">Total:</th>
+                                    <th colspan="3" class="text-end">Total:</th>
                                     <th id="totalTotal">0 Gs.</th>
                                     <th></th>
                                 </tr>
@@ -376,7 +376,7 @@ const initDatatable = () => {
                     const estados = {
                         'PENDIENTE': '<span class="badge bg-warning-soft text-warning">Pendiente</span>',
                         'CONFIRMADO': '<span class="badge bg-info-soft text-info">Confirmado</span>',
-                        'EN_PREPARACION': '<span class="badge badge-primary">En Preparación</span>',
+                        'EN_PREPARACION': '<span class="badge bg-primary">En Preparación</span>',
                         'ENTREGADO': '<span class="badge bg-success-soft text-success">Entregado</span>',
                         'CANCELADO': '<span class="badge bg-danger-soft text-danger">Cancelado</span>'
                     };
@@ -601,8 +601,8 @@ const renderizarItems = () => {
             <tr>
                 <td>${item.item_descripcion || ''}</td>
                 <td class="text-center">${item.item_cantidad || 1}</td>
-                <td class="text-right">${formatearMoneda(item.item_precio_unitario || 0)}</td>
-                <td class="text-right"><strong>${formatearMoneda(subtotal)}</strong></td>
+                <td class="text-end">${formatearMoneda(item.item_precio_unitario || 0)}</td>
+                <td class="text-end"><strong>${formatearMoneda(subtotal)}</strong></td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-warning btn-editar-item" 
                             data-index="${index}" title="Editar">
@@ -926,7 +926,7 @@ const verDetalle = () => {
                 Swal.fire({
                     title: `Pedido ${pedido.pedido_numero}`,
                     html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${pedido.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${pedido.profesional_nombre || 'N/A'}</p>
                             <p><strong>Fecha:</strong> ${pedido.fecha_pedido}</p>

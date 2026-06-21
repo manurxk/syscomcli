@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}Usuarios{% endblock %}
 
@@ -225,7 +225,7 @@ const initDatatable = () => {
       },
       { 
         data: function(row) {
-          const badgeClass = row.intentos > 2 ? 'badge-danger' : 'badge-secondary';
+          const badgeClass = row.intentos > 2 ? 'bg-danger' : 'bg-secondary';
           return `<span class="badge ${badgeClass}">${row.intentos}</span>`;
         },
         className: 'text-center'

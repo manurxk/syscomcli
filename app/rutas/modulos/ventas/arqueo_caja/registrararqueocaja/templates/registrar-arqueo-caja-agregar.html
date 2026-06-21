@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Arqueo de Caja
@@ -383,20 +383,20 @@ Registrar Arqueo de Caja
         diferenciaEl.removeClass('text-success text-danger text-warning');
 
         let estado = 'PENDIENTE';
-        let estadoBadge = 'badge-secondary';
+        let estadoBadge = 'bg-secondary';
 
         if (diferencia === 0) {
             diferenciaEl.addClass('text-success');
             estado = 'CONCILIADO';
-            estadoBadge = 'badge-success';
+            estadoBadge = 'bg-success';
         } else if (Math.abs(diferencia) <= 1000) {
             diferenciaEl.addClass('text-warning');
             estado = 'CONCILIADO';
-            estadoBadge = 'badge-success';
+            estadoBadge = 'bg-success';
         } else {
             diferenciaEl.addClass('text-danger');
             estado = 'CON_DIFERENCIA';
-            estadoBadge = 'badge-danger';
+            estadoBadge = 'bg-danger';
         }
 
         $('#resumenEstado').html(`<span class="badge ${estadoBadge}">${estado}</span>`);

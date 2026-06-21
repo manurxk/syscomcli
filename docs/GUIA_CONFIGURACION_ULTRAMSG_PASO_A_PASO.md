@@ -1,7 +1,7 @@
 # Guía Paso a Paso: Configuración de Credenciales UltraMsg
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Objetivo:** Crear cuenta y configurar credenciales de UltraMsg para WhatsApp
 
 ---
@@ -103,12 +103,12 @@ Name: Tu Nombre
 
 Completa los siguientes campos:
 
-- **Instance Name:** Nombre descriptivo (ej: "Angasys-Produccion" o "Angasys-Desarrollo")
+- **Instance Name:** Nombre descriptivo (ej: "Sysclin-Produccion" o "Sysclin-Desarrollo")
 - **Description:** Descripción opcional (ej: "Instancia para recordatorios de citas médicas")
 
 **Ejemplo:**
 ```
-Instance Name: Angasys-Produccion
+Instance Name: Sysclin-Produccion
 Description: Instancia para envío de recordatorios de citas por WhatsApp
 ```
 
@@ -190,7 +190,7 @@ Description: Instancia para envío de recordatorios de citas por WhatsApp
 
 **Ejemplo de cómo guardar:**
 ```
-UltraMsg Credentials - Angasys
+UltraMsg Credentials - Sysclin
 ==============================
 Instance ID: instance1234567890
 Token: abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
@@ -233,7 +233,7 @@ set ULTRAMSG_API_URL=https://api.ultramsg.com
 
 1. Crea un archivo llamado `.env` en la raíz del proyecto:
 ```bash
-cd /home/armando/Documentos/PERSONAL/GIT/Angasys
+cd /home/armando/Documentos/PERSONAL/GIT/Sysclin
 touch .env
 ```
 
@@ -342,7 +342,7 @@ service = UltraMsgService()
 # Reemplaza con TU número de teléfono (formato internacional sin +)
 success, message_id, error = service.enviar_mensaje_simple(
     telefono="595981123456",  # Tu número de prueba
-    mensaje="🧪 Mensaje de prueba desde Angasys"
+    mensaje="🧪 Mensaje de prueba desde Sysclin"
 )
 
 if success:

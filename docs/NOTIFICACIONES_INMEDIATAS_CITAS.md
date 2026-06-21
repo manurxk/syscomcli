@@ -1,7 +1,7 @@
 # Notificaciones Inmediatas de Citas - Implementación Completada
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Funcionalidad:** Envío de notificaciones WhatsApp inmediatas al crear/editar citas
 
 ---
@@ -99,12 +99,12 @@ Recuerde que recibirá recordatorios automáticos 24 horas y 12 horas antes de s
 Se agregó configuración para el nombre de la clínica:
 
 ```python
-app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'Angasys')
+app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'Sysclin')
 ```
 
 **Configuración:**
 - Variable de entorno: `NOMBRE_CLINICA`
-- Valor por defecto: `"Angasys"`
+- Valor por defecto: `"Sysclin"`
 - Se puede cambiar en variables de entorno o directamente en el código
 
 ---
@@ -155,7 +155,7 @@ Su cita médica ha sido creada con los siguientes detalles:
 🕐 Hora: 10:00
 👨‍⚕️ Profesional: Dr. Carlos González
 🩺 Especialidad: Cardiología
-🏥 Clínica: Angasys
+🏥 Clínica: Sysclin
 
 Recuerde que recibirá recordatorios automáticos 24 horas y 12 horas antes de su cita.
 
@@ -174,7 +174,7 @@ Su cita médica ha sido actualizada con los siguientes detalles:
 🕐 Hora: 14:00
 👨‍⚕️ Profesional: Dr. Carlos González
 🩺 Especialidad: Cardiología
-🏥 Clínica: Angasys
+🏥 Clínica: Sysclin
 
 Recuerde que recibirá recordatorios automáticos 24 horas y 12 horas antes de su cita.
 

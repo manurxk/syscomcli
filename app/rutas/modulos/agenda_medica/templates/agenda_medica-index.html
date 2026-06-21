@@ -1,4 +1,4 @@
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   {% extends 'base.html' %}
+﻿                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   {% extends 'base.html' %}
 
 {% block titulo %}
 Módulo de Horarios
@@ -447,20 +447,20 @@ const crearFilaDia = (dia, turno, tipoTurno) => {
             data-fecha-hasta="${turno.fecha_hasta || ''}">
             <td>
                 <strong>${dia.nombre_dia}</strong>
-                <span class="badge badge-${turnoColor} ml-2">${tipoTurno}</span>
+                <span class="badge badge-${turnoColor} ms-2">${tipoTurno}</span>
             </td>
             <td>${turno.consultorio || '-'}</td>
             <td class="text-center">
                 <span class="badge badge-${estadoBadge}" data-estado-activo="${turno.estado || turno.est_agenda_horario || false}">${estadoText}</span>
             </td>
             <td class="text-center">
-                <i class="far fa-clock mr-1"></i>${turno.hora_inicio || '-'}
+                <i class="far fa-clock me-1"></i>${turno.hora_inicio || '-'}
             </td>
             <td class="text-center">
-                <i class="far fa-clock mr-1"></i>${turno.hora_fin || '-'}
+                <i class="far fa-clock me-1"></i>${turno.hora_fin || '-'}
             </td>
             <td class="text-center">
-                <span class="badge badge-success">${turno.cupos_disponibles || 0}</span>
+                <span class="badge bg-success">${turno.cupos_disponibles || 0}</span>
             </td>
             <td class="text-center">${turno.cupos_totales || 0}</td>
             <td class="text-center">
@@ -776,7 +776,7 @@ const toggleEstadoFila = (elemento, idAgendaHorario) => {
         estadoActual = estadoActualStr === 'true' || estadoActualStr === true;
     } else {
         // Fallback: detectar por clase o texto
-        estadoActual = badgeEstado.hasClass('badge-success') || badgeEstado.text().trim() === 'Activo';
+        estadoActual = badgeEstado.hasClass('bg-success') || badgeEstado.text().trim() === 'Activo';
     }
     
     const nuevoEstado = !estadoActual;

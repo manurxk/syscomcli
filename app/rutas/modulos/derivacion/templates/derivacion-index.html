@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Gestión de Derivaciones
@@ -30,7 +30,7 @@ Gestión de Derivaciones
         <li class="nav-item">
             <a class="nav-link active" id="tab-pendientes" data-toggle="tab" href="#pendientes" role="tab">
                 <i class="fas fa-clock"></i> Pendientes Recibidas
-                <span class="badge badge-warning ml-2" id="badgePendientes">0</span>
+                <span class="badge bg-warning ms-2" id="badgePendientes">0</span>
             </a>
         </li>
         <li class="nav-item">
@@ -155,7 +155,7 @@ Gestión de Derivaciones
                     
                     <!-- Selección de Paciente -->
                     <div class="form-group">
-                        <label class="font-weight-semibold">Paciente <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="txtPacienteDerivacion" 
                                    placeholder="Buscar paciente..." readonly>
@@ -170,7 +170,7 @@ Gestión de Derivaciones
                     
                     <!-- Tipo de Derivación -->
                     <div class="form-group">
-                        <label class="font-weight-semibold">Tipo de Derivación <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Tipo de Derivación <span class="text-danger">*</span></label>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="tipoDerivacion" id="tipoInterno" value="interno" checked>
                             <label class="form-check-label" for="tipoInterno">
@@ -187,7 +187,7 @@ Gestión de Derivaciones
                     
                     <!-- Selección de Especialista Interno -->
                     <div class="form-group" id="grupoEspecialistaInterno">
-                        <label class="font-weight-semibold">Derivar a Especialista <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Derivar a Especialista <span class="text-danger">*</span></label>
                         <select class="form-control" id="id_especialista_destino">
                             <option value="">Seleccione un especialista...</option>
                         </select>
@@ -198,14 +198,14 @@ Gestión de Derivaciones
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Nombre <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="externo_nombre" 
                                            placeholder="Nombre del especialista">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Apellido</label>
+                                    <label class="fw-semibold">Apellido</label>
                                     <input type="text" class="form-control" id="externo_apellido" 
                                            placeholder="Apellido del especialista">
                                 </div>
@@ -214,14 +214,14 @@ Gestión de Derivaciones
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Teléfono</label>
+                                    <label class="fw-semibold">Teléfono</label>
                                     <input type="text" class="form-control" id="externo_telefono" 
                                            placeholder="Número de teléfono">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Matrícula</label>
+                                    <label class="fw-semibold">Matrícula</label>
                                     <input type="text" class="form-control" id="externo_matricula" 
                                            placeholder="Matrícula profesional (opcional)">
                                 </div>
@@ -231,7 +231,7 @@ Gestión de Derivaciones
                     
                     <!-- Urgencia -->
                     <div class="form-group">
-                        <label class="font-weight-semibold">Nivel de Urgencia <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Nivel de Urgencia <span class="text-danger">*</span></label>
                         <select class="form-control" id="urgencia" required>
                             <option value="BAJA">Baja</option>
                             <option value="NORMAL" selected>Normal</option>
@@ -242,7 +242,7 @@ Gestión de Derivaciones
                     
                     <!-- Motivo -->
                     <div class="form-group">
-                        <label class="font-weight-semibold">Motivo de Derivación <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Motivo de Derivación <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="motivo_derivacion" rows="4" 
                                   placeholder="Describa el motivo de la derivación..." required></textarea>
                         <small class="form-text text-muted">Mínimo 10 caracteres</small>
@@ -250,7 +250,7 @@ Gestión de Derivaciones
                     
                     <!-- Observaciones -->
                     <div class="form-group">
-                        <label class="font-weight-semibold">Observaciones Adicionales</label>
+                        <label class="fw-semibold">Observaciones Adicionales</label>
                         <textarea class="form-control" id="observaciones" rows="3" 
                                   placeholder="Información adicional que considere relevante..."></textarea>
                     </div>
@@ -313,7 +313,7 @@ Gestión de Derivaciones
                 
                 <div id="contenidoRechazo" style="display: none;">
                     <div class="form-group">
-                        <label class="font-weight-semibold">Motivo del Rechazo <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Motivo del Rechazo <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="motivo_rechazo" rows="3" 
                                   placeholder="Explique el motivo del rechazo..." required></textarea>
                     </div>
@@ -394,10 +394,10 @@ const initDatatablePendientes = () => {
         data: 'urgencia',
         render: function(data) {
           const badges = {
-            'URGENTE': '<span class="badge badge-danger">URGENTE</span>',
-            'ALTA': '<span class="badge badge-warning">ALTA</span>',
-            'NORMAL': '<span class="badge badge-info">NORMAL</span>',
-            'BAJA': '<span class="badge badge-secondary">BAJA</span>'
+            'URGENTE': '<span class="badge bg-danger">URGENTE</span>',
+            'ALTA': '<span class="badge bg-warning">ALTA</span>',
+            'NORMAL': '<span class="badge bg-info">NORMAL</span>',
+            'BAJA': '<span class="badge bg-secondary">BAJA</span>'
           };
           return badges[data] || data;
         }
@@ -470,7 +470,7 @@ const initDatatableEnviadas = () => {
           if (row.es_externo) {
             return `
               ${row.especialista_destino || '-'}
-              <br><span class="badge badge-info badge-sm">Externo</span>
+              <br><span class="badge bg-info badge-sm">Externo</span>
               ${row.externo_telefono ? `<br><small class="text-muted"><i class="fas fa-phone"></i> ${row.externo_telefono}</small>` : ''}
             `;
           }
@@ -481,10 +481,10 @@ const initDatatableEnviadas = () => {
         data: 'estado',
         render: function(data) {
           const badges = {
-            'PENDIENTE': '<span class="badge badge-warning">PENDIENTE</span>',
-            'ACEPTADA': '<span class="badge badge-success">ACEPTADA</span>',
-            'RECHAZADA': '<span class="badge badge-danger">RECHAZADA</span>',
-            'CANCELADA': '<span class="badge badge-secondary">CANCELADA</span>'
+            'PENDIENTE': '<span class="badge bg-warning">PENDIENTE</span>',
+            'ACEPTADA': '<span class="badge bg-success">ACEPTADA</span>',
+            'RECHAZADA': '<span class="badge bg-danger">RECHAZADA</span>',
+            'CANCELADA': '<span class="badge bg-secondary">CANCELADA</span>'
           };
           return badges[data] || data;
         }
@@ -542,11 +542,11 @@ const initDatatableHistorial = () => {
         data: 'tipo',
         render: function(data) {
           if (data === 'ENVIADA') {
-            return '<span class="badge badge-primary"><i class="fas fa-paper-plane"></i> Enviada</span>';
+            return '<span class="badge bg-primary"><i class="fas fa-paper-plane"></i> Enviada</span>';
           } else if (data === 'RECIBIDA') {
-            return '<span class="badge badge-success"><i class="fas fa-inbox"></i> Recibida</span>';
+            return '<span class="badge bg-success"><i class="fas fa-inbox"></i> Recibida</span>';
           }
-          return '<span class="badge badge-secondary">-</span>';
+          return '<span class="badge bg-secondary">-</span>';
         }
       },
       { data: 'paciente_nombre' },
@@ -557,7 +557,7 @@ const initDatatableHistorial = () => {
           if (row.es_externo) {
             return `
               ${row.especialista_destino || '-'}
-              <br><span class="badge badge-info badge-sm">Externo</span>
+              <br><span class="badge bg-info badge-sm">Externo</span>
             `;
           }
           return row.especialista_destino || '-';
@@ -567,10 +567,10 @@ const initDatatableHistorial = () => {
         data: 'estado',
         render: function(data) {
           const badges = {
-            'PENDIENTE': '<span class="badge badge-warning">PENDIENTE</span>',
-            'ACEPTADA': '<span class="badge badge-success">ACEPTADA</span>',
-            'RECHAZADA': '<span class="badge badge-danger">RECHAZADA</span>',
-            'CANCELADA': '<span class="badge badge-secondary">CANCELADA</span>'
+            'PENDIENTE': '<span class="badge bg-warning">PENDIENTE</span>',
+            'ACEPTADA': '<span class="badge bg-success">ACEPTADA</span>',
+            'RECHAZADA': '<span class="badge bg-danger">RECHAZADA</span>',
+            'CANCELADA': '<span class="badge bg-secondary">CANCELADA</span>'
           };
           return badges[data] || data;
         }
@@ -579,10 +579,10 @@ const initDatatableHistorial = () => {
         data: 'urgencia',
         render: function(data) {
           const badges = {
-            'URGENTE': '<span class="badge badge-danger">URGENTE</span>',
-            'ALTA': '<span class="badge badge-warning">ALTA</span>',
-            'NORMAL': '<span class="badge badge-info">NORMAL</span>',
-            'BAJA': '<span class="badge badge-secondary">BAJA</span>'
+            'URGENTE': '<span class="badge bg-danger">URGENTE</span>',
+            'ALTA': '<span class="badge bg-warning">ALTA</span>',
+            'NORMAL': '<span class="badge bg-info">NORMAL</span>',
+            'BAJA': '<span class="badge bg-secondary">BAJA</span>'
           };
           return badges[data] || data;
         }
@@ -912,20 +912,20 @@ $(document).on('click', '.btn-ver-derivacion', function() {
                     <strong>${d.especialista_destino}</strong>
                     ${d.externo_telefono ? `<br><small class="text-muted"><i class="fas fa-phone"></i> ${d.externo_telefono}</small>` : ''}
                     ${d.externo_matricula ? `<br><small class="text-muted">Matrícula: ${d.externo_matricula}</small>` : ''}
-                    <br><span class="badge badge-info">Especialista Externo</span>
+                    <br><span class="badge bg-info">Especialista Externo</span>
                   ` : d.especialista_destino}
                 </td></tr>
                 <tr><th>Estado:</th><td>
-                  ${d.estado === 'PENDIENTE' ? '<span class="badge badge-warning">PENDIENTE</span>' : ''}
-                  ${d.estado === 'ACEPTADA' ? '<span class="badge badge-success">ACEPTADA</span>' : ''}
-                  ${d.estado === 'RECHAZADA' ? '<span class="badge badge-danger">RECHAZADA</span>' : ''}
-                  ${d.estado === 'CANCELADA' ? '<span class="badge badge-secondary">CANCELADA</span>' : ''}
+                  ${d.estado === 'PENDIENTE' ? '<span class="badge bg-warning">PENDIENTE</span>' : ''}
+                  ${d.estado === 'ACEPTADA' ? '<span class="badge bg-success">ACEPTADA</span>' : ''}
+                  ${d.estado === 'RECHAZADA' ? '<span class="badge bg-danger">RECHAZADA</span>' : ''}
+                  ${d.estado === 'CANCELADA' ? '<span class="badge bg-secondary">CANCELADA</span>' : ''}
                 </td></tr>
                 <tr><th>Urgencia:</th><td>
-                  ${d.urgencia === 'URGENTE' ? '<span class="badge badge-danger">URGENTE</span>' : ''}
-                  ${d.urgencia === 'ALTA' ? '<span class="badge badge-warning">ALTA</span>' : ''}
-                  ${d.urgencia === 'NORMAL' ? '<span class="badge badge-info">NORMAL</span>' : ''}
-                  ${d.urgencia === 'BAJA' ? '<span class="badge badge-secondary">BAJA</span>' : ''}
+                  ${d.urgencia === 'URGENTE' ? '<span class="badge bg-danger">URGENTE</span>' : ''}
+                  ${d.urgencia === 'ALTA' ? '<span class="badge bg-warning">ALTA</span>' : ''}
+                  ${d.urgencia === 'NORMAL' ? '<span class="badge bg-info">NORMAL</span>' : ''}
+                  ${d.urgencia === 'BAJA' ? '<span class="badge bg-secondary">BAJA</span>' : ''}
                 </td></tr>
               </table>
             </div>

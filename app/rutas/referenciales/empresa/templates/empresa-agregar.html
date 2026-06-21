@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Empresa
@@ -32,20 +32,20 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">RUC/NIT <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">RUC/NIT <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtRucNit" placeholder="Ej: 800123456" maxlength="20" required>
                             <small class="form-text text-muted">RUC sin guión</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Dígito Verificador <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Dígito Verificador <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtDigitoVerificador" placeholder="Ej: 6" maxlength="1" required>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Tipo <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Tipo <span class="text-danger">*</span></label>
                             <select class="form-control" id="selTipoContribuyente" required>
                                 <option value="persona_juridica">Persona Jurídica</option>
                                 <option value="persona_fisica">Persona Física</option>
@@ -57,13 +57,13 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Razón Social <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Razón Social <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtRazonSocial" placeholder="Razón social completa" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Nombre Comercial</label>
+                            <label class="fw-semibold">Nombre Comercial</label>
                             <input type="text" class="form-control" id="txtNombreComercial" placeholder="Nombre de fantasía">
                         </div>
                     </div>
@@ -71,7 +71,7 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Actividad Económica Principal</label>
+                            <label class="fw-semibold">Actividad Económica Principal</label>
                             <input type="text" class="form-control" id="txtActividadEconomica" placeholder="Ej: Servicios de salud mental">
                         </div>
                     </div>
@@ -79,19 +79,19 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Horario de Atención</label>
+                            <label class="fw-semibold">Horario de Atención</label>
                             <input type="text" class="form-control" id="txtHorarioAtencion" placeholder="Ej: Lun-Vie: 8:00 - 18:00">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Es Principal</label><br>
+                            <label class="fw-semibold">Es Principal</label><br>
                             <input type="checkbox" id="chkEsPrincipal"> Sí
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Estado</label><br>
+                            <label class="fw-semibold">Estado</label><br>
                             <input type="checkbox" id="chkEstado" checked> Activo
                         </div>
                     </div>
@@ -110,19 +110,19 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Departamento <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Departamento <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtDepartamento" placeholder="Ej: Central" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Distrito <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Distrito <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtDistrito" placeholder="Ej: Asunción" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Ciudad <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Ciudad <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtCiudad" placeholder="Ej: Asunción" required>
                         </div>
                     </div>
@@ -130,19 +130,19 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Dirección <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Dirección <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="txtDireccion" rows="2" placeholder="Dirección completa" required></textarea>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Número Casa</label>
+                            <label class="fw-semibold">Número Casa</label>
                             <input type="text" class="form-control" id="txtNumeroCasa" placeholder="1234">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Código Postal</label>
+                            <label class="fw-semibold">Código Postal</label>
                             <input type="text" class="form-control" id="txtCodigoPostal" placeholder="0000">
                         </div>
                     </div>
@@ -161,13 +161,13 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Teléfono <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtTelefono" placeholder="Ej: +595 21 123456" required>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Celular <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Celular <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtCelular" placeholder="Ej: +595 982 123456" required>
                         </div>
                     </div>
@@ -175,41 +175,41 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Email <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="txtEmail" placeholder="empresa@ejemplo.com" required>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Sitio Web</label>
+                            <label class="fw-semibold">Sitio Web</label>
                             <input type="text" class="form-control" id="txtSitioWeb" placeholder="https://www.ejemplo.com">
                         </div>
                     </div>
                 </div>
                 <hr>
-                <h6 class="font-weight-semibold mb-3">Representante Legal</h6>
+                <h6 class="fw-semibold mb-3">Representante Legal</h6>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Nombre</label>
+                            <label class="fw-semibold">Nombre</label>
                             <input type="text" class="form-control" id="txtRepLegalNombre" placeholder="Nombre">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Apellido</label>
+                            <label class="fw-semibold">Apellido</label>
                             <input type="text" class="form-control" id="txtRepLegalApellido" placeholder="Apellido">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label class="font-weight-semibold">CI</label>
+                            <label class="fw-semibold">CI</label>
                             <input type="text" class="form-control" id="txtRepLegalCI" placeholder="CI">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Cargo</label>
+                            <label class="fw-semibold">Cargo</label>
                             <input type="text" class="form-control" id="txtRepLegalCargo" placeholder="Cargo">
                         </div>
                     </div>
@@ -231,13 +231,13 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Facturador Electrónico</label><br>
+                            <label class="fw-semibold">Facturador Electrónico</label><br>
                             <input type="checkbox" id="chkFacturadorElectronico"> Habilitado
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Ambiente SIFEN</label>
+                            <label class="fw-semibold">Ambiente SIFEN</label>
                             <select class="form-control" id="selAmbienteSifen">
                                 <option value="prueba">Prueba</option>
                                 <option value="produccion">Producción</option>
@@ -248,13 +248,13 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Fecha Habilitación SIFEN</label>
+                            <label class="fw-semibold">Fecha Habilitación SIFEN</label>
                             <input type="date" class="form-control" id="txtFechaHabilitacionSifen">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Grupo Obligatoriedad</label>
+                            <label class="fw-semibold">Grupo Obligatoriedad</label>
                             <input type="number" class="form-control" id="txtGrupoObligatoriedad" placeholder="1-18" min="1" max="18">
                         </div>
                     </div>
@@ -262,26 +262,26 @@ Registrar Empresa
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Código de Seguridad del Contribuyente (CSC)</label>
+                            <label class="fw-semibold">Código de Seguridad del Contribuyente (CSC)</label>
                             <input type="text" class="form-control" id="txtCodigoSeguridadContribuyente" placeholder="CSC otorgado por DNIT">
                         </div>
                     </div>
                 </div>
                 <hr>
-                <h6 class="font-weight-semibold mb-3">Certificado Digital</h6>
+                <h6 class="fw-semibold mb-3">Certificado Digital</h6>
                 <div class="alert alert-warning">
                     <small><i class="fas fa-exclamation-triangle"></i> El certificado digital debe subirse por separado después de crear la empresa.</small>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Serial del Certificado</label>
+                            <label class="fw-semibold">Serial del Certificado</label>
                             <input type="text" class="form-control" id="txtCertificadoSerial" placeholder="Serial del certificado .pfx" readonly>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Fecha Vencimiento Certificado</label>
+                            <label class="fw-semibold">Fecha Vencimiento Certificado</label>
                             <input type="date" class="form-control" id="txtCertificadoVencimiento" readonly>
                         </div>
                     </div>
@@ -293,7 +293,7 @@ Registrar Empresa
         <div class="card shadow mb-4">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-12 text-right">
+                    <div class="col-md-12 text-end">
                         <a href="{{ url_for('empresa.empresaIndex') }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>

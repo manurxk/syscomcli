@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Gestión de Citas Médicas
@@ -18,7 +18,7 @@ Gestión de Citas Médicas
     <!-- Filtros -->
     <div class="card shadow mb-4">
         <div class="card-header bg-light">
-            <h6 class="mb-0 font-weight-bold">
+            <h6 class="mb-0 fw-bold">
                 <i class="fas fa-filter"></i> Filtros de Búsqueda
             </h6>
         </div>
@@ -102,13 +102,13 @@ Gestión de Citas Médicas
                     <!-- SECCIÓN 1: INFORMACIÓN DEL PACIENTE -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">Información del Paciente</h6>
+                            <h6 class="mb-0 fw-bold text-primary">Información del Paciente</h6>
                         </div>
                         <div class="card-body">
                             <input type="hidden" id="id_paciente">
                             
                             <div class="form-group">
-                                <label class="font-weight-semibold">Paciente <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" 
                                            placeholder="Haga clic para buscar paciente" 
@@ -169,13 +169,13 @@ Gestión de Citas Médicas
                     <!-- SECCIÓN 2: ESPECIALIDAD Y ESPECIALISTA -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">Especialidad y Especialista</h6>
+                            <h6 class="mb-0 fw-bold text-success">Especialidad y Especialista</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Especialidad <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Especialidad <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_especialidad">
                                         <div class="input-group">
                                             <input type="text" class="form-control" 
@@ -195,7 +195,7 @@ Gestión de Citas Médicas
                                 
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Especialista <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Especialista <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_especialista">
                                         <div class="input-group">
                                             <select class="form-control" id="selectEspecialista" required disabled>
@@ -218,7 +218,7 @@ Gestión de Citas Médicas
                     <!-- SECCIÓN 3: FECHA Y HORARIO -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">Fecha y Horario</h6>
+                            <h6 class="mb-0 fw-bold text-info">Fecha y Horario</h6>
                         </div>
                         <div class="card-body">
                             <input type="hidden" id="id_agenda_horario">
@@ -226,7 +226,7 @@ Gestión de Citas Médicas
                             <input type="hidden" id="txtHoraFin">
                             
                             <div class="form-group">
-                                <label class="font-weight-semibold">Fecha de la Cita <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Fecha de la Cita <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="txtFechaCita" required>
                                 <small class="form-text text-muted">Seleccione la fecha para ver horarios disponibles</small>
                                 
@@ -257,12 +257,12 @@ Gestión de Citas Médicas
                     <!-- SECCIÓN 4: TIPO DE CITA Y DETALLES -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-warning">Tipo de Cita y Detalles</h6>
+                            <h6 class="mb-0 fw-bold text-warning">Tipo de Cita y Detalles</h6>
                         </div>
                         <div class="card-body">
                             <!-- Tipo de Cita -->
                             <div class="form-group">
-                                <label class="d-block mb-3 font-weight-semibold">
+                                <label class="d-block mb-3 fw-semibold">
                                     Tipo de Cita <span class="text-danger">*</span>
                                 </label>
                                 
@@ -278,7 +278,7 @@ Gestión de Citas Médicas
                                                 <p class="card-text text-muted small mb-0">
                                                     Alta del paciente
                                                 </p>
-                                                <span class="badge badge-pill badge-primary tipo-badge" style="display: none;">
+                                                <span class="badge rounded-pill bg-primary tipo-badge" style="display: none;">
                                                     Seleccionado
                                                 </span>
                                             </div>
@@ -296,7 +296,7 @@ Gestión de Citas Médicas
                                                 <p class="card-text text-muted small mb-0">
                                                     Consulta diagnóstica
                                                 </p>
-                                                <span class="badge badge-pill badge-info tipo-badge" style="display: none;">
+                                                <span class="badge rounded-pill bg-info tipo-badge" style="display: none;">
                                                     Seleccionado
                                                 </span>
                                             </div>
@@ -314,7 +314,7 @@ Gestión de Citas Médicas
                                                 <p class="card-text text-muted small mb-0">
                                                     Sesión terapéutica
                                                 </p>
-                                                <span class="badge badge-pill badge-success tipo-badge" style="display: none;">
+                                                <span class="badge rounded-pill bg-success tipo-badge" style="display: none;">
                                                     Seleccionado
                                                 </span>
                                             </div>
@@ -332,7 +332,7 @@ Gestión de Citas Médicas
                                                 <p class="card-text text-muted small mb-0">
                                                     Control post-tratamiento
                                                 </p>
-                                                <span class="badge badge-pill badge-warning tipo-badge" style="display: none;">
+                                                <span class="badge rounded-pill bg-warning tipo-badge" style="display: none;">
                                                     Seleccionado
                                                 </span>
                                             </div>
@@ -350,7 +350,7 @@ Gestión de Citas Médicas
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group" id="grupoNumeroSesion" style="display: none;">
-                                        <label class="font-weight-semibold">Número de Sesión <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Número de Sesión <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control" 
                                                id="txtNumeroSesion" 
                                                min="1" 
@@ -361,7 +361,7 @@ Gestión de Citas Médicas
 
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Estado <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_estado_cita" value="1">
                                         <select class="form-control" id="txtEstadoCita" required></select>
                                         <small class="form-text text-muted">Estado de la cita</small>
@@ -373,7 +373,7 @@ Gestión de Citas Médicas
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
                                         <textarea class="form-control" 
                                                   id="txtMotivo" 
                                                   rows="4" 
@@ -385,7 +385,7 @@ Gestión de Citas Médicas
 
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Observaciones</label>
+                                        <label class="fw-semibold">Observaciones</label>
                                         <textarea class="form-control" 
                                                   id="txtObservaciones" 
                                                   rows="4" 
@@ -471,13 +471,13 @@ Gestión de Citas Médicas
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Nombre <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtNombreRapido" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Apellido <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Apellido <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtApellidoRapido" required>
                             </div>
                         </div>
@@ -486,13 +486,13 @@ Gestión de Citas Médicas
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Cédula <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Cédula <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtCedulaRapido" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Teléfono <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control" id="txtTelefonoRapido" 
                                        placeholder="Ej: 0981123456" required>
                             </div>
@@ -500,7 +500,7 @@ Gestión de Citas Médicas
                     </div>
 
                     <div class="form-group">
-                        <label class="font-weight-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="txtFechaNacimientoRapido" required>
                         <small class="form-text text-muted">Se detectará automáticamente si es menor de edad</small>
                     </div>
@@ -512,18 +512,18 @@ Gestión de Citas Médicas
 
                     <div id="camposTutorRapido" style="display:none;">
                         <hr>
-                        <h6 class="text-warning font-weight-bold">Datos del Tutor</h6>
+                        <h6 class="text-warning fw-bold">Datos del Tutor</h6>
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Nombre de la Madre</label>
+                                    <label class="fw-semibold">Nombre de la Madre</label>
                                     <input type="text" class="form-control" id="txtNombreMadreRapido">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Apellido de la Madre</label>
+                                    <label class="fw-semibold">Apellido de la Madre</label>
                                     <input type="text" class="form-control" id="txtApellidoMadreRapido">
                                 </div>
                             </div>
@@ -532,13 +532,13 @@ Gestión de Citas Médicas
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Nombre del Padre</label>
+                                    <label class="fw-semibold">Nombre del Padre</label>
                                     <input type="text" class="form-control" id="txtNombrePadreRapido">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Apellido del Padre</label>
+                                    <label class="fw-semibold">Apellido del Padre</label>
                                     <input type="text" class="form-control" id="txtApellidoPadreRapido">
                                 </div>
                             </div>
@@ -619,7 +619,7 @@ Gestión de Citas Médicas
     box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 
@@ -717,7 +717,7 @@ Gestión de Citas Médicas
     text-decoration: line-through;
 }
 
-.cupo-card.sin-cupos .badge-danger {
+.cupo-card.sin-cupos .bg-danger {
     background-color: #dc3545 !important;
     font-weight: bold;
     animation: pulse 2s infinite;
@@ -917,10 +917,10 @@ const initDatatable = () => {
         data: 'cita_tipo',
         render: function(data, type, row) {
           const badges = {
-            'PRIMERA_VEZ': '<span class="badge badge-primary">Primera Vez</span>',
-            'EVALUACION': '<span class="badge badge-info">Evaluación</span>',
-            'TRATAMIENTO': `<span class="badge badge-success">Tratamiento ${row.cita_numero_sesion ? '#' + row.cita_numero_sesion : ''}</span>`,
-            'SEGUIMIENTO': '<span class="badge badge-warning">Seguimiento</span>'
+            'PRIMERA_VEZ': '<span class="badge bg-primary">Primera Vez</span>',
+            'EVALUACION': '<span class="badge bg-info">Evaluación</span>',
+            'TRATAMIENTO': `<span class="badge bg-success">Tratamiento ${row.cita_numero_sesion ? '#' + row.cita_numero_sesion : ''}</span>`,
+            'SEGUIMIENTO': '<span class="badge bg-warning">Seguimiento</span>'
           };
           return badges[data] || data;
         },
@@ -940,7 +940,7 @@ const initDatatable = () => {
           const idCita = row.id_cita;
           return `
             <div id="recordatorios-${idCita}" class="recordatorios-container">
-              <span class="badge badge-secondary">
+              <span class="badge bg-secondary">
                 <i class="fas fa-spinner fa-spin"></i> Cargando...
               </span>
             </div>
@@ -1502,7 +1502,7 @@ const cargarCuposDisponibles = () => {
           if (cardActual.length > 0) {
             cardActual.addClass('selected');
             cardActual.find('.btn-seleccionar-cupo')
-                     .html('<i class="fas fa-check mr-1"></i>Seleccionado')
+                     .html('<i class="fas fa-check me-1"></i>Seleccionado')
                      .removeClass('btn-primary')
                      .addClass('btn-success');
             
@@ -1643,7 +1643,7 @@ const renderCupoCard = (cupo) => {
   const horaFin = cupo.hora_fin.substring(0, 5);
   
   let claseCard = 'cupo-card';
-  let claseBadge = 'badge-success';
+  let claseBadge = 'bg-success';
   let textoEstado = 'Disponible';
   let iconoEstado = '✅';
   let disabled = '';
@@ -1652,7 +1652,7 @@ const renderCupoCard = (cupo) => {
   // ✅ Determinar estado visual - Verde si hay cupos disponibles, Rojo si está ocupado
   if (disponibles <= 0) {
     claseCard += ' sin-cupos';
-    claseBadge = 'badge-danger';
+    claseBadge = 'bg-danger';
     textoEstado = 'Ocupado';
     iconoEstado = '🚫';
     disabled = 'disabled';
@@ -1726,7 +1726,7 @@ const seleccionarCupo = () => {
     
     // Marcar como seleccionado
     card.addClass('selected');
-    $(this).html('<i class="fas fa-check mr-1"></i>Seleccionado')
+    $(this).html('<i class="fas fa-check me-1"></i>Seleccionado')
            .removeClass('btn-primary')
            .addClass('btn-success');
 
@@ -2028,7 +2028,7 @@ const guardarCita = () => {
         icon: 'error',
         title: 'Campos incompletos',
         html: `<p>Complete los siguientes campos obligatorios:</p>
-               <ul class="text-left">
+               <ul class="text-start">
                  ${camposFaltantes.map(c => `<li>${c}</li>`).join('')}
                </ul>`,
         confirmButtonColor: '#3085d6'
@@ -2069,7 +2069,7 @@ const guardarCita = () => {
     const btn = $(this);
     const btnTextOriginal = btn.html();
     btn.prop('disabled', true)
-       .html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+       .html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
     fetch(url, {
       method: method,
@@ -2373,7 +2373,7 @@ const guardarPacienteRapido = () => {
 
     const btn = $(this);
     const btnTextOriginal = btn.html();
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
     fetch('/api/v1/pacientes', {
       method: 'POST',
@@ -2509,7 +2509,7 @@ function cargarEstadoRecordatorios(idCita) {
         
         if (!recordatorio) {
           // No existe recordatorio para esta cita
-          html = '<span class="badge badge-secondary">Sin recordatorios</span>';
+          html = '<span class="badge bg-secondary">Sin recordatorios</span>';
           console.log(`[Recordatorios] Cita ${idCita}: No tiene recordatorios`);
         } else {
           // Nueva estructura: un objeto con campos booleanos
@@ -2520,7 +2520,7 @@ function cargarEstadoRecordatorios(idCita) {
           let badges = [];
           
           if (inmediato) {
-            badges.push(`<span class="badge badge-success" title="Inmediato enviado">${inmediato}</span>`);
+            badges.push(`<span class="badge bg-success" title="Inmediato enviado">${inmediato}</span>`);
           }
           
           if (recordatorio24h) {
@@ -2534,7 +2534,7 @@ function cargarEstadoRecordatorios(idCita) {
           }
           
           if (badges.length === 0) {
-            html = '<span class="badge badge-secondary">Sin recordatorios</span>';
+            html = '<span class="badge bg-secondary">Sin recordatorios</span>';
           } else {
             html = badges.join(' ');
           }
@@ -2546,7 +2546,7 @@ function cargarEstadoRecordatorios(idCita) {
         $(`.btn-ver-recordatorios[data-id="${idCita}"]`).show();
       } else {
         console.error(`[Recordatorios] Error en respuesta para cita ${idCita}:`, response.error);
-        $(`#recordatorios-${idCita}`).html(`<span class="badge badge-secondary" title="${response.error || 'Error desconocido'}">N/A</span>`);
+        $(`#recordatorios-${idCita}`).html(`<span class="badge bg-secondary" title="${response.error || 'Error desconocido'}">N/A</span>`);
       }
     },
     error: function(xhr, status, error) {
@@ -2557,7 +2557,7 @@ function cargarEstadoRecordatorios(idCita) {
       } else if (xhr.status === 404) {
         errorMsg = 'No encontrado';
       }
-      $(`#recordatorios-${idCita}`).html(`<span class="badge badge-danger" title="Error: ${errorMsg}">Error</span>`);
+      $(`#recordatorios-${idCita}`).html(`<span class="badge bg-danger" title="Error: ${errorMsg}">Error</span>`);
     }
   });
 }

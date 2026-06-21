@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registro de Anamnesis Psicológica
@@ -13,11 +13,11 @@ Registro de Anamnesis Psicológica
             <small class="text-muted" id="contadorAnamnesis">Cargando registros...</small>
         </div>
         <div>
-            <button type="button" class="btn btn-outline-secondary mr-2" id="btnRefrescar" title="Actualizar tabla">
+            <button type="button" class="btn btn-outline-secondary me-2" id="btnRefrescar" title="Actualizar tabla">
                 <i class="fas fa-sync-alt"></i>
             </button>
             <button type="button" class="btn text-white" style="background-color: #6f42c1;" id="btnNuevaAnamnesis">
-                <i class="fas fa-plus mr-2"></i>Nueva Anamnesis
+                <i class="fas fa-plus me-2"></i>Nueva Anamnesis
             </button>
         </div>
     </div>
@@ -27,23 +27,23 @@ Registro de Anamnesis Psicológica
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <label class="font-weight-semibold">Filtrar por Paciente</label>
+                    <label class="fw-semibold">Filtrar por Paciente</label>
                     <select class="form-control" id="filtroPaciente">
                         <option value="">Todos los pacientes</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="font-weight-semibold">Desde Fecha</label>
+                    <label class="fw-semibold">Desde Fecha</label>
                     <input type="date" class="form-control" id="filtroFechaDesde">
                 </div>
                 <div class="col-md-3">
-                    <label class="font-weight-semibold">Hasta Fecha</label>
+                    <label class="fw-semibold">Hasta Fecha</label>
                     <input type="date" class="form-control" id="filtroFechaHasta">
                 </div>
                 <div class="col-md-3">
                     <label>&nbsp;</label>
                     <button class="btn btn-secondary btn-block" id="btnLimpiarFiltros">
-                        <i class="fas fa-undo mr-2"></i>Limpiar Filtros
+                        <i class="fas fa-undo me-2"></i>Limpiar Filtros
                     </button>
                 </div>
             </div>
@@ -99,7 +99,7 @@ Registro de Anamnesis Psicológica
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group mb-0">
-                                    <label class="font-weight-semibold">Paciente <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
                                     <select class="form-control" id="id_paciente" required>
                                         <option value="">Seleccione un paciente...</option>
                                     </select>
@@ -115,15 +115,15 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">
-                                <i class="fas fa-info-circle mr-2"></i>Información Básica
+                            <h6 class="mb-0 fw-bold text-primary">
+                                <i class="fas fa-info-circle me-2"></i>Información Básica
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="motivo_consulta" rows="3" 
                                                   placeholder="Describa el motivo principal de la consulta..." 
                                                   required></textarea>
@@ -133,14 +133,14 @@ Registro de Anamnesis Psicológica
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Informante</label>
+                                        <label class="fw-semibold">Informante</label>
                                         <input type="text" class="form-control" id="informante" 
                                                placeholder="Ej: Paciente, Madre, Padre...">
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Relación del Informante</label>
+                                        <label class="fw-semibold">Relación del Informante</label>
                                         <input type="text" class="form-control" id="relacion_informante" 
                                                placeholder="Ej: Madre, Tutor legal...">
                                     </div>
@@ -152,22 +152,22 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 2: ANTECEDENTES FAMILIARES -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">
-                                <i class="fas fa-users mr-2"></i>Antecedentes Familiares
+                            <h6 class="mb-0 fw-bold text-success">
+                                <i class="fas fa-users me-2"></i>Antecedentes Familiares
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Antecedentes Familiares Similares</label>
+                                        <label class="fw-semibold">Antecedentes Familiares Similares</label>
                                         <textarea class="form-control" id="antecedentes_familiares_similares" rows="3"
                                                   placeholder="Historia de problemas similares en la familia..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Antecedentes Patológicos Familiares</label>
+                                        <label class="fw-semibold">Antecedentes Patológicos Familiares</label>
                                         <textarea class="form-control" id="antecedentes_patologicos_familiares" rows="3"
                                                   placeholder="Enfermedades físicas o mentales en la familia..."></textarea>
                                     </div>
@@ -176,14 +176,14 @@ Registro de Anamnesis Psicológica
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Componentes Familiares</label>
+                                        <label class="fw-semibold">Componentes Familiares</label>
                                         <textarea class="form-control" id="componentes_familiares" rows="3"
                                                   placeholder="Composición del núcleo familiar..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Historia Familiar</label>
+                                        <label class="fw-semibold">Historia Familiar</label>
                                         <textarea class="form-control" id="historia_familiar" rows="3"
                                                   placeholder="Dinámica y relaciones familiares..."></textarea>
                                     </div>
@@ -195,29 +195,29 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 3: ANTECEDENTES PERSONALES -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">
-                                <i class="fas fa-user mr-2"></i>Antecedentes Personales
+                            <h6 class="mb-0 fw-bold text-info">
+                                <i class="fas fa-user me-2"></i>Antecedentes Personales
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Antecedentes Patológicos Personales</label>
+                                        <label class="fw-semibold">Antecedentes Patológicos Personales</label>
                                         <textarea class="form-control" id="antecedentes_patologicos_personales" rows="3"
                                                   placeholder="Enfermedades previas..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Historia del Problema Actual</label>
+                                        <label class="fw-semibold">Historia del Problema Actual</label>
                                         <textarea class="form-control" id="historia_problema_actual" rows="3"
                                                   placeholder="Evolución del problema actual..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Historia del Desarrollo</label>
+                                        <label class="fw-semibold">Historia del Desarrollo</label>
                                         <textarea class="form-control" id="historia_desarrollo" rows="3"
                                                   placeholder="Desarrollo evolutivo del paciente..."></textarea>
                                     </div>
@@ -229,29 +229,29 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 4: HISTORIA ACADÉMICA Y LABORAL -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-warning">
-                                <i class="fas fa-briefcase mr-2"></i>Historia Académica y Laboral
+                            <h6 class="mb-0 fw-bold text-warning">
+                                <i class="fas fa-briefcase me-2"></i>Historia Académica y Laboral
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Historia Académica</label>
+                                        <label class="fw-semibold">Historia Académica</label>
                                         <textarea class="form-control" id="historia_academica" rows="3"
                                                   placeholder="Trayectoria educativa..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Historia Laboral</label>
+                                        <label class="fw-semibold">Historia Laboral</label>
                                         <textarea class="form-control" id="historia_laboral" rows="3"
                                                   placeholder="Experiencia laboral..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Historia de Rehabilitación</label>
+                                        <label class="fw-semibold">Historia de Rehabilitación</label>
                                         <textarea class="form-control" id="historia_rehabilitacion" rows="3"
                                                   placeholder="Tratamientos previos..."></textarea>
                                     </div>
@@ -263,29 +263,29 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 5: MEDICACIÓN Y SUSTANCIAS -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-danger">
-                                <i class="fas fa-pills mr-2"></i>Medicación y Sustancias
+                            <h6 class="mb-0 fw-bold text-danger">
+                                <i class="fas fa-pills me-2"></i>Medicación y Sustancias
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Medicación Actual</label>
+                                        <label class="fw-semibold">Medicación Actual</label>
                                         <textarea class="form-control" id="medicacion_actual" rows="3"
                                                   placeholder="Medicamentos que toma actualmente..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Medicación Psiquiátrica Previa</label>
+                                        <label class="fw-semibold">Medicación Psiquiátrica Previa</label>
                                         <textarea class="form-control" id="medicacion_psiquiatrica_previa" rows="3"
                                                   placeholder="Medicación psiquiátrica anterior..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Consumo de Sustancias</label>
+                                        <label class="fw-semibold">Consumo de Sustancias</label>
                                         <textarea class="form-control" id="consumo_sustancias" rows="3"
                                                   placeholder="Consumo de alcohol, tabaco, drogas..."></textarea>
                                     </div>
@@ -297,29 +297,29 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 6: ASPECTOS FUNCIONALES -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-secondary">
-                                <i class="fas fa-heart mr-2"></i>Aspectos Funcionales
+                            <h6 class="mb-0 fw-bold text-secondary">
+                                <i class="fas fa-heart me-2"></i>Aspectos Funcionales
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Relaciones Interpersonales</label>
+                                        <label class="fw-semibold">Relaciones Interpersonales</label>
                                         <textarea class="form-control" id="relaciones_interpersonales" rows="2"
                                                   placeholder="Relaciones sociales y familiares..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Actividad Física</label>
+                                        <label class="fw-semibold">Actividad Física</label>
                                         <textarea class="form-control" id="actividad_fisica" rows="2"
                                                   placeholder="Ejercicio y deportes..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Patrón de Sueño</label>
+                                        <label class="fw-semibold">Patrón de Sueño</label>
                                         <textarea class="form-control" id="patron_sueno" rows="2"
                                                   placeholder="Calidad y horas de sueño..."></textarea>
                                     </div>
@@ -328,21 +328,21 @@ Registro de Anamnesis Psicológica
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Patrón de Alimentación</label>
+                                        <label class="fw-semibold">Patrón de Alimentación</label>
                                         <textarea class="form-control" id="patron_alimentacion" rows="2"
                                                   placeholder="Hábitos alimenticios..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Actividad Emocional</label>
+                                        <label class="fw-semibold">Actividad Emocional</label>
                                         <textarea class="form-control" id="actividad_emocional" rows="2"
                                                   placeholder="Estado emocional general..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Actividad Sexual</label>
+                                        <label class="fw-semibold">Actividad Sexual</label>
                                         <textarea class="form-control" id="actividad_sexual" rows="2"
                                                   placeholder="Aspectos de la vida sexual..."></textarea>
                                     </div>
@@ -354,8 +354,8 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 7: EVALUACIONES REQUERIDAS -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold" style="color: #6f42c1;">
-                                <i class="fas fa-clipboard-check mr-2"></i>Evaluaciones Requeridas
+                            <h6 class="mb-0 fw-bold" style="color: #6f42c1;">
+                                <i class="fas fa-clipboard-check me-2"></i>Evaluaciones Requeridas
                             </h6>
                         </div>
                         <div class="card-body">
@@ -363,19 +363,19 @@ Registro de Anamnesis Psicológica
                                 <div class="col-lg-6">
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="eval_neuropsicologica">
-                                        <label class="custom-control-label font-weight-semibold" for="eval_neuropsicologica">
+                                        <label class="custom-control-label fw-semibold" for="eval_neuropsicologica">
                                             Evaluación Neuropsicológica
                                         </label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="eval_psicologica">
-                                        <label class="custom-control-label font-weight-semibold" for="eval_psicologica">
+                                        <label class="custom-control-label fw-semibold" for="eval_psicologica">
                                             Evaluación Psicológica
                                         </label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-lg-0">
                                         <input type="checkbox" class="custom-control-input" id="eval_psicopedagogica">
-                                        <label class="custom-control-label font-weight-semibold" for="eval_psicopedagogica">
+                                        <label class="custom-control-label fw-semibold" for="eval_psicopedagogica">
                                             Evaluación Psicopedagógica
                                         </label>
                                     </div>
@@ -383,13 +383,13 @@ Registro de Anamnesis Psicológica
                                 <div class="col-lg-6">
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="eval_fonoaudiologica">
-                                        <label class="custom-control-label font-weight-semibold" for="eval_fonoaudiologica">
+                                        <label class="custom-control-label fw-semibold" for="eval_fonoaudiologica">
                                             Evaluación Fonoaudiológica
                                         </label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-0">
                                         <input type="checkbox" class="custom-control-input" id="eval_psicomotora">
-                                        <label class="custom-control-label font-weight-semibold" for="eval_psicomotora">
+                                        <label class="custom-control-label fw-semibold" for="eval_psicomotora">
                                             Evaluación Psicomotora
                                         </label>
                                     </div>
@@ -401,8 +401,8 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 8: TERAPIAS INDICADAS -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold" style="color: #28a745;">
-                                <i class="fas fa-hand-holding-heart mr-2"></i>Terapias Indicadas
+                            <h6 class="mb-0 fw-bold" style="color: #28a745;">
+                                <i class="fas fa-hand-holding-heart me-2"></i>Terapias Indicadas
                             </h6>
                         </div>
                         <div class="card-body">
@@ -410,13 +410,13 @@ Registro de Anamnesis Psicológica
                                 <div class="col-lg-6">
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="terapia_individual">
-                                        <label class="custom-control-label font-weight-semibold" for="terapia_individual">
+                                        <label class="custom-control-label fw-semibold" for="terapia_individual">
                                             Terapia Individual
                                         </label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="terapia_familiar">
-                                        <label class="custom-control-label font-weight-semibold" for="terapia_familiar">
+                                        <label class="custom-control-label fw-semibold" for="terapia_familiar">
                                             Terapia Familiar
                                         </label>
                                     </div>
@@ -424,13 +424,13 @@ Registro de Anamnesis Psicológica
                                 <div class="col-lg-6">
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="terapia_grupal">
-                                        <label class="custom-control-label font-weight-semibold" for="terapia_grupal">
+                                        <label class="custom-control-label fw-semibold" for="terapia_grupal">
                                             Terapia Grupal
                                         </label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-3">
                                         <input type="checkbox" class="custom-control-input" id="terapia_ocupacional">
-                                        <label class="custom-control-label font-weight-semibold" for="terapia_ocupacional">
+                                        <label class="custom-control-label fw-semibold" for="terapia_ocupacional">
                                             Terapia Ocupacional
                                         </label>
                                     </div>
@@ -439,7 +439,7 @@ Registro de Anamnesis Psicológica
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Otra Terapia (especificar)</label>
+                                        <label class="fw-semibold">Otra Terapia (especificar)</label>
                                         <input type="text" class="form-control" id="otra_terapia" 
                                                placeholder="Especifique otro tipo de terapia...">
                                     </div>
@@ -451,22 +451,22 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 9: DIAGNÓSTICO Y PLAN -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">
-                                <i class="fas fa-stethoscope mr-2"></i>Impresión Diagnóstica y Plan
+                            <h6 class="mb-0 fw-bold text-primary">
+                                <i class="fas fa-stethoscope me-2"></i>Impresión Diagnóstica y Plan
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Impresión Diagnóstica</label>
+                                        <label class="fw-semibold">Impresión Diagnóstica</label>
                                         <textarea class="form-control" id="impresion_diagnostica" rows="4"
                                                   placeholder="Impresión clínica y diagnóstico preliminar..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Plan de Trabajo</label>
+                                        <label class="fw-semibold">Plan de Trabajo</label>
                                         <textarea class="form-control" id="plan_trabajo" rows="4"
                                                   placeholder="Plan terapéutico propuesto..."></textarea>
                                     </div>
@@ -478,22 +478,22 @@ Registro de Anamnesis Psicológica
                     <!-- SECCIÓN 10: OBSERVACIONES FINALES -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-secondary">
-                                <i class="fas fa-sticky-note mr-2"></i>Observaciones Finales
+                            <h6 class="mb-0 fw-bold text-secondary">
+                                <i class="fas fa-sticky-note me-2"></i>Observaciones Finales
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Observaciones</label>
+                                        <label class="fw-semibold">Observaciones</label>
                                         <textarea class="form-control" id="observaciones" rows="3"
                                                   placeholder="Observaciones generales..."></textarea>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Indicaciones</label>
+                                        <label class="fw-semibold">Indicaciones</label>
                                         <textarea class="form-control" id="indicaciones" rows="3"
                                                   placeholder="Indicaciones para el paciente o familia..."></textarea>
                                     </div>
@@ -510,7 +510,7 @@ Registro de Anamnesis Psicológica
                     Cancelar
                 </button>
                 <button type="button" class="btn text-white" style="background-color: #6f42c1;" id="btnGuardarAnamnesis">
-                    <i class="fas fa-save mr-2"></i>Guardar Anamnesis
+                    <i class="fas fa-save me-2"></i>Guardar Anamnesis
                 </button>
             </div>
         </div>
@@ -642,7 +642,7 @@ Registro de Anamnesis Psicológica
     background: #555;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 </style>
@@ -676,7 +676,7 @@ const initDatatable = () => {
           // Actualizar contador
           const total = json.data.length;
           $('#contadorAnamnesis').html(`
-            <i class="fas fa-file-medical mr-1"></i>Total: <strong>${total}</strong> ${total === 1 ? 'registro' : 'registros'}
+            <i class="fas fa-file-medical me-1"></i>Total: <strong>${total}</strong> ${total === 1 ? 'registro' : 'registros'}
           `);
           
           // Llenar filtro de pacientes
@@ -734,9 +734,9 @@ const initDatatable = () => {
           
           let badge = '';
           if (diasDiferencia <= 7) {
-            badge = '<span class="badge badge-success badge-nueva ml-2">NUEVA</span>';
+            badge = '<span class="badge bg-success badge-nueva ms-2">NUEVA</span>';
           } else if (diasDiferencia <= 30) {
-            badge = '<span class="badge badge-info ml-2">RECIENTE</span>';
+            badge = '<span class="badge bg-info ms-2">RECIENTE</span>';
           }
           
           return data + badge;
@@ -1173,7 +1173,7 @@ $(document).on('click', '#btnGuardarAnamnesis', function() {
   console.log('📤 Enviando anamnesis:', datosAnamnesis);
   
   const btn = $(this);
-  btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+  btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
   
   fetch(url, {
     method: method,
@@ -1192,7 +1192,7 @@ $(document).on('click', '#btnGuardarAnamnesis', function() {
     return resp.json();
   })
   .then(data => {
-    btn.prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Guardar Anamnesis');
+    btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar Anamnesis');
     
     if (data.success) {
       console.log('✅ Anamnesis guardada:', data);
@@ -1211,7 +1211,7 @@ $(document).on('click', '#btnGuardarAnamnesis', function() {
     }
   })
   .catch(err => {
-    btn.prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Guardar Anamnesis');
+    btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar Anamnesis');
     console.error('❌ Error guardando anamnesis:', err);
     Swal.fire('Error', err.message || 'Ocurrió un error al guardar la anamnesis', 'error');
   });
@@ -1261,7 +1261,7 @@ $(document).on('click', '.btn-descargar-pdf', function() {
       icon: 'success',
       title: 'PDF Generado',
       html: `<p>El archivo se ha descargado correctamente</p>
-             <p class="text-muted"><i class="fas fa-file-pdf mr-2"></i>${a.download}</p>`,
+             <p class="text-muted"><i class="fas fa-file-pdf me-2"></i>${a.download}</p>`,
       confirmButtonColor: '#6f42c1'
     });
   })
@@ -1303,7 +1303,7 @@ $(document).on('click', '.btn-historial', function() {
               <div class="card-header ${index === 0 ? 'bg-primary text-white' : 'bg-light'}">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
-                    <strong>Versión ${h.version}</strong> ${index === 0 ? '<span class="badge badge-light ml-2">ACTUAL</span>' : ''}
+                    <strong>Versión ${h.version}</strong> ${index === 0 ? '<span class="badge bg-light ms-2">ACTUAL</span>' : ''}
                     <br><small class="${index === 0 ? 'text-white-50' : 'text-muted'}">${h.fecha_modificacion}</small>
                   </div>
                   <div>
@@ -1313,7 +1313,7 @@ $(document).on('click', '.btn-historial', function() {
               </div>
               <div class="card-body">
                 <p class="text-muted mb-2">
-                  <i class="fas fa-info-circle mr-2"></i>
+                  <i class="fas fa-info-circle me-2"></i>
                   Esta versión fue guardada automáticamente antes de actualizar
                 </p>
                 ${h.comentario_cambio ? `<p class="mb-0"><strong>Comentario:</strong> ${h.comentario_cambio}</p>` : ''}
@@ -1353,7 +1353,7 @@ $(document).on('click', '.btn-archivar-anamnesis', function() {
       <p>Esta acción marcará como inactiva la anamnesis de:</p>
       <strong>${row.nombre_paciente}</strong><br>
       <small class="text-muted">HC: ${row.historia_clinica}</small>
-      <p class="text-warning mt-3"><i class="fas fa-exclamation-triangle mr-2"></i>Esta acción no es reversible</p>
+      <p class="text-warning mt-3"><i class="fas fa-exclamation-triangle me-2"></i>Esta acción no es reversible</p>
     `,
     icon: 'warning',
     showCancelButton: true,
@@ -1567,7 +1567,7 @@ const mostrarEstadisticas = () => {
           icon: 'info',
           title: 'Estadísticas de Anamnesis',
           html: `
-            <div class="text-left">
+            <div class="text-start">
               <p><strong>Total registradas:</strong> ${data.data.total}</p>
               <p><strong>Este mes:</strong> ${data.data.este_mes}</p>
               <p><strong>Pacientes únicos:</strong> ${data.data.pacientes_unicos}</p>

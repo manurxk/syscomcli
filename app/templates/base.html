@@ -6,971 +6,360 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description"
-        content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
+    <meta name="description" content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
     <meta name="author" content="CIN">
+    <meta name="color-scheme" content="light dark">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
 
     <title>{% block titulo %}Sistema CIN{% endblock %}</title>
 
-    <!-- CSS principal - SB Admin Pro (Bootstrap 5) -->
-    <link href="{{ url_for('static', filename='vendor/sb-admin-pro/css/styles.css') }}" rel="stylesheet">
+    <!-- Inicialización del tema (antes del CSS para evitar flash) -->
+    <script>
+        (function () {
+            'use strict';
+            var stored = null;
+            try { stored = localStorage.getItem('lte-theme'); } catch (e) {}
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var resolved = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', resolved);
+            document.documentElement.style.colorScheme = resolved;
+        })();
+    </script>
+
+    <!-- AdminLTE 4 CSS -->
+    <link href="{{ url_for('static', filename='vendor/adminlte4/css/adminlte.min.css') }}" rel="stylesheet">
+
+    <!-- OverlayScrollbars (sidebar scroll suave) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" crossorigin="anonymous">
 
     <!-- FontAwesome 6 -->
     <script data-search-pseudo-elements defer
         src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
 
     <!-- Feather Icons -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js"
-        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js" crossorigin="anonymous"></script>
 
     <!-- Google Fonts - Nunito -->
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
-    <!-- CSS de Datatables Bootstrap 5 -->
+    <!-- DataTables Bootstrap 5 CSS -->
     <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 
-    <!-- Estilos personalizados adicionales -->
+    <!-- Compatibilidad SB Admin Pro → AdminLTE 4 + variables custom -->
+    <link href="{{ url_for('static', filename='css/compat.css') }}" rel="stylesheet">
+
     <style>
         :root {
-            /* Colores primarios */
             --primary-color: #0061f2;
             --primary-dark: #0056d6;
-
-            /* Colores azul cobalto - Para elementos específicos */
             --cobalt-blue: #0047AB;
             --cobalt-blue-dark: #003A8C;
             --cobalt-blue-light: #0056CC;
-
-            --sidebar-width: 14rem;
+            --font-family-base: 'Nunito', sans-serif;
         }
 
-        /* SIDEBAR LIGHT STYLE - Como SB Admin Pro */
-        .sidenav-light {
-            background-color: #fff;
-        }
+        body { font-family: var(--font-family-base); }
 
-        .sidenav-light .sidenav-menu .nav-link {
-            color: #212832;
-        }
+        /* Utilidades custom */
+        .fw-800 { font-weight: 800 !important; }
+        .fw-900 { font-weight: 900 !important; }
+        .text-muted-soft { color: #bdc3cd !important; }
+        .bg-cobalt-blue { background-color: var(--cobalt-blue) !important; }
+        .bg-cobalt-blue-dark { background-color: var(--cobalt-blue-dark) !important; }
+        .bg-cobalt-blue-light { background-color: var(--cobalt-blue-light) !important; }
+        .text-cobalt-blue { color: var(--cobalt-blue) !important; }
+        .border-cobalt-blue { border-color: var(--cobalt-blue) !important; }
+        .btn-cobalt-blue { background-color: var(--cobalt-blue); border-color: var(--cobalt-blue); color: white; }
+        .btn-cobalt-blue:hover { background-color: var(--cobalt-blue-dark); border-color: var(--cobalt-blue-dark); color: white; }
 
-        .sidenav-light .sidenav-menu .nav-link:hover {
-            color: var(--primary-color);
-            background-color: #f2f6fc;
-        }
+        /* Card hover */
+        .card { transition: box-shadow 0.3s ease; }
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-        .sidenav-light .sidenav-menu .nav-link.active {
-            color: var(--primary-color);
-            background-color: #f2f6fc;
-            font-weight: 600;
-        }
-
-        .sidenav-light .sidenav-menu-heading {
-            color: #a7aeb8;
-        }
-
-        .text-muted-soft {
-            color: #bdc3cd !important;
-        }
-
-        .fw-800 {
-            font-weight: 800 !important;
-        }
-
-        .fw-900 {
-            font-weight: 900 !important;
-        }
-
-        .sidenav-light .sidenav-footer {
-            background-color: #f2f6fc;
-        }
-
-        /* Mejoras generales */
-        .topnav {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .sidenav-brand {
-            padding: 1.5rem 1rem;
-        }
-
-        .scroll-to-top {
-            background-color: var(--primary-color);
-            transition: all 0.3s ease;
-        }
-
-        .scroll-to-top:hover {
-            background-color: var(--primary-dark);
-            transform: scale(1.1);
-        }
-
-        /* Clases utilitarias para azul cobalto (para usar donde sea necesario) */
-        .bg-cobalt-blue {
-            background-color: var(--cobalt-blue) !important;
-        }
-
-        .bg-cobalt-blue-dark {
-            background-color: var(--cobalt-blue-dark) !important;
-        }
-
-        .bg-cobalt-blue-light {
-            background-color: var(--cobalt-blue-light) !important;
-        }
-
-        .text-cobalt-blue {
-            color: var(--cobalt-blue) !important;
-        }
-
-        .border-cobalt-blue {
-            border-color: var(--cobalt-blue) !important;
-        }
-
-        .btn-cobalt-blue {
-            background-color: var(--cobalt-blue);
-            border-color: var(--cobalt-blue);
-            color: white;
-        }
-
-        .btn-cobalt-blue:hover {
-            background-color: var(--cobalt-blue-dark);
-            border-color: var(--cobalt-blue-dark);
-            color: white;
-        }
-
-        /* Estilos para el footer - Ocupa todo el ancho */
-        footer {
-            width: 100% !important;
-            max-width: 100% !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            position: relative;
-            left: 0;
-            right: 0;
-            background-color: #212832 !important;
-        }
-
-        footer * {
-            background-color: transparent !important;
-        }
-
-        footer .container-fluid,
-        footer .row,
-        footer .col-lg-4,
-        footer .col-lg-2,
-        footer .col-md-6,
-        footer .col-12 {
-            background-color: transparent !important;
-        }
-
-        footer a:hover {
-            text-decoration: none !important;
-        }
-
-        footer ul li {
-            margin-bottom: 0.25rem;
-        }
-
-        /* Ajustes responsive para el footer */
-        @media (max-width: 768px) {
-            footer {
-                padding-top: 2rem !important;
-                padding-bottom: 1.5rem !important;
-            }
-
-            footer .col-lg-4,
-            footer .col-lg-2,
-            footer .col-md-6 {
-                margin-bottom: 2rem !important;
-            }
-
-            footer .col-lg-4:last-child,
-            footer .col-lg-2:last-child,
-            footer .col-md-6:last-child {
-                margin-bottom: 0 !important;
-            }
-        }
-
-        /* Centrado del footer */
-        footer .container-fluid {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        footer .row {
-            width: 100%;
-            justify-content: center;
-        }
-
-        /* Mejora de hover para enlaces del footer */
-        footer a {
-            transition: all 0.3s ease !important;
-        }
-
-        footer a:hover {
-            opacity: 1 !important;
-            transform: translateX(3px);
-        }
-
-        #layoutSidenav_content {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        #layoutSidenav_content main {
-            flex: 1;
-        }
-
-        /* Estilos para el dropdown de búsqueda */
+        /* Búsqueda dropdown */
         .search-results-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
             border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             max-height: 500px;
             overflow-y: auto;
-            z-index: 1000;
+            z-index: 1060;
             margin-top: 4px;
         }
-
-        .search-results-section {
-            padding: 0.5rem 0;
-        }
-
+        .search-results-section { padding: 0.5rem 0; }
         .search-results-section-title {
             padding: 0.5rem 1rem;
-            background-color: #f8f9fa;
+            background-color: var(--bs-tertiary-bg);
             font-weight: 600;
             font-size: 0.75rem;
             text-transform: uppercase;
             color: var(--primary-color);
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid var(--bs-border-color);
         }
-
         .search-result-item {
             padding: 0.75rem 1rem;
             cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--bs-border-color);
             transition: background-color 0.2s;
         }
-
-        .search-result-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-result-item-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 0.25rem;
-        }
-
-        .search-result-item-subtitle {
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        .search-result-item-icon {
-            margin-right: 0.5rem;
-            color: var(--primary-color);
-        }
-
-        .search-no-results {
-            padding: 1.5rem;
-            text-align: center;
-            color: #999;
-        }
-
-        .search-loading {
-            padding: 1rem;
-            text-align: center;
-            color: #666;
-        }
-
-        /* Modo Oscuro - Variables y Estilos Agresivos */
-        body.dark-mode,
-        body.dark-mode #layoutSidenav,
-        body.dark-mode #layoutSidenav_content {
-            background-color: #0d1117 !important;
-            color: #c9d1d9 !important;
-        }
-
-        body.dark-mode .topnav {
-            background-color: #161b22 !important;
-            border-bottom: 1px solid #30363d !important;
-        }
-
-        body.dark-mode .topnav .navbar-brand {
-            color: #f0f6fc !important;
-        }
-
-        body.dark-mode .topnav .navbar-brand span {
-            color: #58a6ff !important;
-        }
-
-        body.dark-mode .topnav .btn-transparent-dark {
-            color: #8b949e !important;
-        }
-
-        body.dark-mode .topnav .btn-transparent-dark:hover {
-            color: #f0f6fc !important;
-            background-color: #30363d !important;
-        }
-
-        body.dark-mode .sidenav {
-            background-color: #161b22 !important;
-            border-right: 1px solid #30363d !important;
-        }
-
-        body.dark-mode .sidenav-light .sidenav-menu .nav-link {
-            color: #8b949e !important;
-        }
-
-        body.dark-mode .sidenav-light .sidenav-menu .nav-link:hover,
-        body.dark-mode .sidenav-light .sidenav-menu .nav-link.active {
-            color: #58a6ff !important;
-            background-color: #21262d !important;
-        }
-
-        body.dark-mode .sidenav-light .sidenav-menu .nav-link.active .nav-link-icon i {
-            color: #58a6ff !important;
-        }
-
-        body.dark-mode .sidenav-menu-heading {
-            color: #484f58 !important;
-        }
-
-        body.dark-mode .sidenav-footer {
-            background-color: #0d1117 !important;
-            color: #8b949e !important;
-        }
-
-        /* Fuerza la inversión en tarjetas y fondos blancos/claros */
-        body.dark-mode .card,
-        body.dark-mode .bg-white,
-        body.dark-mode .bg-light,
-        body.dark-mode .modal-content,
-        body.dark-mode .card-header,
-        body.dark-mode .card-footer {
-            background-color: #161b22 !important;
-            border-color: #30363d !important;
-            color: #f0f6fc !important;
-        }
-
-        /* Soporte para clases "-soft" de SB Admin Pro en modo oscuro */
-        body.dark-mode .bg-primary-soft {
-            background-color: rgba(56, 139, 253, 0.15) !important;
-            color: #58a6ff !important;
-        }
-
-        body.dark-mode .bg-secondary-soft {
-            background-color: rgba(110, 118, 129, 0.15) !important;
-            color: #8b949e !important;
-        }
-
-        body.dark-mode .bg-success-soft {
-            background-color: rgba(63, 185, 80, 0.15) !important;
-            color: #3fb950 !important;
-        }
-
-        body.dark-mode .bg-info-soft {
-            background-color: rgba(56, 139, 253, 0.15) !important;
-            color: #58a6ff !important;
-        }
-
-        body.dark-mode .bg-warning-soft {
-            background-color: rgba(210, 153, 34, 0.15) !important;
-            color: #d29922 !important;
-        }
-
-        body.dark-mode .bg-danger-soft {
-            background-color: rgba(248, 81, 73, 0.15) !important;
-            color: #f85149 !important;
-        }
-
-        /* Icon Stacks y Visibilidad de Iconos */
-        body.dark-mode .icon-stack {
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-
-        /* Fuerza la visibilidad de los iconos Feather en modo oscuro */
-        body.dark-mode .icon-stack i,
-        body.dark-mode .nav-link-icon i {
-            stroke: currentColor !important;
-            fill: none !important;
-        }
-
-        /* Dashboards y Card-based menus */
-        body.dark-mode .referencial-item .card {
-            background-color: #161b22 !important;
-            border-color: #30363d !important;
-        }
-
-        body.dark-mode .referencial-item .card:hover {
-            background-color: #1c2128 !important;
-            border-color: #58a6ff !important;
-        }
-
-        body.dark-mode .card-header-actions .btn-transparent-dark {
-            color: #8b949e !important;
-        }
-
-        body.dark-mode .btn-primary-soft {
-            background-color: rgba(56, 139, 253, 0.15) !important;
-            color: #58a6ff !important;
-            border: 1px solid rgba(56, 139, 253, 0.2) !important;
-        }
-
-        body.dark-mode .btn-success-soft {
-            background-color: rgba(63, 185, 80, 0.15) !important;
-            color: #3fb950 !important;
-            border: 1px solid rgba(63, 185, 80, 0.2) !important;
-        }
-
-        body.dark-mode .btn-info-soft {
-            background-color: rgba(56, 139, 253, 0.15) !important;
-            color: #58a6ff !important;
-            border: 1px solid rgba(56, 139, 253, 0.2) !important;
-        }
-
-        body.dark-mode .btn-warning-soft {
-            background-color: rgba(210, 153, 34, 0.15) !important;
-            color: #d29922 !important;
-            border: 1px solid rgba(210, 153, 34, 0.2) !important;
-        }
-
-        body.dark-mode .btn-danger-soft {
-            background-color: rgba(248, 81, 73, 0.15) !important;
-            color: #f85149 !important;
-            border: 1px solid rgba(248, 81, 73, 0.2) !important;
-        }
-
-        body.dark-mode .text-dark,
-        body.dark-mode .text-muted,
-        body.dark-mode .text-black-50 {
-            color: #8b949e !important;
-        }
-
-        body.dark-mode h1,
-        body.dark-mode h2,
-        body.dark-mode h3,
-        body.dark-mode h4,
-        body.dark-mode h5,
-        body.dark-mode h6 {
-            color: #f0f6fc !important;
-        }
-
-        /* Soporte para clases sólidas en modo oscuro (Dashboard) */
-        body.dark-mode .bg-primary {
-            background-color: #1f6feb !important;
-            color: #ffffff !important;
-        }
-
-        body.dark-mode .bg-secondary {
-            background-color: #30363d !important;
-            color: #c9d1d9 !important;
-        }
-
-        body.dark-mode .bg-success {
-            background-color: #238636 !important;
-            color: #ffffff !important;
-        }
-
-        body.dark-mode .bg-info {
-            background-color: #388bfd !important;
-            color: #ffffff !important;
-        }
-
-        body.dark-mode .bg-warning {
-            background-color: #9e6a03 !important;
-            color: #ffffff !important;
-        }
-
-        body.dark-mode .bg-danger {
-            background-color: #da3633 !important;
-            color: #ffffff !important;
-        }
-
-        body.dark-mode .bg-dark {
-            background-color: #010409 !important;
-            color: #f0f6fc !important;
-        }
-
-        body.dark-mode .module-card {
-            border: 1px solid #30363d !important;
-        }
-
-        body.dark-mode .module-card:hover {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-            border-color: #58a6ff !important;
-        }
-
-        /* Inputs y Formularios */
-        body.dark-mode .form-control,
-        body.dark-mode .form-select,
-        body.dark-mode .input-group-text,
-        body.dark-mode .dataTable-selector {
-            background-color: #0d1117 !important;
-            border-color: #30363d !important;
-            color: #c9d1d9 !important;
-        }
-
-        body.dark-mode .form-control:focus,
-        body.dark-mode .form-select:focus {
-            border-color: #388bfd !important;
-            box-shadow: 0 0 0 0.2rem rgba(56, 139, 253, 0.25) !important;
-        }
-
-        /* Tablas */
-        body.dark-mode .table,
-        body.dark-mode .table thead th,
-        body.dark-mode .table td {
-            background-color: transparent !important;
-            color: #c9d1d9 !important;
-            border-color: #30363d !important;
-        }
-
-        body.dark-mode .table-striped>tbody>tr:nth-of-type(odd)>* {
-            background-color: rgba(110, 118, 129, 0.05) !important;
-            color: #c9d1d9 !important;
-        }
-
-        body.dark-mode .table-hover>tbody>tr:hover>* {
-            background-color: rgba(110, 118, 129, 0.1) !important;
-            color: #f0f6fc !important;
-        }
-
-        /* Paginación */
-        body.dark-mode .page-link {
-            background-color: #161b22 !important;
-            border-color: #30363d !important;
-            color: #58a6ff !important;
-        }
-
-        body.dark-mode .page-item.active .page-link {
-            background-color: #1f6feb !important;
-            border-color: #388bfd !important;
-        }
-
-        /* Dropdowns */
-        body.dark-mode .dropdown-menu {
-            background-color: #161b22 !important;
-            border-color: #30363d !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-        }
-
-        body.dark-mode .dropdown-item {
-            color: #c9d1d9 !important;
-        }
-
-        body.dark-mode .dropdown-item:hover {
-            background-color: #1f6feb !important;
-            color: #ffffff !important;
-        }
-
-        body.dark-mode .dropdown-divider {
-            border-top-color: #30363d !important;
-        }
-
-        /* Especiales: Badges y Botones (Mantenemos colores pero ajustamos bordes) */
-        body.dark-mode .badge {
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-
-        /* Cabeceras de página y Gradientes */
-        body.dark-mode .page-header.bg-gradient-primary-to-secondary,
-        body.dark-mode .bg-gradient-primary-to-secondary {
-            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%) !important;
-        }
-
-        /* Iconos de Dashboard y clases de opacidad */
-        body.dark-mode .text-white-50,
-        body.dark-mode .text-gray-200 {
-            color: rgba(255, 255, 255, 0.3) !important;
-        }
-
-        body.dark-mode .feather-xl {
-            width: 3.5rem !important;
-            height: 3.5rem !important;
-            stroke: rgba(255, 255, 255, 0.4) !important;
-        }
-
-        /* ========================================== */
-        /* REGLAS GLOBALES DE MODO OSCURO (REFORZADAS) */
-        /* ========================================== */
-        body.dark-mode {
-            background-color: #1a1a1a !important;
-            color: #e2e8f0 !important;
-        }
-
-        /* Iconos Feather (SVG) - Forzar visibilidad absoluta */
-        body.dark-mode i[data-feather],
-        body.dark-mode svg.feather,
-        body.dark-mode .nav-link-icon i,
-        body.dark-mode .nav-link-icon svg,
-        body.dark-mode .feather-xl {
-            stroke: #cbd5e1 !important;
-            /* Gris claro de alta visibilidad */
-            stroke-width: 2px !important;
-            fill: none !important;
-        }
-
-        /* Iconos Font Awesome - Forzar visibilidad absoluta */
-        body.dark-mode .fas,
-        body.dark-mode .far,
-        body.dark-mode .fab,
-        body.dark-mode .fa-solid,
-        body.dark-mode .fa-regular,
-        body.dark-mode .fa-brands,
-        body.dark-mode i[class*="fa-"] {
-            color: #cbd5e1 !important;
-        }
-
-        /* Refuerzo para icon-stack (Usado en Referenciales y otros módulos) */
-        body.dark-mode .icon-stack {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        }
-
-        body.dark-mode .icon-stack i,
-        body.dark-mode .icon-stack svg {
-            stroke: #cbd5e1 !important;
-            color: #cbd5e1 !important;
-        }
-
-        /* Ajustes de Soft Backgrounds en modo oscuro para legibilidad */
-        body.dark-mode .bg-primary-soft {
-            background-color: rgba(0, 97, 242, 0.2) !important;
-            color: #cbd5e1 !important;
-        }
-
-        body.dark-mode .bg-success-soft {
-            background-color: rgba(0, 172, 105, 0.2) !important;
-            color: #cbd5e1 !important;
-        }
-
-        body.dark-mode .bg-info-soft {
-            background-color: rgba(0, 186, 219, 0.2) !important;
-            color: #cbd5e1 !important;
-        }
-
-        body.dark-mode .bg-warning-soft {
-            background-color: rgba(244, 161, 0, 0.2) !important;
-            color: #cbd5e1 !important;
-        }
-
-        body.dark-mode .bg-danger-soft {
-            background-color: rgba(232, 21, 0, 0.2) !important;
-            color: #cbd5e1 !important;
-        }
-
-        /* Nav y sidebar */
-        body.dark-mode .topnav {
-            background-color: #1a1a1a !important;
-            border-bottom: 1px solid #2d2d2d !important;
-        }
-
-        body.dark-mode .sidenav {
-            background-color: #1a1a1a !important;
-        }
-
-        body.dark-mode .sidenav-menu-heading {
-            color: #64748b !important;
-            font-weight: 600;
-        }
-
-        body.dark-mode .nav-link {
-            color: #94a3b8 !important;
-        }
-
-        body.dark-mode .nav-link:hover {
-            color: #f8fafc !important;
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Tarjetas y Contenedores */
-        body.dark-mode .card,
-        body.dark-mode .bg-white {
-            background-color: #1e293b !important;
-            color: #f1f5f9 !important;
-            border-color: #334155 !important;
-        }
-
-        body.dark-mode .card-header,
-        body.dark-mode .card-footer {
-            background-color: #334155 !important;
-            border-color: #475569 !important;
-            color: #f8fafc !important;
-        }
-
-        /* Tablas */
-        body.dark-mode .table {
-            color: #e2e8f0 !important;
-            border-color: #334155 !important;
-        }
-
-        body.dark-mode .table-light {
-            background-color: #334155 !important;
-            color: #f8fafc !important;
-        }
-
-        body.dark-mode .table-hover tbody tr:hover {
-            background-color: #1e293b !important;
-        }
-
-        /* Scrollbar */
-        body.dark-mode ::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        body.dark-mode ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-
-        body.dark-mode ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 6px;
-            border: 3px solid #0f172a;
-        }
-
-        /* Textos */
-        body.dark-mode .text-dark {
-            color: #f1f5f9 !important;
-        }
-
-        body.dark-mode .text-muted {
-            color: #94a3b8 !important;
+        .search-result-item:hover { background-color: var(--bs-tertiary-bg); }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item-title { font-weight: 600; color: var(--bs-body-color); margin-bottom: 0.25rem; }
+        .search-result-item-subtitle { font-size: 0.85rem; color: var(--bs-secondary-color); }
+        .search-result-item-icon { margin-right: 0.5rem; color: var(--primary-color); }
+        .search-no-results { padding: 1.5rem; text-align: center; color: var(--bs-secondary-color); }
+        .search-loading { padding: 1rem; text-align: center; color: var(--bs-secondary-color); }
+
+        /* Footer */
+        .app-footer-custom {
+            background-color: #212832;
+            color: #a7aeb8;
+            padding-top: 3rem;
+            padding-bottom: 2rem;
+            width: 100%;
+        }
+        .app-footer-custom * { background-color: transparent !important; }
+        .app-footer-custom a { transition: all 0.3s ease; }
+        .app-footer-custom a:hover { opacity: 1; transform: translateX(3px); text-decoration: none; }
+        .app-footer-custom ul li { margin-bottom: 0.25rem; }
+
+        /* Sidebar footer */
+        .sidebar-user-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.8rem;
+        }
+
+        /* Topnav search form */
+        .navbar-search-wrapper {
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .app-footer-custom { padding-top: 2rem !important; padding-bottom: 1.5rem !important; }
         }
     </style>
 </head>
 
-<body class="nav-fixed">
-    <!-- Inicialización inmediata del tema para evitar parpadeos y bloqueos -->
-    <script>
-        (function () {
-            try {
-                var theme = localStorage.getItem('theme');
-                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (theme === 'dark' || (!theme && prefersDark)) {
-                    document.body.classList.add('dark-mode');
-                }
-            } catch (e) { }
-        })();
-    </script>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 
-    <nav class="topnav navbar navbar-expand shadow justify-content-between justify-content-sm-start navbar-light bg-white"
-        id="sidenavAccordion">
-        <!-- Sidenav Toggle Button-->
-        <button class="btn btn-icon btn-transparent-dark order-1 order-lg-0 me-2 ms-lg-2 me-lg-0" id="sidebarToggle"><i
-                data-feather="menu"></i></button>
+    <div class="app-wrapper">
 
-        <!-- Navbar Brand-->
-        <a class="navbar-brand pe-3 ps-4 ps-lg-2 d-flex align-items-center" href="/">
-            <div style="font-family: 'Nunito', sans-serif; display: flex; align-items: flex-start; line-height: 1;">
-                <span style="color: #212832; font-weight: 850; font-size: 1.65rem; letter-spacing: -1px;">Anga</span>
-                <span
-                    style="color: #212832; font-weight: 800; font-size: 0.85rem; margin-top: 0.2rem; margin-left: 1px;">Sys</span>
-            </div>
-        </a>
+        <!-- ======================== HEADER / TOPNAV ======================== -->
+        <nav class="app-header navbar navbar-expand bg-body">
+            <div class="container-fluid">
 
-        <!-- Navbar Search Input-->
-        <form class="form-inline me-auto d-none d-lg-block me-3" id="searchForm">
-            <div class="input-group input-group-joined input-group-solid position-relative">
-                <input class="form-control pe-0" type="search" id="globalSearchInput"
-                    placeholder="Buscar pacientes, especialistas, referenciales..." aria-label="Search"
-                    autocomplete="off">
-                <div class="input-group-text"><i data-feather="search"></i></div>
-                <!-- Dropdown de resultados -->
-                <div id="searchResults" class="search-results-dropdown" style="display: none;"></div>
-            </div>
-        </form>
+                <!-- Inicio: toggle sidebar + brand -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button" title="Toggle sidebar">
+                            <i data-feather="menu"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item d-none d-lg-block">
+                        <a class="navbar-brand ps-2 d-flex align-items-center" href="/">
+                            <div style="font-family:'Nunito',sans-serif;display:flex;align-items:flex-start;line-height:1;">
+                                <span style="color:var(--bs-body-color);font-weight:850;font-size:1.65rem;letter-spacing:-1px;">Anga</span>
+                                <span style="color:var(--bs-body-color);font-weight:800;font-size:0.85rem;margin-top:0.2rem;margin-left:1px;">Sys</span>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
 
-        <!-- Navbar Items-->
-        <ul class="navbar-nav align-items-center ms-auto">
-            <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-            <li class="nav-item dropdown no-caret me-3 d-lg-none">
-                <a class="btn btn-icon btn-transparent-dark dropdown-toggle" id="searchDropdown" href="#" role="button"
-                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                        data-feather="search"></i></a>
-                <!-- Dropdown - Search-->
-                <div class="dropdown-menu dropdown-menu-end p-3 shadow animated--fade-in-up"
-                    aria-labelledby="searchDropdown">
-                    <form class="form-inline me-auto w-100 navbar-search" id="searchFormMobile">
-                        <div class="input-group input-group-joined input-group-solid position-relative">
-                            <input class="form-control pe-0" type="text" id="globalSearchInputMobile"
-                                placeholder="Buscar..." aria-label="Search" autocomplete="off">
-                            <div class="input-group-text"><i data-feather="search"></i></div>
-                            <!-- Dropdown de resultados móvil -->
-                            <div id="searchResultsMobile" class="search-results-dropdown" style="display: none;"></div>
-                        </div>
-                    </form>
-                </div>
-            </li>
+                <!-- Búsqueda desktop -->
+                <form class="d-none d-lg-flex me-auto ms-3 navbar-search-wrapper" id="searchForm" style="width:380px;">
+                    <div class="input-group">
+                        <input class="form-control form-control-sm" type="search" id="globalSearchInput"
+                            placeholder="Buscar pacientes, especialistas, referenciales..." aria-label="Buscar" autocomplete="off">
+                        <span class="input-group-text"><i data-feather="search" style="width:14px;height:14px;"></i></span>
+                        <div id="searchResults" class="search-results-dropdown" style="display:none;"></div>
+                    </div>
+                </form>
 
-            <!-- Nav Item - Theme Toggle -->
-            <li class="nav-item me-3">
-                <a class="btn btn-icon btn-transparent-dark" id="themeToggle" href="javascript:void(0);"
-                    title="Cambiar tema">
-                    <i id="themeIcon" data-feather="moon"></i>
-                </a>
-            </li>
+                <!-- Fin: acciones de usuario -->
+                <ul class="navbar-nav ms-auto">
 
-            <!-- Nav Item - User Information -->
-            <li class="nav-item dropdown no-caret dropdown-user me-3 me-lg-4">
-                <a class="btn btn-icon btn-transparent-dark dropdown-toggle" id="navbarDropdownUserImage"
-                    href="javascript:void(0);" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
-                    <img class="img-fluid rounded-circle"
-                        src="{{ url_for('static', filename='img/undraw_profile.svg') }}" alt="Perfil"
-                        style="width: 32px; height: 32px;">
-                </a>
-                <div class="dropdown-menu dropdown-menu-end border-0 shadow animated--fade-in-up"
-                    aria-labelledby="navbarDropdownUserImage">
-                    <h6 class="dropdown-header d-flex align-items-center">
-                        <img class="dropdown-user-img" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
-                            alt="Perfil" />
-                        <div class="dropdown-user-details">
-                            <div class="dropdown-user-details-name">{{ session.get('nombre_persona', 'Usuario') }}</div>
-                            <div class="dropdown-user-details-email">
-                                <span class="badge bg-primary">{{
-                                    session.get('grupo', 'Sin rol') }}</span>
+                    <!-- Búsqueda móvil -->
+                    <li class="nav-item dropdown d-lg-none">
+                        <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-label="Buscar">
+                            <i data-feather="search"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width:280px;">
+                            <div class="navbar-search-wrapper">
+                                <div class="input-group">
+                                    <input class="form-control form-control-sm" type="text" id="globalSearchInputMobile"
+                                        placeholder="Buscar..." aria-label="Buscar" autocomplete="off">
+                                    <span class="input-group-text"><i data-feather="search" style="width:14px;height:14px;"></i></span>
+                                    <div id="searchResultsMobile" class="search-results-dropdown" style="display:none;"></div>
+                                </div>
                             </div>
                         </div>
-                    </h6>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{{ url_for('perfil.perfilIndex') }}">
-                        <div class="dropdown-item-icon"><i data-feather="user"></i></div>
-                        Mi Perfil
-                    </a>
-                    <a class="dropdown-item" href="{{ url_for('login.logout') }}">
-                        <div class="dropdown-item-icon"><i data-feather="log-out"></i></div>
-                        Cerrar Sesión
-                    </a>
-                </div>
-            </li>
-        </ul>
-    </nav>
+                    </li>
 
-    <div id="layoutSidenav">
-        <div id="layoutSidenav_nav">
-            <nav class="sidenav shadow-right sidenav-light">
-                <div class="sidenav-menu">
-                    <div class="nav accordion" id="accordionSidenav">
+                    <!-- Toggle de tema (claro/oscuro) -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:void(0);" id="themeToggle" title="Cambiar tema" aria-label="Toggle color scheme">
+                            <i data-feather="moon" id="themeIcon"></i>
+                        </a>
+                    </li>
+
+                    <!-- Usuario -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false" id="navbarDropdownUser">
+                            <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
+                                alt="Perfil" style="width:32px;height:32px;">
+                            <span class="d-none d-md-inline small">{{ session.get('nombre_persona', 'Usuario') }}</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarDropdownUser">
+                            <div class="dropdown-header d-flex align-items-center gap-2 py-2">
+                                <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
+                                    alt="Perfil" style="width:36px;height:36px;">
+                                <div>
+                                    <div class="fw-semibold small">{{ session.get('nombre_persona', 'Usuario') }}</div>
+                                    <span class="badge bg-primary" style="font-size:0.7rem;">{{ session.get('grupo', 'Sin rol') }}</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('perfil.perfilIndex') }}">
+                                <i data-feather="user" style="width:14px;height:14px;margin-right:6px;"></i> Mi Perfil
+                            </a>
+                            <a class="dropdown-item text-danger" href="{{ url_for('login.logout') }}">
+                                <i data-feather="log-out" style="width:14px;height:14px;margin-right:6px;"></i> Cerrar Sesión
+                            </a>
+                        </div>
+                    </li>
+
+                </ul>
+            </div>
+        </nav>
+        <!-- ======================== FIN HEADER ======================== -->
+
+        <!-- ======================== SIDEBAR ======================== -->
+        <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <a href="/" class="brand-link d-flex align-items-center">
+                    {% if clinica and clinica.logo_path %}
+                    <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
+                        class="brand-image opacity-75 shadow" style="width:32px;height:32px;object-fit:contain;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo Sysclin"
+                        class="brand-image opacity-75 shadow" style="width:32px;height:32px;object-fit:contain;">
+                    {% endif %}
+                    <span class="brand-text fw-bold ms-2">{{ clinica.nombre if clinica else 'Sysclin' }}</span>
+                </a>
+            </div>
+
+            <!-- Menú -->
+            <div class="sidebar-wrapper">
+                <nav class="mt-2" aria-label="Navegación principal">
+                    <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+
                         {% for section in sidebar_items %}
                         {% if section.is_flat %}
-                        {% for group in section.groups %}
-                        <div class="sidenav-menu-heading text-uppercase small fw-800 text-muted-soft"
-                            style="letter-spacing: 0.05rem; padding-top: 1.5rem;">{{ group.heading }}</div>
-                        {% for item in group['items'] %}
-                        <a class="nav-link" href="{{ url_for(item.endpoint) if item.endpoint else '#' }}">
-                            <div class="nav-link-icon">
-                                {% if item.html_icon %}{{ item.html_icon|safe }}{% else %}<i
-                                    data-feather="{{ item.icon }}"></i>{% endif %}
-                            </div>
-                            {{ item.title }}
-                        </a>
-                        {% endfor %}
-                        {% endfor %}
-                        {% else %}<div class="sidenav-menu-heading text-uppercase small fw-800 text-muted-soft"
-                            style="letter-spacing: 0.05rem; padding-top: 1.5rem;">{{ section.heading }}</div>
+                            {% for group in section.groups %}
+                            <li class="nav-header">{{ group.heading }}</li>
+                            {% for item in group['items'] %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for(item.endpoint) if item.endpoint else '#' }}">
+                                    {% if item.html_icon %}
+                                    <span class="nav-icon">{{ item.html_icon|safe }}</span>
+                                    {% else %}
+                                    <i class="nav-icon fas fa-circle"></i>
+                                    {% endif %}
+                                    <p>{{ item.title }}</p>
+                                </a>
+                            </li>
+                            {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                        <li class="nav-header">{{ section.heading }}</li>
                         {% for menu in section.menus %}
-                        <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse"
-                            data-bs-target="#{{ menu.id }}" aria-expanded="false" aria-controls="{{ menu.id }}">
-                            <div class="nav-link-icon"><i data-feather="{{ menu.icon }}"></i></div>
-                            {{ menu.title }}
-                            <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="{{ menu.id }}" data-bs-parent="#accordionSidenav">
-                            <nav class="sidenav-menu-nested nav {% if menu.submenus %}accordion{% endif %}" {% if
-                                menu.submenus %}id="{{ menu.id }}Nested" {% endif %}>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-{{ menu.icon if menu.icon else 'circle' }}"></i>
+                                <p>
+                                    {{ menu.title }}
+                                    <i class="nav-arrow fas fa-angle-right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
                                 {% if menu.submenus %}
                                 {% for submenu in menu.submenus %}
-                                <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse"
-                                    data-bs-target="#{{ submenu.id }}" aria-expanded="false">
-                                    {{ submenu.title }}
-                                    <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                                </a>
-                                <div class="collapse" id="{{ submenu.id }}" data-bs-parent="#{{ menu.id }}Nested">
-                                    <nav class="sidenav-menu-nested nav">
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-circle-o"></i>
+                                        <p>
+                                            {{ submenu.title }}
+                                            <i class="nav-arrow fas fa-angle-right"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
                                         {% for link in submenu.links %}
-                                        <a class="nav-link"
-                                            href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
-                                            {% if link.html_icon %}{{ link.html_icon|safe }}{% endif %}{{ link.title }}
-                                        </a>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
+                                                <i class="nav-icon fas fa-circle"></i>
+                                                <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
+                                            </a>
+                                        </li>
                                         {% endfor %}
-                                    </nav>
-                                </div>
+                                    </ul>
+                                </li>
                                 {% endfor %}
                                 {% endif %}
                                 {% if menu.links %}
                                 {% for link in menu.links %}
-                                <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
-                                    {% if link.html_icon %}{{ link.html_icon|safe }}{% endif %}{{ link.title }}
-                                </a>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
+                                        <i class="nav-icon fas fa-circle"></i>
+                                        <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
+                                    </a>
+                                </li>
                                 {% endfor %}
                                 {% endif %}
-                            </nav>
-                        </div>
+                            </ul>
+                        </li>
                         {% endfor %}
                         {% endif %}
                         {% endfor %}
-                    </div>
-                </div>
-                <!-- Sidenav Footer-->
-                <div class="sidenav-footer">
-                    <div class="sidenav-footer-content">
-                        <div class="sidenav-footer-subtitle">Sesión iniciada como:</div>
-                        <div class="sidenav-footer-title">{{ session.get('nombre_persona', 'Usuario') }}</div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-        <!-- End of Sidenav -->
 
-        <!-- Layout Sidenav Content -->
-        <div id="layoutSidenav_content">
-            <main>
-                <!-- Begin Page Content -->
-                {% block layout_content %}
-                <!-- Para páginas normales como ciudad -->
+                    </ul>
+                </nav>
+
+                <!-- Usuario en sidebar (pie) -->
+                <div class="sidebar-user-footer text-white-50 small">
+                    <i class="fas fa-user-circle me-1"></i>
+                    {{ session.get('nombre_persona', 'Usuario') }}
+                </div>
+            </div>
+
+        </aside>
+        <!-- ======================== FIN SIDEBAR ======================== -->
+
+        <!-- ======================== CONTENIDO PRINCIPAL ======================== -->
+        <main class="app-main">
+
+            {% block layout_content %}
+            <div class="app-content">
                 <div class="container-fluid px-4">
                     {% block contenido %}
                     {% endblock %}
                 </div>
-                {% endblock %}
-                <!-- /.container-fluid -->
-            </main>
-            <!-- Footer -->
+            </div>
+            {% endblock %}
 
-
-            <!-- Footer -->
-            <footer class="footer mt-auto"
-                style="background-color: #212832; color: #a7aeb8; padding-top: 3rem; padding-bottom: 2rem; width: 100%;">
+            <!-- ======================== FOOTER ======================== -->
+            <footer class="app-footer-custom mt-auto">
                 <div class="container-fluid px-4 px-lg-5">
                     <div class="row gx-5 justify-content-between">
 
@@ -979,60 +368,46 @@
                             <a href="/" class="d-flex align-items-center mb-3 text-white text-decoration-none">
                                 {% if clinica and clinica.logo_path %}
                                 <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
-                                    style="width: 28px; height: 28px; margin-right: 10px; opacity: 0.9; object-fit: contain;">
+                                    style="width:28px;height:28px;margin-right:10px;opacity:0.9;object-fit:contain;">
                                 {% else %}
-                                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo AngaSys"
-                                    style="width: 28px; height: 28px; margin-right: 10px; opacity: 0.9;">
+                                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo Sysclin"
+                                    style="width:28px;height:28px;margin-right:10px;opacity:0.9;">
                                 {% endif %}
-                                <span class="fs-4 fw-bold" style="letter-spacing: 0.05rem;">{{ clinica.nombre if clinica
-                                    else 'AngaSys' }}</span>
+                                <span class="fs-4 fw-bold" style="letter-spacing:0.05rem;">{{ clinica.nombre if clinica else 'Sysclin' }}</span>
                             </a>
-                            <p class="small mb-4" style="line-height: 1.6; max-width: 320px;">
+                            <p class="small mb-4" style="line-height:1.6;max-width:320px;">
                                 Sistema de gestión integral para profesionales y consultorios de la salud mental.
                             </p>
                             <div class="d-flex gap-3">
-                                <a href="javascript:void(0);" class="text-decoration-none"
-                                    style="color: #a7aeb8; transition: color 0.2s;" aria-label="LinkedIn"><i
-                                        class="fab fa-linkedin fs-5" aria-hidden="true"></i></a>
-                                <a href="javascript:void(0);" class="text-decoration-none"
-                                    style="color: #a7aeb8; transition: color 0.2s;" aria-label="Twitter"><i
-                                        class="fab fa-twitter fs-5" aria-hidden="true"></i></a>
-                                <a href="javascript:void(0);" class="text-decoration-none"
-                                    style="color: #a7aeb8; transition: color 0.2s;" aria-label="Instagram"><i
-                                        class="fab fa-instagram fs-5" aria-hidden="true"></i></a>
+                                <a href="javascript:void(0);" class="text-decoration-none" style="color:#a7aeb8;" aria-label="LinkedIn">
+                                    <i class="fab fa-linkedin fs-5" aria-hidden="true"></i></a>
+                                <a href="javascript:void(0);" class="text-decoration-none" style="color:#a7aeb8;" aria-label="Twitter">
+                                    <i class="fab fa-twitter fs-5" aria-hidden="true"></i></a>
+                                <a href="javascript:void(0);" class="text-decoration-none" style="color:#a7aeb8;" aria-label="Instagram">
+                                    <i class="fab fa-instagram fs-5" aria-hidden="true"></i></a>
                             </div>
                         </div>
 
                         <!-- Columna 2: Soporte & Legal -->
                         <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                            <h6 class="text-white fw-bold mb-3 text-uppercase"
-                                style="font-size: 0.85rem; letter-spacing: 0.1rem;">Soporte y Legal</h6>
-                            <ul class="list-unstyled mb-0 small" style="line-height: 2;">
-                                <li><a href="{{ url_for('informacion.soporte') }}" class="text-decoration-none"
-                                        style="color: #a7aeb8; transition: color 0.2s;">Soporte Técnico</a></li>
-                                <li><a href="{{ url_for('informacion.contacto') }}" class="text-decoration-none"
-                                        style="color: #a7aeb8; transition: color 0.2s;">Formulario de Contacto</a></li>
-                                <li class="mt-2"><a href="{{ url_for('informacion.privacidad') }}"
-                                        class="text-decoration-none"
-                                        style="color: #a7aeb8; transition: color 0.2s;">Políticas de Privacidad</a></li>
-                                <li><a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none"
-                                        style="color: #a7aeb8; transition: color 0.2s;">armanuramirez16@gmail.com</a>
-                                </li>
+                            <h6 class="text-white fw-bold mb-3 text-uppercase" style="font-size:0.85rem;letter-spacing:0.1rem;">Soporte y Legal</h6>
+                            <ul class="list-unstyled mb-0 small" style="line-height:2;">
+                                <li><a href="{{ url_for('informacion.soporte') }}" class="text-decoration-none" style="color:#a7aeb8;">Soporte Técnico</a></li>
+                                <li><a href="{{ url_for('informacion.contacto') }}" class="text-decoration-none" style="color:#a7aeb8;">Formulario de Contacto</a></li>
+                                <li class="mt-2"><a href="{{ url_for('informacion.privacidad') }}" class="text-decoration-none" style="color:#a7aeb8;">Políticas de Privacidad</a></li>
+                                <li><a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none" style="color:#a7aeb8;">armanuramirez16@gmail.com</a></li>
                             </ul>
                         </div>
 
                     </div>
 
-                    <hr class="mt-5 mb-4" style="border-color: rgba(255, 255, 255, 0.1);" />
+                    <hr class="mt-5 mb-4" style="border-color:rgba(255,255,255,0.1);" />
 
-                    <!-- Bottom Bar -->
-                    <div class="row align-items-center small" style="font-size: 0.8rem;">
-                        <div
-                            class="col-md-6 mb-2 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
-                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'AngaSys' }} {{ current_year if
-                                current_year else '2026' }}</span>
-                            <span class="mx-2 d-none d-md-inline" style="opacity: 0.3;">|</span>
-                            <span>Desarrollado por <strong style="color: rgba(255, 255, 255, 0.6); letter-spacing: 0.5px;">ÑANDESYS</strong></span>
+                    <div class="row align-items-center small" style="font-size:0.8rem;">
+                        <div class="col-md-6 mb-2 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
+                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'Sysclin' }} {{ current_year if current_year else '2026' }}</span>
+                            <span class="mx-2 d-none d-md-inline" style="opacity:0.3;">|</span>
+                            <span>Desarrollado por <strong style="color:rgba(255,255,255,0.6);letter-spacing:0.5px;">ÑANDESYS</strong></span>
                         </div>
                         <div class="col-md-6 text-center text-md-end">
                             Versión {{ app_version if app_version else '2.1.0' }}
@@ -1040,318 +415,174 @@
                     </div>
                 </div>
             </footer>
+            <!-- ======================== FIN FOOTER ======================== -->
 
+        </main>
+        <!-- ======================== FIN CONTENIDO ======================== -->
 
-
-        </div>
-        <!-- End of Layout Sidenav Content -->
     </div>
-    <!-- End of Layout Sidenav -->
+    <!-- ======================== FIN APP WRAPPER ======================== -->
 
+    <!-- OverlayScrollbars (scroll suave en sidebar) -->
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
 
-    <!-- Bootstrap 5 JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
+    <!-- Bootstrap 5.3 -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
 
-    <!-- jQuery (para compatibilidad con código existente) -->
+    <!-- AdminLTE 4 JS -->
+    <script src="{{ url_for('static', filename='vendor/adminlte4/js/adminlte.min.js') }}"></script>
+
+    <!-- jQuery -->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 
-    <!-- SB Admin Pro Scripts -->
-    <script src="{{ url_for('static', filename='vendor/sb-admin-pro/js/scripts.js') }}"></script>
+    <!-- Feather Icons -->
+    <script>feather.replace();</script>
 
-    <!-- Feather Icons (inicializar) -->
-    <script>
-        feather.replace();
-    </script>
-
-    <!-- Datatables Bootstrap 5 -->
+    <!-- DataTables Bootstrap 5 -->
     <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
     <!-- SweetAlert2 -->
     <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
 
-    {% block js %}
-    {% endblock %}
+    {% block js %}{% endblock %}
 
-    <!-- Script de búsqueda global y mejoras de UI -->
+    <!-- OverlayScrollbars para sidebar -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sidebarWrapper = document.querySelector('.sidebar-wrapper');
+            if (sidebarWrapper && typeof OverlayScrollbarsGlobal !== 'undefined' && window.innerWidth > 992) {
+                OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+                    scrollbars: { theme: 'os-theme-light', autoHide: 'leave', clickScroll: true }
+                });
+            }
+        });
+    </script>
+
+    <!-- Dark mode toggle -->
+    <script>
+        (function () {
+            'use strict';
+            var STORAGE_KEY = 'lte-theme';
+
+            function applyTheme(isDark) {
+                var theme = isDark ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+                document.documentElement.style.colorScheme = theme;
+                try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+                var icon = document.getElementById('themeIcon');
+                if (icon) {
+                    icon.setAttribute('data-feather', isDark ? 'sun' : 'moon');
+                    if (window.feather) feather.replace();
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var stored = null;
+                try { stored = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = stored === 'dark' || (!stored && prefersDark);
+                applyTheme(isDark);
+
+                var btn = document.getElementById('themeToggle');
+                if (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                        applyTheme(currentTheme !== 'dark');
+                    });
+                }
+            });
+        })();
+    </script>
+
+    <!-- Búsqueda global -->
     <script>
         $(document).ready(function () {
-            // Fix Sidebar Toggle (Robust Version with Delegation)
-            $(document).on('click', '#sidebarToggle', function (e) {
-                e.preventDefault();
-                $('body').toggleClass('sidenav-toggled');
-                localStorage.setItem('sb|sidebar-toggle', $('body').hasClass('sidenav-toggled'));
-            });
+            var searchTimeout;
+            var minLength = 2;
+            var delay = 300;
 
-            let searchTimeout;
-            const minSearchLength = 2;
-            const searchDelay = 300; // ms
+            function escapeHtml(text) {
+                var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
+            }
 
-            // Función para realizar búsqueda
-            function realizarBusqueda(termino, resultsContainer) {
-                if (termino.length < minSearchLength) {
-                    resultsContainer.hide().empty();
-                    return;
-                }
-
-                // Mostrar indicador de carga
-                resultsContainer.html('<div class="search-loading"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>').show();
-
+            function realizarBusqueda(termino, $container) {
+                if (termino.length < minLength) { $container.hide().empty(); return; }
+                $container.html('<div class="search-loading"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>').show();
                 $.ajax({
                     url: '/api/v1/busqueda',
                     method: 'GET',
                     data: { q: termino, limite: 20 },
                     success: function (response) {
-                        if (response.success && response.data) {
-                            mostrarResultados(response.data, resultsContainer);
-                        } else {
-                            mostrarSinResultados(resultsContainer);
-                        }
+                        if (response.success && response.data) mostrarResultados(response.data, $container);
+                        else $container.html('<div class="search-no-results">Sin resultados</div>').show();
                     },
-                    error: function (xhr, status, error) {
-                        console.error('Error en búsqueda:', error);
-                        resultsContainer.html('<div class="search-no-results">Error al realizar la búsqueda</div>').show();
+                    error: function () {
+                        $container.html('<div class="search-no-results">Error al buscar</div>').show();
                     }
                 });
             }
 
-            // Función para mostrar resultados
-            function mostrarResultados(data, container) {
-                let html = '';
-                let tieneResultados = false;
-
-                // Pacientes
+            function mostrarResultados(data, $container) {
+                var html = '';
+                var tiene = false;
                 if (data.pacientes && data.pacientes.length > 0) {
-                    tieneResultados = true;
-                    html += '<div class="search-results-section">';
-                    html += '<div class="search-results-section-title"><i class="fas fa-user-injured"></i> Pacientes</div>';
-                    data.pacientes.forEach(function (paciente) {
-                        html += `
-                            <div class="search-result-item" onclick="window.location.href='${paciente.url}'">
-                                <div class="search-result-item-title">
-                                    <i class="fas fa-user-injured search-result-item-icon"></i>
-                                    ${escapeHtml(paciente.nombre_completo)}
-                                </div>
-                                <div class="search-result-item-subtitle">
-                                    HC: ${escapeHtml(paciente.historia_clinica)} | CI: ${escapeHtml(paciente.cedula)}
-                                </div>
-                            </div>
-                        `;
+                    tiene = true;
+                    html += '<div class="search-results-section"><div class="search-results-section-title"><i class="fas fa-user-injured"></i> Pacientes</div>';
+                    data.pacientes.forEach(function (p) {
+                        html += '<div class="search-result-item" onclick="window.location.href=\'' + p.url + '\'">' +
+                            '<div class="search-result-item-title"><i class="fas fa-user-injured search-result-item-icon"></i>' + escapeHtml(p.nombre_completo) + '</div>' +
+                            '<div class="search-result-item-subtitle">HC: ' + escapeHtml(p.historia_clinica) + ' | CI: ' + escapeHtml(p.cedula) + '</div></div>';
                     });
                     html += '</div>';
                 }
-
-                // Especialistas
                 if (data.especialistas && data.especialistas.length > 0) {
-                    tieneResultados = true;
-                    html += '<div class="search-results-section">';
-                    html += '<div class="search-results-section-title"><i class="fas fa-user-md"></i> Especialistas</div>';
-                    data.especialistas.forEach(function (especialista) {
-                        html += `
-                            <div class="search-result-item" onclick="window.location.href='${especialista.url}'">
-                                <div class="search-result-item-title">
-                                    <i class="fas fa-user-md search-result-item-icon"></i>
-                                    ${escapeHtml(especialista.nombre_completo)}
-                                </div>
-                                <div class="search-result-item-subtitle">
-                                    ${especialista.matricula ? 'Mat: ' + escapeHtml(especialista.matricula) + ' | ' : ''}CI: ${escapeHtml(especialista.cedula)}
-                                    ${especialista.especialidades ? ' | ' + escapeHtml(especialista.especialidades) : ''}
-                                </div>
-                            </div>
-                        `;
+                    tiene = true;
+                    html += '<div class="search-results-section"><div class="search-results-section-title"><i class="fas fa-user-md"></i> Especialistas</div>';
+                    data.especialistas.forEach(function (e) {
+                        html += '<div class="search-result-item" onclick="window.location.href=\'' + e.url + '\'">' +
+                            '<div class="search-result-item-title"><i class="fas fa-user-md search-result-item-icon"></i>' + escapeHtml(e.nombre_completo) + '</div>' +
+                            '<div class="search-result-item-subtitle">' + escapeHtml(e.especialidad || '') + '</div></div>';
                     });
                     html += '</div>';
                 }
-
-                // Referenciales
                 if (data.referenciales && data.referenciales.length > 0) {
-                    tieneResultados = true;
-                    html += '<div class="search-results-section">';
-                    html += '<div class="search-results-section-title"><i class="fas fa-database"></i> Referenciales</div>';
-                    data.referenciales.forEach(function (ref) {
-                        const iconos = {
-                            'ciudad': 'fa-city',
-                            'especialidad': 'fa-user-md',
-                            'consultorio': 'fa-clinic-medical'
-                        };
-                        const icono = iconos[ref.tipo] || 'fa-tag';
-                        html += `
-                            <div class="search-result-item" onclick="window.location.href='${ref.url}'">
-                                <div class="search-result-item-title">
-                                    <i class="fas ${icono} search-result-item-icon"></i>
-                                    ${escapeHtml(ref.nombre)}
-                                </div>
-                                <div class="search-result-item-subtitle">
-                                    ${escapeHtml(ref.tipo_display)}
-                                </div>
-                            </div>
-                        `;
+                    tiene = true;
+                    html += '<div class="search-results-section"><div class="search-results-section-title"><i class="fas fa-list"></i> Referenciales</div>';
+                    data.referenciales.forEach(function (r) {
+                        html += '<div class="search-result-item" onclick="window.location.href=\'' + r.url + '\'">' +
+                            '<div class="search-result-item-title">' + escapeHtml(r.nombre) + '</div>' +
+                            '<div class="search-result-item-subtitle">' + escapeHtml(r.tipo || '') + '</div></div>';
                     });
                     html += '</div>';
                 }
-
-                if (!tieneResultados) {
-                    mostrarSinResultados(container);
-                } else {
-                    container.html(html).show();
-                }
+                if (!tiene) $container.html('<div class="search-no-results">Sin resultados para "' + escapeHtml($container.closest('.navbar-search-wrapper').find('input').val()) + '"</div>').show();
+                else $container.html(html).show();
             }
 
-            // Función para mostrar sin resultados
-            function mostrarSinResultados(container) {
-                container.html('<div class="search-no-results">No se encontraron resultados</div>').show();
+            function bindSearch(inputId, containerId) {
+                var $input = $('#' + inputId);
+                var $container = $('#' + containerId);
+                if (!$input.length) return;
+                $input.on('input', function () {
+                    clearTimeout(searchTimeout);
+                    var val = $(this).val().trim();
+                    searchTimeout = setTimeout(function () { realizarBusqueda(val, $container); }, delay);
+                });
+                $(document).on('click', function (e) {
+                    if (!$(e.target).closest('#' + containerId).length && !$(e.target).is($input)) {
+                        $container.hide();
+                    }
+                });
             }
 
-            // Función para escapar HTML
-            function escapeHtml(text) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
-            }
-
-            // Eventos para búsqueda desktop
-            const searchInput = $('#globalSearchInput');
-            const searchResults = $('#searchResults');
-            const searchForm = $('#searchForm');
-
-            searchInput.on('input', function () {
-                const termino = $(this).val().trim();
-                clearTimeout(searchTimeout);
-
-                if (termino.length >= minSearchLength) {
-                    searchTimeout = setTimeout(function () {
-                        realizarBusqueda(termino, searchResults);
-                    }, searchDelay);
-                } else {
-                    searchResults.hide().empty();
-                }
-            });
-
-            // Reinicializar Feather Icons después de cargar contenido dinámico
-            $(document).ajaxComplete(function () {
-                if (typeof feather !== 'undefined') {
-                    feather.replace();
-                }
-            });
-
-            searchForm.on('submit', function (e) {
-                e.preventDefault();
-                const termino = searchInput.val().trim();
-                if (termino.length >= minSearchLength) {
-                    realizarBusqueda(termino, searchResults);
-                }
-            });
-
-            // Ocultar resultados al hacer clic fuera
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('.navbar-search').length) {
-                    searchResults.hide();
-                    $('#searchResultsMobile').hide();
-                }
-            });
-
-            // Eventos para búsqueda móvil
-            const searchInputMobile = $('#globalSearchInputMobile');
-            const searchResultsMobile = $('#searchResultsMobile');
-            const searchFormMobile = $('#searchFormMobile');
-
-            searchInputMobile.on('input', function () {
-                const termino = $(this).val().trim();
-                clearTimeout(searchTimeout);
-
-                if (termino.length >= minSearchLength) {
-                    searchTimeout = setTimeout(function () {
-                        realizarBusqueda(termino, searchResultsMobile);
-                    }, searchDelay);
-                } else {
-                    searchResultsMobile.hide().empty();
-                }
-            });
-
-            searchFormMobile.on('submit', function (e) {
-                e.preventDefault();
-                const termino = searchInputMobile.val().trim();
-                if (termino.length >= minSearchLength) {
-                    realizarBusqueda(termino, searchResultsMobile);
-                }
-            });
-        }); // Cerramos el $(document).ready() de la búsqueda aquí
-
-        // ==========================================
-        // MODO OSCURO (Lógica de Toggle y Sincronización) 
-        // Totalmente independiente de otros scripts
-        // ==========================================
-        // ==========================================
-        // MODO OSCURO (Motor de Temas Robusto e Independiente)
-        // ==========================================
-        (function () {
-            const applyTheme = (isDark) => {
-                const body = document.body;
-                const sidenav = document.querySelector('.sidenav');
-                const topnav = document.querySelector('.topnav');
-                const themeToggle = document.getElementById('themeToggle');
-
-                if (isDark) {
-                    body.classList.add('dark-mode');
-                    if (sidenav) {
-                        sidenav.classList.remove('sidenav-light');
-                        sidenav.classList.add('sidenav-dark');
-                    }
-                    if (topnav) {
-                        topnav.classList.remove('navbar-light', 'bg-white');
-                        topnav.classList.add('navbar-dark', 'bg-dark');
-                    }
-                    if (themeToggle) {
-                        themeToggle.innerHTML = '<i id="themeIcon" data-feather="sun"></i>';
-                    }
-                } else {
-                    body.classList.remove('dark-mode');
-                    if (sidenav) {
-                        sidenav.classList.remove('sidenav-dark');
-                        sidenav.classList.add('sidenav-light');
-                    }
-                    if (topnav) {
-                        topnav.classList.remove('navbar-dark', 'bg-dark');
-                        topnav.classList.add('navbar-light', 'bg-white');
-                    }
-                    if (themeToggle) {
-                        themeToggle.innerHTML = '<i id="themeIcon" data-feather="moon"></i>';
-                    }
-                }
-
-                // Refrescar iconos Feather si la librería está disponible
-                if (window.feather) {
-                    try { window.feather.replace(); } catch (e) { console.warn('Feather failed to reload'); }
-                }
-            };
-
-            // Listener de ALTA PRIORIDAD (Capture Phase) para el botón de tema
-            window.addEventListener('click', function (e) {
-                const trigger = e.target.closest('#themeToggle');
-                if (trigger) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const isNowDark = !document.body.classList.contains('dark-mode');
-                    applyTheme(isNowDark);
-                    localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
-                }
-            }, true);
-
-            // Sincronización al cargar el DOM
-            document.addEventListener('DOMContentLoaded', function () {
-                const savedTheme = localStorage.getItem('theme');
-                const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                applyTheme(isDark);
-            });
-        })();
+            bindSearch('globalSearchInput', 'searchResults');
+            bindSearch('globalSearchInputMobile', 'searchResultsMobile');
+        });
     </script>
 
 </body>
-
 </html>

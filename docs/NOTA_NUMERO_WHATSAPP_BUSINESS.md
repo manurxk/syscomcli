@@ -1,7 +1,7 @@
 # Nota: Número de WhatsApp Business
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica
+**Sistema:** Sysclin - Sistema de Gestión Médica
 
 ---
 
@@ -17,7 +17,7 @@ Este es el número de WhatsApp Business que está conectado a tu instancia de Ul
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Sistema Angasys                                        │
+│  Sistema Sysclin                                        │
 │  (app/services/UltraMsgService.py)                     │
 └──────────────────┬──────────────────────────────────────┘
                    │

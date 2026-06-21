@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Puntos de Expedición
@@ -76,14 +76,14 @@ Puntos de Expedición
         {
           data: 'permite_facturacion',
           render: function(val) {
-            return val ? '<span class="badge badge-success">Sí</span>' : '<span class="badge badge-secondary">No</span>';
+            return val ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>';
           }
         },
         { 
           data: 'estado', 
           render: function(val) {
-            return val ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+            return val ? '<span class="badge bg-success">Activo</span>'
+                       : '<span class="badge bg-secondary">Inactivo</span>';
           }
         },
         { 

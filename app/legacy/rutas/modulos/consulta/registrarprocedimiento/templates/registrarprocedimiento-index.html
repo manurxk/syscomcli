@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Procedimiento
@@ -89,13 +89,13 @@ Registrar Procedimiento
                     <!-- SECCIÓN 1: INFORMACIÓN DEL PROCEDIMIENTO -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">Información del Procedimiento</h6>
+                            <h6 class="mb-0 fw-bold text-success">Información del Procedimiento</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Tipo de Procedimiento <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Tipo de Procedimiento <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_tipo_procedimiento">
                                         <div class="input-group">
                                             <input type="text" class="form-control" 
@@ -115,7 +115,7 @@ Registrar Procedimiento
                                 
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Profesional que Realizó <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Profesional que Realizó <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_profesional_realizo">
                                         <div class="input-group">
                                             <input type="text" class="form-control" 
@@ -137,14 +137,14 @@ Registrar Procedimiento
                             <div class="row">
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Fecha y Hora del Procedimiento <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Fecha y Hora del Procedimiento <span class="text-danger">*</span></label>
                                         <input type="datetime-local" class="form-control" id="fecha_procedimiento" required>
                                     </div>
                                 </div>
                                 
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Estado <span class="text-danger">*</span></label>
                                         <select class="form-control" id="estado_procedimiento" required>
                                             <option value="">Seleccione...</option>
                                             <option value="PROGRAMADO">Programado</option>
@@ -161,13 +161,13 @@ Registrar Procedimiento
                     <!-- SECCIÓN 2: DESCRIPCIÓN Y RESULTADO -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">Descripción y Resultado</h6>
+                            <h6 class="mb-0 fw-bold text-primary">Descripción y Resultado</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Descripción del Procedimiento <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Descripción del Procedimiento <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="descripcion_procedimiento" rows="5" 
                                                   placeholder="Describa detalladamente el procedimiento realizado..." 
                                                   required></textarea>
@@ -177,7 +177,7 @@ Registrar Procedimiento
 
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Resultado del Procedimiento</label>
+                                        <label class="fw-semibold">Resultado del Procedimiento</label>
                                         <textarea class="form-control" id="resultado_procedimiento" rows="5" 
                                                   placeholder="Resultado obtenido, hallazgos, evolución..."></textarea>
                                         <small class="form-text text-muted">Indique los hallazgos y resultado final</small>
@@ -188,7 +188,7 @@ Registrar Procedimiento
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Observaciones / Complicaciones</label>
+                                        <label class="fw-semibold">Observaciones / Complicaciones</label>
                                         <textarea class="form-control" id="observaciones" rows="2" 
                                                   placeholder="Complicaciones, observaciones especiales, recomendaciones..."></textarea>
                                     </div>
@@ -202,7 +202,7 @@ Registrar Procedimiento
                 <div id="listaProcedimientos" style="display: none;">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">Procedimientos Registrados en esta Consulta</h6>
+                            <h6 class="mb-0 fw-bold text-success">Procedimientos Registrados en esta Consulta</h6>
                         </div>
                         <div class="card-body">
                             <div id="contenidoProcedimientos"></div>
@@ -425,7 +425,7 @@ Registrar Procedimiento
     background-image: none;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 </style>
@@ -485,9 +485,9 @@ const initDatatable = () => {
         data: 'consulta_estado',
         render: function(data) {
           const badges = {
-            'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
-            'EN_ATENCION': '<span class="badge badge-info">En Atención</span>',
-            'FINALIZADA': '<span class="badge badge-success">Finalizada</span>'
+            'PENDIENTE': '<span class="badge bg-warning">Pendiente</span>',
+            'EN_ATENCION': '<span class="badge bg-info">En Atención</span>',
+            'FINALIZADA': '<span class="badge bg-success">Finalizada</span>'
           };
           return badges[data] || data;
         },
@@ -554,8 +554,8 @@ const initTiposProcedimientoDatatable = () => {
         title: 'Estado',
         render: function(data) {
           return data === 'A' ? 
-            '<span class="badge badge-success">Activo</span>' : 
-            '<span class="badge badge-secondary">Inactivo</span>';
+            '<span class="badge bg-success">Activo</span>' : 
+            '<span class="badge bg-secondary">Inactivo</span>';
         },
         className: 'text-center'
       },
@@ -789,7 +789,7 @@ const guardarProcedimiento = () => {
     console.log('📤 Enviando procedimiento:', dataProcedimiento);
     
     const btn = $(this);
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
     
     fetch('/api/v1/registro-procedimientos', {
       method: 'POST',

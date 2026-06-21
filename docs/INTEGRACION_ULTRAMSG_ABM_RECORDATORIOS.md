@@ -1,7 +1,7 @@
 # Integración UltraMsg en ABM de Recordatorios
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Objetivo:** Documentar la integración completa de UltraMsg en el módulo de gestión de recordatorios
 
 ---

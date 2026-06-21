@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Certificados Médicos
@@ -212,7 +212,7 @@ Certificados Médicos
                         Swal.fire({
                             title: `Certificado ${cert.certificado_numero}`,
                             html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${cert.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${cert.profesional_nombre}</p>
                             <p><strong>Fecha:</strong> ${cert.certificado_fecha}</p>

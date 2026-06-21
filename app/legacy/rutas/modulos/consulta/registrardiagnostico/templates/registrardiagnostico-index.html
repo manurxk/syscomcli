@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Diagnóstico
@@ -88,14 +88,14 @@ Registrar Diagnóstico
                     <!-- SECCIÓN 1: INFORMACIÓN DEL DIAGNÓSTICO -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">Información del Diagnóstico</h6>
+                            <h6 class="mb-0 fw-bold text-info">Información del Diagnóstico</h6>
                         </div>
                         <div class="card-body">
                             <!-- Primera fila: Diagnóstico CIE-10 -->
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Diagnóstico CIE-10 <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Diagnóstico CIE-10 <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_diagnostico">
                                         <div class="input-group">
                                             <input type="text" class="form-control" 
@@ -118,7 +118,7 @@ Registrar Diagnóstico
                             <div class="row">
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Tipo de Diagnóstico <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Tipo de Diagnóstico <span class="text-danger">*</span></label>
                                         <select class="form-control" id="tipo_diagnostico" required>
                                             <option value="">Seleccione...</option>
                                             <option value="PRINCIPAL">Principal</option>
@@ -131,7 +131,7 @@ Registrar Diagnóstico
                                 
                                 <div class="col-lg-6 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Estado <span class="text-danger">*</span></label>
                                         <select class="form-control" id="estado_diagnostico" required>
                                             <option value="">Seleccione...</option>
                                             <option value="CONFIRMADO" selected>Confirmado</option>
@@ -148,14 +148,14 @@ Registrar Diagnóstico
                     <!-- SECCIÓN 2: DESCRIPCIÓN Y OBSERVACIONES -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">Información Complementaria</h6>
+                            <h6 class="mb-0 fw-bold text-primary">Información Complementaria</h6>
                         </div>
                         <div class="card-body">
                             <!-- Primera fila: Descripción y Observaciones (2 columnas) -->
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Descripción Adicional</label>
+                                        <label class="fw-semibold">Descripción Adicional</label>
                                         <textarea class="form-control" id="descripcion_adicional" rows="4" 
                                                   placeholder="Información complementaria sobre el diagnóstico..."></textarea>
                                         <small class="form-text text-muted">Detalles específicos o hallazgos relevantes</small>
@@ -164,7 +164,7 @@ Registrar Diagnóstico
 
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Observaciones</label>
+                                        <label class="fw-semibold">Observaciones</label>
                                         <textarea class="form-control" id="observaciones" rows="4" 
                                                   placeholder="Observaciones generales, consideraciones especiales..."></textarea>
                                         <small class="form-text text-muted">Notas adicionales del médico</small>
@@ -179,7 +179,7 @@ Registrar Diagnóstico
                 <div id="listaDiagnosticos" style="display: none;">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">Diagnósticos Registrados en esta Consulta</h6>
+                            <h6 class="mb-0 fw-bold text-info">Diagnósticos Registrados en esta Consulta</h6>
                         </div>
                         <div class="card-body">
                             <div id="contenidoDiagnosticos"></div>
@@ -369,7 +369,7 @@ Registrar Diagnóstico
     background-image: none;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 
@@ -451,9 +451,9 @@ const initDatatable = () => {
         data: 'consulta_estado',
         render: function(data) {
           const badges = {
-            'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
-            'EN_ATENCION': '<span class="badge badge-info">En Atención</span>',
-            'FINALIZADA': '<span class="badge badge-success">Finalizada</span>'
+            'PENDIENTE': '<span class="badge bg-warning">Pendiente</span>',
+            'EN_ATENCION': '<span class="badge bg-info">En Atención</span>',
+            'FINALIZADA': '<span class="badge bg-success">Finalizada</span>'
           };
           return badges[data] || data;
         },
@@ -647,7 +647,7 @@ const cargarDiagnosticosExistentes = (idConsulta) => {
                 <small class="text-muted mt-1 d-block">
                   <span class="badge badge-${tipoBadge}">${diag.tipo}</span>
                   <span class="badge badge-${estadoBadge}">${diag.estado}</span>
-                  ${diag.descripcion_adicional ? '<span class="badge badge-light ml-1">Con descripción adicional</span>' : ''}
+                  ${diag.descripcion_adicional ? '<span class="badge bg-light ms-1">Con descripción adicional</span>' : ''}
                 </small>
               </div>
             </div>
@@ -810,7 +810,7 @@ const guardarDiagnostico = () => {
     
     const btn = $(this);
     const btnTextOriginal = btn.html();
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
     
     fetch('/api/v1/registro-diagnosticos', {
       method: 'POST',

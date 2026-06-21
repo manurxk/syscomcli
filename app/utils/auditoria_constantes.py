@@ -1,7 +1,7 @@
 """
 auditoria_constantes.py
 =======================
-Módulo de constantes para el sistema de auditoría del sistema Angasys.
+Módulo de constantes para el sistema de auditoría del sistema Sysclin.
 
 Centraliza las acciones auditables, sus íconos de Font Awesome 6 y sus
 etiquetas en español.  No tiene dependencias externas (solo stdlib).

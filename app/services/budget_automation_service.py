@@ -57,7 +57,7 @@ def enviar_alerta_ventas(ids_presupuestos: List[int]) -> None:
     # from flask_mail import Message, mail
     # msg = Message(
     #     subject="Presupuestos vencidos hoy",
-    #     recipients=["ventas@angasys.com"],
+    #     recipients=["ventas@sysclin.com"],
     #     body=f"{len(ids_presupuestos)} presupuesto(s) vencieron hoy: {ids_presupuestos}"
     # )
     # mail.send(msg)

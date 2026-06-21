@@ -1,7 +1,7 @@
 # Plan de Implementación: UltraMsg por Fases
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Objetivo:** Implementar UltraMsg para notificaciones WhatsApp en fases incrementales
 
 ---

@@ -15,7 +15,7 @@
 
 ## Resumen Ejecutivo
 
-El sistema **Angasys** es una aplicación web desarrollada en Flask (Python) para la gestión de una clínica médica. El análisis abarca desde la estructura base del sistema hasta el módulo completo de agendamiento de citas médicas.
+El sistema **Sysclin** es una aplicación web desarrollada en Flask (Python) para la gestión de una clínica médica. El análisis abarca desde la estructura base del sistema hasta el módulo completo de agendamiento de citas médicas.
 
 ### Componentes Analizados
 

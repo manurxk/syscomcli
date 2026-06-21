@@ -39,7 +39,7 @@ Los <h1> dentro del {% block contenido %} compiten con el <h1> que probablemente
 
 
 
-Prompt de implementación — Mejora de archivos de información AngaSys
+Prompt de implementación — Mejora de archivos de información Sysclin
 Tengo tres templates HTML de Flask (soporte.html, privacidad.html, contacto.html) que usan {% extends "base.html" %} y {% block contenido %}. Necesito que los reescribas completamente con las siguientes instrucciones:
 
 Reglas generales para los tres archivos
@@ -54,9 +54,9 @@ Variables de Flask disponibles: {{ current_year }}
 
 
 soporte.html — Cambios y textos nuevos
-Sección "Acerca de AngaSys" — reemplazar texto por:
+Sección "Acerca de Sysclin" — reemplazar texto por:
 
-AngaSys es un sistema integral de gestión diseñado para consultorios psicológicos y neuropsicológicos. Desarrollado para la Clínica Integral Neuropsicológica (CIN), centraliza en una sola plataforma todos los procesos clínicos y administrativos: desde el primer turno de un paciente hasta la emisión de su factura, pasando por el registro de consultas, diagnósticos y documentos médicos. El sistema está pensado para todo el personal de la clínica, con accesos y vistas adaptadas al rol de cada usuario.
+Sysclin es un sistema integral de gestión diseñado para consultorios psicológicos y neuropsicológicos. Desarrollado para la Clínica Integral Neuropsicológica (CIN), centraliza en una sola plataforma todos los procesos clínicos y administrativos: desde el primer turno de un paciente hasta la emisión de su factura, pasando por el registro de consultas, diagnósticos y documentos médicos. El sistema está pensado para todo el personal de la clínica, con accesos y vistas adaptadas al rol de cada usuario.
 
 Sección "Funcionalidades del Sistema" — enriquecer cada módulo:
 
@@ -71,7 +71,7 @@ FAQ — agregar estas preguntas nuevas además de las existentes:
 
 ¿Puedo ver el historial completo de un paciente? → Sí, desde la ficha del paciente podés acceder a todas sus consultas, documentos generados, citas anteriores y estado de cuenta, siempre según tu rol en el sistema.
 ¿Qué pasa si cancelo una cita por error? → Contactá al administrador del sistema. Las citas canceladas quedan registradas en el historial y pueden ser revisadas, pero no se eliminan automáticamente.
-¿El sistema funciona desde el celular? → AngaSys está optimizado para uso en computadora de escritorio o notebook. Puede visualizarse en dispositivos móviles, pero la experiencia está pensada para pantallas más grandes.
+¿El sistema funciona desde el celular? → Sysclin está optimizado para uso en computadora de escritorio o notebook. Puede visualizarse en dispositivos móviles, pero la experiencia está pensada para pantallas más grandes.
 
 Mejoras técnicas:
 
@@ -96,7 +96,7 @@ Agregar índice navegable al inicio, antes del primer card, con anclas a cada se
 Agregar id="seccion-N" a cada <h4> correspondiente.
 Sección "Información General" — reemplazar texto por:
 
-AngaSys es un sistema de gestión de consultorios psicológicos y neuropsicológicos desarrollado para la Clínica Integral Neuropsicológica (CIN). Dado que el sistema maneja información sensible de salud, nos comprometemos con los más altos estándares de privacidad y confidencialidad. Esta política describe qué datos se recopilan, cómo se usan, quién puede acceder a ellos y cuáles son los derechos de los pacientes y usuarios del sistema.
+Sysclin es un sistema de gestión de consultorios psicológicos y neuropsicológicos desarrollado para la Clínica Integral Neuropsicológica (CIN). Dado que el sistema maneja información sensible de salud, nos comprometemos con los más altos estándares de privacidad y confidencialidad. Esta política describe qué datos se recopilan, cómo se usan, quién puede acceder a ellos y cuáles son los derechos de los pacientes y usuarios del sistema.
 
 Sección "Derechos de los Usuarios" — agregar estos puntos:
 
@@ -112,9 +112,9 @@ Cada card debe tener su id correspondiente para que los anclas funcionen
 
 
 contacto.html — Cambios y textos nuevos
-Sección informativa — reemplazar texto "Sobre AngaSys" por:
+Sección informativa — reemplazar texto "Sobre Sysclin" por:
 
-AngaSys gestiona de forma integrada los turnos, consultas, documentos médicos y facturación de la Clínica Integral Neuropsicológica. Si tenés dudas sobre cómo usar el sistema, encontraste un error o necesitás soporte técnico, este es el canal correcto para comunicarte con el equipo de desarrollo.
+Sysclin gestiona de forma integrada los turnos, consultas, documentos médicos y facturación de la Clínica Integral Neuropsicológica. Si tenés dudas sobre cómo usar el sistema, encontraste un error o necesitás soporte técnico, este es el canal correcto para comunicarte con el equipo de desarrollo.
 
 Formulario — mejoras:
 

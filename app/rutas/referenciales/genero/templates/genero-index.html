@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Géneros
@@ -86,8 +86,8 @@ Géneros
       columns: [
         { data: 'descripcion' },
         { data: 'estado', render: function(val) {
-            return val ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+            return val ? '<span class="badge bg-success">Activo</span>'
+                       : '<span class="badge bg-secondary">Inactivo</span>';
           }
         },
         { data: function(row) {

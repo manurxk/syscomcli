@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Insumos Médicos
@@ -196,9 +196,9 @@ const initDatatable = () => {
                 data: 'estado_stock',
                 render: function(data, type, row) {
                     const estados = {
-                        'BAJO': '<span class="badge badge-danger">Stock Bajo</span>',
-                        'MEDIO': '<span class="badge badge-warning">Stock Medio</span>',
-                        'NORMAL': '<span class="badge badge-success">Stock Normal</span>'
+                        'BAJO': '<span class="badge bg-danger">Stock Bajo</span>',
+                        'MEDIO': '<span class="badge bg-warning">Stock Medio</span>',
+                        'NORMAL': '<span class="badge bg-success">Stock Normal</span>'
                     };
                     return estados[data] || data;
                 }

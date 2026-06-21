@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Medicamentos
@@ -96,12 +96,12 @@ Medicamentos
       columns: [
         { data: 'descripcion' },
         { data: 'concentracion', render: function(val) {
-            return val ? val : '<span class="badge badge-secondary">N/A</span>';
+            return val ? val : '<span class="badge bg-secondary">N/A</span>';
           }
         },
         { data: 'estado', render: function(val) {
-            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
-                               : '<span class="badge badge-secondary">Inactivo</span>';
+            return val === 'A' ? '<span class="badge bg-success">Activo</span>'
+                               : '<span class="badge bg-secondary">Inactivo</span>';
           }
         },
         { data: function(row) {

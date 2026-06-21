@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Contacto - AngaSys{% endblock %}
+{% block titulo %}Contacto - Sysclin{% endblock %}
 
 {% block contenido %}
 <style>
@@ -115,7 +115,7 @@
         margin-bottom: 0.2rem;
     }
 
-    /* ── Sobre AngaSys card ── */
+    /* ── Sobre Sysclin card ── */
     .about-card {
         border-radius: 12px;
         background: linear-gradient(135deg, #f0f5ff 0%, #e8f0fe 100%);
@@ -309,13 +309,13 @@
                 </div>
             </div>
 
-            <!-- Sobre AngaSys -->
+            <!-- Sobre Sysclin -->
             <div class="card about-card border-0 shadow-sm">
                 <div class="fw-bold text-primary mb-2">
-                    Sobre AngaSys
+                    Sobre Sysclin
                 </div>
                 <p class="text-muted small mb-3">
-                    AngaSys gestiona de forma integrada los turnos, consultas, documentos médicos
+                    Sysclin gestiona de forma integrada los turnos, consultas, documentos médicos
                     y facturación de la Clínica Integral Neuropsicológica.
                 </p>
                 <ul class="features-list">
@@ -501,7 +501,7 @@
                     var asunto = asuntoInput.value;
                     var mensaje = msgArea.value;
 
-                    var subject = encodeURIComponent('[' + asunto.toUpperCase() + '] AngaSys Contacto');
+                    var subject = encodeURIComponent('[' + asunto.toUpperCase() + '] Sysclin Contacto');
                     var body = encodeURIComponent(
                         'Nombre: ' + nombre +
                         '\nEmail: ' + email +

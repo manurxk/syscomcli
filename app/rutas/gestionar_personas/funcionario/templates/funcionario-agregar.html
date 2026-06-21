@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 {% if id_funcionario %}Editar Funcionario{% else %}Registrar Funcionario{% endif %}
@@ -200,7 +200,7 @@
             </div>
 
             <label class="small mb-2 fw-bold text-dark">
-              Grupos / Roles Disponibles <span class="text-muted font-weight-normal">(Máximo 3)</span>
+              Grupos / Roles Disponibles <span class="text-muted fw-normal">(Máximo 3)</span>
             </label>
 
             <div class="border rounded bg-light p-3 mb-3" id="contenedorGrupos"
@@ -793,7 +793,7 @@
       const url = esEdicion ? `/api/v1/funcionarios/${idFuncionario}` : '/api/v1/funcionarios';
       const method = esEdicion ? 'PUT' : 'POST';
 
-      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
       fetch(url, {
         method: method,

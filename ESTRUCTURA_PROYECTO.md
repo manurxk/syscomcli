@@ -1,4 +1,4 @@
-# Análisis de Estructura - Sistema CIN (Angasys)
+# Análisis de Estructura - Sistema CIN (Sysclin)
 
 Este documento detalla la arquitectura, tecnologías y el estado actual del **Sistema CIN**, un ecosistema de gestión clínica integral.
 

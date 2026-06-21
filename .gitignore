@@ -260,3 +260,6 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask
+
+# Documentación interna de la reestructuración (tesis) - no se sube al repo
+docs_reestructuracion/

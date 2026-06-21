@@ -442,7 +442,7 @@ Por favor confirme su asistencia respondiendo:
     
     def enviar_notificacion_cita_creada_editada(self, telefono, nombre_paciente, cita_fecha, 
                                                  cita_hora, especialista, especialidad, 
-                                                 nombre_clinica="Angasys", es_edicion=False):
+                                                 nombre_clinica="Sysclin", es_edicion=False):
         """
         Envía notificación inmediata cuando se crea o edita una cita
         
@@ -453,7 +453,7 @@ Por favor confirme su asistencia respondiendo:
             cita_hora: Hora de la cita
             especialista: Nombre del especialista
             especialidad: Nombre de la especialidad
-            nombre_clinica: Nombre de la clínica (opcional, default: "Angasys")
+            nombre_clinica: Nombre de la clínica (opcional, default: "Sysclin")
             es_edicion: True si es edición, False si es creación
         
         Returns:

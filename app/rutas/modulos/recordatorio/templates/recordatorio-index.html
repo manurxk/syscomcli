@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Historial de Recordatorios Enviados - UltraMsg
@@ -236,7 +236,7 @@ $(document).ready(function() {
                         return '<span class="text-muted">No hay avisos enviados</span>';
                     }
                     
-                    return `<div class="text-left">${historial.join('')}</div>`;
+                    return `<div class="text-start">${historial.join('')}</div>`;
                 }
             },
             {
@@ -282,7 +282,7 @@ function verDetalles(idRecordatorio) {
                 let contenido = `
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="font-weight-bold">Información de la Cita</h6>
+                            <h6 class="fw-bold">Información de la Cita</h6>
                             <table class="table table-sm">
                                 <tr><td><strong>ID Recordatorio:</strong></td><td>${r.id_recordatorio}</td></tr>
                                 <tr><td><strong>ID Cita:</strong></td><td>${r.id_cita}</td></tr>
@@ -296,7 +296,7 @@ function verDetalles(idRecordatorio) {
                             </table>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="font-weight-bold">Historial de Avisos Enviados</h6>
+                            <h6 class="fw-bold">Historial de Avisos Enviados</h6>
                             <div class="list-group">
                 `;
                 
@@ -374,7 +374,7 @@ function verDetalles(idRecordatorio) {
                 
                 // Mostrar mensajes enviados si existen
                 if (r.inmediato.mensaje || r['24h'].mensaje || r['12h'].mensaje) {
-                    contenido += `<div class="mt-3"><h6 class="font-weight-bold">Mensajes Enviados:</h6>`;
+                    contenido += `<div class="mt-3"><h6 class="fw-bold">Mensajes Enviados:</h6>`;
                     
                     if (r.inmediato.mensaje) {
                         contenido += `
@@ -430,7 +430,7 @@ function verMetricas() {
             if (response.success) {
                 const m = response.data;
                 let html = `
-                    <div class="text-left">
+                    <div class="text-start">
                         <h6><strong>Métricas UltraMsg</strong></h6>
                         <table class="table table-sm">
                             <tr><td><strong>Mensajes Enviados:</strong></td><td>${m.mensajes_enviados || 0}</td></tr>

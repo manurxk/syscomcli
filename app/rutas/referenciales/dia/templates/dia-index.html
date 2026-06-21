@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Días de la Semana
@@ -91,8 +91,8 @@ Días de la Semana
         { data: 'descripcion' },
         { data: 'orden' },
         { data: 'estado', render: val => 
-            val ? '<span class="badge badge-success">Activo</span>' 
-                : '<span class="badge badge-secondary">Inactivo</span>'
+            val ? '<span class="badge bg-success">Activo</span>' 
+                : '<span class="badge bg-secondary">Inactivo</span>'
         },
         { data: row => `
             <button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>

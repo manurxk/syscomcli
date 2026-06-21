@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Factura
@@ -1025,10 +1025,10 @@ Registrar Factura
                 <td class="text-center">${index + 1}</td>
                 <td>${item.item_descripcion}</td>
                 <td class="text-center">${item.item_cantidad}</td>
-                <td class="text-right">${formatearMoneda(item.precio_unitario_final || item.item_precio_unitario)}</td>
+                <td class="text-end">${formatearMoneda(item.precio_unitario_final || item.item_precio_unitario)}</td>
                 <td class="text-center">${item.impuesto_porcentaje > 0 ? tiposImpuestos.find(t => t.id == item.id_tipo_impuesto)?.descripcion || 'N/A' : 'Sin impuesto'}</td>
                 <td class="text-center">${item.impuesto_porcentaje > 0 ? `${item.impuesto_porcentaje}%` : '-'}</td>
-                <td class="text-right"><strong>${formatearMoneda(item.item_total)}</strong></td>
+                <td class="text-end"><strong>${formatearMoneda(item.item_total)}</strong></td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-warning btn-editar-item" data-index="${index}" title="Editar">
                         <i class="fas fa-edit"></i>

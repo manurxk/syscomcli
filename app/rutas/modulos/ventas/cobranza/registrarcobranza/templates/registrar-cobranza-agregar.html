@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Cobranza
@@ -683,7 +683,7 @@ Registrar Cobranza
             const row = `
             <tr>
                 <td>${fp.forma_cobro}</td>
-                <td class="text-right">${formatearMoneda(fp.monto_cobrado)}</td>
+                <td class="text-end">${formatearMoneda(fp.monto_cobrado)}</td>
                 <td><small>${infoAdicional || 'N/A'}</small></td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-warning btn-editar-forma-pago" data-index="${index}" title="Editar">
@@ -846,9 +846,9 @@ Registrar Cobranza
                     title: 'Estado',
                     render: function (data) {
                         const estados = {
-                            'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
-                            'PARCIAL': '<span class="badge badge-info">Parcial</span>',
-                            'VENCIDA': '<span class="badge badge-danger">Vencida</span>'
+                            'PENDIENTE': '<span class="badge bg-warning">Pendiente</span>',
+                            'PARCIAL': '<span class="badge bg-info">Parcial</span>',
+                            'VENCIDA': '<span class="badge bg-danger">Vencida</span>'
                         };
                         return estados[data] || data;
                     }

@@ -1,7 +1,7 @@
 # Configuración de UltraMsg para Recordatorios WhatsApp
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica
+**Sistema:** Sysclin - Sistema de Gestión Médica
 
 ---
 

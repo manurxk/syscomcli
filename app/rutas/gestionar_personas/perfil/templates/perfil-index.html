@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Mi Perfil
@@ -341,15 +341,15 @@ Mi Perfil
     
     // Datos del encabezado
     $('#nombreCompleto').text(datos.nombre_completo);
-    $('#rolUsuario').html(`<i class="fas fa-shield-alt mr-1"></i>${datos.rol}`);
+    $('#rolUsuario').html(`<i class="fas fa-shield-alt me-1"></i>${datos.rol}`);
     $('#nombreUsuario').text(datos.nom_usuario);
     
     // Estado
     if (datos.est_usuario) {
-      $('#estadoUsuario').html('<i class="fas fa-check-circle mr-1"></i>Activo')
+      $('#estadoUsuario').html('<i class="fas fa-check-circle me-1"></i>Activo')
                          .removeClass('bg-danger').addClass('bg-success');
     } else {
-      $('#estadoUsuario').html('<i class="fas fa-times-circle mr-1"></i>Inactivo')
+      $('#estadoUsuario').html('<i class="fas fa-times-circle me-1"></i>Inactivo')
                          .removeClass('bg-success').addClass('bg-danger');
     }
     
@@ -377,8 +377,8 @@ Mi Perfil
     $('#grupoSistema span').text(datos.rol);
     
     const badgeEstado = datos.est_usuario 
-      ? '<span class="badge bg-success-soft text-success"><i class="fas fa-check mr-1"></i>Cuenta Activa</span>'
-      : '<span class="badge bg-danger-soft text-danger"><i class="fas fa-times mr-1"></i>Cuenta Inactiva</span>';
+      ? '<span class="badge bg-success-soft text-success"><i class="fas fa-check me-1"></i>Cuenta Activa</span>'
+      : '<span class="badge bg-danger-soft text-danger"><i class="fas fa-times me-1"></i>Cuenta Inactiva</span>';
     $('#estadoCuenta').html(badgeEstado);
   }
 
@@ -399,7 +399,7 @@ Mi Perfil
 
     const btn = $('#btnGuardarPerfil');
     const txtOriginal = btn.html();
-    btn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...').prop('disabled', true);
+    btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Guardando...').prop('disabled', true);
 
     $.ajax({
       url: '/api/v1/perfil/update',
@@ -494,9 +494,9 @@ Mi Perfil
                     <div class="card border-left-primary shadow h-100 py-2" style="border-left: 4px solid var(--primary-color);">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" style="color: var(--primary-color) !important;">${key}</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${value}</div>
+                                <div class="col me-2">
+                                    <div class="text-xs fw-bold text-primary text-uppercase mb-1" style="color: var(--primary-color) !important;">${key}</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800">${value}</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-chart-line fa-2x text-gray-300"></i>
@@ -535,8 +535,8 @@ Mi Perfil
                   html += `
                   <div class="list-group-item list-group-item-action border-left-primary" style="border-left: 4px solid var(--primary-color) !important;">
                       <div class="d-flex w-100 justify-content-between">
-                          <h6 class="mb-1 text-primary" style="color: var(--primary-color) !important;"><i class="${item.icono || 'fas fa-info-circle'} mr-2"></i>${item.label}</h6>
-                          <small class="text-muted"><i class="far fa-clock mr-1"></i>${item.fecha_evento || ''}</small>
+                          <h6 class="mb-1 text-primary" style="color: var(--primary-color) !important;"><i class="${item.icono || 'fas fa-info-circle'} me-2"></i>${item.label}</h6>
+                          <small class="text-muted"><i class="far fa-clock me-1"></i>${item.fecha_evento || ''}</small>
                       </div>
                       <p class="mb-1 text-sm">${item.detalle || ''}</p>
                   </div>`;

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Certificados Médicos
@@ -254,13 +254,13 @@ const initDatatable = () => {
                     const tipoNombre = row.tipo_certificado_nombre || row.certificado_tipo || 'N/A';
                     // Determinar badge según el nombre del tipo
                     if (tipoNombre.toUpperCase().includes('REPOSO')) {
-                        return '<span class="badge badge-warning">' + tipoNombre + '</span>';
+                        return '<span class="badge bg-warning">' + tipoNombre + '</span>';
                     } else if (tipoNombre.toUpperCase().includes('APTITUD')) {
-                        return '<span class="badge badge-success">' + tipoNombre + '</span>';
+                        return '<span class="badge bg-success">' + tipoNombre + '</span>';
                     } else if (tipoNombre.toUpperCase().includes('ASISTENCIA')) {
-                        return '<span class="badge badge-info">' + tipoNombre + '</span>';
+                        return '<span class="badge bg-info">' + tipoNombre + '</span>';
                     } else {
-                        return '<span class="badge badge-secondary">' + tipoNombre + '</span>';
+                        return '<span class="badge bg-secondary">' + tipoNombre + '</span>';
                     }
                 },
                 title: 'Tipo'
@@ -275,9 +275,9 @@ const initDatatable = () => {
                 data: 'certificado_estado',
                 render: function(data) {
                     const estados = {
-                        'VIGENTE': '<span class="badge badge-success">Vigente</span>',
-                        'VENCIDO': '<span class="badge badge-warning">Vencido</span>',
-                        'ANULADO': '<span class="badge badge-danger">Anulado</span>'
+                        'VIGENTE': '<span class="badge bg-success">Vigente</span>',
+                        'VENCIDO': '<span class="badge bg-warning">Vencido</span>',
+                        'ANULADO': '<span class="badge bg-danger">Anulado</span>'
                     };
                     return estados[data] || data;
                 }
@@ -617,7 +617,7 @@ const verDetalle = () => {
                 Swal.fire({
                     title: `Certificado ${cert.certificado_numero}`,
                     html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${cert.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${cert.profesional_nombre}</p>
                             <p><strong>Fecha:</strong> ${cert.certificado_fecha}</p>

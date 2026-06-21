@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Historial de Recordatorios Enviados - UltraMsg
@@ -234,7 +234,7 @@ $(document).ready(function() {
                         return '<span class="text-muted">No hay avisos enviados</span>';
                     }
                     
-                    return `<div class="text-left">${historial.join('')}</div>`;
+                    return `<div class="text-start">${historial.join('')}</div>`;
                 }
             },
             {
@@ -428,7 +428,7 @@ function verMetricas() {
             if (response.success) {
                 const m = response.data;
                 let html = `
-                    <div class="text-left">
+                    <div class="text-start">
                         <h6><strong>Métricas UltraMsg</strong></h6>
                         <table class="table table-sm">
                             <tr><td><strong>Mensajes Enviados:</strong></td><td>${m.mensajes_enviados || 0}</td></tr>

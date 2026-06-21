@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Timbrados
@@ -79,9 +79,9 @@ Timbrados
               
               let clase = '';
               if (vencimiento < today) {
-                clase = 'badge-danger';
+                clase = 'bg-danger';
               } else if ((vencimiento - today) / (1000 * 60 * 60 * 24) <= 30) {
-                clase = 'badge-warning';
+                clase = 'bg-warning';
               }
               
               const fechaStr = date.toLocaleDateString('es-PY');
@@ -120,20 +120,20 @@ Timbrados
           data: 'estado',
           render: function(val) {
             const estados = {
-              'activo': 'badge-success',
-              'vencido': 'badge-danger',
-              'dado_baja': 'badge-secondary',
-              'suspendido': 'badge-warning'
+              'activo': 'bg-success',
+              'vencido': 'bg-danger',
+              'dado_baja': 'bg-secondary',
+              'suspendido': 'bg-warning'
             };
-            const clase = estados[val] || 'badge-secondary';
+            const clase = estados[val] || 'bg-secondary';
             return `<span class="badge ${clase}">${val}</span>`;
           }
         },
         {
           data: 'estado_activo',
           render: function(val) {
-            return val ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+            return val ? '<span class="badge bg-success">Activo</span>'
+                       : '<span class="badge bg-secondary">Inactivo</span>';
           }
         },
         { 

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Sedes
@@ -62,14 +62,14 @@ Sedes
         { 
           data: 'estado', 
           render: function(val) {
-            return val ? '<span class="badge badge-success">Activo</span>'
-                       : '<span class="badge badge-secondary">Inactivo</span>';
+            return val ? '<span class="badge bg-success">Activo</span>'
+                       : '<span class="badge bg-secondary">Inactivo</span>';
           }
         },
         {
           data: 'es_principal',
           render: function(val) {
-            return val ? '<span class="badge badge-primary">Principal</span>' : '';
+            return val ? '<span class="badge bg-primary">Principal</span>' : '';
           }
         },
         { 

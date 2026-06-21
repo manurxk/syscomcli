@@ -1,0 +1,258 @@
+/*
+ * compat.css — Compatibilidad SB Admin Pro → AdminLTE 4
+ * Aliases CSS para clases propietarias de SB Admin Pro que no existen en AdminLTE 4.
+ * No tocar los templates — solo añadir alias aquí.
+ */
+
+/* ============================================================
+   PAGE HEADER (reemplaza page-header-* de SB Admin Pro)
+   ============================================================ */
+.page-header {
+    position: relative;
+    padding: 2rem 2rem 4rem;
+    margin-bottom: 1.5rem;
+    background-color: var(--bs-primary);
+    color: #fff;
+    border-radius: 0;
+}
+
+.page-header-dark {
+    background-color: #212832;
+    color: #fff;
+}
+
+.page-header-content {
+    position: relative;
+    z-index: 1;
+}
+
+.page-header-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.page-header-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 0;
+}
+
+.page-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Gradiente primario → secundario (usado en dashboards) */
+.bg-gradient-primary-to-secondary {
+    background: linear-gradient(135deg, #0061f2 0%, #6900c7 100%) !important;
+    color: #fff;
+}
+
+/* Padding bottom extra (pb-10 era una utilidad de SB Admin Pro) */
+.pb-10 {
+    padding-bottom: 2.5rem !important;
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+
+/* Botón transparente para fondos oscuros */
+.btn-transparent-dark {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.85);
+}
+.btn-transparent-dark:hover,
+.btn-transparent-dark:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.7);
+    color: #fff;
+}
+
+/* Botón circular (usado en stepwizard y acciones de tabla) */
+.btn-circle {
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.btn-circle.btn-sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.8rem;
+}
+.btn-circle.btn-lg {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.1rem;
+}
+
+/* Botón ícono (solo icono, sin texto) */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.5rem;
+    line-height: 1;
+}
+
+/* Botón de DataTable (acciones en filas de tabla) */
+.btn-datatable {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* ============================================================
+   BADGES SOFT (colores suaves)
+   ============================================================ */
+.bg-primary-soft {
+    background-color: rgba(0, 97, 242, 0.12) !important;
+    color: #0061f2 !important;
+}
+.bg-success-soft {
+    background-color: rgba(0, 172, 105, 0.12) !important;
+    color: #00ac69 !important;
+}
+.bg-danger-soft {
+    background-color: rgba(228, 0, 43, 0.12) !important;
+    color: #e4002b !important;
+}
+.bg-warning-soft {
+    background-color: rgba(255, 165, 0, 0.12) !important;
+    color: #e6960c !important;
+}
+.bg-info-soft {
+    background-color: rgba(0, 188, 212, 0.12) !important;
+    color: #00bcd4 !important;
+}
+.bg-secondary-soft {
+    background-color: rgba(105, 0, 199, 0.12) !important;
+    color: #6900c7 !important;
+}
+
+/* ============================================================
+   CARD HEADER ACTIONS
+   ============================================================ */
+.card-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ============================================================
+   ICON STACK
+   ============================================================ */
+.icon-stack {
+    position: relative;
+    display: inline-block;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+.icon-stack [class*="fa-stack"] {
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================================
+   STEP WIZARD (wizard de pasos)
+   ============================================================ */
+.stepwizard {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+.stepwizard-row {
+    display: flex;
+    width: 100%;
+}
+.stepwizard-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+.stepwizard-step::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: -50%;
+    right: 50%;
+    height: 2px;
+    background-color: var(--bs-border-color);
+    z-index: 0;
+}
+.stepwizard-step:first-child::before { display: none; }
+.stepwizard-step p { font-size: 0.8rem; color: var(--bs-secondary-color); margin-top: 0.4rem; }
+.stepwizard-step .btn-circle { position: relative; z-index: 1; }
+
+/* ============================================================
+   SIDEBAR FOOTER (SB Admin Pro: sidenav-footer)
+   CompatLTE: sidebar-user-footer ya está en base.html como clase nueva.
+   Alias por si algún template usa la clase antigua.
+   ============================================================ */
+.sidenav-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--bs-border-color);
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+}
+.sidenav-footer-content { }
+.sidenav-footer-subtitle { font-size: 0.75rem; color: var(--bs-secondary-color); }
+.sidenav-footer-title { font-weight: 600; color: var(--bs-body-color); }
+
+/* ============================================================
+   SOMBRA LATERAL (shadow-right de SB Admin Pro)
+   ============================================================ */
+.shadow-right {
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   INPUT GROUP JOINED (SB Admin Pro: input-group-joined)
+   ============================================================ */
+.input-group-joined .form-control {
+    border-right: 0;
+}
+.input-group-joined .input-group-text {
+    background-color: var(--bs-body-bg);
+    border-left: 0;
+}
+
+/* ============================================================
+   DROPDOWN ANIMADO (SB Admin Pro: animated--fade-in-up)
+   ============================================================ */
+.animated--fade-in-up {
+    animation: fadeInUp 0.2s ease-in-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   DROPDOWN USER (SB Admin Pro: dropdown-user-*)
+   ============================================================ */
+.dropdown-user-img { width: 36px; height: 36px; border-radius: 50%; margin-right: 0.75rem; }
+.dropdown-user-details { display: flex; flex-direction: column; }
+.dropdown-user-details-name { font-weight: 600; font-size: 0.9rem; }
+.dropdown-user-details-email { font-size: 0.8rem; color: var(--bs-secondary-color); }
+.dropdown-item-icon { display: inline-flex; margin-right: 0.5rem; color: var(--bs-secondary-color); }

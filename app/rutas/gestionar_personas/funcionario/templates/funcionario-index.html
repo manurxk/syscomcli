@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Funcionarios
@@ -1027,7 +1027,7 @@ Funcionarios
       console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));
 
       const btn = $(this);
-      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
       const esEdicion = $('#txtIdFuncionario').val() !== '';
       const url = esEdicion ? `/api/v1/funcionarios/${$('#txtIdFuncionario').val()}` : '/api/v1/funcionarios';

@@ -453,7 +453,7 @@ def generarContratoPDF(id_presupuesto):
         detalles = dao.getPresupuestoDetalle(id_presupuesto)
         
         datos_contrato = {
-            'empresa_nombre': app.config.get('NOMBRE_CLINICA', 'Clínica Angasys'),
+            'empresa_nombre': app.config.get('NOMBRE_CLINICA', 'Clínica Sysclin'),
             'empresa_ruc': app.config.get('RUC_CLINICA', '80000000-1'),
             'empresa_telefono': app.config.get('TELEFONO_CLINICA', '0999 999 999'),
             'empresa_direccion': app.config.get('DIRECCION_CLINICA', 'Asunción, Paraguay'),

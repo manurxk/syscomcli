@@ -1,7 +1,7 @@
-# Estado de Implementación UltraMsg - Angasys
+# Estado de Implementación UltraMsg - Sysclin
 
 **Fecha de actualización:** 2026-01-23  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Integración:** UltraMsg para WhatsApp
 
 ---

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Sede
@@ -32,7 +32,7 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Empresa <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Empresa <span class="text-danger">*</span></label>
                             <select class="form-control" id="selEmpresa" required>
                                 <option value="">Seleccione una empresa...</option>
                             </select>
@@ -40,7 +40,7 @@ Registrar Sede
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Descripción <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtDescripcion" placeholder="Ej: Sede Central, Sucursal San Lorenzo" required>
                         </div>
                     </div>
@@ -48,20 +48,20 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Código de Sede</label>
+                            <label class="fw-semibold">Código de Sede</label>
                             <input type="text" class="form-control" id="txtCodigoSede" placeholder="Ej: SEDE-001" maxlength="20">
                             <small class="form-text text-muted">Código único por empresa (opcional)</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Es Principal</label><br>
+                            <label class="fw-semibold">Es Principal</label><br>
                             <input type="checkbox" id="chkEsPrincipal"> Sí
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Estado</label><br>
+                            <label class="fw-semibold">Estado</label><br>
                             <input type="checkbox" id="chkEstado" checked> Activo
                         </div>
                     </div>
@@ -80,19 +80,19 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Departamento</label>
+                            <label class="fw-semibold">Departamento</label>
                             <input type="text" class="form-control" id="txtDepartamento" placeholder="Ej: Central">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Ciudad</label>
+                            <label class="fw-semibold">Ciudad</label>
                             <input type="text" class="form-control" id="txtCiudad" placeholder="Ej: Asunción">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Código Postal</label>
+                            <label class="fw-semibold">Código Postal</label>
                             <input type="text" class="form-control" id="txtCodigoPostal" placeholder="0000" maxlength="10">
                         </div>
                     </div>
@@ -100,7 +100,7 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Dirección</label>
+                            <label class="fw-semibold">Dirección</label>
                             <textarea class="form-control" id="txtDireccion" rows="2" placeholder="Dirección completa"></textarea>
                         </div>
                     </div>
@@ -108,14 +108,14 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Latitud</label>
+                            <label class="fw-semibold">Latitud</label>
                             <input type="number" step="any" class="form-control" id="txtLatitud" placeholder="Ej: -25.2637">
                             <small class="form-text text-muted">Coordenada GPS (opcional)</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Longitud</label>
+                            <label class="fw-semibold">Longitud</label>
                             <input type="number" step="any" class="form-control" id="txtLongitud" placeholder="Ej: -57.5759">
                             <small class="form-text text-muted">Coordenada GPS (opcional)</small>
                         </div>
@@ -135,13 +135,13 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Teléfono</label>
+                            <label class="fw-semibold">Teléfono</label>
                             <input type="text" class="form-control" id="txtTelefono" placeholder="Ej: +595 21 123456">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Email</label>
+                            <label class="fw-semibold">Email</label>
                             <input type="email" class="form-control" id="txtEmail" placeholder="sede@ejemplo.com">
                         </div>
                     </div>
@@ -149,7 +149,7 @@ Registrar Sede
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Horario de Atención</label>
+                            <label class="fw-semibold">Horario de Atención</label>
                             <textarea class="form-control" id="txtHorarioAtencion" rows="2" placeholder="Ej: Lun-Vie: 8:00 - 18:00, Sáb: 8:00 - 12:00"></textarea>
                         </div>
                     </div>
@@ -161,7 +161,7 @@ Registrar Sede
         <div class="card shadow mb-4">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-12 text-right">
+                    <div class="col-md-12 text-end">
                         <a href="{{ url_for('sede.sedeIndex') }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>

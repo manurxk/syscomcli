@@ -1,7 +1,7 @@
 # Fase 3: Implementación de Webhooks UltraMsg
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Objetivo:** Implementar recepción de webhooks de UltraMsg para actualizar estados de mensajes y recibir respuestas de pacientes
 
 ---

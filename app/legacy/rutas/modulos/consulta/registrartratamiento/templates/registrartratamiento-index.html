@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Tratamiento Psicológico
@@ -83,13 +83,13 @@ Registrar Tratamiento Psicológico
                     <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-primary">Información Básica del Tratamiento</h6>
+                            <h6 class="mb-0 fw-bold text-primary">Información Básica del Tratamiento</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Diagnóstico a Tratar <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Diagnóstico a Tratar <span class="text-danger">*</span></label>
                                         <select class="form-control" id="id_diagnostico" required>
                                             <option value="">Seleccione un diagnóstico...</option>
                                         </select>
@@ -99,7 +99,7 @@ Registrar Tratamiento Psicológico
                                 
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Tipo de Tratamiento <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Tipo de Tratamiento <span class="text-danger">*</span></label>
                                         <input type="hidden" id="id_tipo_tratamiento">
                                         <div class="input-group">
                                             <input type="text" class="form-control" 
@@ -121,7 +121,7 @@ Registrar Tratamiento Psicológico
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Nombre del Tratamiento <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Nombre del Tratamiento <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="nombre_tratamiento" 
                                                placeholder="Ej: Terapia Cognitiva para Ansiedad, Sesiones de Mindfulness..." 
                                                required>
@@ -134,13 +134,13 @@ Registrar Tratamiento Psicológico
                     <!-- SECCIÓN 2: OBJETIVOS Y DESCRIPCIÓN -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-success">Objetivos y Metodología</h6>
+                            <h6 class="mb-0 fw-bold text-success">Objetivos y Metodología</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Objetivos Terapéuticos <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Objetivos Terapéuticos <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="objetivos_terapeuticos" rows="4" 
                                                   placeholder="Objetivos específicos a alcanzar en el tratamiento..." 
                                                   required></textarea>
@@ -150,7 +150,7 @@ Registrar Tratamiento Psicológico
 
                                 <div class="col-lg-6">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Descripción y Técnicas a Utilizar <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Descripción y Técnicas a Utilizar <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="descripcion_tratamiento" rows="4" 
                                                   placeholder="Descripción detallada del tratamiento y técnicas psicológicas a aplicar..." 
                                                   required></textarea>
@@ -164,13 +164,13 @@ Registrar Tratamiento Psicológico
                     <!-- SECCIÓN 3: PLANIFICACIÓN Y ESTADO -->
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0 font-weight-bold text-info">Planificación y Estado</h6>
+                            <h6 class="mb-0 fw-bold text-info">Planificación y Estado</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-3 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Número de Sesiones</label>
+                                        <label class="fw-semibold">Número de Sesiones</label>
                                         <input type="number" class="form-control" id="numero_sesiones" 
                                                placeholder="Ej: 8, 12, 16..." min="1">
                                         <small class="form-text text-muted">Cantidad total aproximada</small>
@@ -179,7 +179,7 @@ Registrar Tratamiento Psicológico
                                 
                                 <div class="col-lg-3 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Frecuencia</label>
+                                        <label class="fw-semibold">Frecuencia</label>
                                         <select class="form-control" id="frecuencia_sesiones">
                                             <option value="">Seleccione...</option>
                                             <option value="SEMANAL">Semanal</option>
@@ -193,7 +193,7 @@ Registrar Tratamiento Psicológico
                                 
                                 <div class="col-lg-3 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Duración (min)</label>
+                                        <label class="fw-semibold">Duración (min)</label>
                                         <input type="number" class="form-control" id="duracion_sesion" 
                                                placeholder="60" min="15" step="15" value="60">
                                         <small class="form-text text-muted">Tiempo por sesión</small>
@@ -202,7 +202,7 @@ Registrar Tratamiento Psicológico
 
                                 <div class="col-lg-3 col-md-6">
                                     <div class="form-group">
-                                        <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Estado <span class="text-danger">*</span></label>
                                         <select class="form-control" id="estado_tratamiento" required>
                                             <option value="ACTIVO" selected>Activo</option>
                                             <option value="EN_PAUSA">En Pausa</option>
@@ -216,21 +216,21 @@ Registrar Tratamiento Psicológico
                             <div class="row">
                                 <div class="col-lg-4 col-md-6">
                                     <div class="form-group mb-lg-0">
-                                        <label class="font-weight-semibold">Fecha de Inicio <span class="text-danger">*</span></label>
+                                        <label class="fw-semibold">Fecha de Inicio <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control" id="fecha_inicio" required>
                                     </div>
                                 </div>
                                 
                                 <div class="col-lg-4 col-md-6">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Fecha de Fin Estimada</label>
+                                        <label class="fw-semibold">Fecha de Fin Estimada</label>
                                         <input type="date" class="form-control" id="fecha_fin">
                                     </div>
                                 </div>
 
                                 <div class="col-lg-4">
                                     <div class="form-group mb-0">
-                                        <label class="font-weight-semibold">Observaciones</label>
+                                        <label class="fw-semibold">Observaciones</label>
                                         <textarea class="form-control" id="observaciones" rows="1" 
                                                   placeholder="Observaciones adicionales..."></textarea>
                                     </div>
@@ -394,7 +394,7 @@ Registrar Tratamiento Psicológico
     background-image: none;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 </style>
@@ -447,7 +447,7 @@ const initDatatable = () => {
       { 
         data: 'id_consulta',
         render: function(data, type, row) {
-          return `<span class="badge badge-info cursor-pointer" onclick="verDiagnosticos(${data})" style="cursor: pointer;">Ver</span>`;
+          return `<span class="badge bg-info cursor-pointer" onclick="verDiagnosticos(${data})" style="cursor: pointer;">Ver</span>`;
         },
         className: 'text-center'
       },
@@ -455,9 +455,9 @@ const initDatatable = () => {
         data: 'consulta_estado',
         render: function(data) {
           const badges = {
-            'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
-            'EN_ATENCION': '<span class="badge badge-info">En Atención</span>',
-            'FINALIZADA': '<span class="badge badge-success">Finalizada</span>'
+            'PENDIENTE': '<span class="badge bg-warning">Pendiente</span>',
+            'EN_ATENCION': '<span class="badge bg-info">En Atención</span>',
+            'FINALIZADA': '<span class="badge bg-success">Finalizada</span>'
           };
           return badges[data] || data;
         },
@@ -529,8 +529,8 @@ const initTiposTratamientoDatatable = () => {
         data: 'estado',
         render: function(data) {
           return data === 'A' 
-            ? '<span class="badge badge-success">Activo</span>' 
-            : '<span class="badge badge-secondary">Inactivo</span>';
+            ? '<span class="badge bg-success">Activo</span>' 
+            : '<span class="badge bg-secondary">Inactivo</span>';
         },
         className: 'text-center'
       },
@@ -826,7 +826,7 @@ const guardarTratamiento = () => {
     console.log('📤 Enviando tratamiento:', dataTratamiento);
     
     const btn = $(this);
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
     
     fetch('/api/v1/tratamientos', {
       method: 'POST',

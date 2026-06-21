@@ -1,7 +1,7 @@
 """
 DashboardDao.py
 ===============
-DAO para las estadísticas del dashboard del sistema Angasys.
+DAO para las estadísticas del dashboard del sistema Sysclin.
 
 Proporciona métricas reales desde la BD, reemplazando completamente
 los valores simulados (multiplicadores por 150000, capacidades fijas, etc.)

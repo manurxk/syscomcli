@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Timbrado
@@ -32,7 +32,7 @@ Registrar Timbrado
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Empresa <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Empresa <span class="text-danger">*</span></label>
                             <select class="form-control" id="selEmpresa" required>
                                 <option value="">Seleccione una empresa...</option>
                             </select>
@@ -40,7 +40,7 @@ Registrar Timbrado
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Número de Timbrado <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Número de Timbrado <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtNumeroTimbrado" placeholder="12345678" maxlength="8" pattern="[0-9]{8}" required>
                             <small class="form-text text-muted">Número de 8 dígitos otorgado por DNIT</small>
                         </div>
@@ -49,19 +49,19 @@ Registrar Timbrado
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Fecha Inicio <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Fecha Inicio <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="txtFechaInicio" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Fecha Vencimiento <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Fecha Vencimiento <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="txtFechaVencimiento" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Estado</label><br>
+                            <label class="fw-semibold">Estado</label><br>
                             <input type="checkbox" id="chkEstadoActivo" checked> Activo
                         </div>
                     </div>
@@ -80,7 +80,7 @@ Registrar Timbrado
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Tipo de Documento <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Tipo de Documento <span class="text-danger">*</span></label>
                             <select class="form-control" id="selTipoDocumento" required>
                                 <option value="factura">Factura</option>
                                 <option value="nota_credito">Nota de Crédito</option>
@@ -93,7 +93,7 @@ Registrar Timbrado
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Tipo de Generación <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Tipo de Generación <span class="text-danger">*</span></label>
                             <select class="form-control" id="selTipoGeneracion" required>
                                 <option value="electronico">Electrónico</option>
                                 <option value="preimpreso">Preimpreso</option>
@@ -117,7 +117,7 @@ Registrar Timbrado
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Estado del Timbrado</label>
+                            <label class="fw-semibold">Estado del Timbrado</label>
                             <select class="form-control" id="selEstado">
                                 <option value="activo">Activo</option>
                                 <option value="vencido">Vencido</option>
@@ -130,7 +130,7 @@ Registrar Timbrado
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Observaciones</label>
+                            <label class="fw-semibold">Observaciones</label>
                             <textarea class="form-control" id="txtObservaciones" rows="4" placeholder="Observaciones sobre el timbrado..."></textarea>
                         </div>
                     </div>
@@ -142,7 +142,7 @@ Registrar Timbrado
         <div class="card shadow mb-4">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-12 text-right">
+                    <div class="col-md-12 text-end">
                         <a href="{{ url_for('timbrado.timbradoIndex') }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>

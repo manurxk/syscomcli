@@ -1,7 +1,7 @@
 """
 AuditoriaDao.py
 ===============
-DAO para el sistema de auditoría del sistema Angasys.
+DAO para el sistema de auditoría del sistema Sysclin.
 
 Centraliza todas las operaciones de base de datos relacionadas con la tabla
 ``auditoria_sistema``.  Sigue el patrón estándar del proyecto:

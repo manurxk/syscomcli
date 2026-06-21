@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Órdenes de Estudios
@@ -227,9 +227,9 @@ const initDatatable = () => {
                 data: 'orden_tipo',
                 render: function(data) {
                     const tipos = {
-                        'LABORATORIO': '<span class="badge badge-info">Laboratorio</span>',
-                        'IMAGENOLOGIA': '<span class="badge badge-primary">Imagenología</span>',
-                        'OTROS': '<span class="badge badge-secondary">Otros</span>'
+                        'LABORATORIO': '<span class="badge bg-info">Laboratorio</span>',
+                        'IMAGENOLOGIA': '<span class="badge bg-primary">Imagenología</span>',
+                        'OTROS': '<span class="badge bg-secondary">Otros</span>'
                     };
                     return tipos[data] || data;
                 }
@@ -238,9 +238,9 @@ const initDatatable = () => {
                 data: 'orden_estado',
                 render: function(data) {
                     const estados = {
-                        'PENDIENTE': '<span class="badge badge-warning">Pendiente</span>',
-                        'REALIZADO': '<span class="badge badge-success">Realizado</span>',
-                        'CANCELADO': '<span class="badge badge-danger">Cancelado</span>'
+                        'PENDIENTE': '<span class="badge bg-warning">Pendiente</span>',
+                        'REALIZADO': '<span class="badge bg-success">Realizado</span>',
+                        'CANCELADO': '<span class="badge bg-danger">Cancelado</span>'
                     };
                     return estados[data] || data;
                 }
@@ -453,7 +453,7 @@ const verDetalle = () => {
                 Swal.fire({
                     title: `Orden ${orden.orden_numero}`,
                     html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${orden.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${orden.profesional_nombre}</p>
                             <p><strong>Fecha:</strong> ${orden.orden_fecha}</p>

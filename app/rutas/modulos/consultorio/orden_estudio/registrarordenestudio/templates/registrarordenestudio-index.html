@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Órdenes de Estudios
@@ -252,7 +252,7 @@
                         Swal.fire({
                             title: `Orden ${orden.orden_numero}`,
                             html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${orden.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${orden.profesional_nombre}</p>
                             <p><strong>Fecha:</strong> ${orden.orden_fecha}</p>

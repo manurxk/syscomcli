@@ -1,7 +1,7 @@
 # Análisis de Requisitos: Integración de UltraMsg para Notificaciones WhatsApp
 
 **Fecha:** 2026-01-22  
-**Sistema:** Angasys - Sistema de Gestión Médica  
+**Sistema:** Sysclin - Sistema de Gestión Médica  
 **Objetivo:** Integrar UltraMsg para envío de notificaciones y recordatorios de citas por WhatsApp
 
 ---

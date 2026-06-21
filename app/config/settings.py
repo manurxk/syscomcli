@@ -12,7 +12,7 @@ def init_settings(app):
     app.config['ULTRAMSG_API_URL'] = os.getenv('ULTRAMSG_API_URL', 'https://api.ultramsg.com')
 
     # General configuration
-    app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'Angasys')
+    app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'Sysclin')
 
     # Path prefixes
     app.config['MODULO_REFERENCIALES'] = "/referenciales"

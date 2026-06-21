@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Recetas Médicas
@@ -350,7 +350,7 @@ const initDatatable = () => {
             { 
                 data: function(row) {
                     // TODO: Obtener cantidad de medicamentos desde el detalle
-                    return '<span class="badge badge-info">Ver detalle</span>';
+                    return '<span class="badge bg-info">Ver detalle</span>';
                 }
             },
             { 
@@ -581,7 +581,7 @@ const verDetalle = () => {
                 Swal.fire({
                     title: `Receta ${receta.receta_numero}`,
                     html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${receta.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${receta.profesional_nombre}</p>
                             <p><strong>Fecha:</strong> ${receta.receta_fecha}</p>
@@ -876,8 +876,8 @@ const initMedicamentosDatatable = () => {
                 data: 'estado',
                 render: function(data) {
                     return data === 'A' ? 
-                        '<span class="badge badge-success">Activo</span>' : 
-                        '<span class="badge badge-secondary">Inactivo</span>';
+                        '<span class="badge bg-success">Activo</span>' : 
+                        '<span class="badge bg-secondary">Inactivo</span>';
                 }
             },
             {

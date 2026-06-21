@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Recetas Médicas
@@ -464,7 +464,7 @@ Recetas Médicas
                         Swal.fire({
                             title: `Receta ${receta.receta_numero}`,
                             html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${receta.paciente_nombre}</p>
                             <p><strong>Profesional:</strong> ${receta.profesional_nombre}</p>
                             <p><strong>Fecha:</strong> ${receta.receta_fecha}</p>

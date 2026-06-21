@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Nota de Débito
@@ -546,8 +546,8 @@ Registrar Nota de Débito
             <tr>
                 <td>${item.item_descripcion}</td>
                 <td class="text-center">${item.item_cantidad}</td>
-                <td class="text-right">${formatearMoneda(item.item_precio_unitario)}</td>
-                <td class="text-right">${formatearMoneda(item.monto_total)}</td>
+                <td class="text-end">${formatearMoneda(item.item_precio_unitario)}</td>
+                <td class="text-end">${formatearMoneda(item.monto_total)}</td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-warning btn-editar-item" data-index="${index}" title="Editar">
                         <i class="fas fa-edit"></i>
@@ -685,8 +685,8 @@ Registrar Nota de Débito
                     title: 'Estado',
                     render: function (data) {
                         const estados = {
-                            'REGISTRADA': '<span class="badge badge-success">Registrada</span>',
-                            'ANULADA': '<span class="badge badge-danger">Anulada</span>'
+                            'REGISTRADA': '<span class="badge bg-success">Registrada</span>',
+                            'ANULADA': '<span class="badge bg-danger">Anulada</span>'
                         };
                         return estados[data] || data;
                     }

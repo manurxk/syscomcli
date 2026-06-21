@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
     
 {% block titulo %}
 Tipos de Estudios
@@ -90,8 +90,8 @@ Tipos de Estudios
       columns: [
         { data: 'descripcion' },
         { data: 'estado', render: function(val) {
-            return val === 'A' ? '<span class="badge badge-success">Activo</span>'
-                               : '<span class="badge badge-secondary">Inactivo</span>';
+            return val === 'A' ? '<span class="badge bg-success">Activo</span>'
+                               : '<span class="badge bg-secondary">Inactivo</span>';
           }
         },
         { data: function(row) {

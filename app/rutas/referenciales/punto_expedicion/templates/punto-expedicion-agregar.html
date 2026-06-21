@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Punto de Expedición
@@ -32,7 +32,7 @@ Registrar Punto de Expedición
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Establecimiento <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Establecimiento <span class="text-danger">*</span></label>
                             <select class="form-control" id="selEstablecimiento" required>
                                 <option value="">Seleccione un establecimiento...</option>
                             </select>
@@ -40,14 +40,14 @@ Registrar Punto de Expedición
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Código <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Código <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtCodigoPuntoExpedicion" placeholder="001" maxlength="3" pattern="[0-9]{3}" required>
                             <small class="form-text text-muted">Código de 3 dígitos (001, 002, etc.)</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Tipo de Punto</label>
+                            <label class="fw-semibold">Tipo de Punto</label>
                             <select class="form-control" id="selTipoPunto">
                                 <option value="caja">Caja</option>
                                 <option value="consultorio">Consultorio</option>
@@ -63,7 +63,7 @@ Registrar Punto de Expedición
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Nombre <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtNombrePuntoExpedicion" placeholder="Ej: Caja 1, Consultorios, Farmacia" required>
                         </div>
                     </div>
@@ -71,7 +71,7 @@ Registrar Punto de Expedición
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Descripción</label>
+                            <label class="fw-semibold">Descripción</label>
                             <textarea class="form-control" id="txtDescripcion" rows="3" placeholder="Descripción del punto de expedición..."></textarea>
                         </div>
                     </div>
@@ -79,13 +79,13 @@ Registrar Punto de Expedición
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Permite Facturación</label><br>
+                            <label class="fw-semibold">Permite Facturación</label><br>
                             <input type="checkbox" id="chkPermiteFacturacion" checked> Sí
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="font-weight-semibold">Estado</label><br>
+                            <label class="fw-semibold">Estado</label><br>
                             <input type="checkbox" id="chkEstado" checked> Activo
                         </div>
                     </div>
@@ -97,7 +97,7 @@ Registrar Punto de Expedición
         <div class="card shadow mb-4">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-12 text-right">
+                    <div class="col-md-12 text-end">
                         <a href="{{ url_for('puntoexpedicion.puntoExpedicionIndex') }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>

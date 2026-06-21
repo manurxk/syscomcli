@@ -504,5 +504,5 @@ WHATSAPP_BUSINESS_ACCOUNT_ID=xxxxx
 
 **Documento creado:** 2025-01-XX
 **Última actualización:** 2025-01-XX
-**Autor:** Análisis Técnico - Sistema Angasys
+**Autor:** Análisis Técnico - Sistema Sysclin
 

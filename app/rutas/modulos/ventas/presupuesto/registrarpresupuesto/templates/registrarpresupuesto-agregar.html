@@ -1,4 +1,4 @@
-{% if embedded %}
+﻿{% if embedded %}
 {% extends 'base_embedded.html' %}
 {% else %}
 {% extends 'base.html' %}
@@ -205,8 +205,8 @@ Presupuestos
                                         <tr>
                                             <th>Descripción</th>
                                             <th class="text-center" width="10%">Cantidad</th>
-                                            <th class="text-right" width="15%">Precio Unit.</th>
-                                            <th class="text-right" width="15%">Subtotal</th>
+                                            <th class="text-end" width="15%">Precio Unit.</th>
+                                            <th class="text-end" width="15%">Subtotal</th>
                                             <th class="text-center" width="15%">Acciones</th>
                                         </tr>
                                     </thead>
@@ -215,24 +215,24 @@ Presupuestos
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="3" class="text-right fw-bold">Subtotal Presupuesto:
+                                            <td colspan="3" class="text-end fw-bold">Subtotal Presupuesto:
                                             </td>
-                                            <td class="text-right fw-bold" id="lblSubtotal">0 Gs.</td>
+                                            <td class="text-end fw-bold" id="lblSubtotal">0 Gs.</td>
                                             <td></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3" class="text-right fw-bold">Descuento Global (Gs.):
+                                            <td colspan="3" class="text-end fw-bold">Descuento Global (Gs.):
                                             </td>
-                                            <td class="text-right">
-                                                <input type="number" class="form-control form-control-sm text-right"
+                                            <td class="text-end">
+                                                <input type="number" class="form-control form-control-sm text-end"
                                                     id="txtDescuento" value="0" min="0">
                                             </td>
                                             <td></td>
                                         </tr>
                                         <tr class="table-active text-primary">
-                                            <td colspan="3" class="text-right fw-bold h5 mb-0">TOTAL A PAGAR:
+                                            <td colspan="3" class="text-end fw-bold h5 mb-0">TOTAL A PAGAR:
                                             </td>
-                                            <td class="text-right fw-bold h5 mb-0" id="lblTotal">0 Gs.</td>
+                                            <td class="text-end fw-bold h5 mb-0" id="lblTotal">0 Gs.</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -653,8 +653,8 @@ Presupuestos
                  <tr class="table-warning">
                      <td>${item.des_item || ''} <span class="badge bg-warning text-dark ms-1">Pendiente de guardar</span></td>
                      <td class="text-center">${item.cantidad || 1}</td>
-                     <td class="text-right">${formatearMoneda(item.precio_unitario || 0)}</td>
-                     <td class="text-right"><strong>${formatearMoneda(subtotal)}</strong></td>
+                     <td class="text-end">${formatearMoneda(item.precio_unitario || 0)}</td>
+                     <td class="text-end"><strong>${formatearMoneda(subtotal)}</strong></td>
                      <td class="text-center text-muted small">
                         Requiere guardar cabecera
                      </td>
@@ -926,8 +926,8 @@ Presupuestos
 <tr>
     <td>${item.des_item || ''}</td>
     <td class="text-center">${item.cantidad || 1}</td>
-    <td class="text-right">${formatearMoneda(item.precio_unitario || 0)}</td>
-    <td class="text-right"><strong>${formatearMoneda(subtotal)}</strong></td>
+    <td class="text-end">${formatearMoneda(item.precio_unitario || 0)}</td>
+    <td class="text-end"><strong>${formatearMoneda(subtotal)}</strong></td>
     <td class="text-center">
         <button type="button" class="btn btn-sm btn-warning btn-editar-item" data-index="${index}" title="Editar">
             <i class="fas fa-edit"></i>
@@ -1149,7 +1149,7 @@ Presupuestos
                             Swal.fire({
                                 title: `Presupuesto ${presupuesto.presupuesto_numero}`,
                                 html: `
-    <div class="text-left">
+    <div class="text-start">
         <p><strong>Paciente:</strong> ${presupuesto.paciente_nombre}</p>
         <p><strong>Profesional:</strong> ${presupuesto.profesional_nombre}</p>
         <p><strong>Fecha:</strong> ${presupuesto.presupuesto_fecha}</p>

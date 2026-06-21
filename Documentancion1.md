@@ -1,14 +1,14 @@
-# Documentación Exhaustiva de Negocio y Operativa - Sistema Angasys
+# Documentación Exhaustiva de Negocio y Operativa - Sistema Sysclin
 
-El siguiente documento provee el marco analítico y normativo formal de la capa de negocio del ERP Clínico Angasys. Ha sido elaborado para cubrir con exhaustividad los procesos de Agendamiento, Consultorio, Facturación Electrónica SIFEN, Cobranzas y Notificaciones, bajo los perfiles de acceso de la clínica.
+El siguiente documento provee el marco analítico y normativo formal de la capa de negocio del ERP Clínico Sysclin. Ha sido elaborado para cubrir con exhaustividad los procesos de Agendamiento, Consultorio, Facturación Electrónica SIFEN, Cobranzas y Notificaciones, bajo los perfiles de acceso de la clínica.
 
 ---
 
 ## 1. Glosario de Dominio
 
-A continuación, se define la terminología clave del sistema, diferenciando el uso coloquial del rigor técnico aplicado en la arquitectura de Angasys:
+A continuación, se define la terminología clave del sistema, diferenciando el uso coloquial del rigor técnico aplicado en la arquitectura de Sysclin:
 
-| Término | Definición Técnica en Angasys |
+| Término | Definición Técnica en Sysclin |
 | :--- | :--- |
 | **Agenda Médica** | Módulo planificador compuesto por `agenda_horarios`. No es un simple calendario, sino una matriz de Días de la Semana (DOW) y Franjas Horarias que dictamina la capacidad máxima de un especialista. |
 | **Cita Médica** | Transacción central que reserva un bloque indivisible de tiempo entre un paciente y un especialista. Posee ciclo de vida estricto (Agendada -> Confirmada -> Atendida / Cancelada). |
@@ -26,7 +26,7 @@ A continuación, se define la terminología clave del sistema, diferenciando el 
 | **Punto de Expedición** | Terminal de emisión o sub-sucursal lógica específica desde la que una caja genera comprobantes de venta de forma independiente. |
 | **Cuenta a Cobrar** | Obligación financiera autogenerada cuando una factura se emite a Crédito, o cuando surge un copago pendiente. Balance dinámico mediante monto pendiente. |
 | **Cobranza** | Asiento de flujo de caja que reduce parcial o totalmente el monto pendiente de una cuenta. Obliga a cruzar con una forma de cobro. |
-| **UltraMsg** | Pasarela RESTful de terceros (API) consumida por Angasys para enrutar mensajes de texto automatizados vía WhatsApp sin intervención manual. |
+| **UltraMsg** | Pasarela RESTful de terceros (API) consumida por Sysclin para enrutar mensajes de texto automatizados vía WhatsApp sin intervención manual. |
 | **Roles de Seguridad** | Decorador `@role_required` de Python en la capa de Rutas que intercepta la sesión HTTP y compara el grupo del usuario contra una matriz de permisos. |
 | **Anulación Lógica** | Concepto donde los registros jamás se borran (DELETE). Simplemente mutan su campo de estado para dejar rastro histórico auditable. |
 | **Presupuesto** | Módulo de cotización de planes de tratamiento que no tiene impacto fiscal automático ante la SET hasta su explícita aprobación por el paciente. |
@@ -70,7 +70,7 @@ La comunicación a terceros está programada para dispararse en segundo plano ju
 
 ## 3. Manual de Usuario (Guías Operativas)
 
-Por diseño de seguridad, este sistema Angasys controla los perfiles o accesos operacionales mediante filtros basados en decoradores (`@role_required`).
+Por diseño de seguridad, este sistema Sysclin controla los perfiles o accesos operacionales mediante filtros basados en decoradores (`@role_required`).
 
 ### Rol Operativo: **RECEPCIONISTA**
 
@@ -116,4 +116,4 @@ El máximo eslabón directivo dentro del organigrama sistémico. Transita el ERP
 * Fallos sobrevenidos en base de datos si la asignación no cumple un marco de fechas válidas para la red paraguaya, o advertencias locales dictaminadas si intentó borrar de raíz un usuario activo del sanatorio (el cual sólo debe inactivarse).
 
 ---
-*Fin Documentación Operativa y del Negocio - Revisión Angasys Marzo 2026*
+*Fin Documentación Operativa y del Negocio - Revisión Sysclin Marzo 2026*

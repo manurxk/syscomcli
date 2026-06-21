@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Facturas
@@ -185,7 +185,7 @@ Facturas
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3" class="text-right">
+                                    <td colspan="3" class="text-end">
                                         <button type="button" class="btn btn-success btn-sm" id="btnAgregarItemInline"
                                             style="display: none;">
                                             <i class="fas fa-plus"></i> Agregar Item
@@ -194,17 +194,17 @@ Facturas
                                     <td colspan="2"></td>
                                 </tr>
                                 <tr>
-                                    <th colspan="3" class="text-right">Subtotal:</th>
+                                    <th colspan="3" class="text-end">Subtotal:</th>
                                     <th id="totalSubtotal">0 Gs.</th>
                                     <th></th>
                                 </tr>
                                 <tr>
-                                    <th colspan="3" class="text-right">Descuento:</th>
+                                    <th colspan="3" class="text-end">Descuento:</th>
                                     <th id="totalDescuento">0 Gs.</th>
                                     <th></th>
                                 </tr>
                                 <tr class="table-primary">
-                                    <th colspan="3" class="text-right">Total:</th>
+                                    <th colspan="3" class="text-end">Total:</th>
                                     <th id="totalTotal">0 Gs.</th>
                                     <th></th>
                                 </tr>
@@ -597,8 +597,8 @@ Facturas
             <tr>
                 <td>${item.item_descripcion || ''}</td>
                 <td class="text-center">${item.item_cantidad || 1}</td>
-                <td class="text-right">${formatearMoneda(item.item_precio_unitario || 0)}</td>
-                <td class="text-right"><strong>${formatearMoneda(subtotal)}</strong></td>
+                <td class="text-end">${formatearMoneda(item.item_precio_unitario || 0)}</td>
+                <td class="text-end"><strong>${formatearMoneda(subtotal)}</strong></td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-warning btn-editar-item" 
                             data-index="${index}" title="Editar">
@@ -922,7 +922,7 @@ Facturas
                         Swal.fire({
                             title: `Factura ${Factura.factura_numero}`,
                             html: `
-                        <div class="text-left">
+                        <div class="text-start">
                             <p><strong>Paciente:</strong> ${Factura.paciente_nombre}</p>
                             <p><strong>Tipo Comprobante:</strong> ${Factura.tipo_comprobante || 'N/A'}</p>
                             <p><strong>Fecha:</strong> ${Factura.fecha_factura}</p>

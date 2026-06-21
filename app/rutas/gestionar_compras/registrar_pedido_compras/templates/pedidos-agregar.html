@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Formulario Pedido de Compras
@@ -18,7 +18,7 @@ Formulario Pedido de Compras
                   <!-- Combo empleados -->
                   <div class="form-group">
                     <label for="cbo_empleado">Empleados:</label>
-                    <select id="cbo_empleado" class="custom-select">
+                    <select id="cbo_empleado" class="form-select">
                       <option selected>Empleados</option>
                       {% for item in empleados %}
                         <option value="{{ item['id_empleado'] }}">
@@ -32,7 +32,7 @@ Formulario Pedido de Compras
                   <!-- Combo sucursales -->
                   <div class="form-group">
                     <label for="cbo_sucursal">Sucursales:</label>
-                    <select id="cbo_sucursal" class="custom-select">
+                    <select id="cbo_sucursal" class="form-select">
                       <option value="">Sucursales</option>
                       {% for item in sucursales %}
                         <option value="{{ item['id'] }}">
@@ -53,7 +53,7 @@ Formulario Pedido de Compras
                 <div class="col col-md-6">
                     <div class="form-group">
                       <label for="cbo_deposito">Depósitos:</label>
-                      <select id="cbo_deposito" class="custom-select">
+                      <select id="cbo_deposito" class="form-select">
                         <option value="">Depósitos</option>
                       </select>
                     </div>
@@ -65,7 +65,7 @@ Formulario Pedido de Compras
             <div class="form-group row mt-3">
               <label for="cbo_producto" class="col-md-2 col-form-label">Producto:</label>
               <div class="col-md-6">
-                  <select id="cbo_producto" class="custom-select">
+                  <select id="cbo_producto" class="form-select">
                     <option value="">Productos</option>
                       {% for item in productos %}
                         <option value="{{ item['id_producto'] }}">

@@ -176,8 +176,8 @@ def addCita():
                         if paciente and paciente.get('telefono'):
                             ultramsg_service = UltraMsgService()
                             
-                            # Obtener nombre de clínica (configurable, default: "Angasys")
-                            nombre_clinica = app.config.get('NOMBRE_CLINICA', 'Angasys')
+                            # Obtener nombre de clínica (configurable, default: "Sysclin")
+                            nombre_clinica = app.config.get('NOMBRE_CLINICA', 'Sysclin')
                             
                             # Enviar notificación
                             resultado = ultramsg_service.enviar_notificacion_cita_creada_editada(
@@ -358,8 +358,8 @@ def updateCita(id_cita):
                         if paciente and paciente.get('telefono'):
                             ultramsg_service = UltraMsgService()
                             
-                            # Obtener nombre de clínica (configurable, default: "Angasys")
-                            nombre_clinica = app.config.get('NOMBRE_CLINICA', 'Angasys')
+                            # Obtener nombre de clínica (configurable, default: "Sysclin")
+                            nombre_clinica = app.config.get('NOMBRE_CLINICA', 'Sysclin')
                             
                             # Enviar notificación
                             resultado_notif = ultramsg_service.enviar_notificacion_cita_creada_editada(

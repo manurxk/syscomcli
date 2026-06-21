@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Registrar Nueva Cita
@@ -26,13 +26,13 @@ Registrar Nueva Cita
                 <!-- SECCIÓN 1: INFORMACIÓN DEL PACIENTE -->
                 <div class="card mb-3 border-0 shadow-sm">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0 font-weight-bold text-primary">Información del Paciente</h6>
+                        <h6 class="mb-0 fw-bold text-primary">Información del Paciente</h6>
                     </div>
                     <div class="card-body">
                         <input type="hidden" id="id_paciente">
                         
                         <div class="form-group">
-                            <label class="font-weight-semibold">Paciente <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="text" class="form-control" 
                                        placeholder="Haga clic para buscar paciente" 
@@ -93,14 +93,14 @@ Registrar Nueva Cita
                 <!-- SECCIÓN 2: ESPECIALIDAD Y ESPECIALISTA -->
                 <div class="card mb-3 border-0 shadow-sm">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0 font-weight-bold text-success">Especialidad y Especialista</h6>
+                        <h6 class="mb-0 fw-bold text-success">Especialidad y Especialista</h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <!-- Primero ESPECIALISTA -->
                             <div class="col-lg-6 col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Especialista <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Especialista <span class="text-danger">*</span></label>
                                     <input type="hidden" id="id_especialista">
                                     <div class="input-group">
                                         <select class="form-control" id="selectEspecialista" required>
@@ -120,7 +120,7 @@ Registrar Nueva Cita
                             <!-- Luego ESPECIALIDAD (dependiente del especialista) -->
                             <div class="col-lg-6 col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Especialidad <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Especialidad <span class="text-danger">*</span></label>
                                     <input type="hidden" id="id_especialidad">
                                     <select class="form-control" id="selectEspecialidad" required disabled>
                                         <option value="">-- Primero seleccione un especialista --</option>
@@ -135,7 +135,7 @@ Registrar Nueva Cita
                 <!-- SECCIÓN 3: FECHA Y HORARIO -->
                 <div class="card mb-3 border-0 shadow-sm">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0 font-weight-bold text-info">Fecha y Horario</h6>
+                        <h6 class="mb-0 fw-bold text-info">Fecha y Horario</h6>
                     </div>
                     <div class="card-body">
                         <input type="hidden" id="id_agenda_horario">
@@ -143,7 +143,7 @@ Registrar Nueva Cita
                         <input type="hidden" id="txtHoraFin">
                         
                         <div class="form-group">
-                            <label class="font-weight-semibold">Fecha de la Cita <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Fecha de la Cita <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="txtFechaCita" required>
                             <small class="form-text text-muted">Seleccione la fecha para ver horarios disponibles</small>
                             
@@ -174,12 +174,12 @@ Registrar Nueva Cita
                 <!-- SECCIÓN 4: TIPO DE CITA Y DETALLES -->
                 <div class="card mb-3 border-0 shadow-sm">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0 font-weight-bold text-warning">Tipo de Cita y Detalles</h6>
+                        <h6 class="mb-0 fw-bold text-warning">Tipo de Cita y Detalles</h6>
                     </div>
                     <div class="card-body">
                         <!-- Tipo de Cita -->
                         <div class="form-group">
-                            <label class="d-block mb-3 font-weight-semibold">
+                            <label class="d-block mb-3 fw-semibold">
                                 Tipo de Cita <span class="text-danger">*</span>
                             </label>
                             
@@ -193,7 +193,7 @@ Registrar Nueva Cita
                                             </div>
                                             <h6 class="card-title mb-2">Primera Vez</h6>
                                             <p class="card-text text-muted small mb-0">Alta del paciente</p>
-                                            <span class="badge badge-pill badge-primary tipo-badge" style="display: none;">Seleccionado</span>
+                                            <span class="badge rounded-pill bg-primary tipo-badge" style="display: none;">Seleccionado</span>
                                         </div>
                                     </div>
                                 </div>
@@ -207,7 +207,7 @@ Registrar Nueva Cita
                                             </div>
                                             <h6 class="card-title mb-2">Evaluación</h6>
                                             <p class="card-text text-muted small mb-0">Consulta diagnóstica</p>
-                                            <span class="badge badge-pill badge-info tipo-badge" style="display: none;">Seleccionado</span>
+                                            <span class="badge rounded-pill bg-info tipo-badge" style="display: none;">Seleccionado</span>
                                         </div>
                                     </div>
                                 </div>
@@ -221,7 +221,7 @@ Registrar Nueva Cita
                                             </div>
                                             <h6 class="card-title mb-2">Tratamiento</h6>
                                             <p class="card-text text-muted small mb-0">Sesión terapéutica</p>
-                                            <span class="badge badge-pill badge-success tipo-badge" style="display: none;">Seleccionado</span>
+                                            <span class="badge rounded-pill bg-success tipo-badge" style="display: none;">Seleccionado</span>
                                         </div>
                                     </div>
                                 </div>
@@ -235,7 +235,7 @@ Registrar Nueva Cita
                                             </div>
                                             <h6 class="card-title mb-2">Seguimiento</h6>
                                             <p class="card-text text-muted small mb-0">Control post-tratamiento</p>
-                                            <span class="badge badge-pill badge-warning tipo-badge" style="display: none;">Seleccionado</span>
+                                            <span class="badge rounded-pill bg-warning tipo-badge" style="display: none;">Seleccionado</span>
                                         </div>
                                     </div>
                                 </div>
@@ -251,7 +251,7 @@ Registrar Nueva Cita
                         <div class="row">
                             <div class="col-lg-6 col-md-12">
                                 <div class="form-group" id="grupoNumeroSesion" style="display: none;">
-                                    <label class="font-weight-semibold">Número de Sesión <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Número de Sesión <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" 
                                            id="txtNumeroSesion" 
                                            min="1" 
@@ -262,7 +262,7 @@ Registrar Nueva Cita
 
                             <div class="col-lg-6 col-md-12">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Estado <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Estado <span class="text-danger">*</span></label>
                                     <input type="hidden" id="id_estado_cita" value="1">
                                     <select class="form-control" id="txtEstadoCita" required></select>
                                     <small class="form-text text-muted">Estado de la cita</small>
@@ -274,7 +274,7 @@ Registrar Nueva Cita
                         <div class="row">
                             <div class="col-lg-6 col-md-12">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
+                                    <label class="fw-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
                                     <textarea class="form-control" 
                                               id="txtMotivo" 
                                               rows="4" 
@@ -286,7 +286,7 @@ Registrar Nueva Cita
 
                             <div class="col-lg-6 col-md-12">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Observaciones</label>
+                                    <label class="fw-semibold">Observaciones</label>
                                     <textarea class="form-control" 
                                               id="txtObservaciones" 
                                               rows="4" 
@@ -301,7 +301,7 @@ Registrar Nueva Cita
                 <!-- SECCIÓN: NOTIFICACIONES -->
                 <div class="card mb-3 border-0 shadow-sm">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0 font-weight-bold text-info">
+                        <h6 class="mb-0 fw-bold text-info">
                             <i class="fas fa-bell"></i> Notificaciones WhatsApp
                         </h6>
                     </div>
@@ -328,7 +328,7 @@ Registrar Nueva Cita
 
                 <!-- Botones de acción -->
                 <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ url_for('cita.citaIndex') }}" class="btn btn-secondary mr-2">
+                    <a href="{{ url_for('cita.citaIndex') }}" class="btn btn-secondary me-2">
                         Cancelar
                     </a>
                     <button type="button" class="btn btn-success" id="btnGuardarCita">
@@ -398,13 +398,13 @@ Registrar Nueva Cita
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Nombre <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Nombre <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtNombreRapido" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Apellido <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Apellido <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtApellidoRapido" required>
                             </div>
                         </div>
@@ -413,13 +413,13 @@ Registrar Nueva Cita
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Cédula <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Cédula <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="txtCedulaRapido" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-semibold">Teléfono <span class="text-danger">*</span></label>
+                                <label class="fw-semibold">Teléfono <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control" id="txtTelefonoRapido" 
                                        placeholder="Ej: 0981123456" required>
                             </div>
@@ -427,7 +427,7 @@ Registrar Nueva Cita
                     </div>
 
                     <div class="form-group">
-                        <label class="font-weight-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                        <label class="fw-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="txtFechaNacimientoRapido" required>
                         <small class="form-text text-muted">Se detectará automáticamente si es menor de edad</small>
                     </div>
@@ -439,18 +439,18 @@ Registrar Nueva Cita
 
                     <div id="camposTutorRapido" style="display:none;">
                         <hr>
-                        <h6 class="text-warning font-weight-bold">Datos del Tutor</h6>
+                        <h6 class="text-warning fw-bold">Datos del Tutor</h6>
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Nombre de la Madre</label>
+                                    <label class="fw-semibold">Nombre de la Madre</label>
                                     <input type="text" class="form-control" id="txtNombreMadreRapido">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Apellido de la Madre</label>
+                                    <label class="fw-semibold">Apellido de la Madre</label>
                                     <input type="text" class="form-control" id="txtApellidoMadreRapido">
                                 </div>
                             </div>
@@ -459,7 +459,7 @@ Registrar Nueva Cita
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Teléfono de la Madre</label>
+                                    <label class="fw-semibold">Teléfono de la Madre</label>
                                     <input type="tel" class="form-control" id="txtTelefonoMadreRapido" placeholder="Ej: 0981...">
                                 </div>
                             </div>
@@ -470,13 +470,13 @@ Registrar Nueva Cita
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Nombre del Padre</label>
+                                    <label class="fw-semibold">Nombre del Padre</label>
                                     <input type="text" class="form-control" id="txtNombrePadreRapido">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Apellido del Padre</label>
+                                    <label class="fw-semibold">Apellido del Padre</label>
                                     <input type="text" class="form-control" id="txtApellidoPadreRapido">
                                 </div>
                             </div>
@@ -485,7 +485,7 @@ Registrar Nueva Cita
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-semibold">Teléfono del Padre</label>
+                                    <label class="fw-semibold">Teléfono del Padre</label>
                                     <input type="tel" class="form-control" id="txtTelefonoPadreRapido" placeholder="Ej: 0981...">
                                 </div>
                             </div>
@@ -532,7 +532,7 @@ Registrar Nueva Cita
     box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
 }
 
-.font-weight-semibold {
+.fw-semibold {
     font-weight: 600;
 }
 
@@ -639,7 +639,7 @@ Registrar Nueva Cita
     font-weight: bold;
 }
 
-.cupo-card.sin-cupos .badge-danger {
+.cupo-card.sin-cupos .bg-danger {
     background-color: #dc3545 !important;
     font-size: 0.85em;
     padding: 0.5em 0.8em;
@@ -1187,7 +1187,7 @@ const cargarCuposDisponibles = (fechaParam = null, idEspecialistaParam = null) =
           if (cardActual.length > 0) {
             cardActual.addClass('selected');
             cardActual.find('.btn-seleccionar-cupo')
-                     .html('<i class="fas fa-check mr-1"></i>Seleccionado')
+                     .html('<i class="fas fa-check me-1"></i>Seleccionado')
                      .removeClass('btn-primary')
                      .addClass('btn-success');
             console.log('Cupo actual resaltado:', idAgendaActual);
@@ -1380,7 +1380,7 @@ const renderCupoCard = (cupo) => {
   const estaOcupado = disponibles <= 0 || ocupados >= totales;
   
   let claseCard = 'cupo-card';
-  let claseBadge = 'badge-success';
+  let claseBadge = 'bg-success';
   let textoEstado = 'Disponible';
   let iconoEstado = '✅';
   let disabled = '';
@@ -1391,7 +1391,7 @@ const renderCupoCard = (cupo) => {
   
   if (estaOcupado) {
     claseCard += ' sin-cupos';
-    claseBadge = 'badge-danger';
+    claseBadge = 'bg-danger';
     textoEstado = 'OCUPADO';
     iconoEstado = '🚫';
     disabled = 'disabled';
@@ -1430,7 +1430,7 @@ const renderCupoCard = (cupo) => {
                   class="btn btn-sm ${estaOcupado ? 'btn-danger' : 'btn-primary'} mt-2 btn-seleccionar-cupo" 
                   ${disabled}
                   style="${estaOcupado ? 'cursor: not-allowed; opacity: 0.6;' : ''}">
-            ${estaOcupado ? '<i class="fas fa-ban mr-1"></i> No disponible' : '<i class="fas fa-check mr-1"></i> Seleccionar'}
+            ${estaOcupado ? '<i class="fas fa-ban me-1"></i> No disponible' : '<i class="fas fa-check me-1"></i> Seleccionar'}
           </button>
         </div>
       </div>
@@ -1478,7 +1478,7 @@ const seleccionarCupo = () => {
     
     // Marcar como seleccionado
     card.addClass('selected');
-    $(this).html('<i class="fas fa-check mr-1"></i>Seleccionado')
+    $(this).html('<i class="fas fa-check me-1"></i>Seleccionado')
            .removeClass('btn-primary')
            .addClass('btn-success');
 
@@ -1753,7 +1753,7 @@ const guardarCita = () => {
         icon: 'error',
         title: 'Campos incompletos',
         html: `<p>Complete los siguientes campos obligatorios:</p>
-               <ul class="text-left">
+               <ul class="text-start">
                  ${camposFaltantes.map(c => `<li>${c}</li>`).join('')}
                </ul>`,
         confirmButtonColor: '#3085d6'
@@ -1797,7 +1797,7 @@ const guardarCita = () => {
     const btn = $(this);
     const btnTextOriginal = btn.html();
     btn.prop('disabled', true)
-       .html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+       .html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
     fetch(url, {
       method: method,
@@ -2092,7 +2092,7 @@ const guardarPacienteRapido = () => {
 
     const btn = $(this);
     const btnTextOriginal = btn.html();
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Guardando...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
     fetch('/api/v1/pacientes', {
       method: 'POST',

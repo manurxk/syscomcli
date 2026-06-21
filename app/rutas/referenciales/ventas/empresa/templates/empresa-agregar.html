@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block titulo %}
 Configuración de Empresa
@@ -68,10 +68,10 @@ Configuración de Empresa
         border-radius: 50px;
         margin-bottom: 12px;
     }
-    .badge-info { background: #e0f2fe; color: #0369a1; }
-    .badge-success { background: #dcfce7; color: #166534; }
-    .badge-warning { background: #fef9c3; color: #854d0e; }
-    .badge-secondary { background: #f1f5f9; color: #475569; }
+    .bg-info { background: #e0f2fe; color: #0369a1; }
+    .bg-success { background: #dcfce7; color: #166534; }
+    .bg-warning { background: #fef9c3; color: #854d0e; }
+    .bg-secondary { background: #f1f5f9; color: #475569; }
 
     /* === PRINCIPAL MARKER === */
     .principal-toggle {
@@ -132,7 +132,7 @@ Configuración de Empresa
                 <!-- CARD: Identidad Corporativa -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-info"><i class="fas fa-building fa-xs"></i> Identidad Corporativa</span>
+                        <span class="section-badge bg-info"><i class="fas fa-building fa-xs"></i> Identidad Corporativa</span>
                         <div class="row gx-3 mb-3">
                             <div class="col-md-5">
                                 <label class="fw-semibold small mb-1" for="txtRucNit">RUC / NIT <span class="text-danger">*</span></label>
@@ -154,7 +154,7 @@ Configuración de Empresa
                         <div class="row gx-3 mb-3">
                             <div class="col-md-7">
                                 <label class="fw-semibold small mb-1" for="txtRazonSocial">Razón Social <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="txtRazonSocial" placeholder="Ej: CLÍNICA ANGASYS S.A." required>
+                                <input type="text" class="form-control" id="txtRazonSocial" placeholder="Ej: CLÍNICA SYSCLIN S.A." required>
                             </div>
                             <div class="col-md-5">
                                 <label class="fw-semibold small mb-1" for="txtNombreComercial">Nombre Comercial</label>
@@ -185,7 +185,7 @@ Configuración de Empresa
                 <!-- CARD: Domicilio Fiscal -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-success"><i class="fas fa-map-marker-alt fa-xs"></i> Domicilio Fiscal</span>
+                        <span class="section-badge bg-success"><i class="fas fa-map-marker-alt fa-xs"></i> Domicilio Fiscal</span>
                         <div class="row gx-3 mb-3">
                             <div class="col-md-4">
                                 <label class="fw-semibold small mb-1" for="txtDepartamento">Departamento <span class="text-danger">*</span></label>
@@ -220,7 +220,7 @@ Configuración de Empresa
                 <!-- CARD: SIFEN -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-warning"><i class="fas fa-file-invoice fa-xs"></i> Configuración SIFEN</span>
+                        <span class="section-badge bg-warning"><i class="fas fa-file-invoice fa-xs"></i> Configuración SIFEN</span>
                         <div class="alert alert-info py-2 mb-3" style="font-size:0.8rem;">
                             <i class="fas fa-info-circle me-1"></i> Datos requeridos para facturación electrónica (Paraguay – DNIT).
                         </div>
@@ -259,7 +259,7 @@ Configuración de Empresa
                 <!-- CARD: Representante Legal -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-secondary"><i class="fas fa-user-tie fa-xs"></i> Representante Legal</span>
+                        <span class="section-badge bg-secondary"><i class="fas fa-user-tie fa-xs"></i> Representante Legal</span>
                         <div class="row gx-3 mb-3">
                             <div class="col-md-6">
                                 <label class="fw-semibold small mb-1" for="txtRepLegalNombre">Nombre</label>
@@ -291,7 +291,7 @@ Configuración de Empresa
                 <!-- CARD: Logo Corporativo -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-info"><i class="fas fa-image fa-xs"></i> Logo Corporativo</span>
+                        <span class="section-badge bg-info"><i class="fas fa-image fa-xs"></i> Logo Corporativo</span>
 
                         <div class="logo-upload-zone" id="logoDropZone" title="Haz clic o arrastra tu logo aquí">
                             <div id="logoPlaceholder">
@@ -343,7 +343,7 @@ Configuración de Empresa
                 <!-- CARD: Empresa Principal -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-warning"><i class="fas fa-star fa-xs"></i> Estado</span>
+                        <span class="section-badge bg-warning"><i class="fas fa-star fa-xs"></i> Estado</span>
                         <label class="principal-toggle w-100" for="chkEsPrincipal">
                             <input class="form-check-input lg-check" type="checkbox" id="chkEsPrincipal">
                             <div>
@@ -357,7 +357,7 @@ Configuración de Empresa
                 <!-- CARD: Contacto -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
-                        <span class="section-badge badge-info"><i class="fas fa-phone fa-xs"></i> Información de Contacto</span>
+                        <span class="section-badge bg-info"><i class="fas fa-phone fa-xs"></i> Información de Contacto</span>
                         <div class="mb-3">
                             <label class="fw-semibold small mb-1" for="txtTelefono">Teléfono <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="txtTelefono" placeholder="+595 21 123456" required>
