@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(DB_NAME_NUEVA=sysclin_bd DB_NAME=sysclin_bd DB_HOST=127.0.0.1 DB_PORT=5434 DB_USER=postgres DB_PASSWORD=postgres python -c ' *)",
+      "Bash(python -c \"from werkzeug.security import generate_password_hash; print\\(generate_password_hash\\('TestA2_2026!', method='pbkdf2:sha256'\\)\\)\")",
+      "Bash(python -c \"from datetime import datetime; print\\('host now:', datetime.now\\(\\)\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('run.py', encoding='utf-8'\\).read\\(\\)\\)\")",
+      "Bash(python -c \"from werkzeug.security import generate_password_hash; print\\(generate_password_hash\\('Manu2026!', method='pbkdf2:sha256'\\)\\)\")",
+      "Bash(powershell -Command \"\\(Get-Item .env\\).LastWriteTime\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/auth/tasks/auth_tasks.py', encoding='utf-8'\\).read\\(\\)\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5005/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/login)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/dao/mantenimiento/personas/funcionario/FuncionarioDao.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/dao/mantenimiento/personas/paciente/PacienteDao.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/rutas/mantenimiento/personas/funcionario/funcionario_api.py', encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('app/rutas/mantenimiento/personas/funcionario/funcionario_routes.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK sintaxis'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\n\" \"http://localhost:5005/mantenimiento/funcionario/funcionario-index\")",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\n\" \"http://localhost:5005/api/v1/funcionarios\")",
+      "Bash(rm -f cookies.txt)",
+      "Bash(curl -s -c cookies.txt \"http://localhost:5005/login\" -o login_page.html)",
+      "Bash(curl -s -b cookies.txt -o /dev/null -w \"Funcionario index status: %{http_code}\\\\n\" \"http://localhost:5005/mantenimiento/funcionario/funcionario-index\")",
+      "Bash(curl -s -b cookies.txt -w \"\\\\nAPI funcionarios status: %{http_code}\\\\n\" \"http://localhost:5005/api/v1/funcionarios\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt \"http://localhost:5005/mantenimiento/funcionario/funcionario-index\" -o funcionario_index.html)",
+      "Bash(curl -s -b cookies.txt -X POST http://localhost:5005/api/v1/funcionarios -H 'Content-Type: application/json' -d '{\"nombre\":\"Prueba\",\"apellido\":\"Test\",\"cedula\":\"9999999\",\"telefono\":\"0981000000\",\"id_cargo\":1}' -w '\\\\nStatus: %{http_code}\\\\n')",
+      "Bash(curl -s -b cookies.txt -c cookies.txt -X POST http://localhost:5005/api/v1/funcionarios -H 'Content-Type: application/json' -H 'X-CSRFToken: __TRACKED_VAR__' -d '{\"nombre\":\"Prueba\",\"apellido\":\"Test\",\"cedula\":\"9999999\",\"telefono\":\"0981000000\",\"id_cargo\":1}' -w '\\\\nStatus: %{http_code}\\\\n')",
+      "Bash(curl -s -b cookies.txt -c cookies.txt -X POST http://localhost:5005/api/v1/funcionarios -H 'Content-Type: application/json' -H 'X-CSRFToken: __TRACKED_VAR__' -d '{\"nombre\":\"Prueba\",\"apellido\":\"Test\",\"cedula\":\"9999999\",\"telefono\":\"0981000000\",\"id_cargo\":10}' -w '\\\\nStatus: %{http_code}\\\\n')",
+      "Bash(curl -s -b cookies.txt \"http://localhost:5005/api/v1/funcionarios/6\" -w \"\\\\nGET status: %{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -X PUT http://localhost:5005/api/v1/funcionarios/6 -H 'Content-Type: application/json' -H 'X-CSRFToken: __TRACKED_VAR__' -d '{\"nombre\":\"Prueba\",\"apellido\":\"Test Editado\",\"cedula\":\"9999999\",\"telefono\":\"0981000001\",\"id_cargo\":10,\"activo\":true}' -w '\\\\nPUT status: %{http_code}\\\\n')",
+      "Bash(curl -s -b cookies.txt -X DELETE http://localhost:5005/api/v1/funcionarios/6 -H 'X-CSRFToken: __TRACKED_VAR__' -w '\\\\nDELETE status: %{http_code}\\\\n')",
+      "Bash(curl -s -b cookies.txt \"http://localhost:5005/\")"
+    ]
+  }
+}

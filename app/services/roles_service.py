@@ -3,7 +3,7 @@ Servicio para gestión de roles múltiples y validaciones de permisos
 """
 from flask import session, current_app as app
 from app.conexion.Conexion import Conexion
-from app.auth.dao.user_dao import UsuarioDao
+from app.dao.auth.user_dao import UsuarioDao
 
 
 class RolesService:

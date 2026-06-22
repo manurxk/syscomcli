@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, session, \
     request, redirect, url_for, flash, current_app as app
 from app.auth.services.auth_service import AuthService
-from app.dao.AuditoriaDao import AuditoriaDao
+from app.dao.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
 
-logmod = Blueprint('login', __name__, template_folder='../../rutas/seguridad/templates')
+logmod = Blueprint('login', __name__, template_folder='../../rutas/legacy/seguridad/templates')
 
 
 # FUNCIÓN NUEVA AÑADIDA - SIN MODIFICAR NADA MÁS
@@ -49,7 +49,7 @@ def login():
             session['usu_nick'] = datos_usuario['usu_nick']
             session['nombre_persona'] = datos_usuario['nombre_completo']
             session['grupo'] = datos_usuario['grupo']
-            session['id_grupo'] = datos_usuario['id_grupo']
+            session['roles'] = datos_usuario.get('roles', [])
             session['id_funcionario'] = datos_usuario.get('id_funcionario')
             session['session_token'] = datos_usuario.get('session_token')
             
@@ -98,7 +98,7 @@ def logout():
         )
     
     if session_token:
-        AuthService.cerrar_sesion(session_token, tipo_cierre='logout')
+        AuthService.cerrar_sesion(session_token, tipo_cierre='LOGOUT')
     
     session.clear()
     flash('Sesión cerrada', 'info')

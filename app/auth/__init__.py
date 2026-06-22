@@ -24,8 +24,8 @@ from app.auth.routes.admin_api import adminauthapi as admin_auth_api_blueprint
 # ============================================================================
 # DAO - Data Access Objects
 # ============================================================================
-from app.auth.dao.auth_dao import AuthDao
-from app.auth.dao.user_dao import UsuarioDao
+from app.dao.auth.auth_dao import AuthDao
+from app.dao.auth.user_dao import UsuarioDao
 
 # ============================================================================
 # SERVICES - Lógica de Negocio

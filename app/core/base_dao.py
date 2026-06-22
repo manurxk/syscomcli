@@ -40,17 +40,36 @@ class BaseDAO:
         cur = con.cursor()
         try:
             cur.execute(sql, params or ())
+            columnas = [c[0] for c in cur.description] if cur.description else []
+            f = cur.fetchone()
+            fila = dict(zip(columnas, f)) if f else None
             if commit:
-                fila = cur.fetchone()
                 con.commit()
-            else:
-                columnas = [c[0] for c in cur.description] if cur.description else []
-                f = cur.fetchone()
-                fila = dict(zip(columnas, f)) if f else None
             return fila
         except Exception as e:
             con.rollback()
             app.logger.error(f"Error de BD en {self.__class__.__name__}: {e}")
+            raise
+        finally:
+            cur.close()
+            con.close()
+
+    def execute_transaction(self, fn):
+        """Ejecuta fn(cursor) dentro de una única transacción (commit al final, rollback si falla).
+
+        Útil para operaciones que escriben en varias tablas relacionadas
+        (ej. persona + funcionario + especialista) y deben confirmarse o
+        revertirse juntas.
+        """
+        con = self._get_conexion()
+        cur = con.cursor()
+        try:
+            resultado = fn(cur)
+            con.commit()
+            return resultado
+        except Exception as e:
+            con.rollback()
+            app.logger.error(f"Error de BD en transacción ({self.__class__.__name__}): {e}")
             raise
         finally:
             cur.close()

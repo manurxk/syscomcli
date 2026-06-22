@@ -159,7 +159,7 @@ class ModulosService:
         Returns:
             List[Dict]: Lista de roles con id_grupo y des_grupo
         """
-        from app.auth.dao.user_dao import UsuarioDao
+        from app.dao.auth.user_dao import UsuarioDao
         usuario_dao = UsuarioDao()
         
         # Si no se proporciona id_usuario, usar el de la sesión

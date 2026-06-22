@@ -1,6 +1,5 @@
 from app import app
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.tasks.recordatorio_tasks import configurar_tarea_recordatorios
 from app.auth.tasks.auth_tasks import configurar_tareas_programadas
 import socket
 
@@ -13,11 +12,9 @@ try:
 except Exception as e:
     app.logger.warning(f"No se pudieron configurar tareas de autenticación: {str(e)}")
 
-# Configurar tarea de recordatorios
-try:
-    configurar_tarea_recordatorios(scheduler)
-except Exception as e:
-    app.logger.error(f"Error al configurar tarea de recordatorios: {str(e)}")
+# TODO (post A.2): restaurar configurar_tarea_recordatorios cuando el módulo
+# de agendamiento (app/dao/modulos/agendamiento/recordatorio/) se reconstruya
+# en la estructura nueva.
 
 # Iniciar scheduler
 try:

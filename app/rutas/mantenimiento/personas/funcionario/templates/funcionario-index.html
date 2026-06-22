@@ -258,41 +258,6 @@ Funcionarios
             </div>
           </div>
 
-          <!-- CARD 5: Grupos/Roles Asignados -->
-          <div class="card mb-3 border-0 shadow-sm">
-            <div class="card-header bg-info text-white">
-              <h6 class="mb-0 fw-bold">
-                <i class="fas fa-user-shield"></i> Grupos/Roles Asignados
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="alert alert-info border-0">
-                <i class="fas fa-info-circle"></i>
-                Asigne los grupos/roles que este funcionario podrá utilizar cuando se le cree un usuario en el sistema.
-                Puede seleccionar múltiples grupos (máximo 3).
-              </div>
-
-              <div class="form-group">
-                <label class="fw-semibold">
-                  <i class="fas fa-users"></i> Grupos Disponibles
-                </label>
-                <small class="form-text text-muted mb-2 d-block">
-                  Seleccione uno o más grupos/roles. El primer grupo seleccionado será el rol principal.
-                </small>
-                <div class="border rounded p-3" id="contenedorGrupos"
-                  style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
-                  <div class="text-center text-muted py-3">
-                    <i class="fas fa-spinner fa-spin"></i> Cargando grupos...
-                  </div>
-                </div>
-                <small class="form-text text-muted mt-2">
-                  <i class="fas fa-check-circle text-success"></i>
-                  <span id="contadorGrupos">0 grupos seleccionados de 3 máximo</span>
-                </small>
-              </div>
-            </div>
-          </div>
-
           <!-- CARD 6: Datos de Especialista (COLAPSABLE) -->
           <div class="collapse" id="collapseEspecialista">
             <div class="card mb-3 border-0 shadow-sm">
@@ -471,36 +436,8 @@ Funcionarios
   }
 
   .modal-body::-webkit-scrollbar-thumb:hover,
-  #contenedorEspecialidades::-webkit-scrollbar-thumb:hover,
-  #contenedorGrupos::-webkit-scrollbar-thumb:hover {
+  #contenedorEspecialidades::-webkit-scrollbar-thumb:hover {
     background: #555;
-  }
-
-  #contenedorGrupos .custom-control {
-    padding: 8px;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  #contenedorGrupos .custom-control:hover {
-    background-color: #e9ecef;
-  }
-
-  #contenedorGrupos .custom-control:last-child {
-    border-bottom: none;
-  }
-
-  #contenedorGrupos::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  #contenedorGrupos::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-
-  #contenedorGrupos::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
   }
 
   /* Responsive */
@@ -530,9 +467,9 @@ Funcionarios
   // CONSTANTES Y CONFIGURACIÓN
   // ==========================================
   const CSRFToken = "{{ csrf_token() }}";
-  const tienePermisoBorrar = "{{ tiene_permiso_accion('borrar', request.path) }}" === "True";
+  {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+  const tienePermisoBorrar = {{ ('ADMINISTRADOR' in roles_usuario or 'SUPERADMIN' in roles_usuario) | tojson }};
   let especialidadesCargadas = false;
-  let gruposCargados = false;
 
   // ==========================================
   // DATATABLE PRINCIPAL
@@ -618,7 +555,6 @@ Funcionarios
     cargarSelect('/api/v1/cargos-permitidos', '#id_cargo'); // Usar endpoint filtrado
     cargarSelect('/api/v1/ciudades', '#id_ciudad', 'Seleccione ciudad...');
     cargarSelect('/api/v1/ciudades', '#id_ciudad_nacimiento', 'Seleccione ciudad...');
-    cargarGrupos(); // Cargar grupos para asignación
   }
 
   const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
@@ -727,120 +663,6 @@ Funcionarios
   }
 
   // ==========================================
-  // MANEJO DE GRUPOS/ROLES
-  // ==========================================
-  const cargarGrupos = () => {
-    console.log('📋 Cargando grupos/roles permitidos...');
-
-    $('#contenedorGrupos').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando grupos...</div>');
-
-    // Cargar solo los grupos que el usuario actual puede asignar
-    fetch('/api/v1/funcionarios/grupos-permitidos')
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && data.data && data.data.length > 0) {
-          let html = '';
-          data.data.forEach(grupo => {
-            const grupoId = grupo.id || grupo.id_grupo;
-            const grupoDesc = grupo.descripcion || grupo.des_grupo;
-
-            if (!grupoId) {
-              console.error('❌ Grupo sin ID:', grupo);
-              return;
-            }
-
-            // Validación adicional: excluir Administrador y Superadministrador si no es Superadmin
-            // (aunque el backend ya debería filtrarlos, esto es una capa extra de seguridad)
-            const descLower = (grupoDesc || '').toLowerCase();
-            if (descLower === 'administrador' || descLower === 'superadministrador') {
-              console.warn(`⚠️ Grupo "${grupoDesc}" excluido del listado (solo Superadmin puede asignarlo)`);
-              return;
-            }
-
-            html += `
-            <div class="custom-control custom-checkbox">
-              <input type="checkbox" class="custom-control-input grupo-check" 
-                     id="grupo_${grupoId}" value="${grupoId}" name="grupos[]">
-              <label class="custom-control-label" for="grupo_${grupoId}">
-                <strong>${grupoDesc}</strong>
-              </label>
-            </div>
-          `;
-          });
-
-          if (html === '') {
-            html = '<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>';
-          }
-
-          $('#contenedorGrupos').html(html);
-          gruposCargados = true;
-          console.log(`✅ ${data.data.length} grupos cargados y listos para selección múltiple`);
-
-          // Agregar evento para contar grupos seleccionados y validar máximo
-          $('.grupo-check').on('change', function () {
-            const seleccionados = $('.grupo-check:checked').length;
-            const maxGrupos = 3;
-
-            // Validar máximo 3 grupos
-            if (seleccionados > maxGrupos) {
-              $(this).prop('checked', false);
-              Swal.fire('Límite alcanzado', `Un funcionario puede tener máximo ${maxGrupos} grupos asignados.`, 'warning');
-              return;
-            }
-
-            $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de ${maxGrupos} máximo`);
-
-            if (seleccionados > 0) {
-              $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-              if (seleccionados >= maxGrupos) {
-                $('#contadorGrupos').addClass('text-warning');
-              }
-            } else {
-              $('#contadorGrupos').removeClass('text-success text-warning').addClass('text-muted');
-            }
-          });
-        } else {
-          $('#contenedorGrupos').html('<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>');
-        }
-      })
-      .catch(err => {
-        console.error('❌ Error cargando grupos:', err);
-        $('#contenedorGrupos').html('<div class="alert alert-danger">Error al cargar grupos. Intente recargar la página.</div>');
-      });
-  }
-
-  const getGruposSeleccionados = () => {
-    const grupos = [];
-    $('.grupo-check:checked').each(function () {
-      const id = parseInt($(this).val());
-      if (!isNaN(id) && id > 0) {
-        grupos.push(id);
-      }
-    });
-    return grupos;
-  }
-
-  const marcarGrupos = (ids) => {
-    $('.grupo-check').prop('checked', false);
-    if (ids && ids.length > 0) {
-      ids.forEach(id => {
-        $(`#grupo_${id}`).prop('checked', true);
-      });
-      // Actualizar contador
-      const seleccionados = ids.length;
-      $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de 3 máximo`);
-      if (seleccionados > 0) {
-        $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-      }
-    }
-  }
-
-  const limpiarGrupos = () => {
-    $('.grupo-check').prop('checked', false);
-    $('#contadorGrupos').text('0 grupos seleccionados de 3 máximo').removeClass('text-success text-warning').addClass('text-muted');
-  }
-
-  // ==========================================
   // MANEJO DEL COLLAPSE DE ESPECIALISTA
   // ==========================================
   // ❌ ELIMINAR función manejarCollapseEspecialista()
@@ -929,7 +751,6 @@ Funcionarios
     $('.form-control').removeClass('is-invalid is-valid');
 
     limpiarEspecialidades();
-    limpiarGrupos();
   }
 
   const validarFormulario = () => {
@@ -1013,15 +834,6 @@ Funcionarios
         dataFuncionario.esp_color_agenda = $('#txtColorAgenda').val();
         dataFuncionario.especialidades = getEspecialidadesSeleccionadas();
         console.log('👨‍⚕️ Es especialista - Especialidades:', dataFuncionario.especialidades);
-      }
-
-      // Agregar grupos/roles asignados
-      const gruposSeleccionados = getGruposSeleccionados();
-      if (gruposSeleccionados.length > 0) {
-        dataFuncionario.grupos = gruposSeleccionados;
-        // El primer grupo seleccionado será el principal
-        dataFuncionario.grupo_principal = gruposSeleccionados[0];
-        console.log('👥 Grupos asignados:', gruposSeleccionados);
       }
 
       console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));

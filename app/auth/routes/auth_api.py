@@ -4,7 +4,7 @@ FASE 2: MEJORAS DE SEGURIDAD
 """
 from flask import Blueprint, request, jsonify, session, current_app as app
 from app.auth.services.auth_service import AuthService
-from app.auth.dao.auth_dao import AuthDao
+from app.dao.auth.auth_dao import AuthDao
 from app.auth.utils.password_validator import validar_politica_password
 from app.auth.utils.decorators import role_required
 
@@ -57,9 +57,9 @@ def login():
             session['usu_nick'] = datos_usuario['usu_nick']
             session['nombre_persona'] = datos_usuario['nombre_completo']
             session['grupo'] = datos_usuario['grupo']
-            session['id_grupo'] = datos_usuario['id_grupo']
+            session['roles'] = datos_usuario.get('roles', [])
             session['session_token'] = datos_usuario['session_token']
-            
+
             return jsonify({
                 'success': True,
                 'data': {
@@ -68,7 +68,7 @@ def login():
                         'usu_nick': datos_usuario['usu_nick'],
                         'nombre_completo': datos_usuario['nombre_completo'],
                         'grupo': datos_usuario['grupo'],
-                        'id_grupo': datos_usuario['id_grupo']
+                        'roles': datos_usuario.get('roles', [])
                     },
                     'session_token': datos_usuario['session_token'],
                     'csrf_token': datos_usuario['csrf_token'],
@@ -100,7 +100,7 @@ def logout():
         session_token = session.get('session_token') or request.headers.get('X-Session-Token')
         
         if session_token:
-            AuthService.cerrar_sesion(session_token, tipo_cierre='logout')
+            AuthService.cerrar_sesion(session_token, tipo_cierre='LOGOUT')
         
         session.clear()
         
@@ -177,37 +177,26 @@ def cambiar_password():
             }), 400
         
         # Cambiar contraseña
-        exitoso, mensaje = AuthDao.cambiar_password(
+        exitoso, mensaje = AuthDao().cambiar_password(
             id_usuario=id_usuario,
             password_actual=password_actual,
             password_nueva=password_nueva,
             password_hash_actual=usuario['usu_clave']
         )
-        
+
         if exitoso:
             # Cerrar todas las sesiones excepto la actual
             session_token = session.get('session_token')
             if session_token:
-                # Cerrar otras sesiones
+                from app.core.base_dao import BaseDAO
                 sql = """
                     UPDATE sesiones
-                    SET sesion_activa = FALSE,
+                    SET est_sesion = FALSE,
                         fecha_cierre = CURRENT_TIMESTAMP,
-                        tipo_cierre = 'security'
-                    WHERE id_usuario = %s AND token_sesion != %s AND sesion_activa = TRUE
+                        tipo_cierre = 'SECURITY'
+                    WHERE id_usuario = %s AND token_sesion != %s AND est_sesion = TRUE
                 """
-                from app.conexion.Conexion import Conexion
-                conexion = Conexion()
-                con = conexion.getConexion()
-                cur = con.cursor()
-                try:
-                    cur.execute(sql, (id_usuario, session_token))
-                    con.commit()
-                except:
-                    con.rollback()
-                finally:
-                    cur.close()
-                    con.close()
+                BaseDAO(db_name_env="DB_NAME_NUEVA").execute_query(sql, (id_usuario, session_token), commit=True)
             
             app.logger.info(f"Password cambiado exitosamente para usuario {id_usuario}")
             return jsonify({
@@ -266,20 +255,19 @@ def solicitar_recuperacion():
         # Por seguridad, siempre retornar el mismo mensaje
         mensaje_generico = "Si el usuario existe, recibirá instrucciones por email"
         
-        if not usuario or not usuario.get('usu_estado'):
+        if not usuario or not usuario.get('est_usuario'):
             return jsonify({
                 'success': True,
                 'message': mensaje_generico
             }), 200
-        
+
         # Crear token de recuperación
         ip_solicitud = AuthService.obtener_ip_cliente()
-        email_destino = email or usuario.get('email')  # Necesitarías agregar email a la vista
-        
-        token = AuthDao.crear_password_reset_token(
+
+        token = AuthDao().crear_password_reset_token(
             id_usuario=usuario['id_usuario'],
             ip_solicitud=ip_solicitud,
-            email_destino=email_destino
+            email_destino=email
         )
         
         if token:
@@ -339,33 +327,20 @@ def confirmar_recuperacion():
             }), 400
         
         # Validar token
-        token_data = AuthDao.validar_password_reset_token(token)
+        token_data = AuthDao().validar_password_reset_token(token)
         if not token_data:
             return jsonify({
                 'success': False,
                 'error': 'Token inválido o expirado'
             }), 400
-        
-        # Obtener datos del usuario
-        usuario = AuthService.buscar_usuario_seguridad(
-            token_data['id_usuario']  # Necesitarías una función que busque por ID
+
+        # Obtener datos del usuario a partir del nick (la vista de seguridad busca por usu_nick, no por id)
+        from app.core.base_dao import BaseDAO
+        fila = BaseDAO(db_name_env="DB_NAME_NUEVA").execute_query_one(
+            "SELECT usu_nick FROM usuarios WHERE id_usuario = %s", (token_data['id_usuario'],)
         )
-        if not usuario:
-            # Buscar directamente por ID
-            from app.conexion.Conexion import Conexion
-            sql = "SELECT usu_nick FROM usuarios WHERE id_usuario = %s"
-            conexion = Conexion()
-            con = conexion.getConexion()
-            cur = con.cursor()
-            try:
-                cur.execute(sql, (token_data['id_usuario'],))
-                row = cur.fetchone()
-                if row:
-                    usuario = AuthService.buscar_usuario_seguridad(row[0])
-            finally:
-                cur.close()
-                con.close()
-        
+        usuario = AuthService.buscar_usuario_seguridad(fila['usu_nick']) if fila else None
+
         if not usuario:
             return jsonify({
                 'success': False,
@@ -386,7 +361,7 @@ def confirmar_recuperacion():
             }), 400
         
         # Resetear contraseña
-        exitoso, mensaje = AuthDao.resetear_password_con_token(token, password_nueva)
+        exitoso, mensaje = AuthDao().resetear_password_con_token(token, password_nueva)
         
         if exitoso:
             app.logger.info(f"Password reseteado exitosamente con token {token[:8]}...")

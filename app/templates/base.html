@@ -229,9 +229,7 @@
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ url_for('perfil.perfilIndex') }}">
-                                <i data-feather="user" style="width:14px;height:14px;margin-right:6px;"></i> Mi Perfil
-                            </a>
+                            {# TODO: módulo perfil pendiente de reconstruir (ver app/rutas/legacy/gestionar_personas/perfil) #}
                             <a class="dropdown-item text-danger" href="{{ url_for('login.logout') }}">
                                 <i data-feather="log-out" style="width:14px;height:14px;margin-right:6px;"></i> Cerrar Sesión
                             </a>
@@ -392,9 +390,7 @@
                         <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                             <h6 class="text-white fw-bold mb-3 text-uppercase" style="font-size:0.85rem;letter-spacing:0.1rem;">Soporte y Legal</h6>
                             <ul class="list-unstyled mb-0 small" style="line-height:2;">
-                                <li><a href="{{ url_for('informacion.soporte') }}" class="text-decoration-none" style="color:#a7aeb8;">Soporte Técnico</a></li>
-                                <li><a href="{{ url_for('informacion.contacto') }}" class="text-decoration-none" style="color:#a7aeb8;">Formulario de Contacto</a></li>
-                                <li class="mt-2"><a href="{{ url_for('informacion.privacidad') }}" class="text-decoration-none" style="color:#a7aeb8;">Políticas de Privacidad</a></li>
+                                {# TODO: modulo informacion pendiente de reconstruir (ver app/rutas/legacy/seguridad/informacion) #}
                                 <li><a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none" style="color:#a7aeb8;">armanuramirez16@gmail.com</a></li>
                             </ul>
                         </div>

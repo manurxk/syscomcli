@@ -1,12 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
-from app.dao.gestionar_personas.funcionario.FuncionarioDao import FuncionarioDao
-from app.services.roles_service import RolesService
-from app.utils.decorators import require_permission
-from flask import send_file
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from openpyxl import Workbook
-import io
+from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
+from app.auth.utils.decorators import role_required
 
 
 funcionarioapi = Blueprint('funcionarioapi', __name__)
@@ -18,6 +12,7 @@ funcionarioapi = Blueprint('funcionarioapi', __name__)
 # OBTENER TODOS LOS FUNCIONARIOS
 # ============================================
 @funcionarioapi.route('/funcionarios', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def getFuncionarios():
     """Obtiene la lista completa de funcionarios"""
     funcionariodao = FuncionarioDao()
@@ -43,6 +38,7 @@ def getFuncionarios():
 # OBTENER SOLO ESPECIALISTAS
 # ============================================
 @funcionarioapi.route('/funcionarios/especialistas', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
 def getFuncionariosEspecialistas():
     """Obtiene solo los funcionarios que son especialistas"""
     funcionariodao = FuncionarioDao()
@@ -68,6 +64,7 @@ def getFuncionariosEspecialistas():
 # OBTENER ESPECIALIDADES POR ESPECIALISTA
 # ============================================
 @funcionarioapi.route('/funcionarios/especialistas/<int:id_especialista>/especialidades', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
 def getEspecialidadesEspecialista(id_especialista):
     """Obtiene las especialidades de un especialista por su id_especialista"""
     funcionariodao = FuncionarioDao()
@@ -93,6 +90,7 @@ def getEspecialidadesEspecialista(id_especialista):
 # OBTENER FUNCIONARIO POR ID
 # ============================================
 @funcionarioapi.route('/funcionarios/<int:id_funcionario>', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def getFuncionario(id_funcionario):
     """Obtiene un funcionario específico por su ID"""
     funcionariodao = FuncionarioDao()
@@ -121,47 +119,18 @@ def getFuncionario(id_funcionario):
 
 
 # ============================================
-# OBTENER GRUPOS PERMITIDOS PARA ASIGNAR
-# ============================================
-@funcionarioapi.route('/funcionarios/grupos-permitidos', methods=['GET'])
-def getGruposPermitidos():
-    """Obtiene los grupos que el usuario actual puede asignar a funcionarios"""
-    roles_service = RolesService()
-    
-    try:
-        grupos_permitidos = roles_service.obtener_roles_permitidos()
-        
-        return jsonify({
-            'success': True,
-            'data': grupos_permitidos,
-            'error': None
-        }), 200
-    
-    except Exception as e:
-        app.logger.error(f"Error al obtener grupos permitidos: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'Ocurrió un error interno.'
-        }), 500
-
-
-# ============================================
 # OBTENER FUNCIONARIO PARA EDITAR
 # ============================================
 @funcionarioapi.route('/funcionarios/<int:id_funcionario>/editar', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def getFuncionarioParaEditar(id_funcionario):
     """Obtiene funcionario con IDs originales para formulario de edición"""
     funcionariodao = FuncionarioDao()
 
     try:
         funcionario = funcionariodao.getFuncionarioParaEditar(id_funcionario)
-        
+
         if funcionario:
-            # Agregar grupos asignados al funcionario
-            grupos = funcionariodao.obtener_grupos_funcionario(id_funcionario)
-            funcionario['grupos'] = [g['id_grupo'] for g in grupos]
-            funcionario['grupo_principal'] = next((g['id_grupo'] for g in grupos if g['es_rol_principal']), None)
-            
             return jsonify({
                 'success': True,
                 'data': funcionario,
@@ -185,7 +154,7 @@ def getFuncionarioParaEditar(id_funcionario):
 # CREAR NUEVO FUNCIONARIO
 # ============================================
 @funcionarioapi.route('/funcionarios', methods=['POST'])
-@require_permission('insertar')
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def addFuncionario():
     """Crea un nuevo funcionario con todos sus datos"""
     data = request.get_json()
@@ -218,29 +187,6 @@ def addFuncionario():
                 'success': False,
                 'error': 'Debe seleccionar al menos una especialidad.'
             }), 400
-    
-    # Validar grupos/roles asignados
-    grupos = data.get('grupos', [])
-    grupo_principal = data.get('grupo_principal')
-    
-    if grupos:
-        # Validar máximo 3 grupos
-        if len(grupos) > funcionariodao.MAX_GRUPOS_POR_FUNCIONARIO:
-            return jsonify({
-                'success': False,
-                'error': f'Un funcionario puede tener máximo {funcionariodao.MAX_GRUPOS_POR_FUNCIONARIO} grupos asignados.'
-            }), 400
-        
-        # Validar permisos para asignar grupos
-        roles_service = RolesService()
-        id_usuario_actual = session.get('id_usuario')
-        
-        for id_grupo in grupos:
-            if not roles_service.puede_asignar_rol(id_usuario_actual, id_grupo):
-                return jsonify({
-                    'success': False,
-                    'error': f'No tienes permisos para asignar el grupo seleccionado. Solo puedes asignar grupos básicos (Recepcionista, Especialista, Ventas).'
-                }), 403
 
     try:
         funcionario_id = funcionariodao.guardarFuncionario(
@@ -250,7 +196,7 @@ def addFuncionario():
             cedula=data['cedula'],
             telefono=data['telefono'],
             fecha_nacimiento=data.get('fecha_nacimiento'),
-            
+
             # Datos de persona (opcionales)
             genero_id=data.get('id_genero'),
             estado_civil_id=data.get('id_estado_civil'),
@@ -260,20 +206,16 @@ def addFuncionario():
             ciudad_nacimiento_id=data.get('id_ciudad_nacimiento'),
             nivel_instruccion_id=data.get('id_nivel_instruccion'),
             profesion_id=data.get('id_profesion'),
-            
+
             # Datos de funcionario
             id_cargo=data['id_cargo'],
-            fun_estado=data.get('activo', True),
-            creacion_usuario=data.get('creacion_usuario', 1),
-            
+            est_funcionario=data.get('activo', True),
+            usuario_creacion=session.get('id_usuario'),
+
             # Datos de especialista (condicionales)
             esp_matricula=data.get('esp_matricula'),
             especialidades=data.get('especialidades', []),
-            esp_color_agenda=data.get('esp_color_agenda', '#3498db'),
-            
-            # Grupos/roles asignados
-            grupos=grupos if grupos else None,
-            grupo_principal=grupo_principal
+            esp_color_agenda=data.get('esp_color_agenda', '#3498db')
         )
 
         if funcionario_id is not None:
@@ -303,7 +245,7 @@ def addFuncionario():
 # ACTUALIZAR FUNCIONARIO EXISTENTE
 # ============================================
 @funcionarioapi.route('/funcionarios/<int:id_funcionario>', methods=['PUT'])
-@require_permission('editar')
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateFuncionario(id_funcionario):
     """Actualiza un funcionario existente con todos sus datos"""
     data = request.get_json()
@@ -344,35 +286,11 @@ def updateFuncionario(id_funcionario):
                 'success': False,
                 'error': 'Debe seleccionar al menos una especialidad.'
             }), 400
-    
-    # Validar grupos/roles asignados
-    grupos = data.get('grupos', [])
-    grupo_principal = data.get('grupo_principal')
-    
-    if grupos:
-        # Validar máximo 3 grupos
-        grupos_actuales = funcionariodao.contar_grupos_funcionario(id_funcionario)
-        if grupos_actuales + len(grupos) > funcionariodao.MAX_GRUPOS_POR_FUNCIONARIO:
-            return jsonify({
-                'success': False,
-                'error': f'El funcionario ya tiene {grupos_actuales} grupos. No se pueden asignar {len(grupos)} más (máximo {funcionariodao.MAX_GRUPOS_POR_FUNCIONARIO}).'
-            }), 400
-        
-        # Validar permisos para asignar grupos
-        roles_service = RolesService()
-        id_usuario_actual = session.get('id_usuario')
-        
-        for id_grupo in grupos:
-            if not roles_service.puede_asignar_rol(id_usuario_actual, id_grupo):
-                return jsonify({
-                    'success': False,
-                    'error': f'No tienes permisos para asignar el grupo seleccionado. Solo puedes asignar grupos básicos (Recepcionista, Especialista, Ventas).'
-                }), 403
 
     try:
         resultado = funcionariodao.updateFuncionario(
             id_funcionario=id_funcionario,
-            
+
             # Datos de persona
             nombre=data['nombre'],
             apellido=data['apellido'],
@@ -387,19 +305,16 @@ def updateFuncionario(id_funcionario):
             ciudad_nacimiento_id=data.get('id_ciudad_nacimiento'),
             nivel_instruccion_id=data.get('id_nivel_instruccion'),
             profesion_id=data.get('id_profesion'),
-            
+
             # Datos de funcionario
             id_cargo=data['id_cargo'],
-            fun_estado=data.get('activo', True),
-            
+            est_funcionario=data.get('activo', True),
+            usuario_modificacion=session.get('id_usuario'),
+
             # Datos de especialista
             esp_matricula=data.get('esp_matricula'),
             especialidades=data.get('especialidades', []),
-            esp_color_agenda=data.get('esp_color_agenda', '#3498db'),
-            
-            # Grupos/roles asignados
-            grupos=grupos if grupos else None,
-            grupo_principal=grupo_principal
+            esp_color_agenda=data.get('esp_color_agenda', '#3498db')
         )
 
         if resultado:
@@ -426,29 +341,29 @@ def updateFuncionario(id_funcionario):
 
 
 # ============================================
-# ELIMINAR FUNCIONARIO
+# DESACTIVAR FUNCIONARIO
 # ============================================
 @funcionarioapi.route('/funcionarios/<int:id_funcionario>', methods=['DELETE'])
-@require_permission('borrar')
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def deleteFuncionario(id_funcionario):
-    """Elimina un funcionario y todos sus datos asociados"""
+    """Desactiva un funcionario (soft-delete)"""
     funcionariodao = FuncionarioDao()
 
     try:
-        if funcionariodao.deleteFuncionario(id_funcionario):
+        if funcionariodao.desactivarFuncionario(id_funcionario, session.get('id_usuario')):
             return jsonify({
                 'success': True,
-                'mensaje': f'Funcionario con ID {id_funcionario} eliminado correctamente.',
+                'mensaje': f'Funcionario con ID {id_funcionario} desactivado correctamente.',
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el funcionario con el ID proporcionado o no se pudo eliminar.'
+                'error': 'No se encontró el funcionario con el ID proporcionado o no se pudo desactivar.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al eliminar funcionario: {str(e)}")
+        app.logger.error(f"Error al desactivar funcionario: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'

@@ -23,8 +23,8 @@ def role_required(*roles):
             
             is_ajax = is_api_path or is_ajax_header or is_json_content or accepts_json
             
-            grupo = (session.get("grupo") or "").strip().upper()
-            if not grupo:
+            roles_usuario = {(r or "").strip().upper() for r in session.get("roles", [])}
+            if not roles_usuario:
                 if is_ajax:
                     return jsonify({
                         'success': False,
@@ -35,14 +35,14 @@ def role_required(*roles):
                 return redirect(url_for("login.login"))
 
             allowed = {r.strip().upper() for r in roles}
-            if allowed and grupo not in allowed:
+            if allowed and not (roles_usuario & allowed):
                 if is_ajax:
                     return jsonify({
                         'success': False,
                         'error': f'Acceso denegado. Se requiere uno de los siguientes roles: {", ".join(roles)}',
                         'code': 'FORBIDDEN',
                         'required_roles': list(roles),
-                        'current_role': grupo
+                        'current_roles': list(roles_usuario)
                     }), 403
                 return abort(403)
 

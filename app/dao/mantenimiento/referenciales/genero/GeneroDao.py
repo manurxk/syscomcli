@@ -19,7 +19,7 @@ class GeneroDao(BaseDAO):
             VALUES (%s, %s)
             RETURNING id_genero
         """
-        fila = self.execute_query_one(sql, (descripcion, estado))
+        fila = self.execute_query_one(sql, (descripcion, estado), commit=True)
         return fila["id_genero"] if fila else None
 
     def updateGenero(self, genero_id, descripcion, estado):

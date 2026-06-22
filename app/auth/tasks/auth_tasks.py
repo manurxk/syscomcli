@@ -7,36 +7,31 @@ Ejecutar con cron o scheduler:
 - limpiar_tokens_expirados: cada 1 hora
 """
 from flask import current_app as app
-from app.conexion.Conexion import Conexion
+from app.core.base_dao import BaseDAO
+
+_dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
 
 
 def limpiar_sesiones_expiradas():
     """
     Limpia sesiones expiradas usando función PostgreSQL
     Ejecutar cada 15 minutos
+
+    NOTA: requiere la función limpiar_sesiones_expiradas() en PostgreSQL,
+    todavía no creada en docs_reestructuracion/sql_nueva_bd/04_roles_auditoria.sql.
     """
-    sql = "SELECT limpiar_sesiones_expiradas()"
-    
-    conexion = Conexion()
-    con = conexion.getConexion()
-    cur = con.cursor()
-    
+    sql = "SELECT limpiar_sesiones_expiradas() AS cantidad"
     try:
-        cur.execute(sql)
-        cantidad_cerradas = cur.fetchone()[0]
-        con.commit()
-        
+        fila = _dao.execute_query_one(sql, commit=True)
+        cantidad_cerradas = fila['cantidad'] if fila else 0
+
         if cantidad_cerradas > 0:
             app.logger.info(f"TAREA: {cantidad_cerradas} sesiones expiradas cerradas")
-        
+
         return cantidad_cerradas
     except Exception as e:
-        con.rollback()
         app.logger.error(f"Error en limpiar_sesiones_expiradas: {str(e)}")
         return 0
-    finally:
-        cur.close()
-        con.close()
 
 
 def limpiar_tokens_expirados():
@@ -45,30 +40,19 @@ def limpiar_tokens_expirados():
     Ejecutar cada 1 hora
     """
     sql = """
-        DELETE FROM password_reset_tokens 
+        DELETE FROM password_reset_tokens
         WHERE fecha_expiracion < NOW() - INTERVAL '7 days'
     """
-    
-    conexion = Conexion()
-    con = conexion.getConexion()
-    cur = con.cursor()
-    
     try:
-        cur.execute(sql)
-        cantidad_eliminados = cur.rowcount
-        con.commit()
-        
+        cantidad_eliminados = _dao.execute_query(sql, commit=True)
+
         if cantidad_eliminados > 0:
             app.logger.info(f"TAREA: {cantidad_eliminados} tokens expirados eliminados")
-        
+
         return cantidad_eliminados
     except Exception as e:
-        con.rollback()
         app.logger.error(f"Error en limpiar_tokens_expirados: {str(e)}")
         return 0
-    finally:
-        cur.close()
-        con.close()
 
 
 def limpiar_historial_antiguo():
@@ -81,34 +65,23 @@ def limpiar_historial_antiguo():
         WHERE id_history NOT IN (
             SELECT id_history
             FROM (
-                SELECT id_history, 
-                       ROW_NUMBER() OVER (PARTITION BY id_usuario ORDER BY fecha_cambio DESC) as rn
+                SELECT id_history,
+                       ROW_NUMBER() OVER (PARTITION BY id_usuario ORDER BY fecha_creacion DESC) as rn
                 FROM password_history
             ) ranked
             WHERE rn <= 5
         )
     """
-    
-    conexion = Conexion()
-    con = conexion.getConexion()
-    cur = con.cursor()
-    
     try:
-        cur.execute(sql)
-        cantidad_eliminados = cur.rowcount
-        con.commit()
-        
+        cantidad_eliminados = _dao.execute_query(sql, commit=True)
+
         if cantidad_eliminados > 0:
             app.logger.info(f"TAREA: {cantidad_eliminados} registros antiguos de historial eliminados")
-        
+
         return cantidad_eliminados
     except Exception as e:
-        con.rollback()
         app.logger.error(f"Error en limpiar_historial_antiguo: {str(e)}")
         return 0
-    finally:
-        cur.close()
-        con.close()
 
 
 # Ejemplo de uso con APScheduler (opcional)

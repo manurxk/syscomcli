@@ -1,18 +1,16 @@
 from flask import Blueprint, render_template
+from app.auth.utils.decorators import role_required
 
 pacientemod = Blueprint('paciente', __name__, template_folder='templates')
 
 @pacientemod.route('/paciente-index')
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
 def pacienteIndex():
     return render_template('paciente-index.html')
 
 @pacientemod.route('/paciente-agregar')
 @pacientemod.route('/paciente-editar/<int:id_paciente>')
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
 def pacienteAgregar(id_paciente=None):
     """Página para agregar o editar paciente (formulario completo)"""
     return render_template('paciente-agregar.html', id_paciente=id_paciente)
-
-@pacientemod.route('/mis-pacientes')
-def misPacientes():
-    """Vista de Mis Pacientes para especialistas - Solo muestra pacientes asignados"""
-    return render_template('paciente-mis-pacientes.html')

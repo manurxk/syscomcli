@@ -183,41 +183,6 @@
           </div>
         </div>
 
-        <!-- SECCIÓN: Seguridad y Roles -->
-        <div id="section-seguridad" class="card shadow-sm mb-4">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-muted">
-              <i class="fas fa-user-shield me-2"></i> Seguridad y Roles del Sistema
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="alert alert-soft-primary d-flex align-items-center mb-4" role="alert">
-              <i class="fas fa-info-circle me-3 fa-lg text-primary"></i>
-              <div class="text-primary small">
-                Defina los grupos de acceso para este funcionario. Estos determinarán sus permisos cuando se habilite su
-                usuario.
-              </div>
-            </div>
-
-            <label class="small mb-2 fw-bold text-dark">
-              Grupos / Roles Disponibles <span class="text-muted fw-normal">(Máximo 3)</span>
-            </label>
-
-            <div class="border rounded bg-light p-3 mb-3" id="contenedorGrupos"
-              style="max-height: 250px; overflow-y: auto;">
-              <!-- Cargado dinámicamente -->
-              <div class="text-center text-muted py-3">
-                <i class="fas fa-spinner fa-spin me-2"></i> Cargando grupos...
-              </div>
-            </div>
-
-            <div class="mt-2 d-flex justify-content-between align-items-center">
-              <small class="text-muted">El primer grupo seleccionado será el rol principal.</small>
-              <span class="badge bg-light text-dark border p-2" id="contadorGrupos">0 seleccionados</span>
-            </div>
-          </div>
-        </div>
-
         <!-- SECCIÓN: Especialista (OCULTO POR DEFECTO) -->
         <div class="collapse" id="collapseEspecialista">
           <div id="section-especialista" class="card shadow-sm mb-4 border-start-purple">
@@ -381,18 +346,6 @@
     border-bottom: none;
   }
 
-  #contenedorGrupos .custom-control {
-    padding: 8px;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  #contenedorGrupos .custom-control:hover {
-    background-color: #e9ecef;
-  }
-
-  #contenedorGrupos .custom-control:last-child {
-    border-bottom: none;
-  }
 </style>
 
 {% endblock %}
@@ -405,7 +358,6 @@
   const CSRFToken = "{{ csrf_token() }}" || null;
   let especialidadesCargadas = false;
   let idCargoEspecialista = null; // Se detectará dinámicamente
-  let gruposCargados = false;
 
   // ==========================================
   // CARGAR CATÁLOGOS EN SELECTS
@@ -418,7 +370,6 @@
     cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
     cargarSelect('/api/v1/profesiones', '#id_profesion');
     cargarSelect('/api/v1/cargos-permitidos', '#id_cargo'); // Usar endpoint filtrado
-    cargarGrupos(); // Cargar grupos para asignación
   }
 
   const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
@@ -569,117 +520,6 @@
     }
   }
 
-  // ==========================================
-  // MANEJO DE GRUPOS/ROLES
-  // ==========================================
-  const cargarGrupos = () => {
-    console.log('📋 Cargando grupos/roles permitidos...');
-
-    $('#contenedorGrupos').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando grupos...</div>');
-
-    // Cargar solo los grupos que el usuario actual puede asignar
-    fetch('/api/v1/funcionarios/grupos-permitidos')
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && data.data && data.data.length > 0) {
-          let html = '';
-          data.data.forEach(grupo => {
-            const grupoId = grupo.id || grupo.id_grupo;
-            const grupoDesc = grupo.descripcion || grupo.des_grupo;
-
-            if (!grupoId) {
-              console.error('❌ Grupo sin ID:', grupo);
-              return;
-            }
-
-            // Validación adicional: excluir Administrador y Superadministrador si no es Superadmin
-            // (aunque el backend ya debería filtrarlos, esto es una capa extra de seguridad)
-            const descLower = (grupoDesc || '').toLowerCase();
-            if (descLower === 'administrador' || descLower === 'superadministrador') {
-              console.warn(`⚠️ Grupo "${grupoDesc}" excluido del listado (solo Superadmin puede asignarlo)`);
-              return;
-            }
-
-            html += `
-            <div class="custom-control custom-checkbox">
-              <input type="checkbox" class="custom-control-input grupo-check" 
-                     id="grupo_${grupoId}" value="${grupoId}" name="grupos[]">
-              <label class="custom-control-label" for="grupo_${grupoId}">
-                <strong>${grupoDesc}</strong>
-              </label>
-            </div>
-          `;
-          });
-
-          if (html === '') {
-            html = '<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>';
-          }
-
-          $('#contenedorGrupos').html(html);
-          gruposCargados = true;
-          console.log(`✅ ${data.data.length} grupos cargados y listos para selección múltiple`);
-
-          // Agregar evento para contar grupos seleccionados y validar máximo
-          $('.grupo-check').on('change', function () {
-            const seleccionados = $('.grupo-check:checked').length;
-            const maxGrupos = 3;
-
-            // Validar máximo 3 grupos
-            if (seleccionados > maxGrupos) {
-              $(this).prop('checked', false);
-              Swal.fire('Límite alcanzado', `Un funcionario puede tener máximo ${maxGrupos} grupos asignados.`, 'warning');
-              return;
-            }
-
-            $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de ${maxGrupos} máximo`);
-
-            if (seleccionados > 0) {
-              $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-              if (seleccionados >= maxGrupos) {
-                $('#contadorGrupos').addClass('text-warning');
-              }
-            } else {
-              $('#contadorGrupos').removeClass('text-success text-warning').addClass('text-muted');
-            }
-          });
-        } else {
-          $('#contenedorGrupos').html('<div class="alert alert-warning">No hay grupos disponibles. Contacte al administrador.</div>');
-        }
-      })
-      .catch(err => {
-        console.error('❌ Error cargando grupos:', err);
-        $('#contenedorGrupos').html('<div class="alert alert-danger">Error al cargar grupos. Intente recargar la página.</div>');
-      });
-  }
-
-  const getGruposSeleccionados = () => {
-    const grupos = [];
-    $('.grupo-check:checked').each(function () {
-      const id = parseInt($(this).val());
-      if (!isNaN(id) && id > 0) {
-        grupos.push(id);
-      }
-    });
-    return grupos;
-  }
-
-  const marcarGrupos = (ids) => {
-    $('.grupo-check').prop('checked', false);
-    if (ids && ids.length > 0) {
-      ids.forEach(id => {
-        $(`#grupo_${id}`).prop('checked', true);
-      });
-      // Actualizar contador
-      const seleccionados = ids.length;
-      $('#contadorGrupos').text(`${seleccionados} grupo${seleccionados !== 1 ? 's' : ''} seleccionado${seleccionados !== 1 ? 's' : ''} de 3 máximo`);
-      if (seleccionados > 0) {
-        $('#contadorGrupos').removeClass('text-muted').addClass('text-success');
-        if (seleccionados >= 3) {
-          $('#contadorGrupos').addClass('text-warning');
-        }
-      }
-    }
-  }
 
   // ==========================================
   // DETECCIÓN DE ESPECIALISTA POR CARGO
@@ -775,14 +615,6 @@
         dataFuncionario.esp_matricula = $('#txtMatricula').val().trim();
         dataFuncionario.esp_color_agenda = $('#txtColorAgenda').val();
         dataFuncionario.especialidades = getEspecialidadesSeleccionadas();
-      }
-
-      // Agregar grupos/roles asignados
-      const gruposSeleccionados = getGruposSeleccionados();
-      if (gruposSeleccionados.length > 0) {
-        dataFuncionario.grupos = gruposSeleccionados;
-        // El primer grupo seleccionado será el principal
-        dataFuncionario.grupo_principal = gruposSeleccionados[0];
       }
 
       console.log('📤 Datos completos a enviar:', JSON.stringify(dataFuncionario, null, 2));
@@ -998,13 +830,6 @@
 
           // Estado
           $('#chkActivo').prop('checked', func.activo);
-
-          // Cargar grupos asignados
-          if (func.grupos && func.grupos.length > 0) {
-            setTimeout(() => {
-              marcarGrupos(func.grupos);
-            }, 700);
-          }
 
           // Cambiar texto del botón
           $('#btnGuardar').html('<i class="fas fa-save"></i> Actualizar Funcionario');
