@@ -157,25 +157,17 @@
         <nav class="app-header navbar navbar-expand bg-body">
             <div class="container-fluid">
 
-                <!-- Inicio: toggle sidebar + brand -->
+                <!-- Inicio: toggle sidebar -->
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button" title="Toggle sidebar">
                             <i data-feather="menu"></i>
                         </a>
                     </li>
-                    <li class="nav-item d-none d-lg-block">
-                        <a class="navbar-brand ps-2 d-flex align-items-center" href="/">
-                            <div style="font-family:'Nunito',sans-serif;display:flex;align-items:flex-start;line-height:1;">
-                                <span style="color:var(--bs-body-color);font-weight:850;font-size:1.65rem;letter-spacing:-1px;">Anga</span>
-                                <span style="color:var(--bs-body-color);font-weight:800;font-size:0.85rem;margin-top:0.2rem;margin-left:1px;">Sys</span>
-                            </div>
-                        </a>
-                    </li>
                 </ul>
 
                 <!-- Búsqueda desktop -->
-                <form class="d-none d-lg-flex me-auto ms-3 navbar-search-wrapper" id="searchForm" style="width:380px;">
+                <form class="d-none d-lg-flex me-auto ms-3 navbar-search-wrapper" id="searchForm" style="width:480px;">
                     <div class="input-group">
                         <input class="form-control form-control-sm" type="search" id="globalSearchInput"
                             placeholder="Buscar pacientes, especialistas, referenciales..." aria-label="Buscar" autocomplete="off">
@@ -273,7 +265,7 @@
                                     {% if item.html_icon %}
                                     <span class="nav-icon">{{ item.html_icon|safe }}</span>
                                     {% else %}
-                                    <i class="nav-icon fas fa-circle"></i>
+                                    <i class="nav-icon" data-feather="circle"></i>
                                     {% endif %}
                                     <p>{{ item.title }}</p>
                                 </a>
@@ -285,7 +277,7 @@
                         {% for menu in section.menus %}
                         <li class="nav-item">
                             <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-{{ menu.icon if menu.icon else 'circle' }}"></i>
+                                <i class="nav-icon" data-feather="{{ menu.icon if menu.icon else 'circle' }}"></i>
                                 <p>
                                     {{ menu.title }}
                                     <i class="nav-arrow fas fa-angle-right"></i>
@@ -296,7 +288,7 @@
                                 {% for submenu in menu.submenus %}
                                 <li class="nav-item">
                                     <a href="#" class="nav-link">
-                                        <i class="nav-icon fas fa-circle-o"></i>
+                                        <i class="nav-icon" data-feather="circle"></i>
                                         <p>
                                             {{ submenu.title }}
                                             <i class="nav-arrow fas fa-angle-right"></i>
@@ -306,7 +298,7 @@
                                         {% for link in submenu.links %}
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
-                                                <i class="nav-icon fas fa-circle"></i>
+                                                <i class="nav-icon" data-feather="circle"></i>
                                                 <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
                                             </a>
                                         </li>
@@ -319,7 +311,7 @@
                                 {% for link in menu.links %}
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
-                                        <i class="nav-icon fas fa-circle"></i>
+                                        <i class="nav-icon" data-feather="circle"></i>
                                         <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
                                     </a>
                                 </li>
@@ -349,15 +341,16 @@
 
             {% block layout_content %}
             <div class="app-content">
-                <div class="container-fluid px-4">
-                    {% block contenido %}
-                    {% endblock %}
-                </div>
+                {% block contenido %}
+                {% endblock %}
             </div>
             {% endblock %}
 
-            <!-- ======================== FOOTER ======================== -->
-            <footer class="app-footer-custom mt-auto">
+        </main>
+        <!-- ======================== FIN CONTENIDO ======================== -->
+
+        <!-- ======================== FOOTER ======================== -->
+        <footer class="app-footer app-footer-custom">
                 <div class="container-fluid px-4 px-lg-5">
                     <div class="row gx-5 justify-content-between">
 
@@ -411,10 +404,7 @@
                     </div>
                 </div>
             </footer>
-            <!-- ======================== FIN FOOTER ======================== -->
-
-        </main>
-        <!-- ======================== FIN CONTENIDO ======================== -->
+        <!-- ======================== FIN FOOTER ======================== -->
 
     </div>
     <!-- ======================== FIN APP WRAPPER ======================== -->

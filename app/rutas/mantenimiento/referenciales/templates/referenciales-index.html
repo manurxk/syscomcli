@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Referenciales
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Referenciales</h1>
+          <div class="page-header-subtitle">Catálogos base para la configuración de Funcionarios</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="row gx-3">
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('cargo.cargoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="briefcase" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Cargos</h6>
+              <small class="text-muted">Cargos asignables a funcionarios</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('especialidad.especialidadIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="award" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Especialidades</h6>
+              <small class="text-muted">Especialidades médicas para funcionarios clínicos</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('empresa.empresaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="home" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Empresa</h6>
+              <small class="text-muted">Datos administrativos de la clínica</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('sede.sedeIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="map-pin" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Sedes</h6>
+              <small class="text-muted">Sucursales o sedes físicas de la empresa</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm h-100 border-start-secondary opacity-50">
+        <div class="card-body d-flex align-items-center gap-3">
+          <i data-feather="grid" style="width:32px;height:32px;" class="text-secondary"></i>
+          <div>
+            <h6 class="m-0 fw-bold">Consultorios</h6>
+            <small class="text-muted">Próximamente</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

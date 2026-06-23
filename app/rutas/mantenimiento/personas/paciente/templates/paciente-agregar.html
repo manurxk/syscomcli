@@ -6,17 +6,18 @@ Registrar Paciente
 
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
-  <div class="container-xl px-4">
+  <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
-          <h1 class="page-header-title">{% if id_paciente %}Editar Paciente{% else %}Registrar Nuevo Paciente{% endif %}
+          <h1 class="page-header-title">
+            {% if id_paciente %}Editar Paciente{% else %}Registrar Nuevo Paciente{% endif %}
           </h1>
           <div class="page-header-subtitle">Completa los datos del paciente para su registro en el sistema clínico</div>
         </div>
-        <div class="col-12 col-xl-auto mt-4">
-          <a href="{{ url_for('paciente.pacienteIndex') }}" class="btn btn-sm btn-light text-primary fw-500 shadow-sm">
-            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('paciente.pacienteIndex') }}">
+            Volver al Listado
           </a>
         </div>
       </div>
@@ -24,367 +25,201 @@ Registrar Paciente
   </div>
 </header>
 
-<div class="container-xl px-4 mt-n10">
+<div class="container-fluid px-4 mt-n10">
 
   <form id="formPaciente">
     <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" id="txtIdPersona">
     <input type="hidden" id="txtIdPaciente">
 
-    <div class="row justify-content-center">
-      <!-- Contenido del Formulario (Full Width) -->
-      <div class="col-lg-10">
-        <!-- SECCIÓN: Datos Personales -->
-        <div id="section-personales" class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-primary">
-              <i class="fas fa-user-circle me-2"></i> Información Básica
-            </h6>
+    <!-- SECCIÓN: Datos Personales -->
+    <div id="section-personales" class="card shadow-sm mb-4 border-start-primary">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2"><i data-feather="user" class="icon-sm"></i> Datos Personales</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtNombre">Nombres <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtNombre" type="text" placeholder="Ingrese los nombres" required>
           </div>
-          <div class="card-body p-4">
-            <div class="row gx-3 mb-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="txtNombre">Nombres <span
-                    class="text-danger">*</span></label>
-                <div class="input-group input-group-modern">
-                  <span class="input-group-text"><i class="fas fa-user"></i></span>
-                  <input class="form-control" id="txtNombre" type="text" placeholder="Ej: Juan Pérez" required>
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="txtApellido">Apellidos <span
-                    class="text-danger">*</span></label>
-                <input class="form-control" id="txtApellido" type="text" placeholder="Ej: García López" required>
-              </div>
-            </div>
-            <div class="row gx-3 mb-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="txtCedula">Cédula de Identidad <span
-                    class="text-danger">*</span></label>
-                <div class="input-group input-group-modern">
-                  <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                  <input class="form-control" id="txtCedula" type="text" placeholder="Número de documento" required>
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="txtFecha_nacimiento">
-                  Fecha de Nacimiento <span class="text-danger">*</span>
-                </label>
-                <input class="form-control" id="txtFecha_nacimiento" type="date" required>
-                <div id="alertaEdad" class="mt-2" style="display:none;"></div>
-              </div>
-            </div>
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="id_genero">Género</label>
-                <select class="form-select" id="id_genero">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="id_estado_civil">Estado Civil</label>
-                <select class="form-select" id="id_estado_civil">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-            </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtApellido">Apellidos <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtApellido" type="text" placeholder="Ingrese los apellidos" required>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtCedula">Cédula de Identidad <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtCedula" type="text" placeholder="Ingrese el número de cédula" required>
           </div>
         </div>
-
-        <!-- SECCIÓN: Contacto y Ubicación -->
-        <div id="section-contacto" class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-success">
-              <i class="fas fa-map-marker-alt me-2"></i> Ubicación y Contacto
-            </h6>
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtFecha_nacimiento">Fecha de Nacimiento <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtFecha_nacimiento" type="date" required>
+            <div id="alertaEdad" class="mt-2" style="display:none;"></div>
           </div>
-          <div class="card-body p-4">
-            <div class="row gx-3 mb-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="txtTelefono">Teléfono / Celular <span
-                    class="text-danger">*</span></label>
-                <div class="input-group input-group-modern">
-                  <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
-                  <input class="form-control" id="txtTelefono" type="text" placeholder="Ej: 0981 123 456" required>
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="txtCorreo">Email</label>
-                <div class="input-group input-group-modern">
-                  <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                  <input class="form-control" id="txtCorreo" type="email" placeholder="ejemplo@correo.com">
-                </div>
-              </div>
-            </div>
-            <div class="mb-4">
-              <label class="form-label small fw-bold text-muted" for="txtDomicilio">Dirección de Domicilio</label>
-              <div class="input-group input-group-modern">
-                <span class="input-group-text"><i class="fas fa-home"></i></span>
-                <input class="form-control" id="txtDomicilio" type="text" placeholder="Calle, Nro, Barrio...">
-              </div>
-            </div>
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted">Ciudad de Residencia</label>
-                <div class="autocomplete-container">
-                  <input type="hidden" id="id_ciudad">
-                  <input class="form-control city-autocomplete" id="txtCiudad" type="text"
-                    placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted">Ciudad de Nacimiento</label>
-                <div class="autocomplete-container">
-                  <input type="hidden" id="id_ciudad_nacimiento">
-                  <input class="form-control city-autocomplete" id="txtCiudad_nacimiento" type="text"
-                    placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
-                </div>
-              </div>
-            </div>
-            <datalist id="listCiudades"></datalist>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_genero">Género</label>
+            <select class="form-select" id="id_genero">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
-        </div>
-
-        <!-- SECCIÓN: Formación -->
-        <div id="section-profesional" class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-info">
-              <i class="fas fa-graduation-cap me-2"></i> Formación Académica
-            </h6>
-          </div>
-          <div class="card-body p-4">
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="id_nivel_instruccion">Nivel de
-                  Instrucción</label>
-                <select class="form-select" id="id_nivel_instruccion">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted" for="id_profesion">Profesión / Ocupación</label>
-                <select class="form-select" id="id_profesion">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECCIÓN: Datos de Tutor (MENOR DE EDAD) -->
-        <div id="section-tutor" class="card shadow-sm mb-4 border-0 d-none">
-          <div class="card-body p-4 border-top border-5 border-warning rounded-3">
-            <div class="d-flex align-items-center mb-4">
-              <div class="bg-warning-soft p-3 rounded-circle me-3">
-                <i class="fas fa-user-shield text-warning fs-4"></i>
-              </div>
-              <div>
-                <h5 class="card-title text-warning mb-1">Responsables del Menor</h5>
-                <p class="text-muted small mb-0">Se requiere registrar al menos un tutor para pacientes menores.</p>
-              </div>
-            </div>
-
-            <div class="row mb-4">
-              <div class="col-md-6 mb-3">
-                <h6 class="small fw-bold text-dark border-bottom pb-2 mb-3">Madre / Tutora</h6>
-                <div class="mb-3">
-                  <label class="form-label small text-muted" for="txtNomMadre">Nombre Completo</label>
-                  <input class="form-control" id="txtNomMadre" type="text">
-                </div>
-                <div>
-                  <label class="form-label small text-muted" for="txtTelMadre">Teléfono</label>
-                  <input class="form-control" id="txtTelMadre" type="text">
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <h6 class="small fw-bold text-dark border-bottom pb-2 mb-3">Padre / Tutor</h6>
-                <div class="mb-3">
-                  <label class="form-label small text-muted" for="txtNomPadre">Nombre Completo</label>
-                  <input class="form-control" id="txtNomPadre" type="text">
-                </div>
-                <div>
-                  <label class="form-label small text-muted" for="txtTelPadre">Teléfono</label>
-                  <input class="form-control" id="txtTelPadre" type="text">
-                </div>
-              </div>
-            </div>
-
-            <h6 class="small fw-bold text-dark border-bottom pb-2 mb-3">Entorno Educativo</h6>
-            <div class="mb-3">
-              <label class="form-label small text-muted" for="txtEducacion">Grado actual</label>
-              <input class="form-control" id="txtEducacion" type="text" placeholder="Ej: 5to Grado">
-            </div>
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small text-muted" for="txtColegio">Nombre de la Institución</label>
-                <input class="form-control" id="txtColegio" type="text">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small text-muted" for="txtTelColegio">Teléfono Institucional</label>
-                <input class="form-control" id="txtTelColegio" type="text">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECCIÓN: Datos Clínicos -->
-        <div id="section-clinicos" class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-danger">
-              <i class="fas fa-file-medical me-2"></i> Expediente Clínico
-            </h6>
-          </div>
-          <div class="card-body p-4 border-top border-5 border-danger rounded-3">
-            <div class="row gx-3 mb-4">
-              <div class="col-md-6 mb-3">
-                <label class="form-label small fw-bold text-muted">Registro de Historia Clínica</label>
-                <div class="d-flex align-items-center bg-light p-3 rounded">
-                  <div class="bg-white p-2 rounded shadow-xs me-3">
-                    <i class="fas fa-barcode text-muted fs-4"></i>
-                  </div>
-                  <div>
-                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Código del
-                      Expediente</div>
-                    <div class="h5 mb-0 fw-bold text-primary" id="previewHistoria">-- Generando --</div>
-                    <input type="hidden" id="txtHistoria_clinica">
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small fw-bold text-muted" for="txtObservaciones">Notas Clínicas /
-                  Observaciones</label>
-                <textarea class="form-control" id="txtObservaciones" rows="4"
-                  placeholder="Antecedentes, alergias, condiciones preexistentes..."></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- BOTONES DE ACCIÓN -->
-        <div class="card shadow-sm mb-5 border-0 bg-transparent">
-          <div class="card-body p-0 d-flex justify-content-between align-items-center">
-            <div class="text-muted small">
-              <i class="fas fa-info-circle me-1"></i>
-              <span>Los campos marcados con <span class="text-danger">*</span> son obligatorios.</span>
-            </div>
-            <div class="d-flex">
-              <button class="btn btn-ghost-danger me-2" type="button" id="btnDescartar">
-                <i class="fas fa-times me-1"></i> Descartar
-              </button>
-              <button class="btn btn-primary shadow px-5 py-2 fw-bold" type="button" id="btnGuardar">
-                <i class="fas fa-save me-2"></i>
-                {% if id_paciente %}Actualizar Expediente{% else %}Registrar Paciente{% endif %}
-              </button>
-            </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="id_estado_civil">Estado Civil</label>
+            <select class="form-select" id="id_estado_civil">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- SECCIÓN: Contacto y Ubicación -->
+    <div id="section-contacto" class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2"><i data-feather="map-pin" class="icon-sm"></i> Contacto y Ubicación</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtTelefono">Teléfono / Celular <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtTelefono" type="text" placeholder="Ingrese el número de teléfono" required>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtCorreo">Email</label>
+            <input class="form-control" id="txtCorreo" type="email" placeholder="nombre@ejemplo.com">
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtDomicilio">Dirección de Domicilio</label>
+            <input class="form-control" id="txtDomicilio" type="text" placeholder="Ingrese la dirección completa">
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0 position-relative">
+            <label class="small mb-1" for="txtCiudad">Ciudad de Residencia</label>
+            <div class="autocomplete-container">
+              <input type="hidden" id="id_ciudad">
+              <input class="form-control city-autocomplete" id="txtCiudad" type="text"
+                placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtCiudad_nacimiento">Ciudad de Nacimiento</label>
+            <div class="autocomplete-container">
+              <input type="hidden" id="id_ciudad_nacimiento">
+              <input class="form-control city-autocomplete" id="txtCiudad_nacimiento" type="text"
+                placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
+            </div>
+          </div>
+        </div>
+        <datalist id="listCiudades"></datalist>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Formación -->
+    <div id="section-profesional" class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2"><i data-feather="book-open" class="icon-sm"></i> Formación y Profesión</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_nivel_instruccion">Nivel de Instrucción</label>
+            <select class="form-select" id="id_nivel_instruccion">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="id_profesion">Profesión / Ocupación</label>
+            <select class="form-select" id="id_profesion">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Datos Clínicos -->
+    <div id="section-clinicos" class="card shadow-sm mb-4 border-start-danger">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-danger d-flex align-items-center gap-2"><i data-feather="file-text" class="icon-sm"></i> Expediente Clínico</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1 text-muted">Historia Clínica</label>
+            <div class="d-flex align-items-center bg-light p-3 rounded">
+              <div class="h6 mb-0 fw-bold text-primary" id="previewHistoria">-- Generando --</div>
+              <input type="hidden" id="txtHistoria_clinica">
+            </div>
+          </div>
+          <div class="col-md-8">
+            <label class="small mb-1" for="txtObservaciones">Notas Clínicas / Observaciones</label>
+            <textarea class="form-control" id="txtObservaciones" rows="2"
+              placeholder="Antecedentes, alergias, condiciones preexistentes..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Datos de Tutor (OCULTO POR DEFECTO, MENOR DE EDAD) -->
+    <div id="section-tutor" class="card shadow-sm mb-4 border-start-warning d-none">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2"><i data-feather="shield" class="icon-sm"></i> Responsables del Menor</h6>
+        <span class="badge border border-warning text-warning">Datos adicionales</span>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-soft-warning mb-4">
+          <div class="text-warning small">Se requiere registrar al menos un tutor para pacientes menores.</div>
+        </div>
+        <div class="row gx-3 mb-3">
+          <div class="col-md-3 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtNomMadre">Nombre de la Madre / Tutora</label>
+            <input class="form-control" id="txtNomMadre" type="text">
+          </div>
+          <div class="col-md-3 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtTelMadre">Teléfono Madre</label>
+            <input class="form-control" id="txtTelMadre" type="text">
+          </div>
+          <div class="col-md-3 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtNomPadre">Nombre del Padre / Tutor</label>
+            <input class="form-control" id="txtNomPadre" type="text">
+          </div>
+          <div class="col-md-3">
+            <label class="small mb-1" for="txtTelPadre">Teléfono Padre</label>
+            <input class="form-control" id="txtTelPadre" type="text">
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtEducacion">Grado Actual</label>
+            <input class="form-control" id="txtEducacion" type="text" placeholder="Ej: 5to Grado">
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtColegio">Institución Educativa</label>
+            <input class="form-control" id="txtColegio" type="text">
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtTelColegio">Teléfono Institucional</label>
+            <input class="form-control" id="txtTelColegio" type="text">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de Acción FINAL -->
+    <div class="card shadow-sm mb-5">
+      <div class="card-body d-flex justify-content-between py-3">
+        <button type="button" class="btn btn-outline-secondary px-4" id="btnDescartar">Descartar</button>
+        <button type="button" class="btn btn-primary px-5 fw-600" id="btnGuardar">
+          {% if id_paciente %}Actualizar Expediente{% else %}Registrar Paciente{% endif %}
+        </button>
+      </div>
+    </div>
   </form>
   <style>
-    :root {
-      --primary-color: #0d6efd;
-      --primary-op-60: rgba(13, 110, 253, 0.6);
-      --secondary-color: #6c757d;
-      --text-muted: #adb5bd;
-      --input-padding-v: 12px;
-      --input-height: 42px;
-      --border-radius: 6px;
-      --section-spacing: 32px;
-      --field-spacing: 16px;
-      --card-padding: 24px;
-    }
-
-    /* Section Vertical Spacing */
-    .card {
-      margin-bottom: 2rem !important;
-      border: 1px solid #e3e6f0 !important;
-    }
-
-    .card-header {
-      border-bottom: 1px solid #e3e6f0 !important;
-      background-color: #f8f9fc !important;
-    }
-
-    /* Form Fields Styling */
-    .form-label {
-      margin-bottom: 0.5rem;
-      transition: color 0.2s;
-    }
-
-    .form-control,
-    .form-select {
-      min-height: var(--input-height) !important;
-      padding: var(--input-padding-v) 1rem !important;
-      border-radius: var(--border-radius) !important;
-      border: 1px solid #ced4da;
-      font-size: 0.95rem;
-      transition: all 0.2s ease-in-out;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-      border-color: var(--primary-color) !important;
-      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1) !important;
-      border-width: 2px !important;
-    }
-
-    .input-group-modern .input-group-text {
-      background-color: #f8f9fa;
-      border-color: #ced4da;
-      border-radius: var(--border-radius) 0 0 var(--border-radius) !important;
-      color: var(--secondary-color);
-    }
-
-    /* Sticky behavior fix */
-    @media (max-width: 991.98px) {
-      #form-sections-nav {
-        position: relative !important;
-        top: 0 !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        padding-bottom: 0.5rem !important;
-      }
-
-      #form-sections-nav .nav-link {
-        white-space: nowrap !important;
-        margin-right: 0.5rem !important;
-        margin-bottom: 0 !important;
-      }
-    }
-
-    /* Ghost Button */
-    .btn-ghost-secondary {
-      color: var(--secondary-color);
-      background: transparent;
-      border: none;
-      transition: all 0.2s;
-    }
-
-    .btn-ghost-secondary:hover {
-      background: #f8f9fa;
-      color: var(--primary-color);
-    }
-
-    .btn-ghost-danger {
-      color: #dc3545;
-      background: transparent;
-      border: none;
-    }
-
-    .btn-ghost-danger:hover {
-      background: #fff5f5;
-    }
-
-    /* Validations */
-    .form-control.is-invalid {
-      border-color: #dc3545 !important;
-      background-image: none !important;
-    }
-
-    .bg-warning-soft {
-      background-color: #fff9e6 !important;
+    .autocomplete-container {
+      position: relative;
     }
   </style>
 
@@ -670,13 +505,13 @@ Registrar Paciente
                 .then(() => window.location.href = pacienteIndexUrl);
             } else {
               Swal.fire('Error', res.error || 'No se pudo guardar', 'error');
-              btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar');
+              btn.prop('disabled', false).text(idPaciente ? 'Actualizar Expediente' : 'Registrar Paciente');
             }
           })
           .catch(err => {
             console.error(err);
             Swal.fire('Error', 'Error de conexión', 'error');
-            btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Guardar');
+            btn.prop('disabled', false).text(idPaciente ? 'Actualizar Expediente' : 'Registrar Paciente');
           });
       });
     };

@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+{% if id_usuario %}Editar Usuario{% else %}Registrar Usuario{% endif %}
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">
+            {% if id_usuario %}Editar Usuario{% else %}Registrar Usuario{% endif %}
+          </h1>
+          <div class="page-header-subtitle">Completa los datos para gestionar el acceso del usuario al sistema</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('usuario.usuarioIndex') }}">
+            Volver al Listado
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <form id="formUsuario">
+    <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" id="txtIdUsuario" value="{{ id_usuario or '' }}">
+
+    <!-- SECCIÓN: Funcionario Asociado -->
+    <div id="section-funcionario" class="card shadow-sm mb-4 border-start-primary">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2"><i data-feather="briefcase" class="icon-sm"></i> Funcionario Asociado</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_funcionario">Funcionario <span class="text-danger">*</span></label>
+            <select class="form-select" id="id_funcionario" required>
+              <option value="">Seleccione un funcionario...</option>
+            </select>
+            <small class="text-muted">Solo se muestran funcionarios sin usuario asignado</small>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1 text-muted">Cargo</label>
+            <input class="form-control" id="txtCargoFuncionario" type="text" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1 text-muted">Cédula</label>
+            <input class="form-control" id="txtCedulaFuncionario" type="text" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Datos de Acceso -->
+    <div id="section-acceso" class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2"><i data-feather="user" class="icon-sm"></i> Datos de Acceso</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtUsername">Username <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtUsername" type="text" placeholder="Ingrese el username" maxlength="30" required>
+            <small id="usernameFeedback" class="form-text"></small>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_rol">Rol Principal <span class="text-danger">*</span></label>
+            <select class="form-select" id="id_rol" required>
+              <option value="">Seleccione un rol...</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1">Estado</label>
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" id="chkActivo" checked>
+              <label class="form-check-label fw-bold" for="chkActivo">Usuario Activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Contraseña -->
+    <div id="section-password" class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2"><i data-feather="lock" class="icon-sm"></i> Contraseña</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtPassword">Contraseña <span class="text-danger" id="lblPasswordRequerida">*</span></label>
+            <input class="form-control" id="txtPassword" type="password" placeholder="Ingrese la contraseña" minlength="6">
+            <small id="passwordHelp" class="text-muted">Mínimo 6 caracteres</small>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtPasswordConfirmacion">Confirmar Contraseña <span class="text-danger" id="lblPasswordConfirmacionRequerida">*</span></label>
+            <input class="form-control" id="txtPasswordConfirmacion" type="password" placeholder="Confirme la contraseña">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de Acción FINAL -->
+    <div class="card shadow-sm mb-5">
+      <div class="card-body d-flex justify-content-between py-3">
+        <button type="button" class="btn btn-outline-secondary px-4" id="btnCancelar">Cancelar</button>
+        <button type="button" class="btn btn-primary px-5 fw-600" id="btnGuardar">
+          {% if id_usuario %}Actualizar{% else %}Guardar{% endif %}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+  const idUsuario = parseInt("{{ id_usuario }}") || null;
+  const usuarioIndexUrl = "{{ url_for('usuario.usuarioIndex') }}";
+
+  // ==========================================
+  // CARGAR CATÁLOGOS
+  // ==========================================
+  const cargarFuncionariosSinUsuario = () => {
+    fetch('/api/v1/funcionarios/sin-usuario')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          let options = '<option value="">Seleccione un funcionario...</option>';
+          data.data.forEach(f => {
+            options += `<option value="${f.id_funcionario}" data-cargo="${f.des_cargo || ''}" data-cedula="${f.per_cedula || ''}">${f.nombre_completo} - ${f.des_cargo || 'Sin cargo'}</option>`;
+          });
+          $('#id_funcionario').html(options);
+        }
+      })
+      .catch(() => Swal.fire('Error', 'Error al cargar los funcionarios', 'error'));
+  };
+
+  const cargarRoles = (idRolSeleccionado) => {
+    fetch('/api/v1/roles')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          let options = '<option value="">Seleccione un rol...</option>';
+          data.data.forEach(rol => {
+            options += `<option value="${rol.id_rol}">${rol.des_rol}</option>`;
+          });
+          $('#id_rol').html(options);
+          if (idRolSeleccionado) $('#id_rol').val(idRolSeleccionado);
+        }
+      })
+      .catch(() => Swal.fire('Error', 'Error al cargar los roles', 'error'));
+  };
+
+  // ==========================================
+  // VALIDACIÓN DE USERNAME EN TIEMPO REAL
+  // ==========================================
+  const validarUsername = (username, idUsuarioActual = null) => {
+    if (!username || username.length < 3) {
+      $('#txtUsername').removeClass('is-valid is-invalid');
+      $('#usernameFeedback').text('');
+      return;
+    }
+    fetch('/api/v1/usuarios/validar-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({ username, id_usuario: idUsuarioActual })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data.disponible) {
+          $('#txtUsername').removeClass('is-invalid').addClass('is-valid');
+          $('#usernameFeedback').text('Username disponible').removeClass('text-danger').addClass('text-success');
+        } else {
+          $('#txtUsername').removeClass('is-valid').addClass('is-invalid');
+          $('#usernameFeedback').text('Username no disponible').removeClass('text-success').addClass('text-danger');
+        }
+      });
+  };
+
+  // ==========================================
+  // CARGAR DATOS PARA EDICIÓN
+  // ==========================================
+  const cargarDatosUsuario = (id) => {
+    fetch(`/api/v1/usuarios/${id}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          const u = res.data;
+          $('#txtUsername').val(u.usu_nick);
+          $('#chkActivo').prop('checked', u.usu_estado);
+          $('#id_funcionario').html(`<option value="${u.id_funcionario}">${u.funcionario}</option>`).prop('disabled', true);
+          $('#txtCargoFuncionario').val(u.cargo || '');
+
+          const rolPrincipal = (u.roles || []).find(r => r.es_rol_principal);
+          cargarRoles(rolPrincipal ? rolPrincipal.id_rol : null);
+
+          $('#lblPasswordRequerida').hide();
+          $('#lblPasswordConfirmacionRequerida').hide();
+          $('#passwordHelp').text('Dejar en blanco para mantener la contraseña actual');
+
+          validarUsername(u.usu_nick, u.id_usuario);
+        }
+      });
+  };
+
+  // ==========================================
+  // VALIDACIÓN Y GUARDADO
+  // ==========================================
+  const validarFormulario = () => {
+    const form = document.getElementById('formUsuario');
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return false;
+    }
+
+    const password = $('#txtPassword').val();
+    const passwordConf = $('#txtPasswordConfirmacion').val();
+
+    if (!idUsuario && (!password || password.length < 6)) {
+      Swal.fire('Atención', 'La contraseña debe tener al menos 6 caracteres', 'warning');
+      return false;
+    }
+    if (password && password !== passwordConf) {
+      Swal.fire('Atención', 'Las contraseñas no coinciden', 'warning');
+      return false;
+    }
+    return true;
+  };
+
+  const initSaveAction = () => {
+    $('#btnGuardar').on('click', function () {
+      if (!validarFormulario()) return;
+
+      const data = {
+        username: $('#txtUsername').val().trim(),
+        id_rol: parseInt($('#id_rol').val()),
+        est_usuario: $('#chkActivo').is(':checked')
+      };
+
+      const password = $('#txtPassword').val();
+      if (password) {
+        data.password = password;
+        data.password_confirmacion = $('#txtPasswordConfirmacion').val();
+      }
+      if (!idUsuario) {
+        data.id_funcionario = parseInt($('#id_funcionario').val());
+      }
+
+      const btn = $(this);
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Procesando...');
+
+      const method = idUsuario ? 'PUT' : 'POST';
+      const url = idUsuario ? `/api/v1/usuarios/${idUsuario}` : '/api/v1/usuarios';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(data)
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            const msg = idUsuario ? 'Usuario actualizado exitosamente' : 'Usuario registrado correctamente';
+            Swal.fire('Éxito', msg, 'success').then(() => window.location.href = usuarioIndexUrl);
+          } else {
+            Swal.fire('Error', res.error || 'No se pudo guardar', 'error');
+            btn.prop('disabled', false).text(idUsuario ? 'Actualizar' : 'Guardar');
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Error de conexión', 'error');
+          btn.prop('disabled', false).text(idUsuario ? 'Actualizar' : 'Guardar');
+        });
+    });
+
+    $('#btnCancelar').on('click', function () {
+      window.location.href = usuarioIndexUrl;
+    });
+  };
+
+  $(document).ready(function () {
+    initSaveAction();
+
+    $('#id_funcionario').on('change', function () {
+      const opt = $(this).find('option:selected');
+      $('#txtCargoFuncionario').val(opt.data('cargo') || '');
+      $('#txtCedulaFuncionario').val(opt.data('cedula') || '');
+    });
+
+    let timeoutId;
+    $('#txtUsername').on('input', function () {
+      clearTimeout(timeoutId);
+      const username = $(this).val().trim();
+      if (username.length >= 3) {
+        timeoutId = setTimeout(() => validarUsername(username, idUsuario), 500);
+      } else {
+        $('#txtUsername').removeClass('is-valid is-invalid');
+        $('#usernameFeedback').text('');
+      }
+    });
+
+    if (idUsuario) {
+      cargarDatosUsuario(idUsuario);
+    } else {
+      cargarFuncionariosSinUsuario();
+      cargarRoles();
+    }
+  });
+</script>
+{% endblock %}

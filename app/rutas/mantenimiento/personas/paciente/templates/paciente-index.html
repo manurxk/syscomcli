@@ -7,7 +7,7 @@ Pacientes
 {% block contenido %}
 <!-- Header premium -->
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
-  <div class="container-xl px-4">
+  <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
@@ -20,14 +20,12 @@ Pacientes
   </div>
 </header>
 
-<div class="container-xl px-4 mt-n10">
+<div class="container-fluid px-4 mt-n10">
   <!-- Tarjeta principal -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header">
-      <span class="fw-semibold">Lista de Pacientes</span>
-      <a href="{{ url_for('paciente.pacienteAgregar') }}" class="btn btn-{{ ui.boton_agregar }} btn-sm shadow-sm">
-        <i class="fas fa-plus me-1"></i> Nuevo Paciente
-      </a>
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Pacientes</span>
+      <a href="{{ url_for('paciente.pacienteAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nuevo Paciente</a>
     </div>
 
     <div class="card-body">
@@ -126,26 +124,8 @@ Pacientes
     font-size: 0.9rem;
   }
 
-  .form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-
   .shadow-sm {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-  }
-
-  .fw-semibold {
-    font-weight: 600;
-  }
-
-  /* Validación visual */
-  .form-control.is-invalid {
-    border-color: #dc3545;
-  }
-
-  .form-control.is-valid {
-    border-color: #28a745;
   }
 
   /* Estilos para alertas de edad */
@@ -225,7 +205,8 @@ Pacientes
   // CONSTANTES Y CONFIGURACIÓN
   // ==========================================
   const CSRFToken = "{{ csrf_token() }}";
-  const tienePermisoBorrar = "{{ tiene_permiso_accion('borrar', request.path) }}" === "True";
+  {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+  const tienePermisoBorrar = {{ ('ADMINISTRADOR' in roles_usuario or 'SUPERADMIN' in roles_usuario) | tojson }};
   let currentCiudadType = 'residencia'; // 'residencia' o 'nacimiento'
   let currentPacienteIdForDownload = null;
   const BASE_EDIT_URL = "{{ url_for('paciente.pacienteAgregar') }}".replace('paciente-agregar', 'paciente-editar');

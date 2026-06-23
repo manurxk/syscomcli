@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Empresa
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Datos de la Empresa</h1>
+          <div class="page-header-subtitle">Información administrativa básica de la clínica</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Ficha de la Empresa</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnEditar">Configurar</button>
+    </div>
+    <div class="card-body">
+      <div id="sinDatos" class="text-muted d-none">Datos de la clínica sin configurar todavía.</div>
+      <dl class="row mb-0" id="ficha">
+        <dt class="col-sm-3">RUC/NIT</dt>
+        <dd class="col-sm-9" id="fRuc"></dd>
+        <dt class="col-sm-3">Razón Social</dt>
+        <dd class="col-sm-9" id="fRazonSocial"></dd>
+        <dt class="col-sm-3">Nombre Comercial</dt>
+        <dd class="col-sm-9" id="fNombreComercial"></dd>
+        <dt class="col-sm-3">Tipo de Contribuyente</dt>
+        <dd class="col-sm-9" id="fTipoContribuyente"></dd>
+        <dt class="col-sm-3">Ciudad</dt>
+        <dd class="col-sm-9" id="fCiudad"></dd>
+        <dt class="col-sm-3">Dirección</dt>
+        <dd class="col-sm-9" id="fDireccion"></dd>
+        <dt class="col-sm-3">Teléfono</dt>
+        <dd class="col-sm-9" id="fTelefono"></dd>
+        <dt class="col-sm-3">Celular</dt>
+        <dd class="col-sm-9" id="fCelular"></dd>
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9" id="fEmail"></dd>
+        <dt class="col-sm-3">Sitio Web</dt>
+        <dd class="col-sm-9" id="fSitioWeb"></dd>
+        <dt class="col-sm-3">Horario de Atención</dt>
+        <dd class="col-sm-9" id="fHorarioAtencion"></dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Datos de la Empresa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="txtIdEmpresa">
+        <div class="row">
+          <div class="form-group col-sm-8">
+            <label class="fw-semibold">RUC/NIT <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtRuc">
+          </div>
+          <div class="form-group col-sm-4">
+            <label class="fw-semibold">Dígito Verificador <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" maxlength="1" id="txtDigitoVerificador">
+          </div>
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Razón Social <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="txtRazonSocial">
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Nombre Comercial</label>
+          <input type="text" class="form-control" id="txtNombreComercial">
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Tipo de Contribuyente <span class="text-danger">*</span></label>
+          <select class="form-select" id="selTipoContribuyente">
+            <option value="PERSONA_FISICA">Persona Física</option>
+            <option value="PERSONA_JURIDICA" selected>Persona Jurídica</option>
+            <option value="EAS">EAS</option>
+          </select>
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Ciudad</label>
+          <select class="form-select" id="selCiudad">
+            <option value="">Seleccione una ciudad</option>
+          </select>
+        </div>
+        <div class="row mt-3">
+          <div class="form-group col-sm-8">
+            <label class="fw-semibold">Dirección <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtDireccion">
+          </div>
+          <div class="form-group col-sm-4">
+            <label class="fw-semibold">N° Casa</label>
+            <input type="text" class="form-control" id="txtNumeroCasa">
+          </div>
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Código Postal</label>
+          <input type="text" class="form-control" id="txtCodigoPostal">
+        </div>
+        <div class="row mt-3">
+          <div class="form-group col-sm-6">
+            <label class="fw-semibold">Teléfono <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtTelefono">
+          </div>
+          <div class="form-group col-sm-6">
+            <label class="fw-semibold">Celular <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtCelular">
+          </div>
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Email <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" id="txtEmail">
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Sitio Web</label>
+          <input type="text" class="form-control" id="txtSitioWeb">
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Actividad Económica Principal</label>
+          <input type="text" class="form-control" id="txtActividadEconomica">
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Horario de Atención</label>
+          <textarea class="form-control" id="txtHorarioAtencion" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardar">
+          <i data-feather="save" class="icon-sm"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+  let ciudadesCache = [];
+  let empresaActual = null;
+
+  const TIPOS_CONTRIBUYENTE = {
+    PERSONA_FISICA: 'Persona Física',
+    PERSONA_JURIDICA: 'Persona Jurídica',
+    EAS: 'EAS'
+  };
+
+  const cargarCiudades = () => {
+    return fetch('/api/v1/ciudades')
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          ciudadesCache = data.data;
+          const sel = $('#selCiudad');
+          ciudadesCache.forEach(c => {
+            sel.append(`<option value="${c.id}">${c.descripcion}</option>`);
+          });
+        }
+      });
+  }
+
+  const nombreCiudad = (id_ciudad) => {
+    const ciudad = ciudadesCache.find(c => c.id === id_ciudad);
+    return ciudad ? ciudad.descripcion : '-';
+  }
+
+  const pintarFicha = (data) => {
+    empresaActual = data;
+    if (!data) {
+      $('#ficha').addClass('d-none');
+      $('#sinDatos').removeClass('d-none');
+      $('#btnEditar').text('Configurar');
+      return;
+    }
+    $('#sinDatos').addClass('d-none');
+    $('#ficha').removeClass('d-none');
+    $('#btnEditar').text('Editar');
+    $('#fRuc').text(`${data.ruc_nit}-${data.digito_verificador}`);
+    $('#fRazonSocial').text(data.razon_social);
+    $('#fNombreComercial').text(data.nombre_comercial || '-');
+    $('#fTipoContribuyente').text(TIPOS_CONTRIBUYENTE[data.tipo_contribuyente] || data.tipo_contribuyente);
+    $('#fCiudad').text(data.id_ciudad ? nombreCiudad(data.id_ciudad) : '-');
+    $('#fDireccion').text(data.direccion);
+    $('#fTelefono').text(data.telefono);
+    $('#fCelular').text(data.celular);
+    $('#fEmail').text(data.email);
+    $('#fSitioWeb').text(data.sitio_web || '-');
+    $('#fHorarioAtencion').text(data.horario_atencion || '-');
+  }
+
+  const cargarFicha = () => {
+    fetch('/api/v1/empresa')
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          pintarFicha(data.data);
+        }
+      });
+  }
+
+  const abrirModal = () => {
+    $('#btnEditar').on('click', function () {
+      const d = empresaActual;
+      $('#txtIdEmpresa').val(d ? d.id_empresa : '');
+      $('#txtRuc').val(d ? d.ruc_nit : '');
+      $('#txtDigitoVerificador').val(d ? d.digito_verificador : '');
+      $('#txtRazonSocial').val(d ? d.razon_social : '');
+      $('#txtNombreComercial').val(d ? d.nombre_comercial : '');
+      $('#selTipoContribuyente').val(d ? d.tipo_contribuyente : 'PERSONA_JURIDICA');
+      $('#selCiudad').val(d && d.id_ciudad ? d.id_ciudad : '');
+      $('#txtDireccion').val(d ? d.direccion : '');
+      $('#txtNumeroCasa').val(d ? d.numero_casa : '');
+      $('#txtCodigoPostal').val(d ? d.codigo_postal : '');
+      $('#txtTelefono').val(d ? d.telefono : '');
+      $('#txtCelular').val(d ? d.celular : '');
+      $('#txtEmail').val(d ? d.email : '');
+      $('#txtSitioWeb').val(d ? d.sitio_web : '');
+      $('#txtActividadEconomica').val(d ? d.actividad_economica_principal : '');
+      $('#txtHorarioAtencion').val(d ? d.horario_atencion : '');
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idEmpresa = $('#txtIdEmpresa').val();
+      const payload = {
+        ruc_nit: $('#txtRuc').val().trim(),
+        digito_verificador: $('#txtDigitoVerificador').val().trim(),
+        razon_social: $('#txtRazonSocial').val().trim(),
+        nombre_comercial: $('#txtNombreComercial').val().trim(),
+        tipo_contribuyente: $('#selTipoContribuyente').val(),
+        id_ciudad: $('#selCiudad').val() || null,
+        direccion: $('#txtDireccion').val().trim(),
+        numero_casa: $('#txtNumeroCasa').val().trim(),
+        codigo_postal: $('#txtCodigoPostal').val().trim(),
+        telefono: $('#txtTelefono').val().trim(),
+        celular: $('#txtCelular').val().trim(),
+        email: $('#txtEmail').val().trim(),
+        sitio_web: $('#txtSitioWeb').val().trim(),
+        actividad_economica_principal: $('#txtActividadEconomica').val().trim(),
+        horario_atencion: $('#txtHorarioAtencion').val().trim()
+      };
+
+      const url = idEmpresa ? `/api/v1/empresa/${idEmpresa}` : '/api/v1/empresa';
+      const method = idEmpresa ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide();
+            Swal.fire('Éxito', idEmpresa ? 'Empresa actualizada.' : 'Empresa configurada.', 'success');
+            cargarFicha();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar la empresa.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar la empresa.', 'error'));
+    });
+  }
+
+  $(function () {
+    cargarCiudades().then(cargarFicha);
+    abrirModal();
+    guardar();
+  });
+</script>
+{% endblock %}

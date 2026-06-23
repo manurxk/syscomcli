@@ -5,34 +5,29 @@ Funcionarios
 {% endblock %}
 
 {% block contenido %}
-<!-- Header premium con degradado -->
+<!-- Header -->
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
-  <div class="container-xl px-4">
+  <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
           <h1 class="page-header-title">
-            <div class="page-header-icon"><i data-feather="user-tie"></i></div>
             Gestión de Funcionarios
           </h1>
           <div class="page-header-subtitle">Administración de personal, cargos y privilegios del sistema</div>
-        </div>
-        <div class="col-12 col-xl-auto mt-4">
-          <a href="{{ url_for('funcionario.funcionarioAgregar') }}" class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm">
-            <i class="fas fa-plus me-1"></i> Nuevo Funcionario
-          </a>
         </div>
       </div>
     </div>
   </div>
 </header>
 
-<div class="container-xl px-4 mt-n10">
+<div class="container-fluid px-4 mt-n10">
 
   <!-- Tarjeta principal -->
-  <div class="card card-header-actions mb-4 shadow-sm">
-    <div class="card-header">
-      <h5 class="mb-0">Lista de Funcionarios</h5>
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Funcionarios</span>
+      <a href="{{ url_for('funcionario.funcionarioAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nuevo Funcionario</a>
     </div>
 
     <div class="card-body">
@@ -381,19 +376,6 @@ Funcionarios
     font-size: 0.9rem;
   }
 
-  .form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-
-  .shadow-sm {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-  }
-
-  .fw-semibold {
-    font-weight: 600;
-  }
-
   /* Estilos para checkboxes de especialidades */
   #contenedorEspecialidades .custom-control {
     padding: 8px;
@@ -406,15 +388,6 @@ Funcionarios
 
   #contenedorEspecialidades .custom-control:last-child {
     border-bottom: none;
-  }
-
-  /* Validación visual */
-  .form-control.is-invalid {
-    border-color: #dc3545;
-  }
-
-  .form-control.is-valid {
-    border-color: #28a745;
   }
 
   /* Scrollbar personalizado */
@@ -504,8 +477,8 @@ Funcionarios
         {
           data: function (row) {
             return row.activo
-              ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
-              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
+              ? '<span class="badge border border-success text-success">Activo</span>'
+              : '<span class="badge border border-secondary text-secondary">Inactivo</span>';
           },
           className: 'text-center'
         },
@@ -525,11 +498,11 @@ Funcionarios
         {
           data: function (row) {
             let acciones = `
-            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id_funcionario}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-outline-primary me-1" type="button" name="btn_editar" data-id="${row.id_funcionario}">Editar</button>
           `;
 
             if (tienePermisoBorrar) {
-              acciones += `<button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id_funcionario}" data-nombre="${row.nombre} ${row.apellido}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+              acciones += `<button class="btn btn-sm btn-outline-danger" type="button" name="btn_eliminar" data-id="${row.id_funcionario}" data-nombre="${row.nombre} ${row.apellido}">Eliminar</button>`;
             }
 
             return acciones;
@@ -582,7 +555,7 @@ Funcionarios
 
     $('#contenedorEspecialidades').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando especialidades...</div>');
 
-    fetch('/api/v1/especialidades')
+    fetch('/api/v1/especialidades-permitidas')
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data && data.data.length > 0) {
@@ -665,26 +638,16 @@ Funcionarios
   // ==========================================
   // MANEJO DEL COLLAPSE DE ESPECIALISTA
   // ==========================================
-  // ❌ ELIMINAR función manejarCollapseEspecialista()
-
-  // ✅ AGREGAR detección automática
-  let idCargoEspecialista = null; // Se detectará dinámicamente
+  // Un cargo "requiere datos de especialista" si el campo es_clinico del
+  // cargo (ABM de Cargos) está marcado, no por coincidencia de texto en la descripción.
+  let cargosClinicos = new Set();
 
   const detectarEspecialistaPorCargo = () => {
-    const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
-
-    // Detectar ID del cargo Especialista al cargar los cargos permitidos
     fetch('/api/v1/cargos-permitidos')
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
-          data.data.forEach(cargo => {
-            const descCargo = (cargo.descripcion || '').toUpperCase();
-            if (descCargo.includes('ESPECIALISTA') || descCargo.includes('ESPECIALIST')) {
-              idCargoEspecialista = cargo.id;
-              console.log(`✅ Cargo Especialista detectado con ID: ${idCargoEspecialista}`);
-            }
-          });
+          cargosClinicos = new Set(data.data.filter(c => c.es_clinico).map(c => c.id));
         }
       });
 
@@ -696,12 +659,7 @@ Funcionarios
         return;
       }
 
-      // Verificar si es cargo de Especialista (dinámicamente o por ID hardcodeado)
-      const esEspecialista = (idCargoEspecialista && cargoId === idCargoEspecialista) ||
-        CARGOS_ESPECIALISTAS.includes(cargoId);
-
-      if (esEspecialista) {
-        console.log('✅ Cargo Especialista detectado, mostrando sección de especialidades');
+      if (esCargoEspecialista()) {
         $('#collapseEspecialista').collapse('show');
         cargarEspecialidades();
         $('#txtMatricula').attr('required', true);
@@ -713,20 +671,12 @@ Funcionarios
     });
   }
 
-  // En validarFormulario(), cambiar:
-  // ❌ if ($('#chkEsEspecialista').is(':checked'))
-  // ✅ if (esCargoEspecialista())
-
   const esCargoEspecialista = () => {
-    const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
     const cargoId = parseInt($('#id_cargo').val());
     if (!cargoId || isNaN(cargoId)) {
       return false;
     }
-
-    // Verificar dinámicamente o por fallback
-    return (idCargoEspecialista && cargoId === idCargoEspecialista) ||
-      CARGOS_ESPECIALISTAS.includes(cargoId);
+    return cargosClinicos.has(cargoId);
   }
 
 

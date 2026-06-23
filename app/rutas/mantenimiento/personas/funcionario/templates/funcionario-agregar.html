@@ -6,19 +6,18 @@
 
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
-  <div class="container-xl px-4">
+  <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
           <h1 class="page-header-title">
-            <div class="page-header-icon"><i data-feather="user-plus"></i></div>
             {% if id_funcionario %}Editar Funcionario{% else %}Registrar Funcionario{% endif %}
           </h1>
           <div class="page-header-subtitle">Completa la información necesaria para gestionar el perfil del funcionario en el sistema</div>
         </div>
-        <div class="col-12 col-xl-auto mt-4">
-          <a href="{{ url_for('funcionario.funcionarioIndex') }}" class="btn btn-sm btn-light text-primary fw-500 shadow-sm">
-            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('funcionario.funcionarioIndex') }}">
+            Volver al Listado
           </a>
         </div>
       </div>
@@ -26,250 +25,218 @@
   </div>
 </header>
 
-<div class="container-xl px-4 mt-n10">
+<div class="container-fluid px-4 mt-n10">
 
   <form id="formFuncionario">
     <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" id="txtIdPersona">
     <input type="hidden" id="txtIdFuncionario" value="{{ id_funcionario or '' }}">
 
-    <div class="row justify-content-center">
-      <!-- Contenido del Formulario -->
-      <div class="col-lg-10">
-        <!-- SECCIÓN: Datos Personales -->
-        <div id="section-personales" class="card shadow-sm mb-4">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-primary">
-              <i class="fas fa-user me-2"></i> Datos Personales
-            </h6>
+    <!-- SECCIÓN: Datos Personales -->
+    <div id="section-personales" class="card shadow-sm mb-4 border-start-primary">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2"><i data-feather="user" class="icon-sm"></i> Datos Personales</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtNombre">Nombres <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtNombre" type="text" placeholder="Ingrese los nombres" required>
           </div>
-          <div class="card-body">
-            <div class="row gx-3 mb-3">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="small mb-1" for="txtNombre">Nombres <span class="text-danger">*</span></label>
-                <input class="form-control" id="txtNombre" type="text" placeholder="Ingrese los nombres" required>
-              </div>
-              <div class="col-md-6">
-                <label class="small mb-1" for="txtApellido">Apellidos <span class="text-danger">*</span></label>
-                <input class="form-control" id="txtApellido" type="text" placeholder="Ingrese los apellidos" required>
-              </div>
-            </div>
-            <div class="row gx-3 mb-3">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="small mb-1" for="txtCedula">Cédula de Identidad <span class="text-danger">*</span></label>
-                <input class="form-control" id="txtCedula" type="text" placeholder="Ingrese el número de cédula"
-                  required>
-              </div>
-              <div class="col-md-6">
-                <label class="small mb-1" for="txtFecha_nacimiento">Fecha de Nacimiento <span
-                    class="text-danger">*</span></label>
-                <input class="form-control" id="txtFecha_nacimiento" type="date" required>
-              </div>
-            </div>
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="small mb-1" for="id_genero">Género</label>
-                <select class="form-select" id="id_genero">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="small mb-1" for="id_estado_civil">Estado Civil</label>
-                <select class="form-select" id="id_estado_civil">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtApellido">Apellidos <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtApellido" type="text" placeholder="Ingrese los apellidos" required>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtCedula">Cédula de Identidad <span class="text-danger">*</span></label>
+            <input class="form-control" id="txtCedula" type="text" placeholder="Ingrese el número de cédula"
+              required>
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtFecha_nacimiento">Fecha de Nacimiento <span
+                class="text-danger">*</span></label>
+            <input class="form-control" id="txtFecha_nacimiento" type="date" required>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_genero">Género</label>
+            <select class="form-select" id="id_genero">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="id_estado_civil">Estado Civil</label>
+            <select class="form-select" id="id_estado_civil">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Contacto y Ubicación -->
+    <div id="section-contacto" class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2"><i data-feather="map-pin" class="icon-sm"></i> Contacto y Ubicación</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtTelefono">Teléfono / Celular <span
+                class="text-danger">*</span></label>
+            <input class="form-control" id="txtTelefono" type="text" placeholder="Ingrese el número de teléfono"
+              required>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="txtCorreo">Email</label>
+            <input class="form-control" id="txtCorreo" type="email" placeholder="nombre@ejemplo.com">
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="txtDomicilio">Dirección de Domicilio</label>
+            <input class="form-control" id="txtDomicilio" type="text" placeholder="Ingrese la dirección completa">
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0 position-relative">
+            <label class="small mb-1" for="txtCiudad">Ciudad de Residencia</label>
+            <input type="hidden" id="id_ciudad">
+            <input class="form-control" id="txtCiudad" type="text" placeholder="Escriba para buscar..."
+              autocomplete="off">
+            <div class="list-group ciudad-sugerencias" id="sugerenciasCiudad"></div>
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1 text-muted" for="txtDepartamento">Departamento</label>
+            <input class="form-control" id="txtDepartamento" type="text" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1 text-muted" for="txtPais">País</label>
+            <input class="form-control" id="txtPais" type="text" readonly>
+          </div>
+        </div>
+        <div class="row gx-3 mt-3">
+          <div class="col-md-4 position-relative">
+            <label class="small mb-1" for="txtCiudad_nacimiento">Ciudad de Nacimiento</label>
+            <input type="hidden" id="id_ciudad_nacimiento">
+            <input class="form-control" id="txtCiudad_nacimiento" type="text" placeholder="Escriba para buscar..."
+              autocomplete="off">
+            <div class="list-group ciudad-sugerencias" id="sugerenciasCiudadNacimiento"></div>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1 text-muted" for="txtDepartamentoNacimiento">Departamento de Nacimiento</label>
+            <input class="form-control" id="txtDepartamentoNacimiento" type="text" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1 text-muted" for="txtPaisNacimiento">País de Nacimiento</label>
+            <input class="form-control" id="txtPaisNacimiento" type="text" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Formación -->
+    <div id="section-profesional" class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2"><i data-feather="book-open" class="icon-sm"></i> Formación y Profesión</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_nivel_instruccion">Nivel de Instrucción</label>
+            <select class="form-select" id="id_nivel_instruccion">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1" for="id_profesion">Profesión / Ocupación</label>
+            <select class="form-select" id="id_profesion">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Datos Laborales -->
+    <div id="section-laborales" class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2"><i data-feather="briefcase" class="icon-sm"></i> Datos Laborales</h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 align-items-center">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_cargo">Cargo Asignado <span class="text-danger">*</span></label>
+            <select class="form-select" id="id_cargo" required>
+              <option value="">Seleccione un cargo...</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <div class="form-check form-switch mt-md-4">
+              <input class="form-check-input" type="checkbox" id="chkActivo" checked>
+              <label class="form-check-label fw-bold" for="chkActivo">Funcionario Activo</label>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- SECCIÓN: Contacto y Ubicación -->
-        <div id="section-contacto" class="card shadow-sm mb-4">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-success">
-              <i class="fas fa-address-card me-2"></i> Contacto y Ubicación
-            </h6>
+    <!-- SECCIÓN: Especialista (OCULTO POR DEFECTO) -->
+    <div class="collapse" id="collapseEspecialista">
+      <div id="section-especialista" class="card shadow-sm mb-4 border-start-purple">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h6 class="m-0 fw-bold text-purple d-flex align-items-center gap-2"><i data-feather="award" class="icon-sm"></i> Datos de Especialista</h6>
+          <span class="badge border border-purple text-purple">Datos adicionales</span>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-soft-purple mb-4">
+            <div class="text-purple small">Complete estos datos adicionales para profesionales de la salud.</div>
           </div>
-          <div class="card-body">
-            <div class="row gx-3 mb-3">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="small mb-1" for="txtTelefono">Teléfono / Celular <span
-                    class="text-danger">*</span></label>
-                <input class="form-control" id="txtTelefono" type="text" placeholder="Ingrese el número de teléfono"
-                  required>
-              </div>
-              <div class="col-md-6">
-                <label class="small mb-1" for="txtCorreo">Email</label>
-                <input class="form-control" id="txtCorreo" type="email" placeholder="nombre@ejemplo.com">
+          <div class="row gx-3 mb-4">
+            <div class="col-md-4 mb-3 mb-md-0">
+              <label class="small mb-1" for="txtMatricula">Matrícula Profesional <span
+                  class="text-danger">*</span></label>
+              <input class="form-control" id="txtMatricula" type="text" placeholder="Ej: MAT-12345">
+            </div>
+            <div class="col-md-4">
+              <label class="small mb-1" for="txtColorAgenda">Color Identificador en Agenda</label>
+              <div class="d-flex align-items-center">
+                <input class="form-control form-control-color me-3" id="txtColorAgenda" type="color" value="#0061f2"
+                  title="Elija el color para el calendario">
+                <small class="text-muted">Color para citas en el calendario</small>
               </div>
             </div>
-            <div class="mb-3">
-              <label class="small mb-1" for="txtDomicilio">Dirección de Domicilio</label>
-              <input class="form-control" id="txtDomicilio" type="text" placeholder="Ingrese la dirección completa">
+          </div>
+
+          <label class="small mb-2 fw-bold text-dark">Especialidades Médicas</label>
+          <div class="border rounded bg-light p-3 mb-3" id="contenedorEspecialidades"
+            style="max-height: 250px; overflow-y: auto;">
+            <!-- Cargado dinámicamente -->
+            <div class="text-center text-muted py-3">
+              <span class="spinner-border spinner-border-sm me-2"></span> Cargando especialidades...
             </div>
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="small mb-1">Ciudad de Residencia</label>
-                <div class="input-group">
-                  <input type="hidden" id="id_ciudad">
-                  <input class="form-control" id="txtCiudad" type="text" placeholder="Seleccionar ciudad..." readonly>
-                  <button class="btn btn-outline-primary" type="button" id="btnBuscarCiudad">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="small mb-1">Ciudad de Nacimiento</label>
-                <div class="input-group">
-                  <input type="hidden" id="id_ciudad_nacimiento">
-                  <input class="form-control" id="txtCiudad_nacimiento" type="text" placeholder="Seleccionar ciudad..."
-                    readonly>
-                  <button class="btn btn-outline-primary" type="button" id="btnBuscarCiudadNacimiento">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">Seleccione una o más especialidades.</small>
+            <span class="badge bg-light text-dark border p-2" id="contadorEspecialidades">0 seleccionadas</span>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- SECCIÓN: Formación -->
-        <div id="section-profesional" class="card shadow-sm mb-4">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-info">
-              <i class="fas fa-graduation-cap me-2"></i> Formación y Profesión
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="row gx-3">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="small mb-1" for="id_nivel_instruccion">Nivel de Instrucción</label>
-                <select class="form-select" id="id_nivel_instruccion">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="small mb-1" for="id_profesion">Profesión / Ocupación</label>
-                <select class="form-select" id="id_profesion">
-                  <option value="">Seleccione...</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECCIÓN: Datos Laborales -->
-        <div id="section-laborales" class="card shadow-sm mb-4">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-warning">
-              <i class="fas fa-briefcase me-2"></i> Datos Laborales
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="row gx-3 align-items-center">
-              <div class="col-md-7 mb-3 mb-md-0">
-                <label class="small mb-1" for="id_cargo">Cargo Asignado <span class="text-danger">*</span></label>
-                <select class="form-select" id="id_cargo" required>
-                  <option value="">Seleccione un cargo...</option>
-                </select>
-              </div>
-              <div class="col-md-5">
-                <div class="form-check form-switch mt-md-4">
-                  <input class="form-check-input" type="checkbox" id="chkActivo" checked>
-                  <label class="form-check-label fw-bold" for="chkActivo">Funcionario Activo</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECCIÓN: Especialista (OCULTO POR DEFECTO) -->
-        <div class="collapse" id="collapseEspecialista">
-          <div id="section-especialista" class="card shadow-sm mb-4 border-start-purple">
-            <div class="card-header bg-white py-3">
-              <h6 class="m-0 fw-bold text-purple">
-                <i class="fas fa-stethoscope me-2"></i> Datos de Especialista
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="alert alert-soft-purple mb-4 d-flex align-items-center">
-                <i class="fas fa-id-card me-3 fa-lg text-purple"></i>
-                <div class="text-purple small">Complete estos datos adicionales para profesionales de la salud.</div>
-              </div>
-              <div class="row gx-3 mb-4">
-                <div class="col-md-6 mb-3 mb-md-0">
-                  <label class="small mb-1" for="txtMatricula">Matrícula Profesional <span
-                      class="text-danger">*</span></label>
-                  <input class="form-control" id="txtMatricula" type="text" placeholder="Ej: MAT-12345">
-                </div>
-                <div class="col-md-6">
-                  <label class="small mb-1" for="txtColorAgenda">Color Identificador en Agenda</label>
-                  <div class="d-flex align-items-center">
-                    <input class="form-control form-control-color me-3" id="txtColorAgenda" type="color" value="#0061f2"
-                      title="Elija el color para el calendario">
-                    <small class="text-muted">Color para citas en el calendario</small>
-                  </div>
-                </div>
-              </div>
-
-              <label class="small mb-2 fw-bold text-dark">Especialidades Médicas</label>
-              <div class="border rounded bg-light p-3 mb-3" id="contenedorEspecialidades"
-                style="max-height: 250px; overflow-y: auto;">
-                <!-- Cargado dinámicamente -->
-                <div class="text-center text-muted py-3">
-                  <i class="fas fa-spinner fa-spin me-2"></i> Cargando especialidades...
-                </div>
-              </div>
-              <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">Seleccione una o más especialidades.</small>
-                <span class="badge bg-light text-dark border p-2" id="contadorEspecialidades">0 seleccionadas</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Botones de Acción FINAL -->
-        <div class="card shadow-sm mb-5 border-0 bg-transparent">
-          <div class="card-body p-0 d-flex justify-content-end">
-            <button class="btn btn-outline-secondary me-2 shadow-sm" type="button" id="btnCancelar">
-              <i class="fas fa-times me-1"></i> Cancelar
-            </button>
-            <button class="btn btn-primary shadow-sm px-4" type="button" id="btnGuardar">
-              <i class="fas fa-save me-1"></i> {% if id_funcionario %}Guardar Cambios{% else %}Registrar Funcionario{%
-              endif %}
-            </button>
-          </div>
-        </div>
+    <!-- Botones de Acción FINAL -->
+    <div class="card shadow-sm mb-5">
+      <div class="card-body d-flex justify-content-between py-3">
+        <button type="button" class="btn btn-outline-secondary px-4" id="btnCancelar">Cancelar</button>
+        <button type="button" class="btn btn-primary px-5 fw-600" id="btnGuardar">
+          {% if id_funcionario %}Actualizar{% else %}Guardar{% endif %}
+        </button>
       </div>
     </div>
   </form>
 </div>
 
 <style>
-  /* Custom Colors and Section Styles */
-  .text-purple {
-    color: #6f42c1 !important;
-  }
-
-  .bg-purple {
-    background-color: #6f42c1 !important;
-  }
-
-  .border-start-purple {
-    border-left: 0.35rem solid #6f42c1 !important;
-  }
-
-
-  /* Alert improvements (SB Admin Pro style) */
-  .alert-soft-primary {
-    background-color: #e8f0fe !important;
-    border: 1px solid rgba(0, 97, 242, 0.1) !important;
-  }
-
-  .alert-soft-purple {
-    background-color: #f3e5f5 !important;
-    border: 1px solid rgba(111, 66, 193, 0.1) !important;
-  }
+  /* .text-purple, .border-start-purple, .alert-soft-purple ahora viven en compat.css */
 
   /* Form Elements */
   .form-select,
@@ -283,54 +250,33 @@
     border-color: #bac8f3 !important;
     box-shadow: 0 0 0 0.2rem rgba(0, 97, 242, 0.1) !important;
   }
-</style>
 
-<!-- Modal Buscar Ciudad (reutilizable) -->
-<div class="modal fade" id="modalBuscarCiudad" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header border-bottom">
-        <h5 class="modal-title fw-bold" id="tituloModalCiudad">Seleccionar Ciudad</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="table-responsive">
-          <table class="table table-hover table-bordered align-middle w-100" id="tblCiudad">
-            <thead class="table-light">
-              <tr>
-                <th>Ciudad</th>
-                <th style="width: 120px;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  .ciudad-sugerencias {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+
+  .ciudad-sugerencias .list-group-item {
+    cursor: pointer;
+  }
+
+  .ciudad-sugerencias .list-group-item:hover,
+  .ciudad-sugerencias .list-group-item.active {
+    background-color: #e8f0fe;
+  }
+</style>
 
 <style>
   .form-group label {
     margin-bottom: 0.375rem;
     font-size: 0.9rem;
-  }
-
-  .form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-
-  .fw-semibold {
-    font-weight: 600;
-  }
-
-  .form-control.is-invalid {
-    border-color: #dc3545;
-  }
-
-  .form-control.is-valid {
-    border-color: #28a745;
   }
 
   #contenedorEspecialidades .custom-control {
@@ -357,7 +303,9 @@
   // ==========================================
   const CSRFToken = "{{ csrf_token() }}" || null;
   let especialidadesCargadas = false;
-  let idCargoEspecialista = null; // Se detectará dinámicamente
+  // Un cargo "requiere datos de especialista" si el campo es_clinico del
+  // cargo (ABM de Cargos) está marcado, no por coincidencia de texto en la descripción.
+  let cargosClinicos = new Set();
 
   // ==========================================
   // CARGAR CATÁLOGOS EN SELECTS
@@ -378,17 +326,12 @@
       .then(data => {
         if (data.success) {
           let html = `<option value="">${placeholder}</option>`;
+          if (selector === '#id_cargo') {
+            cargosClinicos = new Set(data.data.filter(c => c.es_clinico).map(c => c.id));
+          }
+
           data.data.forEach(item => {
             html += `<option value="${item.id}">${item.descripcion}</option>`;
-
-            // Detectar dinámicamente el ID del cargo "Especialista" o "ESPECIALISTA"
-            if (selector === '#id_cargo') {
-              const descCargo = (item.descripcion || '').toUpperCase();
-              if (descCargo.includes('ESPECIALISTA') || descCargo.includes('ESPECIALIST')) {
-                idCargoEspecialista = item.id;
-                console.log(`✅ Cargo Especialista detectado con ID: ${idCargoEspecialista}`);
-              }
-            }
           });
           // Deshabilitar eventos temporalmente para evitar que se dispare change al cargar
           $(selector).off('change');
@@ -408,11 +351,7 @@
                 return;
               }
 
-              // Verificar si es cargo de Especialista (dinámicamente o por ID hardcodeado)
-              const esEspecialista = (idCargoEspecialista && cargoId === idCargoEspecialista) ||
-                CARGOS_ESPECIALISTAS.includes(cargoId);
-
-              if (esEspecialista) {
+              if (cargosClinicos.has(cargoId)) {
                 console.log('✅ Cargo Especialista detectado, mostrando sección de especialidades');
                 $('#collapseEspecialista').collapse('show');
                 cargarEspecialidades();
@@ -440,7 +379,7 @@
 
     $('#contenedorEspecialidades').html('<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando especialidades...</div>');
 
-    fetch('/api/v1/especialidades')
+    fetch('/api/v1/especialidades-permitidas')
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data && data.data.length > 0) {
@@ -524,17 +463,12 @@
   // ==========================================
   // DETECCIÓN DE ESPECIALISTA POR CARGO
   // ==========================================
-  const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado (se detectará dinámicamente)
-
   const esCargoEspecialista = () => {
     const cargoId = parseInt($('#id_cargo').val());
     if (!cargoId || isNaN(cargoId)) {
       return false;
     }
-
-    // Verificar dinámicamente o por fallback
-    return (idCargoEspecialista && cargoId === idCargoEspecialista) ||
-      CARGOS_ESPECIALISTAS.includes(cargoId);
+    return cargosClinicos.has(cargoId);
   }
 
   const detectarEspecialistaPorCargo = () => {
@@ -652,7 +586,7 @@
           });
         })
         .then(data => {
-          btn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Funcionario');
+          btn.prop('disabled', false).text(esEdicion ? 'Actualizar' : 'Guardar');
 
           if (data.success) {
             Swal.fire({
@@ -668,7 +602,7 @@
           }
         })
         .catch(err => {
-          btn.prop('disabled', false).html(esEdicion ? '<i class="fas fa-save"></i> Actualizar Funcionario' : '<i class="fas fa-save"></i> Guardar Funcionario');
+          btn.prop('disabled', false).text(esEdicion ? 'Actualizar' : 'Guardar');
           console.error('❌ Error guardando funcionario:', err);
           Swal.fire('Error', err.message || 'Ocurrió un error al guardar', 'error');
         });
@@ -676,76 +610,112 @@
   }
 
   // ==========================================
-  // SISTEMA DE BÚSQUEDA DE CIUDAD
+  // SISTEMA DE BÚSQUEDA DE CIUDAD (autocompletado tipo typeahead)
   // ==========================================
-  let dtCiudad = null;
-  let currentCiudadType = 'residencia';
+  let ciudadesCache = [];
+  const MAX_SUGERENCIAS_CIUDAD = 8;
 
-  const initCiudadDatatable = () => {
-    if (dtCiudad) {
+  const normalizarTexto = (txt) => (txt || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .trim();
+
+  const cargarCiudadesCache = () => {
+    fetch('/api/v1/ciudades')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          ciudadesCache = data.data || [];
+          console.log(`✅ Cache de ciudades cargado con ${ciudadesCache.length} registros`);
+        }
+      })
+      .catch(err => console.error('❌ Error cargando cache de ciudades:', err));
+  };
+
+  // Consulta departamento y país de una ciudad y los pinta en los selectores readonly indicados
+  const cargarDepartamentoYPaisDeCiudad = (idCiudad, selectorDepartamento, selectorPais) => {
+    $(selectorDepartamento).val('');
+    $(selectorPais).val('');
+
+    if (!idCiudad) {
       return;
     }
 
-    dtCiudad = $('#tblCiudad').DataTable({
-      language: {
-        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-      },
-      ajax: {
-        url: '/api/v1/ciudades',
-        dataSrc: 'data'
-      },
-      columns: [
-        { data: 'descripcion' },
-        {
-          data: function (row) {
-            return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
-                    data-id="${row.id}" 
-                    data-descripcion="${row.descripcion}">
-                    <i class="fa fa-check"></i> Seleccionar
-                  </button>`;
-          }
+    fetch(`/api/v1/ciudades/${idCiudad}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data) {
+          $(selectorDepartamento).val(data.data.desc_departamento || '');
+          $(selectorPais).val(data.data.desc_pais || '');
         }
-      ]
-    });
+      })
+      .catch(err => console.error('❌ Error cargando departamento/país de la ciudad:', err));
+  };
 
-    $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function () {
-      const id = $(this).data('id');
-      const descripcion = $(this).data('descripcion');
+  // Vincula un input de texto con un dropdown de sugerencias filtradas del cache de ciudades
+  const bindCiudadTypeahead = (selectorInput, selectorHiddenId, selectorSugerencias, selectorDepartamento, selectorPais) => {
+    const $input = $(selectorInput);
+    const $hidden = $(selectorHiddenId);
+    const $sugerencias = $(selectorSugerencias);
 
-      if (currentCiudadType === 'residencia') {
-        $('#txtCiudad').val(descripcion);
-        $('#id_ciudad').val(id);
-      } else {
-        $('#txtCiudad_nacimiento').val(descripcion);
-        $('#id_ciudad_nacimiento').val(id);
+    const ocultarSugerencias = () => $sugerencias.hide().empty();
+
+    const seleccionarCiudad = (ciudad) => {
+      $input.val(ciudad.descripcion);
+      $hidden.val(ciudad.id);
+      cargarDepartamentoYPaisDeCiudad(ciudad.id, selectorDepartamento, selectorPais);
+      ocultarSugerencias();
+    };
+
+    $input.on('input', function () {
+      const termino = normalizarTexto($(this).val());
+
+      // Si el usuario edita el texto, la selección anterior ya no es válida
+      $hidden.val('');
+      $(selectorDepartamento).val('');
+      $(selectorPais).val('');
+
+      if (termino.length < 2) {
+        ocultarSugerencias();
+        return;
       }
 
-      (bootstrap.Modal.getInstance(document.getElementById("modalBuscarCiudad")) || new bootstrap.Modal(document.getElementById("modalBuscarCiudad"))).hide();
+      const coincidencias = ciudadesCache
+        .filter(c => normalizarTexto(c.descripcion).includes(termino))
+        .slice(0, MAX_SUGERENCIAS_CIUDAD);
+
+      if (coincidencias.length === 0) {
+        $sugerencias.html('<div class="list-group-item text-muted small">Sin coincidencias</div>').show();
+        return;
+      }
+
+      const html = coincidencias.map(c =>
+        `<button type="button" class="list-group-item list-group-item-action" data-id="${c.id}" data-descripcion="${c.descripcion}">${c.descripcion}</button>`
+      ).join('');
+      $sugerencias.html(html).show();
+    });
+
+    $sugerencias.on('click', '.list-group-item-action', function () {
+      seleccionarCiudad({ id: $(this).data('id'), descripcion: $(this).data('descripcion') });
+    });
+
+    $input.on('blur', function () {
+      // Pequeño delay para permitir que el click en una sugerencia se procese antes de ocultar
+      setTimeout(ocultarSugerencias, 150);
+    });
+
+    $input.on('focus', function () {
+      if ($(this).val().length >= 2 && $sugerencias.children().length > 0) {
+        $sugerencias.show();
+      }
     });
   };
 
   const bindCiudadSearch = () => {
-    $('#btnBuscarCiudad').on('click', function (e) {
-      e.preventDefault();
-      currentCiudadType = 'residencia';
-      $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
-      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
-    });
-
-    $('#btnBuscarCiudadNacimiento').on('click', function (e) {
-      e.preventDefault();
-      currentCiudadType = 'nacimiento';
-      $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
-      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
-    });
-
-    $('#txtCiudad').on('click', function () {
-      $('#btnBuscarCiudad').click();
-    });
-
-    $('#txtCiudad_nacimiento').on('click', function () {
-      $('#btnBuscarCiudadNacimiento').click();
-    });
+    bindCiudadTypeahead('#txtCiudad', '#id_ciudad', '#sugerenciasCiudad', '#txtDepartamento', '#txtPais');
+    bindCiudadTypeahead('#txtCiudad_nacimiento', '#id_ciudad_nacimiento', '#sugerenciasCiudadNacimiento', '#txtDepartamentoNacimiento', '#txtPaisNacimiento');
   };
 
   // ==========================================
@@ -780,13 +750,10 @@
             $('#id_profesion').val(func.id_profesion);
             $('#id_cargo').val(func.id_cargo);
 
-            // Verificar si el cargo es de especialista y mostrar la sección
+            // Verificar si el cargo es clínico y mostrar la sección
             const cargoId = parseInt(func.id_cargo);
-            const CARGOS_ESPECIALISTAS = [3]; // Fallback: ID hardcodeado
-            const esEspecialistaCargo = (idCargoEspecialista && cargoId === idCargoEspecialista) ||
-              CARGOS_ESPECIALISTAS.includes(cargoId);
 
-            if (esEspecialistaCargo) {
+            if (cargosClinicos.has(cargoId)) {
               console.log('✅ Cargo Especialista detectado al editar, mostrando sección de especialidades');
               $('#collapseEspecialista').collapse('show');
               cargarEspecialidades();
@@ -806,23 +773,29 @@
               }
             }
 
-            // Cargar ciudades después de asignar valores
+            // Cargar ciudades (y su departamento/país) después de asignar valores
+            $('#id_ciudad').val(func.id_ciudad || '');
             if (func.id_ciudad) {
               fetch(`/api/v1/ciudades/${func.id_ciudad}`)
                 .then(r => r.json())
                 .then(data => {
                   if (data.success && data.data) {
                     $('#txtCiudad').val(data.data.desc_ciudad);
+                    $('#txtDepartamento').val(data.data.desc_departamento || '');
+                    $('#txtPais').val(data.data.desc_pais || '');
                   }
                 });
             }
 
+            $('#id_ciudad_nacimiento').val(func.id_ciudad_nacimiento || '');
             if (func.id_ciudad_nacimiento) {
               fetch(`/api/v1/ciudades/${func.id_ciudad_nacimiento}`)
                 .then(r => r.json())
                 .then(data => {
                   if (data.success && data.data) {
                     $('#txtCiudad_nacimiento').val(data.data.desc_ciudad);
+                    $('#txtDepartamentoNacimiento').val(data.data.desc_departamento || '');
+                    $('#txtPaisNacimiento').val(data.data.desc_pais || '');
                   }
                 });
             }
@@ -832,7 +805,7 @@
           $('#chkActivo').prop('checked', func.activo);
 
           // Cambiar texto del botón
-          $('#btnGuardar').html('<i class="fas fa-save"></i> Actualizar Funcionario');
+          $('#btnGuardar').text('Actualizar');
         } else {
           Swal.fire('Error', data.error || 'No se pudo cargar el funcionario', 'error');
           setTimeout(() => {
@@ -865,7 +838,7 @@
     detectarEspecialistaPorCargo();
 
     cargarCatalogos();
-    initCiudadDatatable();
+    cargarCiudadesCache();
     bindCiudadSearch();
     guardar();
 

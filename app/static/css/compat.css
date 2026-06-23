@@ -52,15 +52,20 @@
     margin-bottom: 1rem;
 }
 
-/* Gradiente primario → secundario (usado en dashboards) */
+/* Color de marca sólido para page-header (antes gradiente azul→violeta) */
 .bg-gradient-primary-to-secondary {
-    background: linear-gradient(135deg, #0061f2 0%, #6900c7 100%) !important;
+    background: #6900c7 !important;
     color: #fff;
 }
 
 /* Padding bottom extra (pb-10 era una utilidad de SB Admin Pro) */
 .pb-10 {
-    padding-bottom: 2.5rem !important;
+    padding-bottom: 8rem !important;
+}
+
+/* Margen negativo para que la card "muerda" el page-header */
+.mt-n10 {
+    margin-top: -6rem !important;
 }
 
 /* ============================================================
@@ -145,6 +150,30 @@
     background-color: rgba(105, 0, 199, 0.12) !important;
     color: #6900c7 !important;
 }
+
+/* ============================================================
+   ALERTAS SOFT (fondo suave, usadas en secciones de wizard)
+   ============================================================ */
+.alert-soft-primary {
+    background-color: #e8f0fe !important;
+    border: 1px solid rgba(0, 97, 242, 0.1) !important;
+}
+.alert-soft-warning {
+    background-color: #fff8e6 !important;
+    border: 1px solid rgba(255, 165, 0, 0.15) !important;
+}
+.alert-soft-purple {
+    background-color: #f3e5f5 !important;
+    border: 1px solid rgba(111, 66, 193, 0.1) !important;
+}
+
+/* ============================================================
+   COLOR PURPLE (no nativo de Bootstrap, usado en sección Especialista)
+   ============================================================ */
+.text-purple { color: #6f42c1 !important; }
+.bg-purple { background-color: #6f42c1 !important; }
+.border-start-purple { border-left: 0.35rem solid #6f42c1 !important; }
+.border-purple { border-color: #6f42c1 !important; }
 
 /* ============================================================
    CARD HEADER ACTIONS
@@ -256,3 +285,45 @@
 .dropdown-user-details-name { font-weight: 600; font-size: 0.9rem; }
 .dropdown-user-details-email { font-size: 0.8rem; color: var(--bs-secondary-color); }
 .dropdown-item-icon { display: inline-flex; margin-right: 0.5rem; color: var(--bs-secondary-color); }
+
+/* ============================================================
+   ICONOS FEATHER (ver docs_reestructuracion/07_DESIGN_SYSTEM_UI.md)
+   ============================================================ */
+.icon-sm {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+}
+
+/* Iconos del sidebar: tamaño uniforme */
+.app-sidebar .nav-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Separación entre grupos del menú lateral */
+.app-sidebar .nav-header:not(:first-child) {
+    margin-top: 0.75rem;
+}
+
+/* ============================================================
+   FORM-CONTROL FOCUS Y SEMÁNTICOS COMPARTIDOS
+   (antes duplicados por template — ver regla #6 del design system)
+   ============================================================ */
+.fw-semibold {
+    font-weight: 600;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 97, 242, 0.15);
+}
+
+.form-control.is-invalid {
+    border-color: var(--bs-danger);
+}
+
+.form-control.is-valid {
+    border-color: var(--bs-success);
+}

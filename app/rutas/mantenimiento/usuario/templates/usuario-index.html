@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Usuarios
+{% endblock %}
+
+{% block contenido %}
+<!-- Header -->
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">
+            Gestión de Usuarios
+          </h1>
+          <div class="page-header-subtitle">Administración de accesos y roles del sistema</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Tarjeta principal -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Usuarios</span>
+      {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+      {% if 'SUPERADMIN' in roles_usuario %}
+      <a href="{{ url_for('usuario.usuarioAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nuevo Usuario</a>
+      {% endif %}
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Usuario</th>
+              <th>Funcionario</th>
+              <th>Cargo</th>
+              <th>Rol Principal</th>
+              <th>Roles Adicionales</th>
+              <th>Estado</th>
+              <th>Intentos Fallidos</th>
+              <th>Fecha Creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+  // ==========================================
+  // CONSTANTES Y CONFIGURACIÓN
+  // ==========================================
+  const CSRFToken = "{{ csrf_token() }}";
+  {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+  const esSuperadmin = {{ ('SUPERADMIN' in roles_usuario) | tojson }};
+
+  // ==========================================
+  // DATATABLE PRINCIPAL
+  // ==========================================
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: {
+        url: '/api/v1/usuarios',
+        dataSrc: function (json) {
+          if (!json.success) {
+            console.error('Error del servidor:', json.error);
+            return [];
+          }
+          return json.data;
+        },
+        error: function (xhr) {
+          console.error('Error en AJAX:', xhr.responseText);
+          Swal.fire('Error', 'Error al cargar los usuarios', 'error');
+        }
+      },
+      columns: [
+        { data: 'usu_nick' },
+        { data: 'funcionario' },
+        { data: 'cargo' },
+        {
+          data: 'rol_principal',
+          render: function (data) {
+            return `<span class="badge border border-primary text-primary">${data || 'Sin rol'}</span>`;
+          },
+          className: 'text-center'
+        },
+        {
+          data: 'roles_adicionales',
+          render: function (data) {
+            if (data && data.length > 0) {
+              return data.map(rol => `<span class="badge bg-secondary-soft me-1">${rol}</span>`).join('');
+            }
+            return '<span class="text-muted">-</span>';
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return row.usu_estado
+              ? '<span class="badge border border-success text-success">Activo</span>'
+              : '<span class="badge border border-secondary text-secondary">Inactivo</span>';
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            const badgeClass = row.usu_nro_intentos > 2 ? 'border-danger text-danger' : 'border-secondary text-secondary';
+            return `<span class="badge border ${badgeClass}">${row.usu_nro_intentos}</span>`;
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return row.fecha_creacion || '<span class="text-muted">-</span>';
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            if (!esSuperadmin) {
+              return `<button class="btn btn-datatable btn-icon btn-transparent-dark" type="button" name="btn_resetear" data-id="${row.id_usuario}" title="Resetear intentos"><i data-feather="rotate-ccw" class="icon-sm"></i></button>`;
+            }
+            return `
+              <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_editar" data-id="${row.id_usuario}" title="Editar"><i data-feather="edit-2" class="icon-sm"></i></button>
+              <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_resetear" data-id="${row.id_usuario}" title="Resetear intentos"><i data-feather="rotate-ccw" class="icon-sm"></i></button>
+              <button class="btn btn-datatable btn-icon btn-transparent-dark" type="button" name="btn_desactivar" data-id="${row.id_usuario}" data-username="${row.usu_nick}" title="Desactivar"><i data-feather="user-x" class="icon-sm"></i></button>
+            `;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[0, 'asc']],
+      drawCallback: function () {
+        if (window.feather) feather.replace();
+      }
+    });
+  }
+
+  const editar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_editar"]', function () {
+      const idUsuario = $(this).data('id');
+      const urlEditarBase = "{{ url_for('usuario.usuarioAgregar', id_usuario=0) }}";
+      window.location.href = urlEditarBase.replace(/0$/, idUsuario);
+    });
+  }
+
+  const resetear = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_resetear"]', function () {
+      const idUsuario = $(this).data('id');
+
+      Swal.fire({
+        title: '¿Resetear intentos de login?',
+        text: 'Esto pondrá el contador de intentos fallidos en 0',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, resetear',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/usuarios/${idUsuario}/resetear-intentos`, {
+            method: 'PATCH',
+            headers: { 'X-CSRFToken': CSRFToken }
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.success) {
+                $('#tbl').DataTable().ajax.reload();
+                Swal.fire('Éxito', 'Los intentos han sido reseteados', 'success');
+              } else {
+                Swal.fire('Error', data.error || 'No se pudo resetear', 'error');
+              }
+            })
+            .catch(() => Swal.fire('Error', 'Error al resetear los intentos', 'error'));
+        }
+      });
+    });
+  }
+
+  const desactivar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_desactivar"]', function () {
+      const idUsuario = $(this).data('id');
+      const username = $(this).data('username');
+
+      Swal.fire({
+        title: '¿Está seguro?',
+        html: `¿Desea desactivar al usuario <strong>${username}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, desactivar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/usuarios/${idUsuario}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': CSRFToken }
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.success) {
+                $('#tbl').DataTable().ajax.reload();
+                Swal.fire('Desactivado', 'El usuario ha sido desactivado', 'success');
+              } else {
+                Swal.fire('Error', data.error || 'No se pudo desactivar', 'error');
+              }
+            })
+            .catch(() => Swal.fire('Error', 'Error al desactivar el usuario', 'error'));
+        }
+      });
+    });
+  }
+
+  $(document).ready(function () {
+    initDatatable();
+    editar();
+    resetear();
+    desactivar();
+  });
+
+</script>
+{% endblock %}
