@@ -32,6 +32,21 @@ def build_sidebar():
             "html_icon": '<i data-feather="user-check"></i>'
         })
 
+    agendamiento_items = []
+    if roles & {"ADMINISTRADOR", "SUPERADMIN"}:
+        agendamiento_items.append({
+            "title": "Agenda Médica",
+            "endpoint": "agenda_horarios.agendaHorariosIndex",
+            "html_icon": '<i data-feather="calendar"></i>'
+        })
+
+    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA"}:
+        agendamiento_items.append({
+            "title": "Citas",
+            "endpoint": "cita.citaIndex",
+            "html_icon": '<i data-feather="clipboard"></i>'
+        })
+
     config_items = []
     if roles & {"ADMINISTRADOR", "SUPERADMIN"}:
         config_items.append({
@@ -40,12 +55,14 @@ def build_sidebar():
             "html_icon": '<i data-feather="sliders"></i>'
         })
 
-    if not items and not config_items:
+    if not items and not agendamiento_items and not config_items:
         return []
 
     groups = []
     if items:
         groups.append({"heading": "Personas", "items": items})
+    if agendamiento_items:
+        groups.append({"heading": "Agendamiento", "items": agendamiento_items})
     if config_items:
         groups.append({"heading": "Configuración", "items": config_items})
 

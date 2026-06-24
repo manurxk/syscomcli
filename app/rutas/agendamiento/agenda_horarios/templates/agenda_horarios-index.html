@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Agenda Médica
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-fluid px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">Agenda Médica</h1>
+                    <div class="page-header-subtitle">Configuración de horarios semanales por especialista</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex align-items-center">
+            <h6 class="m-0 fw-bold">Agenda Médica</h6>
+            <div class="ms-auto" style="min-width: 280px;">
+                <select class="form-select form-select-sm" id="selectEspecialista" name="selectEspecialista">
+                    <option value="">-- Seleccione un especialista --</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary ms-2" id="btnNuevoHorario">
+                <i class="fas fa-plus fa-sm me-1"></i> Nuevo Horario
+            </button>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle w-100" id="tblAgendaHorarios">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Día</th>
+                            <th>Sede</th>
+                            <th>Consultorio</th>
+                            <th>Hora Inicio</th>
+                            <th>Hora Fin</th>
+                            <th>Duración</th>
+                            <th>Cupos Disp.</th>
+                            <th>Cupos Total</th>
+                            <th>Vigencia</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyAgendaHorarios"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Formulario de Horario -->
+<div class="modal fade" id="modalAgendaHorario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="modalTitle">
+                    <i class="fas fa-calendar-plus"></i> Configurar Horario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <form id="formAgendaHorario">
+                    <input type="hidden" id="txtIdAgendaHorario" name="txtIdAgendaHorario">
+
+                    <div class="alert alert-danger mb-3" id="divErrorMensaje" style="display:none;">
+                        <button type="button" class="btn-close" onclick="$('#divErrorMensaje').hide()" aria-label="Close"></button>
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Error:</strong> <span id="txtErrorMensaje"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="selectSedeModal">Sede: <span class="text-danger">*</span></label>
+                                <select class="form-control" id="selectSedeModal" name="selectSedeModal" required>
+                                    <option value="">-- Seleccione --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="selectConsultorioModal">Consultorio: <span class="text-danger">*</span></label>
+                                <select class="form-control" id="selectConsultorioModal" name="selectConsultorioModal" required>
+                                    <option value="">-- Seleccione una sede primero --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="selectDiaModal">Día: <span class="text-danger">*</span></label>
+                                <select class="form-control" id="selectDiaModal" name="selectDiaModal" required>
+                                    <option value="">-- Seleccione un día --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="txtHoraInicio">
+                                    Hora inicio (24 hs, ej: 13:45 o 1345): <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="txtHoraInicio" name="txtHoraInicio"
+                                    placeholder="HHMM o HH:MM" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="txtHoraFin">
+                                    Hora fin (24 hs, ej: 17:30 o 1730): <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="txtHoraFin" name="txtHoraFin"
+                                    placeholder="HHMM o HH:MM" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="selectDuracionTurno">Duración turno: <span class="text-danger">*</span></label>
+                                <select class="form-control" id="selectDuracionTurno" name="selectDuracionTurno" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="10">10 minutos</option>
+                                    <option value="15">15 minutos</option>
+                                    <option value="20">20 minutos</option>
+                                    <option value="30">30 minutos</option>
+                                    <option value="45">45 minutos</option>
+                                    <option value="60">60 minutos</option>
+                                    <option value="90">90 minutos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-3" id="alertaCupos" style="display:none;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Cupos generados por día:</strong> <span id="textoCupos"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="selectModalidad">Modalidad:</label>
+                                <select class="form-control" id="selectModalidad" name="selectModalidad">
+                                    <option value="PRESENCIAL">Presencial</option>
+                                    <option value="TELEMEDICINA">Telemedicina</option>
+                                    <option value="DOMICILIO">Domicilio</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-4">
+                                <input class="form-check-input" type="checkbox" id="chkEstado" name="chkEstado" checked>
+                                <label class="form-check-label" for="chkEstado">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtFechaDesde">Fecha desde: <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="txtFechaDesde" name="txtFechaDesde" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="txtFechaHasta">Fecha hasta:</label>
+                                <input type="date" class="form-control" id="txtFechaHasta" name="txtFechaHasta">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="chkVigenciaIndefinida" name="chkVigenciaIndefinida">
+                        <label class="form-check-label" for="chkVigenciaIndefinida">Vigencia indefinida</label>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardarHorario">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Slots Generados -->
+<div class="modal fade" id="modalSlots" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="fas fa-calendar-check"></i> Cupos generados</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle"></i>
+                    Cupos materializados dentro del horizonte rodante (próximos 15 días).
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover" id="tblSlots">
+                        <thead>
+                            <tr>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodySlots"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #alertaCupos {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+    const CSRFToken = "{{ csrf_token() }}" || null;
+    let especialistaSeleccionado = null;
+    let agendaHorarios = [];
+    let tablaHorarios = null;
+
+    // ==========================================
+    // NORMALIZAR HORA A HH:MM (24 HS)
+    // ==========================================
+    const normalizarHora = (valor) => {
+        if (!valor) return '';
+        let v = String(valor).trim();
+
+        if (/^([01]\d|2[0-3]):[0-5]\d$/.test(v)) {
+            return v;
+        }
+
+        if (/^\d{3,4}$/.test(v)) {
+            v = v.padStart(4, '0');
+            const hh = v.slice(0, 2);
+            const mm = v.slice(2);
+            const hhNum = parseInt(hh, 10);
+            const mmNum = parseInt(mm, 10);
+
+            if (hhNum >= 0 && hhNum <= 23 && mmNum >= 0 && mmNum <= 59) {
+                return `${hh}:${mm}`;
+            }
+        }
+
+        return v;
+    };
+
+    const calcularCuposTotales = (horaInicio, horaFin, duracion) => {
+        if (!horaInicio || !horaFin || !duracion || duracion <= 0) return 0;
+        const [h1, m1] = horaInicio.split(':').map(Number);
+        const [h2, m2] = horaFin.split(':').map(Number);
+        const minutosTotales = (h2 * 60 + m2) - (h1 * 60 + m1);
+        return Math.max(1, Math.floor(minutosTotales / duracion));
+    };
+
+    const mostrarError = (mensaje) => {
+        $('#txtErrorMensaje').text(mensaje);
+        $('#divErrorMensaje').show();
+        $('#divErrorMensaje')[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    // ==========================================
+    // CARGAR COMBOS
+    // ==========================================
+    const cargarEspecialistas = () => {
+        $.ajax({
+            url: '/api/v1/especialistas',
+            type: 'GET',
+            success: (response) => {
+                const select = $('#selectEspecialista');
+                select.empty().append('<option value="">-- Seleccione un especialista --</option>');
+                if (response.success && response.data) {
+                    response.data.forEach((esp) => {
+                        select.append(`<option value="${esp.id_especialista}">${esp.nombre_completo} - ${esp.esp_matricula}</option>`);
+                    });
+                }
+            },
+            error: () => Swal.fire('Error', 'No se pudieron cargar los especialistas', 'error')
+        });
+    };
+
+    const cargarDiasSemana = () => {
+        $.ajax({
+            url: '/api/v1/dias-semana',
+            type: 'GET',
+            success: (response) => {
+                const select = $('#selectDiaModal');
+                select.empty().append('<option value="">-- Seleccione un día --</option>');
+                if (response.success && response.data) {
+                    response.data.forEach((dia) => {
+                        select.append(`<option value="${dia.id_dia_semana}">${dia.des_dia}</option>`);
+                    });
+                }
+            }
+        });
+    };
+
+    const cargarSedes = () => {
+        $.ajax({
+            url: '/api/v1/sedes',
+            type: 'GET',
+            success: (response) => {
+                const select = $('#selectSedeModal');
+                select.empty().append('<option value="">-- Seleccione --</option>');
+                if (response.success && response.data) {
+                    response.data.filter(s => s.est_sede).forEach((sede) => {
+                        select.append(`<option value="${sede.id_sede}">${sede.des_sede}</option>`);
+                    });
+                }
+            }
+        });
+    };
+
+    const cargarConsultorios = (idSede, idConsultorioSeleccionado) => {
+        const select = $('#selectConsultorioModal');
+        if (!idSede) {
+            select.empty().append('<option value="">-- Seleccione una sede primero --</option>');
+            return;
+        }
+        $.ajax({
+            url: `/api/v1/consultorios?id_sede=${idSede}`,
+            type: 'GET',
+            success: (response) => {
+                select.empty().append('<option value="">-- Seleccione --</option>');
+                if (response.success && response.data) {
+                    response.data.filter(c => c.est_consultorio).forEach((cons) => {
+                        select.append(`<option value="${cons.id_consultorio}">${cons.des_consultorio}</option>`);
+                    });
+                }
+                if (idConsultorioSeleccionado) {
+                    select.val(idConsultorioSeleccionado);
+                }
+            }
+        });
+    };
+
+    // ==========================================
+    // TABLA (DataTables)
+    // ==========================================
+    const calcularTurno = (horaInicio) => {
+        const horaInicioNum = parseInt(horaInicio.split(':')[0]);
+        return horaInicioNum < 13 ? 'MAÑANA' : 'TARDE';
+    };
+
+    const setMensajeTablaVacia = (mensaje) => {
+        tablaHorarios.settings()[0].oLanguage.sEmptyTable = mensaje;
+    };
+
+    const initTablaHorarios = () => {
+        tablaHorarios = $('#tblAgendaHorarios').DataTable({
+            language: {
+                url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+                emptyTable: 'Seleccione un especialista para ver sus horarios'
+            },
+            dom: 't',
+            paging: false,
+            searching: false,
+            info: false,
+            data: [],
+            columns: [
+                {
+                    data: null,
+                    render: (data, type, row) => {
+                        const turno = calcularTurno(row.hora_inicio);
+                        const turnoBadge = turno === 'MAÑANA' ? 'border border-warning text-warning' : 'border border-info text-info';
+                        return `<strong>${row.des_dia.toUpperCase()}</strong> <span class="badge ${turnoBadge} bg-white ms-1">${turno}</span>`;
+                    }
+                },
+                { data: 'des_sede' },
+                { data: 'des_consultorio' },
+                { data: null, className: 'text-center', render: (data, type, row) => `<i class="far fa-clock me-1"></i>${row.hora_inicio}` },
+                { data: null, className: 'text-center', render: (data, type, row) => `<i class="far fa-clock me-1"></i>${row.hora_fin}` },
+                { data: null, className: 'text-center', render: (data, type, row) => `${row.duracion_turno_min} min` },
+                { data: null, className: 'text-center', render: (data, type, row) => `<span class="badge bg-dark">${row.cupos_disponibles}</span>` },
+                { data: 'cupos_totales', className: 'text-center' },
+                {
+                    data: null,
+                    className: 'text-center',
+                    render: (data, type, row) => row.fec_hasta ? `${row.fec_desde} a ${row.fec_hasta}` : `${row.fec_desde} (indefinida)`
+                },
+                {
+                    data: null,
+                    className: 'text-center',
+                    render: (data, type, row) => {
+                        const estadoBadge = row.est_agenda_horario ? 'border border-success text-success bg-white' : 'border border-secondary text-secondary bg-white';
+                        const estadoText = row.est_agenda_horario ? 'Activo' : 'Inactivo';
+                        return `<span class="badge ${estadoBadge}">${estadoText}</span>`;
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    className: 'text-center',
+                    render: (data, type, row) => `
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="verSlots(${row.id_agenda_horario})" title="Ver cupos generados">
+                            <i class="fas fa-calendar-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="editarHorario(${row.id_agenda_horario})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-${row.est_agenda_horario ? 'warning' : 'success'} btn-sm"
+                                onclick="toggleEstado(${row.id_agenda_horario}, ${!row.est_agenda_horario})"
+                                title="${row.est_agenda_horario ? 'Desactivar' : 'Activar'}">
+                            <i class="fas fa-${row.est_agenda_horario ? 'eye-slash' : 'eye'}"></i>
+                        </button>
+                    `
+                }
+            ]
+        });
+    };
+
+    // ==========================================
+    // CARGAR AGENDA DEL ESPECIALISTA
+    // ==========================================
+    const cargarAgendaHorarios = (idEspecialista) => {
+        if (!idEspecialista) {
+            agendaHorarios = [];
+            setMensajeTablaVacia('Seleccione un especialista para ver sus horarios');
+            tablaHorarios.clear().draw();
+            return;
+        }
+
+        $.ajax({
+            url: `/api/v1/agenda-horarios?id_especialista=${idEspecialista}`,
+            type: 'GET',
+            success: (response) => {
+                agendaHorarios = (response.success && response.data) ? response.data : [];
+                setMensajeTablaVacia('No hay horarios configurados para este especialista');
+                tablaHorarios.clear().rows.add(agendaHorarios).draw();
+            },
+            error: () => Swal.fire('Error', 'No se pudieron cargar los horarios', 'error')
+        });
+    };
+
+    // ==========================================
+    // VER SLOTS
+    // ==========================================
+    const verSlots = (idAgendaHorario) => {
+        $.ajax({
+            url: `/api/v1/agenda-horarios/${idAgendaHorario}/slots`,
+            type: 'GET',
+            success: (response) => {
+                const tbody = $('#tbodySlots');
+                tbody.empty();
+                if (response.success && response.data && response.data.length > 0) {
+                    response.data.forEach((slot) => {
+                        tbody.append(`
+                            <tr>
+                                <td>${slot.slot_inicio}</td>
+                                <td>${slot.slot_fin}</td>
+                                <td>${slot.estado_slot}</td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    tbody.html('<tr><td colspan="3" class="text-center text-muted">Sin cupos generados</td></tr>');
+                }
+                new bootstrap.Modal(document.getElementById('modalSlots')).show();
+            },
+            error: () => Swal.fire('Error', 'No se pudieron cargar los cupos generados', 'error')
+        });
+    };
+
+    // ==========================================
+    // NUEVO / EDITAR
+    // ==========================================
+    const limpiarFormulario = () => {
+        $('#formAgendaHorario')[0].reset();
+        $('#txtIdAgendaHorario').val('');
+        $('#divErrorMensaje').hide();
+        $('#alertaCupos').hide();
+        $('#chkEstado').prop('checked', true);
+        $('#chkVigenciaIndefinida').prop('checked', false);
+        $('#txtFechaHasta').prop('disabled', false);
+        $('#selectConsultorioModal').empty().append('<option value="">-- Seleccione una sede primero --</option>');
+        $('.form-control').removeClass('is-invalid');
+    };
+
+    const nuevoHorario = () => {
+        if (!especialistaSeleccionado) {
+            Swal.fire('Atención', 'Debe seleccionar un especialista primero', 'warning');
+            return;
+        }
+        limpiarFormulario();
+        $('#modalTitle').html('<i class="fas fa-calendar-plus"></i> Registrar Horario');
+
+        const hoy = new Date().toISOString().split('T')[0];
+        $('#txtFechaDesde').attr('min', hoy).val(hoy);
+        $('#txtFechaHasta').attr('min', hoy);
+
+        new bootstrap.Modal(document.getElementById('modalAgendaHorario')).show();
+    };
+
+    const editarHorario = (idAgendaHorario) => {
+        const fila = agendaHorarios.find(f => f.id_agenda_horario === idAgendaHorario);
+        if (!fila) return;
+
+        limpiarFormulario();
+        $('#txtIdAgendaHorario').val(idAgendaHorario);
+        $('#selectSedeModal').val(fila.id_sede);
+        cargarConsultorios(fila.id_sede, fila.id_consultorio);
+        $('#selectDiaModal').val(fila.id_dia_semana);
+        $('#txtHoraInicio').val(fila.hora_inicio);
+        $('#txtHoraFin').val(fila.hora_fin);
+        $('#selectDuracionTurno').val(fila.duracion_turno_min);
+        $('#selectModalidad').val(fila.modalidad_default);
+        $('#chkEstado').prop('checked', fila.est_agenda_horario);
+
+        $('#txtFechaDesde').val(fila.fec_desde);
+        if (fila.fec_hasta) {
+            $('#txtFechaHasta').val(fila.fec_hasta).prop('disabled', false);
+            $('#chkVigenciaIndefinida').prop('checked', false);
+        } else {
+            $('#txtFechaHasta').val('').prop('disabled', true);
+            $('#chkVigenciaIndefinida').prop('checked', true);
+        }
+
+        $('#modalTitle').html('<i class="fas fa-edit"></i> Editar Horario');
+        calcularYMostrarCupos();
+        new bootstrap.Modal(document.getElementById('modalAgendaHorario')).show();
+    };
+
+    const calcularYMostrarCupos = () => {
+        const horaInicio = normalizarHora($('#txtHoraInicio').val());
+        const horaFin = normalizarHora($('#txtHoraFin').val());
+        const duracion = parseInt($('#selectDuracionTurno').val()) || 0;
+        const cupos = calcularCuposTotales(horaInicio, horaFin, duracion);
+        if (cupos > 0) {
+            $('#textoCupos').text(`${cupos} turnos de ${duracion} minutos`);
+            $('#alertaCupos').fadeIn();
+        } else {
+            $('#alertaCupos').fadeOut();
+        }
+    };
+
+    // ==========================================
+    // GUARDAR
+    // ==========================================
+    const guardarHorario = () => {
+        $('#divErrorMensaje').hide();
+
+        const horaInicio = normalizarHora($('#txtHoraInicio').val());
+        const horaFin = normalizarHora($('#txtHoraFin').val());
+        $('#txtHoraInicio').val(horaInicio);
+        $('#txtHoraFin').val(horaFin);
+
+        const datos = {
+            id_especialista: especialistaSeleccionado,
+            id_sede: $('#selectSedeModal').val(),
+            id_consultorio: $('#selectConsultorioModal').val(),
+            id_dia_semana: $('#selectDiaModal').val(),
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            duracion_turno_min: parseInt($('#selectDuracionTurno').val()) || null,
+            modalidad_default: $('#selectModalidad').val(),
+            fec_desde: $('#txtFechaDesde').val(),
+            fec_hasta: $('#chkVigenciaIndefinida').is(':checked') ? null : $('#txtFechaHasta').val(),
+            est_agenda_horario: $('#chkEstado').is(':checked')
+        };
+
+        const idAgendaHorario = $('#txtIdAgendaHorario').val();
+        const url = idAgendaHorario ? `/api/v1/agenda-horarios/${idAgendaHorario}` : '/api/v1/agenda-horarios';
+        const method = idAgendaHorario ? 'PUT' : 'POST';
+
+        const btn = $('#btnGuardarHorario');
+        const textoOriginal = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+        $.ajax({
+            url, type: method, contentType: 'application/json', data: JSON.stringify(datos),
+            headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
+            success: (response) => {
+                if (response.success) {
+                    Swal.fire({ title: '¡Éxito!', text: 'Horario guardado correctamente', icon: 'success', timer: 2000, showConfirmButton: false });
+                    bootstrap.Modal.getInstance(document.getElementById('modalAgendaHorario')).hide();
+                    cargarAgendaHorarios(especialistaSeleccionado);
+                } else {
+                    mostrarError(response.error || 'Error al guardar el horario');
+                }
+            },
+            error: (xhr) => mostrarError(xhr.responseJSON?.error || 'Error al guardar el horario'),
+            complete: () => btn.prop('disabled', false).html(textoOriginal)
+        });
+    };
+
+    // ==========================================
+    // ACTIVAR / DESACTIVAR
+    // ==========================================
+    const toggleEstado = (idAgendaHorario, nuevoEstado) => {
+        const accion = nuevoEstado ? 'activar' : 'desactivar';
+        Swal.fire({
+            title: `¿${nuevoEstado ? 'Activar' : 'Desactivar'} horario?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+            $.ajax({
+                url: `/api/v1/agenda-horarios/${idAgendaHorario}/estado`,
+                type: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({ est_agenda_horario: nuevoEstado }),
+                headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
+                success: (response) => {
+                    if (response.success) {
+                        Swal.fire({ title: '¡Éxito!', text: response.mensaje, icon: 'success', timer: 2000, showConfirmButton: false });
+                        cargarAgendaHorarios(especialistaSeleccionado);
+                    } else {
+                        Swal.fire('Error', response.error || 'Error al cambiar el estado', 'error');
+                    }
+                },
+                error: (xhr) => Swal.fire('Error', xhr.responseJSON?.error || 'Error al cambiar el estado', 'error')
+            });
+        });
+    };
+
+    // ==========================================
+    // EVENTOS
+    // ==========================================
+    $(document).ready(function () {
+        initTablaHorarios();
+        cargarEspecialistas();
+        cargarDiasSemana();
+        cargarSedes();
+
+        $('#selectEspecialista').on('change', function () {
+            especialistaSeleccionado = $(this).val();
+            cargarAgendaHorarios(especialistaSeleccionado);
+        });
+
+        $('#selectSedeModal').on('change', function () {
+            cargarConsultorios($(this).val());
+        });
+
+        $('#btnNuevoHorario').on('click', nuevoHorario);
+        $('#btnGuardarHorario').on('click', guardarHorario);
+
+        $('#txtHoraInicio, #txtHoraFin, #selectDuracionTurno').on('change', calcularYMostrarCupos);
+
+        $('#chkVigenciaIndefinida').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#txtFechaHasta').val('').prop('disabled', true);
+            } else {
+                $('#txtFechaHasta').prop('disabled', false);
+            }
+        });
+
+        $('#formAgendaHorario input, #formAgendaHorario select').on('change', function () {
+            $('#divErrorMensaje').hide();
+        });
+    });
+</script>
+{% endblock %}

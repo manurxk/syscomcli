@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Citas
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Citas</h1>
+          <div class="page-header-subtitle">Administración y seguimiento de agendamientos médicos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Citas</span>
+      <a href="{{ url_for('cita.citaAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nueva Cita</a>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Paciente</th>
+              <th>Especialista</th>
+              <th>Especialidad</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Historial de la Cita -->
+<div class="modal fade" id="modalLogCita" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Historial de la Cita</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="timelineLog"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .card-header {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, .05);
+  }
+
+  #timelineLog {
+    position: relative;
+    padding-left: 30px;
+  }
+
+  #timelineLog::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 15px;
+    width: 2px;
+    background: #e9ecef;
+  }
+
+  .log-item {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .log-item::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #17a2b8;
+    border: 2px solid white;
+  }
+
+  .log-date {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #6c757d;
+    display: block;
+  }
+
+  .log-user {
+    font-style: italic;
+    font-size: 0.8rem;
+  }
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+
+  const ESTADOS_BORDE = {
+    AGENDADA: 'border border-info text-info',
+    CONFIRMADA: 'border border-primary text-primary',
+    EN_CONSULTA: 'border border-warning text-warning',
+    COMPLETADA: 'border border-success text-success',
+    AUSENTE: 'border border-secondary text-secondary',
+    CANCELADA: 'border border-danger text-danger'
+  };
+
+  const SIGUIENTES_ESTADOS = {
+    AGENDADA: [['CONFIRMADA', 'Confirmar', 'check', 'success'], ['CANCELADA', 'Cancelar', 'ban', 'danger']],
+    CONFIRMADA: [['EN_CONSULTA', 'Iniciar consulta', 'play', 'primary'], ['AUSENTE', 'Marcar ausente', 'user-slash', 'secondary'], ['CANCELADA', 'Cancelar', 'ban', 'danger']],
+    EN_CONSULTA: [['COMPLETADA', 'Completar', 'check-circle', 'success']],
+    COMPLETADA: [],
+    AUSENTE: [],
+    CANCELADA: []
+  };
+
+  // ==========================================
+  // DATATABLE PRINCIPAL
+  // ==========================================
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: {
+        url: '/api/v1/citas',
+        dataSrc: function (json) {
+          if (!json.success) {
+            console.error('Error del servidor:', json.error);
+            return [];
+          }
+          return json.data;
+        },
+        error: function (xhr, error, thrown) {
+          console.error('Error en AJAX:', xhr.responseText);
+          Swal.fire('Error', 'Error al cargar las citas', 'error');
+        }
+      },
+      columns: [
+        { data: function (row) { return row.cita_inicio.split(' ')[0]; } },
+        { data: function (row) { return row.cita_inicio.split(' ')[1]; }, className: 'text-center' },
+        { data: function (row) { return `${row.paciente_nombre} ${row.paciente_apellido}`; } },
+        { data: function (row) { return `${row.especialista_nombre} ${row.especialista_apellido}`; } },
+        { data: function (row) { return row.des_especialidad || '<span class="text-muted">-</span>'; } },
+        {
+          data: function (row) {
+            return row.cita_es_primera_vez
+              ? 'Primera Vez'
+              : `Seguimiento${row.cita_numero_sesion ? ' #' + row.cita_numero_sesion : ''}`;
+          }
+        },
+        {
+          data: function (row) {
+            const clase = ESTADOS_BORDE[row.cod_estado_cita] || 'border border-secondary text-secondary';
+            return `<span class="badge ${clase}">${row.des_estado_cita}</span>`;
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            const opciones = SIGUIENTES_ESTADOS[row.cod_estado_cita] || [];
+            let acciones = `<button class="btn btn-datatable btn-icon btn-outline-info me-1" type="button" name="btn_log" data-id="${row.id_cita}" title="Ver Historial"><i class="fas fa-history"></i></button>`;
+            opciones.forEach(([cod, label, icono, color]) => {
+              acciones += `<button class="btn btn-datatable btn-icon btn-outline-${color} me-1" type="button" name="btn_cambiar_estado" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i></button>`;
+            });
+            return acciones;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[0, 'desc'], [1, 'desc']]
+    });
+  };
+
+  // ==========================================
+  // VER HISTORIAL DE LA CITA
+  // ==========================================
+  const verLogsCita = () => {
+    $('#tbl').on('click', 'button[name="btn_log"]', function () {
+      const idCita = $(this).data('id');
+      const modal = new bootstrap.Modal(document.getElementById('modalLogCita'));
+
+      $('#timelineLog').html(`
+        <div class="text-center py-5">
+          <div class="spinner-border text-info" role="status"></div>
+          <p class="mt-2">Cargando historial...</p>
+        </div>
+      `);
+
+      modal.show();
+
+      fetch(`/api/v1/citas/${idCita}/logs`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data && data.success && data.data.length > 0) {
+            let html = '';
+            data.data.forEach(log => {
+              html += `
+                <div class="log-item">
+                  <span class="log-date">${log.fecha_cambio}</span>
+                  <div class="mt-1">${log.estado_anterior ? `${log.estado_anterior} &rarr; ` : ''}<strong>${log.estado_nuevo}</strong></div>
+                  ${log.motivo_cambio ? `<div class="text-muted small">${log.motivo_cambio}</div>` : ''}
+                  <div class="log-user mt-1"><i class="fas fa-user-edit me-1"></i> ${log.usuario || 'Sistema'}</div>
+                </div>
+              `;
+            });
+            $('#timelineLog').html(html);
+          } else {
+            $('#timelineLog').html('<p class="text-center py-4 text-muted">No se encontraron registros para esta cita.</p>');
+          }
+        })
+        .catch(() => $('#timelineLog').html('<p class="text-center py-4 text-danger">Error al cargar el historial.</p>'));
+    });
+  };
+
+  // ==========================================
+  // CAMBIAR ESTADO
+  // ==========================================
+  const cambiarEstado = () => {
+    $('#tbl').on('click', 'button[name="btn_cambiar_estado"]', function () {
+      const idCita = $(this).data('id');
+      const codEstadoNuevo = $(this).data('estado');
+
+      Swal.fire({
+        title: `¿Cambiar estado a "${codEstadoNuevo}"?`,
+        input: codEstadoNuevo === 'CANCELADA' ? 'text' : undefined,
+        inputLabel: codEstadoNuevo === 'CANCELADA' ? 'Motivo de cancelación' : undefined,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/citas/${idCita}/estado`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+          body: JSON.stringify({ cod_estado_nuevo: codEstadoNuevo, motivo: result.value || null })
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({ title: '¡Éxito!', text: data.mensaje, icon: 'success', timer: 2000, showConfirmButton: false });
+              $('#tbl').DataTable().ajax.reload();
+            } else {
+              Swal.fire('Error', data.error || 'Error al cambiar el estado', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'Error al cambiar el estado', 'error'));
+      });
+    });
+  };
+
+  $(document).ready(function () {
+    initDatatable();
+    verLogsCita();
+    cambiarEstado();
+  });
+</script>
+{% endblock %}

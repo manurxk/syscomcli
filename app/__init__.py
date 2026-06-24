@@ -20,6 +20,12 @@ from app.rutas.mantenimiento.referenciales.empresa.empresa_routes import empresa
 from app.rutas.mantenimiento.referenciales.empresa.empresa_api import empresaapi
 from app.rutas.mantenimiento.referenciales.sede.sede_routes import sedemod
 from app.rutas.mantenimiento.referenciales.sede.sede_api import sedeapi
+from app.rutas.mantenimiento.referenciales.consultorio.consultorio_routes import consultoriomod
+from app.rutas.mantenimiento.referenciales.consultorio.consultorio_api import consultorioapi
+from app.rutas.agendamiento.agenda_horarios.agenda_horarios_routes import agendahorariosmod
+from app.rutas.agendamiento.agenda_horarios.agenda_horarios_api import agendahorariosapi
+from app.rutas.agendamiento.cita.cita_routes import citamod
+from app.rutas.agendamiento.cita.cita_api import citaapi
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -54,6 +60,12 @@ app.register_blueprint(empresamod, url_prefix='/mantenimiento/referenciales/empr
 app.register_blueprint(empresaapi, url_prefix='/api/v1')
 app.register_blueprint(sedemod, url_prefix='/mantenimiento/referenciales/sede')
 app.register_blueprint(sedeapi, url_prefix='/api/v1')
+app.register_blueprint(consultoriomod, url_prefix='/mantenimiento/referenciales/consultorio')
+app.register_blueprint(consultorioapi, url_prefix='/api/v1')
+app.register_blueprint(agendahorariosmod, url_prefix='/agendamiento/agenda-horarios')
+app.register_blueprint(agendahorariosapi, url_prefix='/api/v1')
+app.register_blueprint(citamod, url_prefix='/agendamiento/citas')
+app.register_blueprint(citaapi, url_prefix='/api/v1')
 
 # Context processors y helpers de template
 init_context_processors(app)

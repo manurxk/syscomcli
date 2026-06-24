@@ -134,8 +134,63 @@
         /* Sidebar footer */
         .sidebar-user-footer {
             padding: 0.75rem 1rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(0,0,0,0.1);
             font-size: 0.8rem;
+        }
+
+        /* Sidebar en violeta — sigue el toggle claro/oscuro global */
+        .brand-image-wrap {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, #5b21b6 0%, #9333ea 100%);
+        }
+
+        html:not([data-bs-theme="dark"]) .app-sidebar {
+            background-color: #ffffff;
+            --lte-sidebar-color: #6b21a8;
+            --lte-sidebar-header-color: #7c3aed;
+            --lte-sidebar-hover-color: #5b21b6;
+            --lte-sidebar-hover-bg: rgba(147, 51, 234, 0.08);
+            --lte-sidebar-active-color: #5b21b6;
+            --lte-sidebar-menu-active-color: #ffffff;
+            --lte-sidebar-menu-active-bg: #9333ea;
+            --lte-sidebar-submenu-color: #6b21a8;
+            --lte-sidebar-submenu-hover-color: #5b21b6;
+            --lte-sidebar-submenu-hover-bg: rgba(147, 51, 234, 0.08);
+            --lte-sidebar-submenu-active-color: #ffffff;
+            --lte-sidebar-submenu-active-bg: #9333ea;
+        }
+
+        .app-sidebar .nav-header {
+            font-weight: 700;
+        }
+
+        html:not([data-bs-theme="dark"]) .app-sidebar .nav-icon,
+        html:not([data-bs-theme="dark"]) .app-sidebar .nav-arrow,
+        html:not([data-bs-theme="dark"]) .app-sidebar .brand-text {
+            color: #6b21a8;
+        }
+
+        .sidebar-logout {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        html:not([data-bs-theme="dark"]) .sidebar-logout {
+            color: #6b21b6;
+        }
+
+        html:not([data-bs-theme="dark"]) .sidebar-logout:hover {
+            background-color: rgba(147, 51, 234, 0.08);
+            color: #5b21b6;
         }
 
         /* Topnav search form */
@@ -234,18 +289,20 @@
         <!-- ======================== FIN HEADER ======================== -->
 
         <!-- ======================== SIDEBAR ======================== -->
-        <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+        <aside class="app-sidebar shadow">
 
             <!-- Brand -->
             <div class="sidebar-brand">
                 <a href="/" class="brand-link d-flex align-items-center">
-                    {% if clinica and clinica.logo_path %}
-                    <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
-                        class="brand-image opacity-75 shadow" style="width:32px;height:32px;object-fit:contain;">
-                    {% else %}
-                    <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo Sysclin"
-                        class="brand-image opacity-75 shadow" style="width:32px;height:32px;object-fit:contain;">
-                    {% endif %}
+                    <span class="brand-image-wrap d-flex align-items-center justify-content-center shadow">
+                        {% if clinica and clinica.logo_path %}
+                        <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
+                            class="brand-image" style="width:22px;height:22px;object-fit:contain;">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo Sysclin"
+                            class="brand-image" style="width:22px;height:22px;object-fit:contain;">
+                        {% endif %}
+                    </span>
                     <span class="brand-text fw-bold ms-2">{{ clinica.nombre if clinica else 'Sysclin' }}</span>
                 </a>
             </div>
@@ -327,10 +384,16 @@
                 </nav>
 
                 <!-- Usuario en sidebar (pie) -->
-                <div class="sidebar-user-footer text-white-50 small">
+                <div class="sidebar-user-footer text-muted small">
                     <i class="fas fa-user-circle me-1"></i>
                     {{ session.get('nombre_persona', 'Usuario') }}
                 </div>
+
+                <!-- Cerrar sesión -->
+                <a href="{{ url_for('login.logout') }}" class="sidebar-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Cerrar sesión
+                </a>
             </div>
 
         </aside>

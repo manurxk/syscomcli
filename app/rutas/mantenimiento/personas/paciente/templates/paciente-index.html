@@ -52,33 +52,6 @@ Pacientes
   </div>
 </div>
 
-<!-- Formulario de paciente unificado en standalone page -->
-
-<!-- Modal Buscar Ciudad (reutilizable) -->
-<div class="modal fade" id="modalBuscarCiudad" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header border-bottom">
-        <h5 class="modal-title fw-bold" id="tituloModalCiudad">Seleccionar Ciudad</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="table-responsive">
-          <table class="table table-hover table-bordered align-middle w-100" id="tblCiudad">
-            <thead class="table-light">
-              <tr>
-                <th>Ciudad</th>
-                <th style="width: 120px;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Modal Vista Previa Completa del Paciente -->
 <div class="modal fade" id="modalVistaPaciente" tabindex="-1">
   <div class="modal-dialog modal-lg">
@@ -104,62 +77,10 @@ Pacientes
 </div>
 
 <style>
-  /* Estilos mejorados */
   .modal-body {
     padding: 1.5rem;
   }
 
-  .card-header {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid rgba(0, 0, 0, .05);
-  }
-
-  .form-group label {
-    margin-bottom: 0.375rem;
-    font-size: 0.9rem;
-  }
-
-  .form-control,
-  .input-group-text {
-    font-size: 0.9rem;
-  }
-
-  .shadow-sm {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-  }
-
-  /* Estilos para alertas de edad */
-  .alerta-menor {
-    background-color: #fff3cd;
-    border: 1px solid #ffc107;
-    border-radius: 5px;
-    padding: 10px;
-    color: #856404;
-  }
-
-  .alerta-mayor {
-    background-color: #d4edda;
-    border: 1px solid #28a745;
-    border-radius: 5px;
-    padding: 10px;
-    color: #155724;
-  }
-
-  .alerta-error {
-    background-color: #f8d7da;
-    border: 1px solid #dc3545;
-    border-radius: 5px;
-    padding: 10px;
-    color: #721c24;
-  }
-
-  /* Historia clínica readonly */
-  #txtHistoria_clinica {
-    background-color: #e9ecef;
-    cursor: not-allowed;
-  }
-
-  /* Scrollbar personalizado */
   .modal-body::-webkit-scrollbar {
     width: 8px;
   }
@@ -177,23 +98,6 @@ Pacientes
   .modal-body::-webkit-scrollbar-thumb:hover {
     background: #555;
   }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .modal-xl {
-      max-width: 95%;
-      margin: 0.5rem auto;
-    }
-
-    .modal-body {
-      padding: 1rem;
-      max-height: 70vh;
-    }
-
-    .card-body {
-      padding: 1rem;
-    }
-  }
 </style>
 
 {% endblock %}
@@ -206,182 +110,9 @@ Pacientes
   // ==========================================
   const CSRFToken = "{{ csrf_token() }}";
   {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
-  const tienePermisoBorrar = {{ ('ADMINISTRADOR' in roles_usuario or 'SUPERADMIN' in roles_usuario) | tojson }};
-  let currentCiudadType = 'residencia'; // 'residencia' o 'nacimiento'
+  const tienePermisoDesactivar = {{ ('ADMINISTRADOR' in roles_usuario or 'SUPERADMIN' in roles_usuario) | tojson }};
   let currentPacienteIdForDownload = null;
   const BASE_EDIT_URL = "{{ url_for('paciente.pacienteAgregar') }}".replace('paciente-agregar', 'paciente-editar');
-
-  // ==========================================
-  // FUNCIONES AUXILIARES
-  // ==========================================
-
-  /**
-   * Calcula la edad a partir de una fecha de nacimiento
-   */
-  const calcularEdad = (fechaNacimiento) => {
-    if (!fechaNacimiento) return null;
-
-    const hoy = new Date();
-    const nacimiento = new Date(fechaNacimiento);
-
-    if (nacimiento > hoy) {
-      return { error: 'La fecha de nacimiento no puede ser futura' };
-    }
-
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
-    }
-
-    if (edad > 120) {
-      return { error: 'La fecha de nacimiento no puede ser mayor a 120 años' };
-    }
-
-    return { edad, esMenor: edad < 18 };
-  };
-
-  /**
-   * Genera la historia clínica en formato: Iniciales-Año-Secuencial
-   * Ejemplo: AB-2026-001
-   * Nota: El secuencial se asigna automáticamente en el servidor
-   */
-  const generarHistoriaClinica = (nombre, apellido, cedula) => {
-    if (!nombre || !apellido) return '';
-
-    const inicialNombre = nombre.charAt(0).toUpperCase();
-    const inicialApellido = apellido.charAt(0).toUpperCase();
-    const añoActual = new Date().getFullYear();
-
-    // Mostrar formato base, el secuencial se asignará en el servidor
-    return `${inicialNombre}${inicialApellido}-${añoActual}-XXX`;
-  };
-
-  /**
-   * Actualiza el preview de historia clínica en tiempo real
-   * Nota: El secuencial final se asignará automáticamente en el servidor
-   */
-  const actualizarPreviewHistoria = () => {
-    const nombre = $('#txtNombre').val();
-    const apellido = $('#txtApellido').val();
-
-    const historia = generarHistoriaClinica(nombre, apellido);
-
-    if (historia) {
-      $('#previewHistoria').text(historia).addClass('text-success').removeClass('text-muted');
-      // No establecer el valor directamente, se generará en el servidor
-      $('#txtHistoria_clinica').val('');
-    } else {
-      $('#previewHistoria').text('--').addClass('text-muted').removeClass('text-success');
-      $('#txtHistoria_clinica').val('');
-    }
-  };
-
-  /**
-   * Muestra alerta visual de edad calculada
-   */
-  const mostrarAlertaEdad = (resultado) => {
-    const alertaDiv = $('#alertaEdad');
-
-    if (resultado.error) {
-      alertaDiv.html(`
-      <div class="alerta-error">
-        <i class="fas fa-exclamation-circle"></i> ${resultado.error}
-      </div>
-    `).show();
-      return;
-    }
-
-    if (resultado.esMenor) {
-      alertaDiv.html(`
-      <div class="alerta-menor">
-        <i class="fas fa-child"></i> <strong>Menor de edad (${resultado.edad} años)</strong><br>
-        <small>Se habilitará la sección de datos del tutor</small>
-      </div>
-    `).show();
-    } else {
-      alertaDiv.html(`
-      <div class="alerta-mayor">
-        <i class="fas fa-user-check"></i> <strong>Mayor de edad (${resultado.edad} años)</strong>
-      </div>
-    `).show();
-    }
-  };
-
-  /**
-   * Ajusta el formulario según si es menor o no
-   */
-  const ajustarFormularioSegunEdad = (esMenor) => {
-    if (esMenor) {
-      $('#collapseTutor').collapse('show');
-    } else {
-      $('#collapseTutor').collapse('hide');
-      limpiarDatosTutor();
-    }
-  };
-
-  /**
-   * Limpia los datos del tutor
-   */
-  const limpiarDatosTutor = () => {
-    $('#txtNomMadre, #txtTelMadre, #txtNomPadre, #txtTelPadre, #txtEducacion, #txtColegio, #txtTelColegio').val('');
-  };
-
-  /**
-   * Función para sanitizar texto opcional
-   */
-  const sanitizeText = (value) => {
-    if (value === undefined || value === null || value === '' || value === 'undefined' || value === 'null') {
-      return null;
-    }
-    return value;
-  };
-
-  /**
-   * Función para sanitizar IDs
-   */
-  const sanitizeId = (value) => {
-    if (value === '' || value === 'undefined' || value === 'null' || value === undefined || value === null) {
-      return null;
-    }
-
-    const num = Number(value);
-
-    if (isNaN(num) || num <= 0) {
-      return null;
-    }
-
-    return num;
-  };
-
-  // ==========================================
-  // EVENTOS DE CÁLCULO AUTOMÁTICO
-  // ==========================================
-  const initCalculoEdad = () => {
-    $('#txtFecha_nacimiento').on('change', function () {
-      const fecha = $(this).val();
-
-      if (!fecha) {
-        $('#alertaEdad').hide();
-        ajustarFormularioSegunEdad(false);
-        return;
-      }
-
-      const resultado = calcularEdad(fecha);
-      mostrarAlertaEdad(resultado);
-
-      if (!resultado.error) {
-        ajustarFormularioSegunEdad(resultado.esMenor);
-      } else {
-        ajustarFormularioSegunEdad(false);
-      }
-    });
-  };
-
-  const initPreviewHistoria = () => {
-    $('#txtNombre, #txtApellido, #txtCedula').on('input', actualizarPreviewHistoria);
-  };
 
   // ==========================================
   // DATATABLE PRINCIPAL
@@ -418,12 +149,12 @@ Pacientes
         {
           data: function (row) {
             let acciones = `
-            <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_ver" data-id="${row.id_paciente}" title="Ver Ficha"><i class="fas fa-eye"></i></button>
-            <a href="${BASE_EDIT_URL}/${row.id_paciente}" class="btn btn-datatable btn-icon btn-transparent-dark me-2" title="Editar"><i class="fas fa-edit"></i></a>
+            <button class="btn btn-datatable btn-icon btn-outline-info me-1" type="button" name="btn_ver" data-id="${row.id_paciente}" title="Ver Ficha"><i class="fas fa-eye"></i></button>
+            <a href="${BASE_EDIT_URL}/${row.id_paciente}" class="btn btn-datatable btn-icon btn-outline-primary me-1" title="Editar"><i class="fas fa-edit"></i></a>
             `;
 
-            if (tienePermisoBorrar) {
-              acciones += `<button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" name="btn_eliminar" data-id="${row.id_paciente}" data-nombre="${row.nombre} ${row.apellido}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
+            if (tienePermisoDesactivar) {
+              acciones += `<button class="btn btn-datatable btn-icon btn-outline-warning" type="button" name="btn_desactivar" data-id="${row.id_paciente}" data-nombre="${row.nombre} ${row.apellido}" title="Desactivar"><i class="fas fa-ban"></i></button>`;
             }
 
             return acciones;
@@ -433,96 +164,6 @@ Pacientes
         }
       ],
       order: [[8, 'desc']]
-    });
-  };
-
-  // ==========================================
-  // CARGAR CATÁLOGOS EN SELECTS
-  // ==========================================
-  const cargarCatalogos = () => {
-    console.log('📋 Cargando catálogos...');
-
-    cargarSelect('/api/v1/generos', '#id_genero');
-    cargarSelect('/api/v1/estados-civiles', '#id_estado_civil');
-    cargarSelect('/api/v1/niveles-instruccion', '#id_nivel_instruccion');
-    cargarSelect('/api/v1/profesiones', '#id_profesion');
-  }
-
-  const cargarSelect = (url, selector, placeholder = 'Seleccione...') => {
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          let html = `<option value="">${placeholder}</option>`;
-          data.data.forEach(item => {
-            html += `<option value="${item.id}">${item.descripcion}</option>`;
-          });
-          $(selector).html(html);
-          console.log(`✅ ${selector} cargado con ${data.data.length} opciones`);
-        }
-      })
-      .catch(err => console.error(`❌ Error cargando ${selector}:`, err));
-  }
-
-  // ==========================================
-  // SISTEMA DE BÚSQUEDA DE CIUDAD (REUTILIZABLE)
-  // ==========================================
-  let dtCiudad = null;
-
-  const initCiudadDatatable = () => {
-    if (dtCiudad) {
-      return; // Ya está inicializado
-    }
-
-    dtCiudad = $('#tblCiudad').DataTable({
-      language: {
-        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
-      },
-      ajax: {
-        url: '/api/v1/ciudades',
-        dataSrc: 'data'
-      },
-      columns: [
-        { data: 'descripcion' },
-        {
-          data: function (row) {
-            return `<button type="button" class="btn btn-success btn-sm btn-select-ciudad" 
-                    data-id="${row.id}" 
-                    data-descripcion="${row.descripcion}">
-                    <i class="fa fa-check"></i> Seleccionar
-                  </button>`;
-          }
-        }
-      ]
-    });
-
-    $('#tblCiudad tbody').on('click', '.btn-select-ciudad', function () {
-      const id = $(this).data('id');
-      const descripcion = $(this).data('descripcion');
-
-      if (currentCiudadType === 'residencia') {
-        $('#txtCiudad').val(descripcion);
-        $('#id_ciudad').val(id);
-      } else {
-        $('#txtCiudad_nacimiento').val(descripcion);
-        $('#id_ciudad_nacimiento').val(id);
-      }
-
-      (bootstrap.Modal.getInstance(document.getElementById("modalBuscarCiudad")) || new bootstrap.Modal(document.getElementById("modalBuscarCiudad"))).hide();
-    });
-  };
-
-  const bindCiudadSearch = () => {
-    $('#btnBuscarCiudad').on('click', function () {
-      currentCiudadType = 'residencia';
-      $('#tituloModalCiudad').text('Seleccionar Ciudad de Residencia');
-      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
-    });
-
-    $('#btnBuscarCiudadNacimiento').on('click', function () {
-      currentCiudadType = 'nacimiento';
-      $('#tituloModalCiudad').text('Seleccionar Ciudad de Nacimiento');
-      new bootstrap.Modal(document.getElementById("modalBuscarCiudad")).show();
     });
   };
 
@@ -646,24 +287,19 @@ Pacientes
     }
   });
 
-  // ==========================================
-  // VALIDACIÓN DEL FORMULARIO
-  // ==========================================
-  // Funcion para eliminar se mantiene
-
-  const eliminar = () => {
-    $('#tbl tbody').on('click', 'button[name="btn_eliminar"]', function () {
+  const desactivar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_desactivar"]', function () {
       const idPaciente = $(this).data('id');
       const nombre = $(this).data('nombre');
 
       Swal.fire({
         title: '¿Está seguro?',
-        html: `¿Desea eliminar al paciente <strong>${nombre}</strong>?<br><small>Esta acción no se puede deshacer</small>`,
+        html: `¿Desea desactivar al paciente <strong>${nombre}</strong>?<br><small>Podrá reactivarlo más adelante; sus datos no se eliminan</small>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonText: 'Sí, desactivar',
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
@@ -677,14 +313,14 @@ Pacientes
             .then(data => {
               if (data.success) {
                 $('#tbl').DataTable().ajax.reload();
-                Swal.fire('¡Eliminado!', 'El paciente ha sido eliminado', 'success');
+                Swal.fire('¡Desactivado!', 'El paciente ha sido desactivado', 'success');
               } else {
-                Swal.fire('Error', data.error || 'No se pudo eliminar', 'error');
+                Swal.fire('Error', data.error || 'No se pudo desactivar', 'error');
               }
             })
             .catch(err => {
-              console.error('❌ Error eliminando:', err);
-              Swal.fire('Error', 'Error al eliminar el paciente', 'error');
+              console.error('❌ Error desactivando:', err);
+              Swal.fire('Error', 'Error al desactivar el paciente', 'error');
             });
         }
       });
@@ -695,25 +331,9 @@ Pacientes
   // INICIALIZACIÓN
   // ==========================================
   $(document).ready(function () {
-    console.log('🚀 Inicializando módulo de pacientes...');
-
     initDatatable();
-    cargarCatalogos();
-    initCiudadDatatable();
-
-    initCalculoEdad();
-    initPreviewHistoria();
-
-    // editar();
-    eliminar();
-    // guardar();
+    desactivar();
     verFichaPaciente();
-
-    bindCiudadSearch();
-
-    $('[data-bs-toggle="tooltip"]').tooltip();
-
-    console.log('✅ Módulo de pacientes inicializado correctamente');
   });
 
 </script>

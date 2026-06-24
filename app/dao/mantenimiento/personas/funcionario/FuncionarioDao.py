@@ -21,6 +21,26 @@ class FuncionarioDao(BaseDAO):
             params.append(excluir_id_persona)
         return self.execute_query_one(sql, tuple(params)) is not None
 
+    def getEspecialistasActivos(self):
+        """Especialistas activos para combos (agenda médica, etc.)."""
+        sql = """
+            SELECT
+                e.id_especialista,
+                e.esp_matricula,
+                e.esp_color_agenda,
+                p.per_nombre || ' ' || p.per_apellido AS nombre_completo,
+                COALESCE(STRING_AGG(DISTINCT esp.des_especialidad, ', '), 'Sin especialidades') AS especialidades
+            FROM especialistas e
+            JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+            JOIN personas p ON f.id_persona = p.id_persona
+            LEFT JOIN especialista_especialidades ee ON e.id_especialista = ee.id_especialista AND ee.est_especialista_especialidad = TRUE
+            LEFT JOIN especialidades esp ON ee.id_especialidad = esp.id_especialidad AND esp.est_especialidad = TRUE
+            WHERE f.est_funcionario = TRUE
+            GROUP BY e.id_especialista, e.esp_matricula, e.esp_color_agenda, p.per_nombre, p.per_apellido
+            ORDER BY p.per_apellido, p.per_nombre
+        """
+        return self.execute_query(sql)
+
     def getFuncionarios(self):
         """Obtiene todos los funcionarios con sus datos completos"""
         funcionarioSQL = """

@@ -73,15 +73,17 @@ Referenciales
       </a>
     </div>
     <div class="col-md-4 mb-3">
-      <div class="card shadow-sm h-100 border-start-secondary opacity-50">
-        <div class="card-body d-flex align-items-center gap-3">
-          <i data-feather="grid" style="width:32px;height:32px;" class="text-secondary"></i>
-          <div>
-            <h6 class="m-0 fw-bold">Consultorios</h6>
-            <small class="text-muted">Próximamente</small>
+      <a href="{{ url_for('consultorio.consultorioIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="grid" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Consultorios</h6>
+              <small class="text-muted">Consultorios físicos de cada sede</small>
+            </div>
           </div>
         </div>
-      </div>
+      </a>
     </div>
   </div>
 </div>
