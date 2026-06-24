@@ -79,10 +79,34 @@
       "Bash(curl -s -o /dev/null -w \"POST /api/v1/empresa sin sesion: %{http_code}\\\\n\" -X POST http://localhost:5005/api/v1/empresa)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5005/mantenimiento/referenciales/sede/sede-index)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5005/api/v1/sedes)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5005/mantenimiento/referenciales/empresa/empresa-index)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5005/mantenimiento/referenciales/empresa/empresa-index)",
+      "Bash(curl -s -I http://localhost:5005/login)",
+      "Bash(curl -s -c cookies.txt http://localhost:5005/login -o login.html)",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/ -o home.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/referenciales/referenciales-index -o ref.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/referenciales/empresa/empresa-index -o empresa.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt http://localhost:5005/api/v1/empresa)",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/referenciales/sede/sede-index -o sede.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/referenciales/cargo/cargo-index -o cargo.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/referenciales/especialidad/especialidad-index -o especialidad.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/funcionario/funcionario-index -o funcionario.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt \"http://localhost:5005/api/v1/funcionarios\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/usuario/usuario-index -o usuario.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/usuario/usuario-agregar -o usuario_agregar.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt \"http://localhost:5005/api/v1/roles\")",
+      "Bash(curl -s -b cookies.txt \"http://localhost:5005/api/v1/funcionarios/sin-usuario\")",
+      "Bash(curl -s -c cookies_lgonzalez.txt http://localhost:5005/login -o login2.html)",
+      "Bash(curl -s -b cookies_lgonzalez.txt -o /dev/null -w \"HTTP_CODE:%{http_code}\\\\n\" http://localhost:5005/mantenimiento/usuario/usuario-index)",
+      "Bash(curl -s -b cookies_lgonzalez.txt http://localhost:5005/mantenimiento/usuario/usuario-agregar -o agregar2.html -w \"HTTP_CODE:%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/paciente/paciente-index -o paciente.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -b cookies.txt -c cookies.txt http://localhost:5005/mantenimiento/paciente/paciente-agregar -o paciente_agregar.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -c cookies_fail.txt http://localhost:5005/login -o loginf.html)",
+      "Bash(curl -s -b cookies_fail.txt http://localhost:5005/ -o homef.html -w \"%{http_code}\\\\n\")",
+      "Bash(echo \"---exit:$?---\")"
     ],
     "additionalDirectories": [
-      "\\tmp"
+      "\\tmp",
+      "c:\\Users\\MANUEL RAMIREZ\\.claude\\projects\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\memory"
     ]
   }
 }

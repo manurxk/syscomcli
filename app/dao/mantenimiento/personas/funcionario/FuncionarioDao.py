@@ -12,6 +12,15 @@ class FuncionarioDao(BaseDAO):
         """Verifica si un cargo requiere datos de especialista"""
         return id_cargo in self.CARGOS_ESPECIALISTAS
 
+    def cedulaExiste(self, cedula, excluir_id_persona=None):
+        """Verifica si la cédula ya está registrada en personas (paciente o funcionario)."""
+        sql = "SELECT 1 FROM personas WHERE per_cedula = %s"
+        params = [cedula]
+        if excluir_id_persona:
+            sql += " AND id_persona != %s"
+            params.append(excluir_id_persona)
+        return self.execute_query_one(sql, tuple(params)) is not None
+
     def getFuncionarios(self):
         """Obtiene todos los funcionarios con sus datos completos"""
         funcionarioSQL = """
@@ -255,6 +264,9 @@ class FuncionarioDao(BaseDAO):
             if not especialidades or len(especialidades) == 0:
                 raise ValueError("Debe seleccionar al menos una especialidad")
 
+        if self.cedulaExiste(cedula):
+            raise ValueError(f'Ya existe una persona registrada con la cédula "{cedula}".')
+
         insertPersonaSQL = """
             INSERT INTO personas(per_nombre, per_apellido, per_cedula, per_fecha_nacimiento,
                             id_genero, id_estado_civil, per_telefono, per_correo, per_domicilio,
@@ -317,6 +329,13 @@ class FuncionarioDao(BaseDAO):
                 raise ValueError("Matrícula es obligatoria para especialistas")
             if not especialidades or len(especialidades) == 0:
                 raise ValueError("Debe seleccionar al menos una especialidad")
+
+        fila_persona = self.execute_query_one(
+            "SELECT id_persona FROM funcionarios WHERE id_funcionario = %s", (id_funcionario,)
+        )
+        id_persona_actual = fila_persona["id_persona"] if fila_persona else None
+        if self.cedulaExiste(cedula, excluir_id_persona=id_persona_actual):
+            raise ValueError(f'Ya existe una persona registrada con la cédula "{cedula}".')
 
         updatePersonaSQL = """
             UPDATE personas

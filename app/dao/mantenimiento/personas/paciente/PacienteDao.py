@@ -68,6 +68,15 @@ class PacienteDao(BaseDAO):
         # Formato base: Iniciales + Año (sin secuencial aún, se agrega en generar_historia_clinica_unica)
         return f"{inicial_nombre}{inicial_apellido}-{año_actual}"
 
+    def cedulaExiste(self, cedula, excluir_id_persona=None):
+        """Verifica si la cédula ya está registrada en personas (paciente o funcionario)."""
+        sql = "SELECT 1 FROM personas WHERE per_cedula = %s"
+        params = [cedula]
+        if excluir_id_persona:
+            sql += " AND id_persona != %s"
+            params.append(excluir_id_persona)
+        return self.execute_query_one(sql, tuple(params)) is not None
+
     def validar_historia_unica(self, historia_clinica, pac_id=None):
         """
         Verifica que la historia clínica no esté duplicada
@@ -383,6 +392,9 @@ class PacienteDao(BaseDAO):
         if not all([nombre, apellido, cedula, fecha_nacimiento]):
             raise ValueError("Faltan campos obligatorios: nombre, apellido, cedula, fecha_nacimiento")
 
+        if self.cedulaExiste(cedula):
+            raise ValueError(f'Ya existe una persona registrada con la cédula "{cedula}".')
+
         valido, mensaje = self.validar_fecha_nacimiento(fecha_nacimiento)
         if not valido:
             raise ValueError(mensaje)
@@ -450,6 +462,13 @@ class PacienteDao(BaseDAO):
         valido, mensaje = self.validar_fecha_nacimiento(fecha_nacimiento)
         if not valido:
             raise ValueError(mensaje)
+
+        fila_persona = self.execute_query_one(
+            "SELECT id_persona FROM pacientes WHERE id_paciente = %s", (pac_id,)
+        )
+        id_persona_actual = fila_persona["id_persona"] if fila_persona else None
+        if self.cedulaExiste(cedula, excluir_id_persona=id_persona_actual):
+            raise ValueError(f'Ya existe una persona registrada con la cédula "{cedula}".')
 
         es_menor = self.calcular_es_menor(fecha_nacimiento)
 

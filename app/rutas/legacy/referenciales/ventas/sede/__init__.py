@@ -1,5 +1,0 @@
-# Sede Routes
-
-
-
-

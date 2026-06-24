@@ -233,11 +233,13 @@ def addFuncionario():
                 'error': 'No se pudo guardar el funcionario. Consulte con el administrador.'
             }), 500
 
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
-        app.logger.error(f"Error al agregar funcionario: {str(e)}")
+        app.logger.error(f"Error al agregar funcionario: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
-            'error': f'Ocurrió un error interno: {str(e)}'
+            'error': 'Ocurrió un error interno del servidor. Consulte con el administrador.'
         }), 500
 
 
@@ -332,11 +334,13 @@ def updateFuncionario(id_funcionario):
                 'error': 'No se pudo actualizar el funcionario.'
             }), 500
 
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
-        app.logger.error(f"Error al actualizar funcionario: {str(e)}")
+        app.logger.error(f"Error al actualizar funcionario: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
-            'error': f'Ocurrió un error interno: {str(e)}'
+            'error': 'Ocurrió un error interno del servidor. Consulte con el administrador.'
         }), 500
 
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, \
     request, redirect, url_for, flash, current_app as app
 from app.auth.services.auth_service import AuthService
-from app.dao.auditoria.AuditoriaDao import AuditoriaDao
+from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
 
 logmod = Blueprint('login', __name__, template_folder='../../rutas/legacy/seguridad/templates')
