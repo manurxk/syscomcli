@@ -29,7 +29,7 @@ Citas
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-hover table-bordered align-middle w-100" id="tbl">
-          <thead class="table-light">
+          <thead>
             <tr>
               <th>Fecha</th>
               <th>Hora</th>
@@ -38,6 +38,7 @@ Citas
               <th>Especialidad</th>
               <th>Tipo</th>
               <th>Estado</th>
+              <th>Recordatorios</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -64,12 +65,23 @@ Citas
   </div>
 </div>
 
-<style>
-  .card-header {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid rgba(0, 0, 0, .05);
-  }
+<!-- Modal Recordatorios de la Cita -->
+<div class="modal fade" id="modalRecordatorios" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Recordatorios de la Cita</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="listaRecordatorios"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<style>
   #timelineLog {
     position: relative;
     padding-left: 30px;
@@ -121,12 +133,12 @@ Citas
   const CSRFToken = "{{ csrf_token() }}" || null;
 
   const ESTADOS_BORDE = {
-    AGENDADA: 'border border-info text-info',
-    CONFIRMADA: 'border border-primary text-primary',
-    EN_CONSULTA: 'border border-warning text-warning',
-    COMPLETADA: 'border border-success text-success',
-    AUSENTE: 'border border-secondary text-secondary',
-    CANCELADA: 'border border-danger text-danger'
+    AGENDADA: 'bg-info-subtle text-info fw-semibold',
+    CONFIRMADA: 'bg-primary-subtle text-primary fw-semibold',
+    EN_CONSULTA: 'bg-warning-subtle text-warning fw-semibold',
+    COMPLETADA: 'bg-success-subtle text-success fw-semibold',
+    AUSENTE: 'bg-secondary-subtle text-secondary fw-semibold',
+    CANCELADA: 'bg-danger-subtle text-danger fw-semibold'
   };
 
   const SIGUIENTES_ESTADOS = {
@@ -182,10 +194,34 @@ Citas
         },
         {
           data: function (row) {
+            const total = row.recordatorios_total || 0;
+            const pendientes = row.recordatorios_pendientes || 0;
+            let texto, clase;
+            if (total === 0) { texto = 'Sin reglas'; clase = 'border border-secondary text-secondary'; }
+            else if (pendientes === 0) { texto = 'Enviados'; clase = 'border border-success text-success'; }
+            else if (pendientes === total) { texto = 'Pendientes'; clase = 'border border-warning text-warning'; }
+            else { texto = 'Parcial'; clase = 'border border-info text-info'; }
+            return `<button class="btn btn-link p-0" type="button" name="btn_recordatorios" data-id="${row.id_cita}">
+                      <span class="badge ${clase}">${texto}</span>
+                    </button>`;
+          },
+          className: 'text-center',
+          orderable: false
+        },
+        {
+          data: function (row) {
             const opciones = SIGUIENTES_ESTADOS[row.cod_estado_cita] || [];
-            let acciones = `<button class="btn btn-datatable btn-icon btn-outline-info me-1" type="button" name="btn_log" data-id="${row.id_cita}" title="Ver Historial"><i class="fas fa-history"></i></button>`;
-            opciones.forEach(([cod, label, icono, color]) => {
-              acciones += `<button class="btn btn-datatable btn-icon btn-outline-${color} me-1" type="button" name="btn_cambiar_estado" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i></button>`;
+            const esFinal = opciones.length === 0;
+            let acciones = `<button class="btn btn-sm btn-outline-info me-1" type="button" name="btn_log" data-id="${row.id_cita}" title="Ver Historial"><i class="fas fa-history me-1"></i>Historial</button>`;
+            if (!esFinal) {
+              acciones += `<a class="btn btn-sm btn-outline-primary me-1" href="/agendamiento/citas/citas-agregar?id_cita=${row.id_cita}" title="Editar / Reprogramar"><i class="fas fa-edit me-1"></i>Editar</a>`;
+            }
+            opciones.forEach(([cod, label, icono, color], idx) => {
+              if (idx === 0) {
+                acciones += `<button class="btn btn-sm btn-outline-${color} me-1" type="button" name="btn_cambiar_estado" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono} me-1"></i>${label}</button>`;
+              } else {
+                acciones += `<button class="btn btn-sm btn-icon btn-outline-${color} me-1" type="button" name="btn_cambiar_estado" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i><span class="visually-hidden">${label}</span></button>`;
+              }
             });
             return acciones;
           },
@@ -239,6 +275,90 @@ Citas
   };
 
   // ==========================================
+  // VER / REENVIAR RECORDATORIOS DE LA CITA
+  // ==========================================
+  const CANAL_LABEL = { WHATSAPP: 'WhatsApp', SMS: 'SMS', EMAIL: 'Email', PUSH: 'Push' };
+
+  const pintarRecordatorios = (idCita, recordatorios) => {
+    if (!recordatorios || recordatorios.length === 0) {
+      $('#listaRecordatorios').html('<p class="text-center py-4 text-muted">Esta cita todavía no tiene reglas de recordatorio (se crean al confirmarla).</p>');
+      return;
+    }
+    let html = '<ul class="list-group">';
+    recordatorios.forEach(r => {
+      const horas = r.minutos_antes >= 60 ? `${Math.round(r.minutos_antes / 60)}h` : `${r.minutos_antes}min`;
+      const estadoBadge = r.est_recordatorio
+        ? '<span class="badge border border-warning text-warning">Pendiente</span>'
+        : '<span class="badge border border-success text-success">Enviado</span>';
+      html += `
+        <li class="list-group-item d-flex align-items-center justify-content-between">
+          <div>
+            <strong>${CANAL_LABEL[r.canal] || r.canal}</strong> — ${horas} antes
+            <div>${estadoBadge}</div>
+          </div>
+          <button class="btn btn-sm btn-outline-primary" type="button" name="btn_reenviar"
+                  data-id-cita="${idCita}" data-id-recordatorio="${r.id_recordatorio}">
+            Reenviar
+          </button>
+        </li>
+      `;
+    });
+    html += '</ul>';
+    $('#listaRecordatorios').html(html);
+  };
+
+  const verRecordatoriosCita = () => {
+    $('#tbl').on('click', 'button[name="btn_recordatorios"]', function () {
+      const idCita = $(this).data('id');
+      const modal = new bootstrap.Modal(document.getElementById('modalRecordatorios'));
+
+      $('#listaRecordatorios').html(`
+        <div class="text-center py-5">
+          <div class="spinner-border text-info" role="status"></div>
+          <p class="mt-2">Cargando recordatorios...</p>
+        </div>
+      `);
+
+      modal.show();
+
+      fetch(`/api/v1/citas/${idCita}/recordatorios`)
+        .then(resp => resp.json())
+        .then(data => pintarRecordatorios(idCita, data.success ? data.data : []))
+        .catch(() => $('#listaRecordatorios').html('<p class="text-center py-4 text-danger">Error al cargar los recordatorios.</p>'));
+    });
+
+    $('#listaRecordatorios').on('click', 'button[name="btn_reenviar"]', function () {
+      const idCita = $(this).data('id-cita');
+      const idRecordatorio = $(this).data('id-recordatorio');
+      const $btn = $(this);
+
+      $btn.prop('disabled', true).text('Enviando...');
+
+      fetch(`/api/v1/citas/${idCita}/recordatorios/${idRecordatorio}/reenviar`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRFToken }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire({ title: '¡Enviado!', text: data.mensaje, icon: 'success', timer: 2000, showConfirmButton: false });
+            fetch(`/api/v1/citas/${idCita}/recordatorios`)
+              .then(resp => resp.json())
+              .then(d => pintarRecordatorios(idCita, d.success ? d.data : []));
+            $('#tbl').DataTable().ajax.reload(null, false);
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo reenviar el recordatorio.', 'error');
+            $btn.prop('disabled', false).text('Reenviar');
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Ocurrió un error al reenviar el recordatorio.', 'error');
+          $btn.prop('disabled', false).text('Reenviar');
+        });
+    });
+  };
+
+  // ==========================================
   // CAMBIAR ESTADO
   // ==========================================
   const cambiarEstado = () => {
@@ -278,6 +398,7 @@ Citas
   $(document).ready(function () {
     initDatatable();
     verLogsCita();
+    verRecordatoriosCita();
     cambiarEstado();
   });
 </script>

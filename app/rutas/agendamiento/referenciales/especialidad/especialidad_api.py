@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 
-from app.dao.mantenimiento.referenciales.especialidad.EspecialidadDao import EspecialidadDao
+from app.dao.agendamiento.referenciales.especialidad.EspecialidadDao import EspecialidadDao
 from app.auth.utils.decorators import role_required
 
 especialidadapi = Blueprint('especialidadapi', __name__)

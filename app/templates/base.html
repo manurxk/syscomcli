@@ -472,8 +472,8 @@
     </div>
     <!-- ======================== FIN APP WRAPPER ======================== -->
 
-    <!-- OverlayScrollbars (scroll suave en sidebar) -->
-    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 
     <!-- Bootstrap 5.3 -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
@@ -482,18 +482,18 @@
     <!-- AdminLTE 4 JS -->
     <script src="{{ url_for('static', filename='vendor/adminlte4/js/adminlte.min.js') }}"></script>
 
-    <!-- jQuery -->
-    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
-
-    <!-- Feather Icons -->
-    <script>feather.replace();</script>
+    <!-- OverlayScrollbars (scroll suave en sidebar) -->
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
 
     <!-- DataTables Bootstrap 5 -->
-    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
     <!-- SweetAlert2 -->
     <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
+
+    <!-- Feather Icons -->
+    <script>feather.replace();</script>
 
     {% block js %}{% endblock %}
 

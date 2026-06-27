@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Lista de Espera
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Lista de Espera</h1>
+          <div class="page-header-subtitle">ABM manual de pacientes en espera de un cupo — sin notificación automática</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Pacientes en espera</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnAgregar">Agregar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Paciente</th>
+              <th>Agenda</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Desde</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Agregar a Lista de Espera</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="fw-semibold">Agenda (especialista / horario) <span class="text-danger">*</span></label>
+          <select class="form-select" id="selAgenda">
+            <option value="">Seleccione una agenda</option>
+          </select>
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
+          <select class="form-select" id="selPaciente">
+            <option value="">Seleccione un paciente</option>
+          </select>
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Prioridad</label>
+          <input type="number" class="form-control" id="txtPrioridad" value="0" min="0">
+        </div>
+        <div class="form-group mt-3">
+          <label class="fw-semibold">Motivo</label>
+          <textarea class="form-control" id="txtMotivo" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardar">
+          <i data-feather="save" class="icon-sm"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+  let agendasCache = [];
+  let pacientesCache = [];
+
+  const labelAgenda = (a) => `${a.per_nombre} ${a.per_apellido} — ${a.des_dia} ${a.hora_inicio}-${a.hora_fin} (${a.des_consultorio})`;
+
+  const cargarAgendas = () => {
+    return fetch('/api/v1/agenda-horarios')
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          agendasCache = data.data;
+          const sel = $('#selAgenda');
+          agendasCache.forEach(a => {
+            sel.append(`<option value="${a.id_agenda_horario}">${labelAgenda(a)}</option>`);
+          });
+        }
+      });
+  }
+
+  const cargarPacientes = () => {
+    return fetch('/api/v1/pacientes')
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          pacientesCache = data.data;
+          const sel = $('#selPaciente');
+          pacientesCache.forEach(p => {
+            sel.append(`<option value="${p.id_paciente}">${p.apellido}, ${p.nombre} (CI ${p.cedula})</option>`);
+          });
+        }
+      });
+  }
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/lista-espera',
+        dataSrc: 'data'
+      },
+      columns: [
+        {
+          data: null,
+          orderable: false,
+          render: function (data, type, row, meta) { return meta.row + 1; }
+        },
+        { data: 'paciente_nombre' },
+        {
+          data: function (row) {
+            return `${row.especialista_nombre} — ${row.des_dia} ${row.hora_inicio}-${row.hora_fin}`;
+          }
+        },
+        { data: 'prioridad', className: 'text-center' },
+        {
+          data: function (row) {
+            const colores = {
+              PENDIENTE: 'secondary', NOTIFICADO: 'info', ACEPTADO: 'success',
+              EXPIRADO: 'warning', CANCELADO: 'danger'
+            };
+            const color = colores[row.estado] || 'secondary';
+            return `<span class="badge rounded-pill border border-${color} text-${color}">${row.estado}</span>`;
+          },
+          className: 'text-center'
+        },
+        { data: 'fecha_creacion' },
+        {
+          data: function (row) {
+            return `
+              <button class="btn btn-sm btn-outline-success" type="button" name="btn_notificado" data-id="${row.id_lista_espera}" title="Marcar notificado">Notificado</button>
+              <button class="btn btn-sm btn-outline-primary" type="button" name="btn_aceptado" data-id="${row.id_lista_espera}" title="Marcar aceptado">Aceptado</button>
+              <button class="btn btn-sm btn-outline-danger" type="button" name="btn_retirar" data-id="${row.id_lista_espera}" title="Retirar de la lista">Retirar</button>
+            `;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[3, 'desc']]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function () {
+      $('#selAgenda').val('');
+      $('#selPaciente').val('');
+      $('#txtPrioridad').val(0);
+      $('#txtMotivo').val('');
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idAgenda = $('#selAgenda').val();
+      const idPaciente = $('#selPaciente').val();
+
+      if (!idAgenda) {
+        Swal.fire('Atención', 'Seleccione una agenda.', 'warning');
+        return;
+      }
+      if (!idPaciente) {
+        Swal.fire('Atención', 'Seleccione un paciente.', 'warning');
+        return;
+      }
+
+      const payload = {
+        id_agenda_horario: parseInt(idAgenda),
+        id_paciente: parseInt(idPaciente),
+        prioridad: parseInt($('#txtPrioridad').val()) || 0,
+        motivo: $('#txtMotivo').val().trim()
+      };
+
+      fetch('/api/v1/lista-espera', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            $('#tbl').DataTable().ajax.reload();
+            bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide();
+            Swal.fire('Éxito', 'Paciente agregado a la lista de espera.', 'success');
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo agregar a la lista de espera.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar.', 'error'));
+    });
+  }
+
+  const cambiarEstado = (idLista, estado) => {
+    fetch(`/api/v1/lista-espera/${idLista}/estado`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({ estado: estado })
+    })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          $('#tbl').DataTable().ajax.reload();
+        } else {
+          Swal.fire('Error', data.error || 'No se pudo actualizar el estado.', 'error');
+        }
+      })
+      .catch(() => Swal.fire('Error', 'Ocurrió un error al actualizar el estado.', 'error'));
+  }
+
+  const acciones = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_notificado"]', function () {
+      cambiarEstado($(this).data('id'), 'NOTIFICADO');
+    });
+    $('#tbl tbody').on('click', 'button[name="btn_aceptado"]', function () {
+      cambiarEstado($(this).data('id'), 'ACEPTADO');
+    });
+    $('#tbl tbody').on('click', 'button[name="btn_retirar"]', function () {
+      const idLista = $(this).data('id');
+      Swal.fire({
+        title: '¿Retirar de la lista de espera?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, retirar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/lista-espera/${idLista}`, {
+          method: 'DELETE',
+          headers: { 'X-CSRFToken': CSRFToken }
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              $('#tbl').DataTable().ajax.reload();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo retirar el registro.', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'Ocurrió un error al retirar el registro.', 'error'));
+      });
+    });
+  }
+
+  $(function () {
+    Promise.all([cargarAgendas(), cargarPacientes()]).then(initDatatable);
+    agregar();
+    guardar();
+    acciones();
+  });
+</script>
+{% endblock %}

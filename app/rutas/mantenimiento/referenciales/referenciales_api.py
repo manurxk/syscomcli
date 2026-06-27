@@ -8,7 +8,7 @@ from app.dao.mantenimiento.referenciales.estado_civil.EstadoCivilDao import Esta
 from app.dao.mantenimiento.referenciales.nivel_instruccion.NivelInstruccionDao import NivelInstruccionDao
 from app.dao.mantenimiento.referenciales.profesion.ProfesionDao import ProfesionDao
 from app.dao.mantenimiento.referenciales.cargo.CargoDao import CargoDao
-from app.dao.mantenimiento.referenciales.especialidad.EspecialidadDao import EspecialidadDao
+from app.dao.agendamiento.referenciales.especialidad.EspecialidadDao import EspecialidadDao
 from app.auth.utils.decorators import role_required
 
 

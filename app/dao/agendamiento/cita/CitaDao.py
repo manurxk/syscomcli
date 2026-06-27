@@ -57,7 +57,9 @@ class CitaDao(BaseDAO):
                    TO_CHAR(c.cita_fin, 'YYYY-MM-DD HH24:MI') AS cita_fin,
                    c.modalidad, c.cita_es_primera_vez, c.cita_numero_sesion,
                    c.motivo, c.observaciones,
-                   c.id_estado_cita, ec.cod_estado_cita, ec.des_estado_cita
+                   c.id_estado_cita, ec.cod_estado_cita, ec.des_estado_cita,
+                   (SELECT COUNT(*) FROM recordatorios r WHERE r.id_cita = c.id_cita) AS recordatorios_total,
+                   (SELECT COUNT(*) FROM recordatorios r WHERE r.id_cita = c.id_cita AND r.est_recordatorio = TRUE) AS recordatorios_pendientes
             FROM citas c
             JOIN pacientes p ON c.id_paciente = p.id_paciente
             JOIN personas pp ON p.id_persona = pp.id_persona
@@ -229,6 +231,107 @@ class CitaDao(BaseDAO):
         """
         return self.execute_query(sql, (id_cita,))
 
+    def actualizarCita(self, id_cita, datos, usuario_modificacion):
+        """Edita una cita existente. Paciente y especialista quedan fijos (decisión de
+        diseño documentada en el COMMENT ON TABLE citas de 07_agenda_citas.sql); si
+        datos['id_slot_agenda'] difiere del slot actual, reprograma: libera el slot
+        viejo y reserva el nuevo dentro de la misma transacción."""
+
+        def _actualizar(cur):
+            cur.execute(
+                """
+                SELECT c.id_estado_cita, c.id_slot_agenda, c.id_especialista,
+                       ec.cod_estado_cita, ec.es_final
+                FROM citas c
+                JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
+                WHERE c.id_cita = %s
+                FOR UPDATE OF c
+                """,
+                (id_cita,),
+            )
+            fila = cur.fetchone()
+            if fila is None:
+                raise ValueError("La cita indicada no existe")
+            id_estado_actual, id_slot_actual, id_especialista, cod_estado_actual, es_final = fila
+
+            if es_final:
+                raise ValueError(f"No se puede editar una cita en estado '{cod_estado_actual}'")
+
+            id_slot_nuevo = datos.get("id_slot_agenda")
+            reprogramada = bool(id_slot_nuevo) and id_slot_nuevo != id_slot_actual
+
+            if reprogramada:
+                cur.execute(
+                    """
+                    SELECT id_slot_agenda, id_sede, id_consultorio, id_especialista,
+                           slot_inicio, slot_fin, estado_slot
+                    FROM slots_agenda
+                    WHERE id_slot_agenda = %s
+                    FOR UPDATE
+                    """,
+                    (id_slot_nuevo,),
+                )
+                slot = cur.fetchone()
+                if slot is None:
+                    raise ValueError("El turno indicado no existe")
+                (_, id_sede, id_consultorio, id_especialista_slot,
+                 slot_inicio, slot_fin, estado_slot) = slot
+
+                if estado_slot != "DISPONIBLE":
+                    raise ValueError("El turno seleccionado ya no está disponible")
+                if id_especialista_slot != id_especialista:
+                    raise ValueError("El turno seleccionado no corresponde al especialista de la cita")
+
+                if id_slot_actual:
+                    cur.execute(
+                        "UPDATE slots_agenda SET estado_slot = 'DISPONIBLE' WHERE id_slot_agenda = %s AND estado_slot = 'RESERVADO'",
+                        (id_slot_actual,),
+                    )
+                cur.execute(
+                    "UPDATE slots_agenda SET estado_slot = 'RESERVADO' WHERE id_slot_agenda = %s",
+                    (id_slot_nuevo,),
+                )
+                cur.execute(
+                    """
+                    UPDATE citas
+                    SET id_slot_agenda = %s, id_sede = %s, id_consultorio = %s,
+                        cita_inicio = %s, cita_fin = %s
+                    WHERE id_cita = %s
+                    """,
+                    (id_slot_nuevo, id_sede, id_consultorio, slot_inicio, slot_fin, id_cita),
+                )
+                cur.execute(
+                    """
+                    INSERT INTO citas_log_estados
+                        (id_cita, id_estado_anterior, id_estado_nuevo, motivo_cambio, usuario_cambio)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (id_cita, id_estado_actual, id_estado_actual, "Cita reprogramada", usuario_modificacion),
+                )
+
+            cur.execute(
+                """
+                UPDATE citas
+                SET id_especialidad = %s, modalidad = %s, cita_es_primera_vez = %s,
+                    cita_numero_sesion = %s, motivo = %s, observaciones = %s,
+                    usuario_modificacion = %s
+                WHERE id_cita = %s
+                """,
+                (
+                    datos.get("id_especialidad"),
+                    datos.get("modalidad", "PRESENCIAL"),
+                    datos.get("cita_es_primera_vez", True),
+                    datos.get("cita_numero_sesion"),
+                    datos.get("motivo"),
+                    datos.get("observaciones"),
+                    usuario_modificacion,
+                    id_cita,
+                ),
+            )
+            return True
+
+        return self.execute_transaction(_actualizar)
+
     def cambiarEstadoCita(self, id_cita, cod_estado_nuevo, usuario_modificacion, motivo=None):
         """Cambia el estado de una cita. Si el nuevo estado es CANCELADA, libera
         el slot reservado para que vuelva a estar disponible."""
@@ -266,6 +369,21 @@ class CitaDao(BaseDAO):
                 cur.execute(
                     "UPDATE slots_agenda SET estado_slot = 'DISPONIBLE' WHERE id_slot_agenda = %s AND estado_slot = 'RESERVADO'",
                     (id_slot_agenda,),
+                )
+                cur.execute(
+                    "UPDATE citas SET id_slot_agenda = NULL WHERE id_cita = %s",
+                    (id_cita,),
+                )
+
+            if cod_estado_nuevo == "CONFIRMADA":
+                cur.execute(
+                    """
+                    INSERT INTO recordatorios (id_cita, canal, minutos_antes, usuario_creacion)
+                    VALUES (%(id_cita)s, 'WHATSAPP', 1440, %(usuario)s),
+                           (%(id_cita)s, 'WHATSAPP', 120, %(usuario)s)
+                    ON CONFLICT (id_cita, canal, minutos_antes) DO NOTHING
+                    """,
+                    {"id_cita": id_cita, "usuario": usuario_modificacion},
                 )
 
             cur.execute(

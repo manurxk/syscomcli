@@ -47,6 +47,13 @@ def build_sidebar():
             "html_icon": '<i data-feather="clipboard"></i>'
         })
 
+    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA"}:
+        agendamiento_items.append({
+            "title": "Lista de Espera",
+            "endpoint": "lista_espera.listaEsperaIndex",
+            "html_icon": '<i data-feather="clock"></i>'
+        })
+
     config_items = []
     if roles & {"ADMINISTRADOR", "SUPERADMIN"}:
         config_items.append({

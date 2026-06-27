@@ -3,10 +3,9 @@ Tareas programadas para mantenimiento de autenticación
 FASE 2: MEJORAS DE SEGURIDAD
 
 Ejecutar con cron o scheduler:
-- limpiar_sesiones_expiradas: cada 15 minutos
+- limpiar_sesiones_expiradas: cada 1 hora
 - limpiar_tokens_expirados: cada 1 hora
 """
-from flask import current_app as app
 from app.core.base_dao import BaseDAO
 
 _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
@@ -15,23 +14,22 @@ _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
 def limpiar_sesiones_expiradas():
     """
     Limpia sesiones expiradas usando función PostgreSQL
-    Ejecutar cada 15 minutos
-
-    NOTA: requiere la función limpiar_sesiones_expiradas() en PostgreSQL,
-    todavía no creada en docs_reestructuracion/sql_nueva_bd/04_roles_auditoria.sql.
+    Ejecutar cada 1 hora
     """
-    sql = "SELECT limpiar_sesiones_expiradas() AS cantidad"
-    try:
-        fila = _dao.execute_query_one(sql, commit=True)
-        cantidad_cerradas = fila['cantidad'] if fila else 0
+    from app import app
+    with app.app_context():
+        sql = "SELECT limpiar_sesiones_expiradas() AS cantidad"
+        try:
+            fila = _dao.execute_query_one(sql, commit=True)
+            cantidad_cerradas = fila['cantidad'] if fila else 0
 
-        if cantidad_cerradas > 0:
-            app.logger.info(f"TAREA: {cantidad_cerradas} sesiones expiradas cerradas")
+            if cantidad_cerradas > 0:
+                app.logger.info(f"TAREA: {cantidad_cerradas} sesiones expiradas cerradas")
 
-        return cantidad_cerradas
-    except Exception as e:
-        app.logger.error(f"Error en limpiar_sesiones_expiradas: {str(e)}")
-        return 0
+            return cantidad_cerradas
+        except Exception as e:
+            app.logger.error(f"Error en limpiar_sesiones_expiradas: {str(e)}")
+            return 0
 
 
 def limpiar_tokens_expirados():
@@ -39,20 +37,22 @@ def limpiar_tokens_expirados():
     Elimina tokens de recuperación expirados (más de 7 días)
     Ejecutar cada 1 hora
     """
-    sql = """
-        DELETE FROM password_reset_tokens
-        WHERE fecha_expiracion < NOW() - INTERVAL '7 days'
-    """
-    try:
-        cantidad_eliminados = _dao.execute_query(sql, commit=True)
+    from app import app
+    with app.app_context():
+        sql = """
+            DELETE FROM password_reset_tokens
+            WHERE fecha_expiracion < NOW() - INTERVAL '7 days'
+        """
+        try:
+            cantidad_eliminados = _dao.execute_query(sql, commit=True)
 
-        if cantidad_eliminados > 0:
-            app.logger.info(f"TAREA: {cantidad_eliminados} tokens expirados eliminados")
+            if cantidad_eliminados > 0:
+                app.logger.info(f"TAREA: {cantidad_eliminados} tokens expirados eliminados")
 
-        return cantidad_eliminados
-    except Exception as e:
-        app.logger.error(f"Error en limpiar_tokens_expirados: {str(e)}")
-        return 0
+            return cantidad_eliminados
+        except Exception as e:
+            app.logger.error(f"Error en limpiar_tokens_expirados: {str(e)}")
+            return 0
 
 
 def limpiar_historial_antiguo():
@@ -60,28 +60,30 @@ def limpiar_historial_antiguo():
     Limpia historial de contraseñas antiguo (mantener solo últimos 5 por usuario)
     Ejecutar diariamente
     """
-    sql = """
-        DELETE FROM password_history
-        WHERE id_history NOT IN (
-            SELECT id_history
-            FROM (
-                SELECT id_history,
-                       ROW_NUMBER() OVER (PARTITION BY id_usuario ORDER BY fecha_creacion DESC) as rn
-                FROM password_history
-            ) ranked
-            WHERE rn <= 5
-        )
-    """
-    try:
-        cantidad_eliminados = _dao.execute_query(sql, commit=True)
+    from app import app
+    with app.app_context():
+        sql = """
+            DELETE FROM password_history
+            WHERE id_history NOT IN (
+                SELECT id_history
+                FROM (
+                    SELECT id_history,
+                           ROW_NUMBER() OVER (PARTITION BY id_usuario ORDER BY fecha_creacion DESC) as rn
+                    FROM password_history
+                ) ranked
+                WHERE rn <= 5
+            )
+        """
+        try:
+            cantidad_eliminados = _dao.execute_query(sql, commit=True)
 
-        if cantidad_eliminados > 0:
-            app.logger.info(f"TAREA: {cantidad_eliminados} registros antiguos de historial eliminados")
+            if cantidad_eliminados > 0:
+                app.logger.info(f"TAREA: {cantidad_eliminados} registros antiguos de historial eliminados")
 
-        return cantidad_eliminados
-    except Exception as e:
-        app.logger.error(f"Error en limpiar_historial_antiguo: {str(e)}")
-        return 0
+            return cantidad_eliminados
+        except Exception as e:
+            app.logger.error(f"Error en limpiar_historial_antiguo: {str(e)}")
+            return 0
 
 
 # Ejemplo de uso con APScheduler (opcional)
@@ -95,34 +97,36 @@ def configurar_tareas_programadas(scheduler):
         configurar_tareas_programadas(scheduler)
         scheduler.start()
     """
-    # Limpiar sesiones expiradas cada 15 minutos
-    scheduler.add_job(
-        func=limpiar_sesiones_expiradas,
-        trigger='interval',
-        minutes=15,
-        id='limpiar_sesiones',
-        replace_existing=True
-    )
-    
-    # Limpiar tokens expirados cada 1 hora
-    scheduler.add_job(
-        func=limpiar_tokens_expirados,
-        trigger='interval',
-        hours=1,
-        id='limpiar_tokens',
-        replace_existing=True
-    )
-    
-    # Limpiar historial antiguo diariamente a las 2 AM
-    scheduler.add_job(
-        func=limpiar_historial_antiguo,
-        trigger='cron',
-        hour=2,
-        minute=0,
-        id='limpiar_historial',
-        replace_existing=True
-    )
-    
-    app.logger.info("Tareas programadas de autenticación configuradas")
+    from app import app
+    with app.app_context():
+        # Limpiar sesiones expiradas cada 1 hora
+        scheduler.add_job(
+            func=limpiar_sesiones_expiradas,
+            trigger='interval',
+            hours=1,
+            id='limpiar_sesiones',
+            replace_existing=True
+        )
+
+        # Limpiar tokens expirados cada 1 hora
+        scheduler.add_job(
+            func=limpiar_tokens_expirados,
+            trigger='interval',
+            hours=1,
+            id='limpiar_tokens',
+            replace_existing=True
+        )
+
+        # Limpiar historial antiguo diariamente a las 2 AM
+        scheduler.add_job(
+            func=limpiar_historial_antiguo,
+            trigger='cron',
+            hour=2,
+            minute=0,
+            id='limpiar_historial',
+            replace_existing=True
+        )
+
+        app.logger.info("Tareas programadas de autenticación configuradas")
 
 
