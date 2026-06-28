@@ -85,6 +85,136 @@ Referenciales
         </div>
       </a>
     </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('signo.signoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="activity" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Signos</h6>
+              <small class="text-muted">Signos clínicos observables registrados en consulta</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('sintoma.sintomaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="alert-circle" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Síntomas</h6>
+              <small class="text-muted">Síntomas referidos por el paciente registrados en consulta</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('diagnostico.diagnosticoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="file-plus" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Diagnósticos</h6>
+              <small class="text-muted">Catálogo de diagnósticos (CIE-10) para registrar en consulta</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('medicamento.medicamentoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="package" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Medicamentos</h6>
+              <small class="text-muted">Medicamentos disponibles para indicar en recetas</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_analisis.tipoAnalisisIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="droplet" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Análisis</h6>
+              <small class="text-muted">Tipos de análisis de laboratorio para órdenes médicas</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_estudio.tipoEstudioIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="file-text" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Estudio</h6>
+              <small class="text-muted">Tipos de estudio complementario para órdenes médicas</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_procedimiento.tipoProcedimientoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="tool" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Procedimiento</h6>
+              <small class="text-muted">Tipos de procedimiento clínico aplicables en consulta</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_tratamiento.tipoTratamientoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="heart" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Tratamiento</h6>
+              <small class="text-muted">Tipos de tratamiento asignables a un paciente</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_certificado_medico.tipoCertificadoMedicoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="file" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Certificado Médico</h6>
+              <small class="text-muted">Incluye Justificativo Médico</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('instrumento.instrumentoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-primary">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="clipboard" style="width:32px;height:32px;" class="text-primary"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Instrumentos</h6>
+              <small class="text-muted">Instrumentos de evaluación utilizados en consulta</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}

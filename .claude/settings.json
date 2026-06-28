@@ -156,7 +156,15 @@
       "Bash(curl -s -b cookies.txt -c cookies.txt -o cita_agregar.html http://localhost:5005/agendamiento/citas/citas-agregar -w \"GET citas-agregar: %{http_code}\\\\n\")",
       "Bash(curl -s -b cookies.txt -o agendas.json \"http://localhost:5005/api/v1/agenda-horarios\" -H \"X-Requested-With: XMLHttpRequest\" -w \"GET agenda-horarios: %{http_code}\\\\n\")",
       "Bash(curl -s -b cookies.txt -o cita_index2.html -w \"GET citas-index final: %{http_code}\\\\n\" http://localhost:5005/agendamiento/citas/citas-index)",
-      "Bash(curl -s -b cookies.txt -o /dev/null -w \"Sesion sigue activa tras el fix: %{http_code}\\\\n\" http://localhost:5005/agendamiento/citas/citas-index)"
+      "Bash(curl -s -b cookies.txt -o /dev/null -w \"Sesion sigue activa tras el fix: %{http_code}\\\\n\" http://localhost:5005/agendamiento/citas/citas-index)",
+      "Bash(awk '/^## Fase 06/,/^## Fase 07/' \"docs_reestructuracion/02_MAPEO_FASES_NUEVA_BD.md\")",
+      "Bash(python \"C:\\\\Users\\\\MANUEL~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\\\4ff9c966-62c1-4d57-9038-83d6fa86f16d\\\\scratchpad\\\\gen_clinico_referenciales.py\")",
+      "Bash(rm -rf app/dao/clinico/referenciales/* app/rutas/clinico/referenciales/*)",
+      "Bash(curl -s -c /tmp/cookies.txt http://localhost:5005/login -o /tmp/login_page.html)",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:5005/mantenimiento/referenciales/referenciales-index -o /tmp/refidx.html -w \"HTTP:%{http_code}\\\\n\")",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:5005/api/v1/signos -w \"\\\\nHTTP:%{http_code}\\\\n\")",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:5005/clinico/referenciales/signo/signo-index -o /tmp/signo_idx.html -w \"HTTP:%{http_code}\\\\n\")",
+      "Bash(bash \"C:\\\\Users\\\\MANUEL~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\\\4ff9c966-62c1-4d57-9038-83d6fa86f16d\\\\scratchpad\\\\test_clinico_referenciales.sh\")"
     ],
     "additionalDirectories": [
       "\\tmp",

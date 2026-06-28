@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Signos
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Signos</h1>
+          <div class="page-header-subtitle">Signos clínicos observables registrados en consulta</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Listado de Signos</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnAgregar">Agregar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Signo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="txtIdSigno">
+        <div class="form-group">
+          <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" placeholder="Ingrese la descripción" id="txtDescripcion">
+        </div>
+        <div class="form-group mt-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+            <label class="form-check-label fw-semibold" for="chkEstado">Activo</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardar">
+          <i data-feather="save" class="icon-sm"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/signos',
+        dataSrc: 'data'
+      },
+      columns: [
+        {
+          data: null,
+          orderable: false,
+          render: function (data, type, row, meta) { return meta.row + 1; }
+        },
+        { data: 'des_signo' },
+        {
+          data: function (row) {
+            return row.est_signo
+              ? '<span class="badge rounded-pill border border-success text-success">Activo</span>'
+              : '<span class="badge rounded-pill border border-secondary text-secondary">Inactivo</span>';
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return `<button class="btn btn-sm btn-outline-primary" type="button" name="btn_editar" data-id="${row.id_signo}">Editar</button>`;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[1, 'asc']]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function () {
+      $('#modalTitle').text('Nuevo Signo');
+      $('#txtIdSigno').val('');
+      $('#txtDescripcion').val('');
+      $('#chkEstado').prop('checked', true);
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idSigno = $('#txtIdSigno').val();
+      const descripcion = $('#txtDescripcion').val().trim();
+
+      if (!descripcion) {
+        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        return;
+      }
+
+      const payload = {
+        des_signo: descripcion,
+        est_signo: $('#chkEstado').is(':checked')
+      };
+      const url = idSigno ? `/api/v1/signos/${idSigno}` : '/api/v1/signos';
+      const method = idSigno ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            $('#tbl').DataTable().ajax.reload();
+            bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide();
+            Swal.fire('Éxito', idSigno ? 'Signo actualizado.' : 'Signo agregado.', 'success');
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar el registro.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar el registro.', 'error'));
+    });
+  }
+
+  const editar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_editar"]', function () {
+      const idSigno = $(this).data('id');
+
+      fetch(`/api/v1/signos/${idSigno}`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (!data.success) {
+            Swal.fire('Error', data.error || 'No se pudo cargar el registro.', 'error');
+            return;
+          }
+          $('#modalTitle').text('Editar Signo');
+          $('#txtIdSigno').val(data.data.id_signo);
+          $('#txtDescripcion').val(data.data.des_signo);
+          $('#chkEstado').prop('checked', data.data.est_signo);
+          new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+        });
+    });
+  }
+
+  $(function () {
+    initDatatable();
+    agregar();
+    guardar();
+    editar();
+  });
+</script>
+{% endblock %}
