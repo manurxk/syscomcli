@@ -48,6 +48,9 @@ from app.rutas.clinico.referenciales.tipo_certificado_medico.tipo_certificado_me
 from app.rutas.clinico.referenciales.tipo_certificado_medico.tipo_certificado_medico_api import tipocertificadomedicoapi
 from app.rutas.clinico.referenciales.instrumento.instrumento_routes import instrumentomod
 from app.rutas.clinico.referenciales.instrumento.instrumento_api import instrumentoapi
+from app.rutas.clinico.movimientos.consulta.consulta_routes import consultamod
+from app.rutas.clinico.movimientos.consulta.consulta_api import consultaapi
+from app.rutas.clinico.movimientos.consulta.anamnesis_api import anamnesisapi
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -110,6 +113,9 @@ app.register_blueprint(tipo_certificado_medicomod, url_prefix='/clinico/referenc
 app.register_blueprint(tipocertificadomedicoapi, url_prefix='/api/v1')
 app.register_blueprint(instrumentomod, url_prefix='/clinico/referenciales/instrumento')
 app.register_blueprint(instrumentoapi, url_prefix='/api/v1')
+app.register_blueprint(consultamod, url_prefix='/clinico/consulta')
+app.register_blueprint(consultaapi, url_prefix='/api/v1')
+app.register_blueprint(anamnesisapi, url_prefix='/api/v1')
 
 # Context processors y helpers de template
 init_context_processors(app)

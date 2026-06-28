@@ -1,0 +1,634 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Consulta
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-xl px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title" id="tituloPagina">Registrar Nueva Consulta</h1>
+          <div class="page-header-subtitle" id="subtituloPagina">Complete los datos de la atención clínica</div>
+        </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a href="{{ url_for('consulta.consultaIndex') }}" class="btn btn-light btn-sm shadow-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-xl px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-body">
+      <form id="formConsulta">
+
+        <!-- SECCIÓN 1: PACIENTE -->
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold text-primary">Paciente</h6>
+          </div>
+          <div class="card-body">
+            <input type="hidden" id="id_paciente">
+
+            <div class="form-group">
+              <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Haga clic para buscar paciente" id="txtPaciente" readonly required>
+                <button class="btn btn-primary" type="button" id="btnBuscarPaciente">Buscar</button>
+              </div>
+            </div>
+
+            <div id="infoPaciente" style="display: none;">
+              <div class="alert alert-primary border-0 mt-3">
+                <div class="row">
+                  <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                    <small class="text-muted d-block">Nombre</small>
+                    <strong id="infoPacNombre"></strong>
+                  </div>
+                  <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                    <small class="text-muted d-block">CI</small>
+                    <strong id="infoPacCedula"></strong>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <small class="text-muted d-block">HC</small>
+                    <strong id="infoPacHC"></strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: ESPECIALISTA Y DATOS DE LA CONSULTA -->
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold text-success">Datos de la Consulta</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-lg-6 col-md-6">
+                <div class="form-group">
+                  <label class="fw-semibold">Especialista <span class="text-danger">*</span></label>
+                  <select class="form-control" id="selectEspecialista" required>
+                    <option value="">-- Seleccione un especialista --</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-lg-6 col-md-6">
+                <div class="form-group">
+                  <label class="fw-semibold">Fecha y hora <span class="text-danger">*</span></label>
+                  <input type="datetime-local" class="form-control" id="txtFechaConsulta" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-2">
+              <div class="col-lg-4 col-md-6">
+                <div class="form-group">
+                  <label class="fw-semibold">Estado</label>
+                  <select class="form-control" id="selectEstado">
+                    <option value="PENDIENTE">Pendiente</option>
+                    <option value="EN_ATENCION">En atención</option>
+                    <option value="FINALIZADA">Finalizada</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-2">
+              <div class="col-lg-6 col-md-12">
+                <div class="form-group">
+                  <label class="fw-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
+                  <textarea class="form-control" id="txtMotivo" rows="4" placeholder="Describa el motivo de la consulta..." required></textarea>
+                </div>
+              </div>
+              <div class="col-lg-6 col-md-12">
+                <div class="form-group">
+                  <label class="fw-semibold">Observaciones</label>
+                  <textarea class="form-control" id="txtObservaciones" rows="4" placeholder="Observaciones adicionales..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-2">
+              <div class="col-12">
+                <div class="form-group">
+                  <label class="fw-semibold">Descripción detallada</label>
+                  <textarea class="form-control" id="txtDescripcion" rows="3" placeholder="Detalle de lo evaluado/observado en la consulta..."></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <a href="{{ url_for('consulta.consultaIndex') }}" class="btn btn-secondary me-2">Cancelar</a>
+          <button type="button" class="btn btn-success" id="btnGuardarConsulta">
+            <i class="fas fa-save"></i> <span id="textoBtnGuardar">Guardar Consulta</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3: ANAMNESIS DEL PACIENTE -->
+  <div class="card mb-4 border-0 shadow-sm" id="cardAnamnesis" style="display:none;">
+    <div class="card-header bg-light d-flex align-items-center">
+      <h6 class="mb-0 fw-bold text-info">Anamnesis del Paciente</h6>
+      <div class="ms-auto">
+        <button type="button" class="btn btn-sm btn-outline-secondary me-1" id="btnVerHistorialAnamnesis">Ver Historial</button>
+        <button type="button" class="btn btn-sm btn-info" id="btnNuevaVersionAnamnesis">Registrar Nueva Versión</button>
+      </div>
+    </div>
+    <div class="card-body" id="resumenAnamnesis">
+      <p class="text-muted mb-0">Este paciente todavía no tiene anamnesis registrada.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: BUSCAR PACIENTE -->
+<div class="modal fade" id="modalBuscarPaciente" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Buscar Paciente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle w-100" id="tblPacientes">
+            <thead class="table-light">
+              <tr>
+                <th>HC</th>
+                <th>Nombre Completo</th>
+                <th>CI</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: HISTORIAL DE ANAMNESIS -->
+<div class="modal fade" id="modalHistorialAnamnesis" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Historial de Anamnesis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="listaHistorialAnamnesis"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVA VERSIÓN DE ANAMNESIS -->
+<div class="modal fade" id="modalAnamnesis" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Nueva Versión de Anamnesis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+        <form id="formAnamnesis">
+          <div class="row">
+            <div class="col-lg-4">
+              <div class="form-group">
+                <label class="fw-semibold">Informante</label>
+                <select class="form-control" id="anm_informante">
+                  <option value="">-- Seleccione --</option>
+                  <option value="PACIENTE">Paciente</option>
+                  <option value="MADRE">Madre</option>
+                  <option value="PADRE">Padre</option>
+                  <option value="TUTOR">Tutor</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-lg-8">
+              <div class="form-group">
+                <label class="fw-semibold">Relación del informante</label>
+                <input type="text" class="form-control" id="anm_relacion_informante">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mt-2">
+            <label class="fw-semibold">Motivo de Consulta <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="anm_motivo_consulta" rows="2" required></textarea>
+          </div>
+
+          <h6 class="fw-bold text-primary mt-3">Antecedentes e Historia</h6>
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="form-group"><label class="fw-semibold">Antecedentes familiares similares</label><textarea class="form-control" id="anm_antecedentes_familiares_similares" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Antecedentes patológicos familiares</label><textarea class="form-control" id="anm_antecedentes_patologicos_familiares" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Componentes familiares</label><textarea class="form-control" id="anm_componentes_familiares" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Historia familiar</label><textarea class="form-control" id="anm_historia_familiar" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Antecedentes patológicos personales</label><textarea class="form-control" id="anm_antecedentes_patologicos_personales" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Historia del problema actual</label><textarea class="form-control" id="anm_historia_problema_actual" rows="2"></textarea></div>
+            </div>
+            <div class="col-lg-6">
+              <div class="form-group"><label class="fw-semibold">Historia del desarrollo</label><textarea class="form-control" id="anm_historia_desarrollo" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Historia académica</label><textarea class="form-control" id="anm_historia_academica" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Historia laboral</label><textarea class="form-control" id="anm_historia_laboral" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Historia de rehabilitación</label><textarea class="form-control" id="anm_historia_rehabilitacion" rows="2"></textarea></div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary mt-3">Hábitos y Medicación</h6>
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="form-group"><label class="fw-semibold">Medicación actual</label><textarea class="form-control" id="anm_medicacion_actual" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Medicación psiquiátrica previa</label><textarea class="form-control" id="anm_medicacion_psiquiatrica_previa" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Consumo de sustancias</label><textarea class="form-control" id="anm_consumo_sustancias" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Relaciones interpersonales</label><textarea class="form-control" id="anm_relaciones_interpersonales" rows="2"></textarea></div>
+            </div>
+            <div class="col-lg-6">
+              <div class="form-group"><label class="fw-semibold">Actividad física</label><textarea class="form-control" id="anm_actividad_fisica" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Patrón de sueño</label><textarea class="form-control" id="anm_patron_sueno" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Patrón de alimentación</label><textarea class="form-control" id="anm_patron_alimentacion" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Actividad emocional</label><textarea class="form-control" id="anm_actividad_emocional" rows="2"></textarea></div>
+              <div class="form-group mt-2"><label class="fw-semibold">Actividad sexual</label><textarea class="form-control" id="anm_actividad_sexual" rows="2"></textarea></div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary mt-3">Impresión y Plan</h6>
+          <div class="form-group"><label class="fw-semibold">Impresión diagnóstica</label><textarea class="form-control" id="anm_impresion_diagnostica" rows="2"></textarea></div>
+          <div class="form-group mt-2"><label class="fw-semibold">Plan de trabajo</label><textarea class="form-control" id="anm_plan_trabajo" rows="2"></textarea></div>
+
+          <h6 class="fw-bold text-primary mt-3">Evaluaciones</h6>
+          <div class="row">
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_eval_neuropsicologica"><label class="form-check-label" for="anm_eval_neuropsicologica">Neuropsicológica</label></div></div>
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_eval_psicologica"><label class="form-check-label" for="anm_eval_psicologica">Psicológica</label></div></div>
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_eval_psicopedagogica"><label class="form-check-label" for="anm_eval_psicopedagogica">Psicopedagógica</label></div></div>
+            <div class="col-lg-3 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_eval_fonoaudiologica"><label class="form-check-label" for="anm_eval_fonoaudiologica">Fonoaudiológica</label></div></div>
+            <div class="col-lg-3 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_eval_psicomotora"><label class="form-check-label" for="anm_eval_psicomotora">Psicomotora</label></div></div>
+          </div>
+
+          <h6 class="fw-bold text-primary mt-3">Terapias</h6>
+          <div class="row">
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_terapia_individual"><label class="form-check-label" for="anm_terapia_individual">Individual</label></div></div>
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_terapia_familiar"><label class="form-check-label" for="anm_terapia_familiar">Familiar</label></div></div>
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_terapia_grupal"><label class="form-check-label" for="anm_terapia_grupal">Grupal</label></div></div>
+            <div class="col-lg-2 col-md-4 col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="anm_terapia_ocupacional"><label class="form-check-label" for="anm_terapia_ocupacional">Ocupacional</label></div></div>
+            <div class="col-lg-4 col-md-8">
+              <div class="form-group"><label class="fw-semibold">Otra terapia</label><input type="text" class="form-control" id="anm_otra_terapia"></div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-lg-6">
+              <div class="form-group"><label class="fw-semibold">Observaciones</label><textarea class="form-control" id="anm_observaciones" rows="2"></textarea></div>
+            </div>
+            <div class="col-lg-6">
+              <div class="form-group"><label class="fw-semibold">Indicaciones</label><textarea class="form-control" id="anm_indicaciones" rows="2"></textarea></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-info" id="btnGuardarAnamnesis">
+          <i data-feather="save" class="icon-sm"></i> Guardar Nueva Versión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+  const idConsultaEdit = {{ id_consulta | default('null') }};
+  const CAMPOS_ANAMNESIS = [
+    'informante', 'relacion_informante', 'motivo_consulta',
+    'antecedentes_familiares_similares', 'antecedentes_patologicos_familiares',
+    'componentes_familiares', 'historia_familiar',
+    'antecedentes_patologicos_personales', 'historia_problema_actual', 'historia_desarrollo',
+    'historia_academica', 'historia_laboral', 'historia_rehabilitacion',
+    'medicacion_actual', 'medicacion_psiquiatrica_previa', 'consumo_sustancias',
+    'relaciones_interpersonales', 'actividad_fisica', 'patron_sueno', 'patron_alimentacion',
+    'actividad_emocional', 'actividad_sexual',
+    'impresion_diagnostica', 'plan_trabajo',
+    'observaciones', 'indicaciones'
+  ];
+  const CAMPOS_BOOLEANOS_ANAMNESIS = [
+    'eval_neuropsicologica', 'eval_psicologica', 'eval_psicopedagogica',
+    'eval_fonoaudiologica', 'eval_psicomotora',
+    'terapia_individual', 'terapia_familiar', 'terapia_grupal', 'terapia_ocupacional'
+  ];
+
+  // ==========================================
+  // PACIENTE
+  // ==========================================
+  const initPacientesDatatable = () => {
+    if ($.fn.DataTable.isDataTable('#tblPacientes')) $('#tblPacientes').DataTable().destroy();
+
+    $('#tblPacientes').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/pacientes',
+        dataSrc: (json) => json.success ? json.data : []
+      },
+      columns: [
+        { data: 'historia_clinica', render: (d) => d || 'N/A' },
+        { data: null, render: (d, t, row) => `${row.nombre || ''} ${row.apellido || ''}`.trim() },
+        { data: 'cedula' },
+        {
+          data: null,
+          orderable: false,
+          className: 'text-center',
+          render: (d, t, row) => `
+            <button type="button" class="btn btn-success btn-sm btn-select-paciente"
+                    data-id="${row.id_paciente}" data-nombre="${row.nombre || ''} ${row.apellido || ''}"
+                    data-cedula="${row.cedula}" data-hc="${row.historia_clinica || 'N/A'}">
+              Seleccionar
+            </button>`
+        }
+      ],
+      pageLength: 8,
+      order: [[1, 'asc']]
+    });
+  };
+
+  const seleccionarPaciente = () => {
+    $('#tblPacientes').on('click', '.btn-select-paciente', function () {
+      const data = $(this).data();
+      $('#id_paciente').val(data.id);
+      $('#txtPaciente').val(data.nombre);
+      $('#infoPacNombre').text(data.nombre);
+      $('#infoPacCedula').text(data.cedula);
+      $('#infoPacHC').text(data.hc);
+      $('#infoPaciente').fadeIn();
+
+      (bootstrap.Modal.getInstance(document.getElementById("modalBuscarPaciente")) || new bootstrap.Modal(document.getElementById("modalBuscarPaciente"))).hide();
+
+      cargarAnamnesisPaciente(data.id);
+    });
+  };
+
+  // ==========================================
+  // ESPECIALISTAS
+  // ==========================================
+  const cargarEspecialistas = () => {
+    return fetch('/api/v1/consultas/especialistas')
+      .then(resp => resp.json())
+      .then(data => {
+        const select = $('#selectEspecialista');
+        select.find('option:not(:first)').remove();
+        if (data.success && data.data) {
+          data.data.forEach(esp => {
+            select.append(`<option value="${esp.id_especialista}">${esp.nombre_completo} - ${esp.esp_matricula}</option>`);
+          });
+        }
+      });
+  };
+
+  // ==========================================
+  // ANAMNESIS
+  // ==========================================
+  const cargarAnamnesisPaciente = (idPaciente) => {
+    $('#cardAnamnesis').show();
+    $('#resumenAnamnesis').html('<p class="text-muted mb-0">Cargando anamnesis...</p>');
+
+    fetch(`/api/v1/anamnesis/paciente/${idPaciente}`)
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const a = data.data;
+          $('#resumenAnamnesis').html(`
+            <p class="mb-1"><strong>Versión vigente:</strong> #${a.nro_version} <span class="text-muted">(${a.fecha_creacion})</span></p>
+            <p class="mb-1"><strong>Motivo:</strong> ${a.motivo_consulta}</p>
+            <p class="mb-0"><strong>Impresión diagnóstica:</strong> ${a.impresion_diagnostica || '<span class="text-muted">Sin registrar</span>'}</p>
+          `);
+        } else {
+          $('#resumenAnamnesis').html('<p class="text-muted mb-0">Este paciente todavía no tiene anamnesis registrada.</p>');
+        }
+      })
+      .catch(() => $('#resumenAnamnesis').html('<p class="text-danger mb-0">Error al cargar la anamnesis.</p>'));
+  };
+
+  const abrirNuevaVersionAnamnesis = () => {
+    $('#btnNuevaVersionAnamnesis').on('click', function () {
+      const idPaciente = $('#id_paciente').val();
+      if (!idPaciente) {
+        Swal.fire('Atención', 'Primero seleccione un paciente.', 'warning');
+        return;
+      }
+      $('#formAnamnesis')[0].reset();
+      new bootstrap.Modal(document.getElementById('modalAnamnesis')).show();
+    });
+  };
+
+  const guardarAnamnesis = () => {
+    $('#btnGuardarAnamnesis').on('click', function () {
+      const idPaciente = $('#id_paciente').val();
+      const motivo = $('#anm_motivo_consulta').val().trim();
+
+      if (!motivo) {
+        Swal.fire('Atención', 'El motivo de consulta de la anamnesis es obligatorio.', 'warning');
+        return;
+      }
+
+      const payload = {};
+      CAMPOS_ANAMNESIS.forEach(c => { payload[c] = $(`#anm_${c}`).val() || null; });
+      CAMPOS_BOOLEANOS_ANAMNESIS.forEach(c => { payload[c] = $(`#anm_${c}`).is(':checked'); });
+
+      fetch(`/api/v1/anamnesis/paciente/${idPaciente}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalAnamnesis')).hide();
+            Swal.fire('Éxito', 'Nueva versión de anamnesis registrada.', 'success');
+            cargarAnamnesisPaciente(idPaciente);
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar la anamnesis.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar la anamnesis.', 'error'));
+    });
+  };
+
+  const verHistorialAnamnesis = () => {
+    $('#btnVerHistorialAnamnesis').on('click', function () {
+      const idPaciente = $('#id_paciente').val();
+      if (!idPaciente) {
+        Swal.fire('Atención', 'Primero seleccione un paciente.', 'warning');
+        return;
+      }
+      const modal = new bootstrap.Modal(document.getElementById('modalHistorialAnamnesis'));
+      $('#listaHistorialAnamnesis').html('<p class="text-center text-muted py-3">Cargando...</p>');
+      modal.show();
+
+      fetch(`/api/v1/anamnesis/paciente/${idPaciente}/historial`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success && data.data.length > 0) {
+            let html = '<ul class="list-group">';
+            data.data.forEach(v => {
+              html += `<li class="list-group-item">
+                <strong>Versión #${v.nro_version}</strong> ${v.es_version_actual ? '<span class="badge bg-success ms-1">Vigente</span>' : ''}
+                <div class="small text-muted">${v.fecha_creacion}</div>
+                <div>${v.motivo_consulta}</div>
+              </li>`;
+            });
+            html += '</ul>';
+            $('#listaHistorialAnamnesis').html(html);
+          } else {
+            $('#listaHistorialAnamnesis').html('<p class="text-center text-muted py-3">Sin versiones registradas.</p>');
+          }
+        })
+        .catch(() => $('#listaHistorialAnamnesis').html('<p class="text-center text-danger py-3">Error al cargar el historial.</p>'));
+    });
+  };
+
+  // ==========================================
+  // GUARDAR CONSULTA
+  // ==========================================
+  const guardarConsulta = () => {
+    $('#btnGuardarConsulta').on('click', function () {
+      const idPaciente = $('#id_paciente').val();
+      const idEspecialista = $('#selectEspecialista').val();
+      const fecha = $('#txtFechaConsulta').val();
+      const motivo = $('#txtMotivo').val().trim();
+
+      const faltantes = [];
+      if (!idPaciente) faltantes.push('Paciente');
+      if (!idEspecialista) faltantes.push('Especialista');
+      if (!fecha) faltantes.push('Fecha y hora');
+      if (!motivo) faltantes.push('Motivo de consulta');
+
+      if (faltantes.length > 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Campos incompletos',
+          html: `<p>Complete los siguientes campos obligatorios:</p><ul class="text-start">${faltantes.map(c => `<li>${c}</li>`).join('')}</ul>`
+        });
+        return;
+      }
+
+      const datos = {
+        id_paciente: parseInt(idPaciente),
+        id_especialista: parseInt(idEspecialista),
+        consulta_fecha: fecha,
+        consulta_motivo: motivo,
+        consulta_estado: $('#selectEstado').val(),
+        des_consulta: $('#txtDescripcion').val() || null,
+        consulta_observaciones: $('#txtObservaciones').val() || null
+      };
+
+      if (idConsultaEdit) {
+        delete datos.id_paciente;
+        delete datos.id_especialista;
+      }
+
+      const btn = $(this);
+      const textoOriginal = btn.html();
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
+
+      const url = idConsultaEdit ? `/api/v1/consultas/${idConsultaEdit}` : '/api/v1/consultas';
+      const method = idConsultaEdit ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(datos)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          btn.prop('disabled', false).html(textoOriginal);
+          if (data.success) {
+            Swal.fire({ icon: 'success', title: '¡Éxito!', text: idConsultaEdit ? 'Consulta actualizada correctamente.' : 'Consulta registrada correctamente.' })
+              .then(() => { window.location.href = "{{ url_for('consulta.consultaIndex') }}"; });
+          } else {
+            Swal.fire('Error', data.error || 'Ocurrió un error al guardar la consulta', 'error');
+          }
+        })
+        .catch(() => {
+          btn.prop('disabled', false).html(textoOriginal);
+          Swal.fire('Error', 'Ocurrió un error al guardar la consulta', 'error');
+        });
+    });
+  };
+
+  // ==========================================
+  // MODO EDICIÓN
+  // ==========================================
+  const cargarConsultaParaEditar = () => {
+    if (!idConsultaEdit) return Promise.resolve();
+
+    $('#tituloPagina').text('Editar Consulta');
+    $('#subtituloPagina').text('Paciente y especialista quedan fijos una vez creada la consulta.');
+    $('#textoBtnGuardar').text('Guardar Cambios');
+
+    return fetch(`/api/v1/consultas/${idConsultaEdit}/editar`)
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) {
+          Swal.fire('Error', data.error || 'No se pudo cargar la consulta.', 'error')
+            .then(() => { window.location.href = "{{ url_for('consulta.consultaIndex') }}"; });
+          return;
+        }
+        const c = data.data;
+
+        $('#id_paciente').val(c.id_paciente);
+        $('#btnBuscarPaciente').prop('disabled', true);
+        $('#selectEspecialista').val(c.id_especialista).prop('disabled', true);
+        $('#txtFechaConsulta').val(c.consulta_fecha);
+        $('#selectEstado').val(c.consulta_estado);
+        $('#txtMotivo').val(c.consulta_motivo);
+        $('#txtObservaciones').val(c.consulta_observaciones || '');
+        $('#txtDescripcion').val(c.des_consulta || '');
+
+        return fetch(`/api/v1/consultas/${idConsultaEdit}`)
+          .then(resp => resp.json())
+          .then(detalle => {
+            if (detalle.success) {
+              $('#txtPaciente').val(`${detalle.data.paciente_nombre} ${detalle.data.paciente_apellido}`);
+              $('#infoPacNombre').text(`${detalle.data.paciente_nombre} ${detalle.data.paciente_apellido}`);
+              $('#infoPacCedula').text(detalle.data.paciente_cedula);
+              $('#infoPacHC').text(detalle.data.pac_historia_clinica || 'N/A');
+              $('#infoPaciente').show();
+            }
+            cargarAnamnesisPaciente(c.id_paciente);
+          });
+      });
+  };
+
+  $(document).ready(function () {
+    initPacientesDatatable();
+    cargarEspecialistas().then(cargarConsultaParaEditar);
+
+    seleccionarPaciente();
+    abrirNuevaVersionAnamnesis();
+    guardarAnamnesis();
+    verHistorialAnamnesis();
+    guardarConsulta();
+
+    $('#btnBuscarPaciente').on('click', function () {
+      new bootstrap.Modal(document.getElementById("modalBuscarPaciente")).show();
+      $('#tblPacientes').DataTable().ajax.reload();
+    });
+  });
+</script>
+{% endblock %}

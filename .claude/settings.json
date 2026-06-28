@@ -164,11 +164,24 @@
       "Bash(curl -s -b /tmp/cookies.txt http://localhost:5005/mantenimiento/referenciales/referenciales-index -o /tmp/refidx.html -w \"HTTP:%{http_code}\\\\n\")",
       "Bash(curl -s -b /tmp/cookies.txt http://localhost:5005/api/v1/signos -w \"\\\\nHTTP:%{http_code}\\\\n\")",
       "Bash(curl -s -b /tmp/cookies.txt http://localhost:5005/clinico/referenciales/signo/signo-index -o /tmp/signo_idx.html -w \"HTTP:%{http_code}\\\\n\")",
-      "Bash(bash \"C:\\\\Users\\\\MANUEL~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\\\4ff9c966-62c1-4d57-9038-83d6fa86f16d\\\\scratchpad\\\\test_clinico_referenciales.sh\")"
+      "Bash(bash \"C:\\\\Users\\\\MANUEL~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\\\4ff9c966-62c1-4d57-9038-83d6fa86f16d\\\\scratchpad\\\\test_clinico_referenciales.sh\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -f /tmp/08_consulta_anamnesis.sql)",
+      "Bash(mkdir -p app/dao/clinico/movimientos/consulta app/rutas/clinico/movimientos/consulta/templates)",
+      "Bash(touch app/dao/clinico/movimientos/__init__.py app/dao/clinico/movimientos/consulta/__init__.py app/rutas/clinico/movimientos/__init__.py app/rutas/clinico/movimientos/consulta/__init__.py)",
+      "Bash(docker port *)",
+      "Bash(MSYS_NO_PATHCONV=1 docker cp \"C:\\\\Users\\\\MANUEL RAMIREZ\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\\\75ed4d37-61e3-4a4b-9a86-f668f5ae1afb\\\\scratchpad\\\\validar_c2.py\" syscomcli_app:/tmp/validar_c2.py)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_app python /tmp/validar_c2.py)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c \"DELETE FROM consultas WHERE consulta_motivo LIKE 'TEST C.2%';\" -c \"DELETE FROM anamnesis WHERE motivo_consulta LIKE 'TEST ANAMNESIS%';\" -c \"SELECT count\\(*\\) FROM consultas;\" -c \"SELECT count\\(*\\) FROM anamnesis;\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c \"\\\\d consultas\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c \"\\\\d anamnesis\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c \"SELECT count\\(*\\) FROM consultas;\" -c \"SELECT count\\(*\\) FROM anamnesis;\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c \"SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN \\('pei','derivaciones','paciente_profesional','registro_diagnosticos','registro_signos','registro_sintomas','registro_procedimientos','registro_insumos','insumos','tratamientos'\\);\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c \"DELETE FROM consultas WHERE consulta_motivo LIKE 'TEST C.2%';\" -c \"DELETE FROM anamnesis WHERE motivo_consulta LIKE 'TEST ANAMNESIS%';\" -c \"SELECT count\\(*\\) AS consultas FROM consultas;\" -c \"SELECT count\\(*\\) AS anamnesis FROM anamnesis;\")"
     ],
     "additionalDirectories": [
       "\\tmp",
-      "c:\\Users\\MANUEL RAMIREZ\\.claude\\projects\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\memory"
+      "c:\\Users\\MANUEL RAMIREZ\\.claude\\projects\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\memory",
+      "C:\\Users\\MANUEL RAMIREZ\\AppData\\Local\\Temp\\claude\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\75ed4d37-61e3-4a4b-9a86-f668f5ae1afb\\scratchpad"
     ]
   }
 }

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Consultas
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Consultas</h1>
+          <div class="page-header-subtitle">Cabecera de atención clínica y anamnesis del paciente</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Consultas</span>
+      <a href="{{ url_for('consulta.consultaAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nueva Consulta</a>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Paciente</th>
+              <th>Especialista</th>
+              <th>Motivo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const ESTADOS_BADGE = {
+    PENDIENTE: 'border border-secondary text-secondary',
+    EN_ATENCION: 'border border-warning text-warning',
+    FINALIZADA: 'border border-success text-success'
+  };
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/consultas',
+        dataSrc: (json) => json.success ? json.data : []
+      },
+      columns: [
+        { data: 'consulta_fecha' },
+        { data: function (row) { return `${row.paciente_nombre} <span class="text-muted">(${row.historia_clinica || 'S/HC'})</span>`; } },
+        { data: 'especialista_nombre' },
+        { data: function (row) { return row.consulta_motivo.length > 60 ? row.consulta_motivo.slice(0, 60) + '...' : row.consulta_motivo; } },
+        {
+          data: function (row) {
+            const clase = ESTADOS_BADGE[row.consulta_estado] || 'border border-secondary text-secondary';
+            return `<span class="badge ${clase}">${row.consulta_estado}</span>`;
+          },
+          className: 'text-center'
+        },
+        {
+          data: function (row) {
+            return `
+              <a class="btn btn-sm btn-outline-primary me-1" href="/clinico/consulta/consulta-editar/${row.id_consulta}" title="Editar"><i class="fas fa-edit me-1"></i>Editar</a>
+              <button class="btn btn-sm btn-outline-danger" type="button" name="btn_desactivar" data-id="${row.id_consulta}" title="Desactivar"><i class="fas fa-ban me-1"></i>Desactivar</button>
+            `;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[0, 'desc']]
+    });
+  };
+
+  const desactivarConsulta = () => {
+    $('#tbl').on('click', 'button[name="btn_desactivar"]', function () {
+      const idConsulta = $(this).data('id');
+      Swal.fire({
+        title: '¿Desactivar esta consulta?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, desactivar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/consultas/${idConsulta}`, {
+          method: 'DELETE',
+          headers: { 'X-CSRFToken': "{{ csrf_token() }}" }
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({ title: '¡Listo!', icon: 'success', timer: 1500, showConfirmButton: false });
+              $('#tbl').DataTable().ajax.reload();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo desactivar la consulta.', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'Ocurrió un error al desactivar la consulta.', 'error'));
+      });
+    });
+  };
+
+  $(document).ready(function () {
+    initDatatable();
+    desactivarConsulta();
+  });
+</script>
+{% endblock %}
