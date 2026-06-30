@@ -77,6 +77,19 @@ def build_sidebar():
             "html_icon": '<i data-feather="clipboard"></i>'
         })
 
+    ventas_items = []
+    if roles & {"ADMINISTRADOR", "SUPERADMIN", "VENTAS"}:
+        ventas_items.append({
+            "title": "Pedidos",
+            "endpoint": "pedido.pedidoIndex",
+            "html_icon": '<i data-feather="shopping-cart"></i>'
+        })
+        ventas_items.append({
+            "title": "Presupuestos",
+            "endpoint": "presupuesto.presupuestoIndex",
+            "html_icon": '<i data-feather="file-text"></i>'
+        })
+
     config_items = []
     if roles & {"ADMINISTRADOR", "SUPERADMIN"}:
         config_items.append({
@@ -85,7 +98,7 @@ def build_sidebar():
             "html_icon": '<i data-feather="sliders"></i>'
         })
 
-    if not items and not agendamiento_items and not clinico_items and not config_items:
+    if not items and not agendamiento_items and not clinico_items and not ventas_items and not config_items:
         return []
 
     groups = []
@@ -95,6 +108,8 @@ def build_sidebar():
         groups.append({"heading": "Agendamiento", "items": agendamiento_items})
     if clinico_items:
         groups.append({"heading": "Clínico", "items": clinico_items})
+    if ventas_items:
+        groups.append({"heading": "Ventas", "items": ventas_items})
     if config_items:
         groups.append({"heading": "Configuración", "items": config_items})
 

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block titulo %}Marcas de Tarjeta{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Marcas de Tarjeta</h1>
+          <div class="page-header-subtitle">Visa, Mastercard, American Express y otras marcas</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Listado de Marcas de Tarjeta</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnAgregar">Agregar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr><th>#</th><th>Descripción</th><th>Código</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nueva Marca de Tarjeta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="txtId">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtDescripcion" placeholder="Ej. VISA">
+          </div>
+          <div class="col-12">
+            <label class="fw-semibold">Código</label>
+            <input type="text" class="form-control" id="txtCodigo" placeholder="VISA" maxlength="20">
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+              <label class="form-check-label fw-semibold" for="chkEstado">Activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardar"><i data-feather="save" class="icon-sm"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: { url: '/api/v1/marcas-tarjeta', dataSrc: 'data' },
+      columns: [
+        { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
+        { data: 'des_marca_tarjeta' },
+        { data: row => row.cod_marca_tarjeta || '-' },
+        { data: row => row.est_marca_tarjeta ? '<span class="badge rounded-pill border border-success text-success">Activo</span>' : '<span class="badge rounded-pill border border-secondary text-secondary">Inactivo</span>', className: 'text-center' },
+        { data: row => `<button class="btn btn-sm btn-outline-primary" name="btn_editar" data-id="${row.id_marca_tarjeta}">Editar</button>`, className: 'text-center', orderable: false }
+      ],
+      order: [[1,'asc']]
+    });
+  };
+  const agregar = () => {
+    $('#btnAgregar').on('click', () => {
+      $('#modalTitle').text('Nueva Marca de Tarjeta'); $('#txtId').val('');
+      $('#txtDescripcion,#txtCodigo').val(''); $('#chkEstado').prop('checked', true);
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+    });
+  };
+  const guardar = () => {
+    $('#btnGuardar').on('click', () => {
+      const id = $('#txtId').val();
+      const desc = $('#txtDescripcion').val().trim();
+      if (!desc) { Swal.fire('Atención','La descripción es obligatoria.','warning'); return; }
+      const payload = {
+        des_marca_tarjeta: desc,
+        cod_marca_tarjeta: $('#txtCodigo').val().trim() || null,
+        est_marca_tarjeta: $('#chkEstado').is(':checked')
+      };
+      fetch(id ? `/api/v1/marcas-tarjeta/${id}` : '/api/v1/marcas-tarjeta', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      }).then(r=>r.json()).then(d => {
+        if (d.success) { $('#tbl').DataTable().ajax.reload(); bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide(); Swal.fire('Éxito', id ? 'Registro actualizado.' : 'Registro agregado.','success'); }
+        else Swal.fire('Error', d.error||'No se pudo guardar.','error');
+      }).catch(() => Swal.fire('Error','Error al guardar.','error'));
+    });
+  };
+  const editar = () => {
+    $('#tbl tbody').on('click','button[name="btn_editar"]', function() {
+      const id = $(this).data('id');
+      fetch(`/api/v1/marcas-tarjeta/${id}`).then(r=>r.json()).then(d => {
+        if (!d.success) { Swal.fire('Error',d.error,'error'); return; }
+        const m = d.data;
+        $('#modalTitle').text('Editar Marca de Tarjeta'); $('#txtId').val(m.id_marca_tarjeta);
+        $('#txtDescripcion').val(m.des_marca_tarjeta); $('#txtCodigo').val(m.cod_marca_tarjeta||'');
+        $('#chkEstado').prop('checked', m.est_marca_tarjeta);
+        new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+      });
+    });
+  };
+  $(function() { initDatatable(); agregar(); guardar(); editar(); });
+</script>
+{% endblock %}

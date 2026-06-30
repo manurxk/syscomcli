@@ -229,5 +229,181 @@ Referenciales
       </a>
     </div>
   </div>
+
+  <!-- SECCIÓN VENTAS -->
+  <h6 class="fw-bold text-muted mt-3 mb-3 text-uppercase small">
+    <i data-feather="shopping-cart" class="icon-sm me-1"></i> Ventas
+  </h6>
+  <div class="row gx-3">
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('item_servicio.itemServicioIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="tag" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Ítems / Servicios</h6>
+              <small class="text-muted">Catálogo de ítems facturables</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('moneda.monedaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="dollar-sign" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Monedas</h6>
+              <small class="text-muted">Monedas para operaciones de venta</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('forma_cobro.formaCobroIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="credit-card" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Formas de Cobro</h6>
+              <small class="text-muted">Efectivo, tarjeta, transferencia y otros</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('condicion_venta.condicionVentaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="file-text" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Condiciones de Venta</h6>
+              <small class="text-muted">Contado, crédito y modalidades de pago</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_comprobante.tipoComprobanteIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="file" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Comprobante</h6>
+              <small class="text-muted">Factura, boleta, nota de crédito y otros</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_impuesto.tipoImpuestoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="percent" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Impuesto</h6>
+              <small class="text-muted">IVA, ISC, exento y otros impuestos</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('tipo_item.tipoItemIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="layers" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Tipos de Ítem</h6>
+              <small class="text-muted">Producto, servicio, consulta y otras categorías</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('marca_tarjeta.marcaTarjetaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="credit-card" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Marcas de Tarjeta</h6>
+              <small class="text-muted">Visa, Mastercard, Amex y otras</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('entidad_adherida.entidadAdheridaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="globe" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Entidades Adheridas</h6>
+              <small class="text-muted">Bancos y entidades que procesan pagos</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('entidad_emisora.entidadEmisoraIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="globe" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Entidades Emisoras</h6>
+              <small class="text-muted">Bancos que emiten tarjetas de crédito/débito</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('estado_factura.estadoFacturaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="check-circle" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Estados de Factura</h6>
+              <small class="text-muted">Borrador, emitida, pagada, anulada y otros</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('caja.cajaIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="archive" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Cajas</h6>
+              <small class="text-muted">Puntos de venta y cajas registradoras</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('deposito.depositoIndex') }}" class="text-decoration-none">
+        <div class="card shadow-sm h-100 border-start-success">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i data-feather="database" style="width:32px;height:32px;" class="text-success"></i>
+            <div>
+              <h6 class="m-0 fw-bold">Depósitos</h6>
+              <small class="text-muted">Cuentas bancarias y billeteras digitales</small>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}

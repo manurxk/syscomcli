@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block titulo %}Pedidos{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Pedidos</h1>
+          <div class="page-header-subtitle">Pedidos de clientes/pacientes — pre-venta</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('pedido.pedidoAgregar') }}" class="btn btn-primary btn-sm">Nuevo Pedido</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Pedidos</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>Número</th><th>Paciente</th><th>Profesional</th>
+              <th>Fecha pedido</th><th>Fecha entrega</th>
+              <th>Total</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+
+  const badgeEstado = est => {
+    const map = {
+      PENDIENTE: 'warning', CONFIRMADO: 'info', FACTURADO: 'success', CANCELADO: 'secondary'
+    };
+    return `<span class="badge bg-${map[est]||'secondary'}">${est}</span>`;
+  };
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/pedidos', dataSrc: function(json) {
+          if (!json.success) { console.error(json.error); return []; }
+          return json.data;
+        }
+      },
+      columns: [
+        { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
+        { data: 'pedido_numero' },
+        { data: row => `${row.paciente_nombre}<br><small class="text-muted">${row.paciente_cedula||''}</small>` },
+        { data: row => row.profesional_nombre || '<span class="text-muted">-</span>' },
+        { data: 'fecha_pedido' },
+        { data: row => row.fecha_entrega || '-' },
+        { data: row => parseFloat(row.pedido_total||0).toLocaleString('es-PY'), className: 'text-end' },
+        { data: row => badgeEstado(row.pedido_estado), className: 'text-center' },
+        {
+          data: row => `
+            <a class="btn btn-datatable btn-icon btn-outline-primary me-1" href="/ventas/movimientos/pedido/pedido-agregar?id=${row.id_pedido}" title="Ver detalle"><i class="fas fa-eye"></i></a>
+            <button class="btn btn-datatable btn-icon btn-outline-warning" name="btn_cancelar" data-id="${row.id_pedido}" data-num="${row.pedido_numero}" title="Cancelar" ${row.pedido_estado==='CANCELADO'||row.pedido_estado==='FACTURADO'?'disabled':''}><i class="fas fa-ban"></i></button>
+          `,
+          className: 'text-center', orderable: false
+        }
+      ],
+      order: [[4,'desc']]
+    });
+  };
+
+  const cancelar = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_cancelar"]', function() {
+      if (this.disabled) return;
+      const id = $(this).data('id');
+      const num = $(this).data('num');
+      Swal.fire({
+        title: '¿Cancelar pedido?',
+        html: `El pedido <strong>${num}</strong> pasará a estado CANCELADO.`,
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar', cancelButtonText: 'Volver'
+      }).then(r => {
+        if (!r.isConfirmed) return;
+        fetch(`/api/v1/pedidos/${id}/estado`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+          body: JSON.stringify({ pedido_estado: 'CANCELADO' })
+        }).then(r => r.json()).then(d => {
+          if (d.success) { $('#tbl').DataTable().ajax.reload(); Swal.fire('Cancelado', 'El pedido fue cancelado.', 'success'); }
+          else Swal.fire('Error', d.error||'No se pudo cancelar.', 'error');
+        });
+      });
+    });
+  };
+
+  $(function() { initDatatable(); cancelar(); });
+</script>
+{% endblock %}

@@ -65,6 +65,36 @@ from app.rutas.clinico.movimientos.pei.pei_api import peiapi
 from app.rutas.clinico.movimientos.ficha.ficha_routes import fichamod
 from app.rutas.clinico.movimientos.ficha.ficha_api import fichaapi
 from app.rutas.clinico.movimientos.derivacion.derivacion_api import derivacionapi
+from app.rutas.ventas.referenciales.moneda.moneda_routes import monedamod
+from app.rutas.ventas.referenciales.moneda.moneda_api import monedaapi
+from app.rutas.ventas.referenciales.condicion_venta.condicion_venta_routes import condicionventamod
+from app.rutas.ventas.referenciales.condicion_venta.condicion_venta_api import condicionventaapi
+from app.rutas.ventas.referenciales.forma_cobro.forma_cobro_routes import formacobromod
+from app.rutas.ventas.referenciales.forma_cobro.forma_cobro_api import formacobroapi
+from app.rutas.ventas.referenciales.tipo_comprobante.tipo_comprobante_routes import tipocomprobantemod
+from app.rutas.ventas.referenciales.tipo_comprobante.tipo_comprobante_api import tipocomprobanteapi
+from app.rutas.ventas.referenciales.tipo_impuesto.tipo_impuesto_routes import tipoimpuestomod
+from app.rutas.ventas.referenciales.tipo_impuesto.tipo_impuesto_api import tipoimpuestoapi
+from app.rutas.ventas.referenciales.tipo_item.tipo_item_routes import tipoitemmod
+from app.rutas.ventas.referenciales.tipo_item.tipo_item_api import tipoitemapi
+from app.rutas.ventas.referenciales.marca_tarjeta.marca_tarjeta_routes import marcatarjetamod
+from app.rutas.ventas.referenciales.marca_tarjeta.marca_tarjeta_api import marcatarjetaapi
+from app.rutas.ventas.referenciales.entidad_adherida.entidad_adherida_routes import entidadadheridamod
+from app.rutas.ventas.referenciales.entidad_adherida.entidad_adherida_api import entidadadheridaapi
+from app.rutas.ventas.referenciales.entidad_emisora.entidad_emisora_routes import entidademisoramod
+from app.rutas.ventas.referenciales.entidad_emisora.entidad_emisora_api import entidademisoraapi
+from app.rutas.ventas.referenciales.estado_factura.estado_factura_routes import estadofacturamod
+from app.rutas.ventas.referenciales.estado_factura.estado_factura_api import estadofacturaapi
+from app.rutas.ventas.referenciales.caja.caja_routes import cajamod
+from app.rutas.ventas.referenciales.caja.caja_api import cajaapi
+from app.rutas.ventas.referenciales.deposito.deposito_routes import depositomod
+from app.rutas.ventas.referenciales.deposito.deposito_api import depositoapi
+from app.rutas.ventas.referenciales.item_servicio.item_servicio_routes import itemserviciomod
+from app.rutas.ventas.referenciales.item_servicio.item_servicio_api import itemservicioapi
+from app.rutas.ventas.movimientos.pedido.pedido_routes import pedidomod
+from app.rutas.ventas.movimientos.pedido.pedido_api import pedidoapi
+from app.rutas.ventas.movimientos.presupuesto.presupuesto_routes import presupuestomod
+from app.rutas.ventas.movimientos.presupuesto.presupuesto_api import presupuestoapi
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -144,6 +174,36 @@ app.register_blueprint(peiapi, url_prefix='/api/v1')
 app.register_blueprint(fichamod, url_prefix='/clinico/ficha')
 app.register_blueprint(fichaapi, url_prefix='/api/v1')
 app.register_blueprint(derivacionapi, url_prefix='/api/v1')
+app.register_blueprint(monedamod, url_prefix='/ventas/referenciales/moneda')
+app.register_blueprint(monedaapi, url_prefix='/api/v1')
+app.register_blueprint(condicionventamod, url_prefix='/ventas/referenciales/condicion-venta')
+app.register_blueprint(condicionventaapi, url_prefix='/api/v1')
+app.register_blueprint(formacobromod, url_prefix='/ventas/referenciales/forma-cobro')
+app.register_blueprint(formacobroapi, url_prefix='/api/v1')
+app.register_blueprint(tipocomprobantemod, url_prefix='/ventas/referenciales/tipo-comprobante')
+app.register_blueprint(tipocomprobanteapi, url_prefix='/api/v1')
+app.register_blueprint(tipoimpuestomod, url_prefix='/ventas/referenciales/tipo-impuesto')
+app.register_blueprint(tipoimpuestoapi, url_prefix='/api/v1')
+app.register_blueprint(tipoitemmod, url_prefix='/ventas/referenciales/tipo-item')
+app.register_blueprint(tipoitemapi, url_prefix='/api/v1')
+app.register_blueprint(marcatarjetamod, url_prefix='/ventas/referenciales/marca-tarjeta')
+app.register_blueprint(marcatarjetaapi, url_prefix='/api/v1')
+app.register_blueprint(entidadadheridamod, url_prefix='/ventas/referenciales/entidad-adherida')
+app.register_blueprint(entidadadheridaapi, url_prefix='/api/v1')
+app.register_blueprint(entidademisoramod, url_prefix='/ventas/referenciales/entidad-emisora')
+app.register_blueprint(entidademisoraapi, url_prefix='/api/v1')
+app.register_blueprint(estadofacturamod, url_prefix='/ventas/referenciales/estado-factura')
+app.register_blueprint(estadofacturaapi, url_prefix='/api/v1')
+app.register_blueprint(cajamod, url_prefix='/ventas/referenciales/caja')
+app.register_blueprint(cajaapi, url_prefix='/api/v1')
+app.register_blueprint(depositomod, url_prefix='/ventas/referenciales/deposito')
+app.register_blueprint(depositoapi, url_prefix='/api/v1')
+app.register_blueprint(itemserviciomod, url_prefix='/ventas/referenciales/item-servicio')
+app.register_blueprint(itemservicioapi, url_prefix='/api/v1')
+app.register_blueprint(pedidomod, url_prefix='/ventas/movimientos/pedido')
+app.register_blueprint(pedidoapi, url_prefix='/api/v1')
+app.register_blueprint(presupuestomod, url_prefix='/ventas/movimientos/presupuesto')
+app.register_blueprint(presupuestoapi, url_prefix='/api/v1')
 
 # Context processors y helpers de template
 init_context_processors(app)

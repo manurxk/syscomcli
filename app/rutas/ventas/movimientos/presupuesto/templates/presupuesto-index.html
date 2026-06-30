@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block titulo %}Presupuestos{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Presupuestos</h1>
+          <div class="page-header-subtitle">Presupuestos pre-venta para pacientes</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('presupuesto.presupuestoAgregar') }}" class="btn btn-primary btn-sm">Nuevo Presupuesto</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Presupuestos</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>Número</th><th>Paciente</th><th>Profesional</th>
+              <th>Fecha pres.</th><th>Validez</th>
+              <th>Total</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+
+  const badgeEstado = est => {
+    const map = { PENDIENTE:'warning', APROBADO:'success', RECHAZADO:'danger', CONVERTIDO:'info', VENCIDO:'secondary' };
+    return `<span class="badge bg-${map[est]||'secondary'}">${est}</span>`;
+  };
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/presupuestos', dataSrc: function(json) {
+          if (!json.success) { console.error(json.error); return []; }
+          return json.data;
+        }
+      },
+      columns: [
+        { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
+        { data: 'presupuesto_numero' },
+        { data: row => `${row.paciente_nombre}<br><small class="text-muted">${row.paciente_cedula||''}</small>` },
+        { data: row => row.profesional_nombre || '<span class="text-muted">-</span>' },
+        { data: 'fecha_presupuesto' },
+        { data: row => row.fecha_validez || '-' },
+        { data: row => parseFloat(row.presupuesto_total||0).toLocaleString('es-PY'), className: 'text-end' },
+        { data: row => badgeEstado(row.presupuesto_estado), className: 'text-center' },
+        {
+          data: row => {
+            const puedeEstado = !['RECHAZADO','CONVERTIDO'].includes(row.presupuesto_estado);
+            return `
+              <button class="btn btn-datatable btn-icon btn-outline-success me-1" name="btn_aprobar" data-id="${row.id_presupuesto}" title="Aprobar" ${row.presupuesto_estado!=='PENDIENTE'?'disabled':''}><i class="fas fa-check"></i></button>
+              <button class="btn btn-datatable btn-icon btn-outline-danger" name="btn_rechazar" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Rechazar" ${!puedeEstado?'disabled':''}><i class="fas fa-times"></i></button>
+            `;
+          },
+          className: 'text-center', orderable: false
+        }
+      ],
+      order: [[4,'desc']]
+    });
+  };
+
+  const cambiarEstado = (id, estado) => {
+    fetch(`/api/v1/presupuestos/${id}/estado`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({ presupuesto_estado: estado })
+    }).then(r=>r.json()).then(d=>{
+      if (d.success) { $('#tbl').DataTable().ajax.reload(); Swal.fire('Listo','Estado actualizado.','success'); }
+      else Swal.fire('Error', d.error||'No se pudo actualizar.','error');
+    });
+  };
+
+  const bindAcciones = () => {
+    $('#tbl tbody').on('click','button[name="btn_aprobar"]', function(){
+      if (this.disabled) return;
+      const id = $(this).data('id');
+      Swal.fire({title:'¿Aprobar presupuesto?',icon:'question',showCancelButton:true,confirmButtonText:'Sí, aprobar'})
+        .then(r=>{ if(r.isConfirmed) cambiarEstado(id,'APROBADO'); });
+    });
+    $('#tbl tbody').on('click','button[name="btn_rechazar"]', function(){
+      if (this.disabled) return;
+      const id = $(this).data('id');
+      Swal.fire({title:'¿Rechazar presupuesto?',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, rechazar',confirmButtonColor:'#d33'})
+        .then(r=>{ if(r.isConfirmed) cambiarEstado(id,'RECHAZADO'); });
+    });
+  };
+
+  $(function() { initDatatable(); bindAcciones(); });
+</script>
+{% endblock %}

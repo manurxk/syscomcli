@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block titulo %}Ítems / Servicios{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Ítems / Servicios</h1>
+          <div class="page-header-subtitle">Catálogo de ítems facturables para pedidos, presupuestos y facturas</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Listado de Ítems / Servicios</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnAgregar">Agregar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>Descripción</th><th>Código</th><th>Tipo</th>
+              <th>Precio</th><th>Moneda</th><th>Impuesto</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Ítem / Servicio</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="txtId">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtDescripcion" placeholder="Ej. CONSULTA PSICOLOGICA">
+          </div>
+          <div class="col-6">
+            <label class="fw-semibold">Código</label>
+            <input type="text" class="form-control" id="txtCodigo" maxlength="20">
+          </div>
+          <div class="col-6">
+            <label class="fw-semibold">Tipo de ítem <span class="text-danger">*</span></label>
+            <select class="form-select" id="selTipoItem">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="fw-semibold">Precio unitario</label>
+            <input type="number" class="form-control" id="txtPrecio" value="0" min="0" step="0.01">
+          </div>
+          <div class="col-6">
+            <label class="fw-semibold">Moneda</label>
+            <select class="form-select" id="selMoneda">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <div class="form-check form-switch mt-3">
+              <input class="form-check-input" type="checkbox" id="chkAplicaImpuesto">
+              <label class="form-check-label fw-semibold" for="chkAplicaImpuesto">Aplica impuesto</label>
+            </div>
+          </div>
+          <div class="col-6" id="grupoTipoImpuesto" style="display:none;">
+            <label class="fw-semibold">Tipo de impuesto</label>
+            <select class="form-select" id="selTipoImpuesto">
+              <option value="">Seleccione...</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <div class="form-check form-switch mt-3">
+              <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+              <label class="form-check-label fw-semibold" for="chkEstado">Activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardar"><i data-feather="save" class="icon-sm"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+
+  const cargarCombo = (url, selector, valueField, textField) => {
+    return fetch(url).then(r => r.json()).then(d => {
+      const sel = $(selector);
+      sel.find('option:not(:first)').remove();
+      if (d.success) {
+        d.data.forEach(item => sel.append(`<option value="${item[valueField]}">${item[textField]}</option>`));
+      }
+    });
+  };
+
+  const cargarCombos = () => Promise.all([
+    cargarCombo('/api/v1/tipos-items', '#selTipoItem', 'id_tipo_item', 'des_tipo_item'),
+    cargarCombo('/api/v1/monedas', '#selMoneda', 'id_moneda', 'des_moneda'),
+    cargarCombo('/api/v1/tipos-impuestos', '#selTipoImpuesto', 'id_tipo_impuesto', 'des_tipo_impuesto')
+  ]);
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: { url: '/api/v1/items-servicios', dataSrc: 'data' },
+      columns: [
+        { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
+        { data: 'des_item_servicio' },
+        { data: row => row.cod_item_servicio || '-' },
+        { data: row => row.des_tipo_item || '-' },
+        { data: row => parseFloat(row.item_precio_unitario || 0).toFixed(2) },
+        { data: row => row.des_moneda || '-' },
+        { data: row => row.aplica_impuesto ? (row.des_tipo_impuesto || 'Sí') : 'No' },
+        { data: row => row.est_item_servicio ? '<span class="badge rounded-pill border border-success text-success">Activo</span>' : '<span class="badge rounded-pill border border-secondary text-secondary">Inactivo</span>', className: 'text-center' },
+        { data: row => `<button class="btn btn-sm btn-outline-primary" name="btn_editar" data-id="${row.id_item_servicio}">Editar</button>`, className: 'text-center', orderable: false }
+      ],
+      order: [[1,'asc']]
+    });
+  };
+
+  const toggleImpuesto = () => {
+    $('#chkAplicaImpuesto').on('change', function () {
+      $('#grupoTipoImpuesto').toggle(this.checked);
+    });
+  };
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', () => {
+      $('#modalTitle').text('Nuevo Ítem / Servicio'); $('#txtId').val('');
+      $('#txtDescripcion,#txtCodigo').val('');
+      $('#txtPrecio').val(0);
+      $('#selTipoItem,#selMoneda,#selTipoImpuesto').val('');
+      $('#chkAplicaImpuesto').prop('checked', false);
+      $('#grupoTipoImpuesto').hide();
+      $('#chkEstado').prop('checked', true);
+      new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+    });
+  };
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', () => {
+      const id = $('#txtId').val();
+      const desc = $('#txtDescripcion').val().trim();
+      const idTipoItem = $('#selTipoItem').val();
+      if (!desc) { Swal.fire('Atención','La descripción es obligatoria.','warning'); return; }
+      if (!idTipoItem) { Swal.fire('Atención','El tipo de ítem es obligatorio.','warning'); return; }
+      const payload = {
+        des_item_servicio: desc,
+        cod_item_servicio: $('#txtCodigo').val().trim() || null,
+        id_tipo_item: parseInt(idTipoItem),
+        item_precio_unitario: parseFloat($('#txtPrecio').val() || 0),
+        id_moneda: $('#selMoneda').val() ? parseInt($('#selMoneda').val()) : null,
+        aplica_impuesto: $('#chkAplicaImpuesto').is(':checked'),
+        id_tipo_impuesto: $('#selTipoImpuesto').val() ? parseInt($('#selTipoImpuesto').val()) : null,
+        est_item_servicio: $('#chkEstado').is(':checked')
+      };
+      fetch(id ? `/api/v1/items-servicios/${id}` : '/api/v1/items-servicios', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      }).then(r=>r.json()).then(d => {
+        if (d.success) { $('#tbl').DataTable().ajax.reload(); bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide(); Swal.fire('Éxito', id ? 'Ítem actualizado.' : 'Ítem agregado.','success'); }
+        else Swal.fire('Error', d.error||'No se pudo guardar.','error');
+      }).catch(() => Swal.fire('Error','Error al guardar.','error'));
+    });
+  };
+
+  const editar = () => {
+    $('#tbl tbody').on('click','button[name="btn_editar"]', function() {
+      const id = $(this).data('id');
+      fetch(`/api/v1/items-servicios/${id}`).then(r=>r.json()).then(d => {
+        if (!d.success) { Swal.fire('Error',d.error,'error'); return; }
+        const it = d.data;
+        $('#modalTitle').text('Editar Ítem / Servicio'); $('#txtId').val(it.id_item_servicio);
+        $('#txtDescripcion').val(it.des_item_servicio); $('#txtCodigo').val(it.cod_item_servicio||'');
+        $('#selTipoItem').val(it.id_tipo_item);
+        $('#txtPrecio').val(it.item_precio_unitario||0);
+        $('#selMoneda').val(it.id_moneda||'');
+        $('#chkAplicaImpuesto').prop('checked', it.aplica_impuesto);
+        $('#grupoTipoImpuesto').toggle(it.aplica_impuesto);
+        $('#selTipoImpuesto').val(it.id_tipo_impuesto||'');
+        $('#chkEstado').prop('checked', it.est_item_servicio);
+        new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+      });
+    });
+  };
+
+  $(function() { cargarCombos().then(initDatatable); toggleImpuesto(); agregar(); guardar(); editar(); });
+</script>
+{% endblock %}

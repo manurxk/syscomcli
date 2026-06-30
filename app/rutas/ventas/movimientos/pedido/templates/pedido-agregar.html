@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% block titulo %}Nuevo Pedido{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nuevo Pedido</h1>
+          <div class="page-header-subtitle">Registrá un pedido de cliente/paciente</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('pedido.pedidoIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- SECCIÓN 1: Buscar Paciente -->
+  <div class="card shadow-sm mb-4 border-start-primary" id="card-busqueda">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="search" class="icon-sm"></i> Buscar Paciente
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-8 mb-3 mb-md-0 position-relative">
+          <label class="small mb-1" for="txtBuscarPaciente">Nombre, apellido o historia clínica</label>
+          <input class="form-control" id="txtBuscarPaciente" type="text" placeholder="Escriba para buscar..." autocomplete="off">
+          <div class="list-group" id="sugerenciasPaciente" style="position:absolute;top:100%;left:0;right:0;z-index:1050;display:none;"></div>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" id="btnSeleccionarPaciente" disabled>Seleccionar y continuar</button>
+        </div>
+      </div>
+      <input type="hidden" id="hidIdPaciente">
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: Formulario del pedido (oculto hasta seleccionar paciente) -->
+  <div id="contenedor-pedido" style="display:none;">
+
+    <!-- Info paciente -->
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="user" class="icon-sm"></i> Paciente seleccionado
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="small text-muted">Nombre completo</label>
+            <p class="fw-bold mb-0" id="lblPacienteNombre">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Cédula</label>
+            <p class="mb-0" id="lblPacienteCedula">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Historia clínica</label>
+            <p class="mb-0" id="lblHistoriaClinica">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cabecera del pedido -->
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="file-text" class="icon-sm"></i> Datos del Pedido
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4">
+            <label class="fw-semibold">Profesional</label>
+            <select class="form-select" id="selProfesional">
+              <option value="">Sin asignar</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Fecha del pedido <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="txtFechaPedido">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Fecha de entrega</label>
+            <input type="date" class="form-control" id="txtFechaEntrega">
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-4">
+            <label class="fw-semibold">Descuento general (Gs.)</label>
+            <input type="number" class="form-control" id="txtDescuento" value="0" min="0">
+          </div>
+          <div class="col-md-8">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="txtObservaciones">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Líneas del pedido -->
+    <div class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2">
+          <i data-feather="list" class="icon-sm"></i> Ítems del Pedido
+        </h6>
+      </div>
+      <div class="card-body">
+        <!-- Fila para agregar ítem -->
+        <div class="row gx-2 align-items-end mb-3 p-2 bg-light rounded">
+          <div class="col-md-3">
+            <label class="small fw-semibold">Ítem/Servicio</label>
+            <select class="form-select form-select-sm" id="selItemServicio">
+              <option value="">— Catálogo —</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="small fw-semibold">Descripción <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="txtItemDesc" placeholder="Descripción del ítem">
+          </div>
+          <div class="col-md-1">
+            <label class="small fw-semibold">Cant.</label>
+            <input type="number" class="form-control form-control-sm" id="txtItemCant" value="1" min="0.01" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <label class="small fw-semibold">Precio unit.</label>
+            <input type="number" class="form-control form-control-sm" id="txtItemPrecio" value="0" min="0" step="0.01">
+          </div>
+          <div class="col-md-1">
+            <label class="small fw-semibold">Desc.</label>
+            <input type="number" class="form-control form-control-sm" id="txtItemDesc2" value="0" min="0" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-success btn-sm w-100" id="btnAnadirItem">+ Añadir ítem</button>
+          </div>
+        </div>
+
+        <!-- Tabla de ítems -->
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Descripción</th><th class="text-center">Cantidad</th>
+                <th class="text-end">Precio unit.</th><th class="text-end">Descuento</th>
+                <th class="text-end">Subtotal</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-items">
+              <tr id="tr-sin-items"><td colspan="6" class="text-muted text-center">Sin ítems agregados</td></tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="text-end fw-bold">Subtotal:</td>
+                <td class="text-end fw-bold" id="lblSubtotal">0</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td colspan="4" class="text-end">Descuento general:</td>
+                <td class="text-end" id="lblDescuentoGeneral">0</td>
+                <td></td>
+              </tr>
+              <tr class="table-success">
+                <td colspan="4" class="text-end fw-bold">TOTAL:</td>
+                <td class="text-end fw-bold" id="lblTotal">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón guardar -->
+    <div class="d-flex justify-content-end mb-4">
+      <button type="button" class="btn btn-primary px-5" id="btnGuardarPedido">
+        <i data-feather="save" class="icon-sm"></i> Guardar Pedido
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+  let pacienteSeleccionado = null;
+  let pacientesCache = [];
+  let lineasPedido = [];
+
+  // ──────────────────────────────────────────────────
+  // NORMALIZACIÓN TEXTO
+  // ──────────────────────────────────────────────────
+  const normalizarTexto = txt => (txt||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().trim();
+
+  // ──────────────────────────────────────────────────
+  // BUSCAR PACIENTE
+  // ──────────────────────────────────────────────────
+  const cargarPacientesCache = () => {
+    fetch('/api/v1/pacientes').then(r=>r.json()).then(d=>{
+      if (d.success) pacientesCache = d.data || [];
+    });
+  };
+
+  const bindBuscadorPaciente = () => {
+    const $input = $('#txtBuscarPaciente');
+    const $sug = $('#sugerenciasPaciente');
+    const $btn = $('#btnSeleccionarPaciente');
+    const $hid = $('#hidIdPaciente');
+
+    $input.on('input', function() {
+      const t = normalizarTexto($(this).val());
+      pacienteSeleccionado = null; $hid.val(''); $btn.prop('disabled', true);
+      if (t.length < 2) { $sug.hide().empty(); return; }
+      const res = pacientesCache.filter(p => {
+        const nom = normalizarTexto((p.nombre||'')+' '+(p.apellido||''));
+        const hc = normalizarTexto(p.historia_clinica||p.pac_historia_clinica||'');
+        return nom.includes(t) || hc.includes(t);
+      }).slice(0,8);
+      if (!res.length) { $sug.html('<div class="list-group-item text-muted small">Sin coincidencias</div>').show(); return; }
+      $sug.html(res.map(p=>{
+        const nom = `${p.nombre||''} ${p.apellido||''}`.trim();
+        const hc = p.historia_clinica||p.pac_historia_clinica||'';
+        return `<button type="button" class="list-group-item list-group-item-action" data-id="${p.id_paciente}" data-nom="${nom}" data-ced="${p.cedula||''}" data-hc="${hc}">
+          <strong>${nom}</strong> <span class="text-muted small ms-2">${hc}</span>
+        </button>`;
+      }).join('')).show();
+    });
+
+    $sug.on('click', '.list-group-item-action', function() {
+      pacienteSeleccionado = { id: $(this).data('id'), nombre: $(this).data('nom') };
+      $input.val($(this).data('nom')); $hid.val($(this).data('id'));
+      $btn.prop('disabled', false); $sug.hide().empty();
+      $('#lblPacienteCedula').text($(this).data('ced')||'—');
+      $('#lblHistoriaClinica').text($(this).data('hc')||'—');
+    });
+
+    $input.on('blur', ()=>setTimeout(()=>$sug.hide(),150));
+
+    $btn.on('click', function() {
+      const idPac = parseInt($hid.val()); if (!idPac) return;
+      $('#lblPacienteNombre').text(pacienteSeleccionado.nombre);
+      $('#card-busqueda').hide();
+      $('#contenedor-pedido').show();
+    });
+  };
+
+  // ──────────────────────────────────────────────────
+  // CARGAR COMBOS
+  // ──────────────────────────────────────────────────
+  const cargarCombos = () => {
+    fetch('/api/v1/funcionarios').then(r=>r.json()).then(d=>{
+      if (d.success) d.data.forEach(f=>
+        $('#selProfesional').append(`<option value="${f.id_funcionario}">${f.nombre} ${f.apellido}</option>`)
+      );
+    });
+    fetch('/api/v1/items-servicios').then(r=>r.json()).then(d=>{
+      if (d.success) d.data.filter(it=>it.est_item_servicio).forEach(it=>
+        $('#selItemServicio').append(`<option value="${it.id_item_servicio}" data-desc="${it.des_item_servicio}" data-precio="${it.item_precio_unitario}">${it.des_item_servicio}</option>`)
+      );
+    });
+    // Fecha hoy por defecto
+    const hoy = new Date().toISOString().split('T')[0];
+    $('#txtFechaPedido').val(hoy);
+  };
+
+  // Autocompletar descripción/precio al seleccionar ítem del catálogo
+  const bindItemServicio = () => {
+    $('#selItemServicio').on('change', function() {
+      const opt = $(this).find('option:selected');
+      if (!$(this).val()) return;
+      $('#txtItemDesc').val(opt.data('desc'));
+      $('#txtItemPrecio').val(parseFloat(opt.data('precio')||0).toFixed(2));
+    });
+  };
+
+  // ──────────────────────────────────────────────────
+  // LÍNEAS DINÁMICAS
+  // ──────────────────────────────────────────────────
+  const fmt = n => parseFloat(n||0).toLocaleString('es-PY', {minimumFractionDigits:0, maximumFractionDigits:2});
+
+  const recalcularTotales = () => {
+    const subtotal = lineasPedido.reduce((s,l)=>s+l.item_subtotal, 0);
+    const descuento = parseFloat($('#txtDescuento').val()||0);
+    $('#lblSubtotal').text(fmt(subtotal));
+    $('#lblDescuentoGeneral').text(fmt(descuento));
+    $('#lblTotal').text(fmt(Math.max(0, subtotal-descuento)));
+  };
+
+  const renderLineas = () => {
+    const $tbody = $('#tbody-items');
+    if (!lineasPedido.length) {
+      $tbody.html('<tr id="tr-sin-items"><td colspan="6" class="text-muted text-center">Sin ítems agregados</td></tr>');
+      recalcularTotales(); return;
+    }
+    $tbody.html(lineasPedido.map((l,idx)=>`
+      <tr>
+        <td>${l.item_descripcion}</td>
+        <td class="text-center">${l.item_cantidad}</td>
+        <td class="text-end">${fmt(l.item_precio_unitario)}</td>
+        <td class="text-end">${fmt(l.item_descuento)}</td>
+        <td class="text-end fw-bold">${fmt(l.item_subtotal)}</td>
+        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-quitar" data-idx="${idx}">&times;</button></td>
+      </tr>`).join(''));
+    recalcularTotales();
+  };
+
+  const bindAnadirItem = () => {
+    $('#btnAnadirItem').on('click', function() {
+      const desc = $('#txtItemDesc').val().trim();
+      const cant = parseFloat($('#txtItemCant').val()||1);
+      const precio = parseFloat($('#txtItemPrecio').val()||0);
+      const desc2 = parseFloat($('#txtItemDesc2').val()||0);
+      if (!desc) { Swal.fire('Atención','La descripción del ítem es obligatoria.','warning'); return; }
+      if (cant <= 0) { Swal.fire('Atención','La cantidad debe ser mayor a 0.','warning'); return; }
+      lineasPedido.push({
+        id_item_servicio: $('#selItemServicio').val() ? parseInt($('#selItemServicio').val()) : null,
+        item_descripcion: desc,
+        item_cantidad: cant,
+        item_precio_unitario: precio,
+        item_descuento: desc2,
+        item_subtotal: cant*precio - desc2
+      });
+      renderLineas();
+      $('#selItemServicio').val('');
+      $('#txtItemDesc,#txtItemPrecio').val('');
+      $('#txtItemCant').val(1); $('#txtItemDesc2').val(0);
+    });
+
+    $(document).on('click', '.btn-quitar', function() {
+      lineasPedido.splice(parseInt($(this).data('idx')), 1);
+      renderLineas();
+    });
+
+    $('#txtDescuento').on('input', recalcularTotales);
+  };
+
+  // ──────────────────────────────────────────────────
+  // GUARDAR PEDIDO
+  // ──────────────────────────────────────────────────
+  const guardarPedido = () => {
+    $('#btnGuardarPedido').on('click', function() {
+      const idPac = parseInt($('#hidIdPaciente').val());
+      if (!idPac) { Swal.fire('Atención','Seleccione un paciente.','warning'); return; }
+      if (!$('#txtFechaPedido').val()) { Swal.fire('Atención','La fecha del pedido es obligatoria.','warning'); return; }
+      if (!lineasPedido.length) { Swal.fire('Atención','Agregue al menos un ítem al pedido.','warning'); return; }
+
+      const payload = {
+        id_paciente: idPac,
+        id_profesional: $('#selProfesional').val() ? parseInt($('#selProfesional').val()) : null,
+        fecha_pedido: $('#txtFechaPedido').val(),
+        fecha_entrega: $('#txtFechaEntrega').val() || null,
+        pedido_descuento: parseFloat($('#txtDescuento').val()||0),
+        observaciones: $('#txtObservaciones').val()||null,
+        detalles: lineasPedido.map(l=>({
+          id_item_servicio: l.id_item_servicio,
+          item_descripcion: l.item_descripcion,
+          item_cantidad: l.item_cantidad,
+          item_precio_unitario: l.item_precio_unitario,
+          item_descuento: l.item_descuento
+        }))
+      };
+
+      fetch('/api/v1/pedidos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      }).then(r=>r.json()).then(d=>{
+        if (d.success) {
+          Swal.fire('Guardado','Pedido registrado correctamente.','success').then(()=>{
+            window.location.href = "{{ url_for('pedido.pedidoIndex') }}";
+          });
+        } else {
+          Swal.fire('Error', d.error||'No se pudo guardar.', 'error');
+        }
+      }).catch(()=>Swal.fire('Error','Error al guardar.','error'));
+    });
+  };
+
+  // ──────────────────────────────────────────────────
+  // INIT
+  // ──────────────────────────────────────────────────
+  $(function() {
+    cargarPacientesCache();
+    cargarCombos();
+    bindBuscadorPaciente();
+    bindItemServicio();
+    bindAnadirItem();
+    guardarPedido();
+  });
+</script>
+{% endblock %}
