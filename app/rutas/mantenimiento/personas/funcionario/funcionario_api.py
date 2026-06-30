@@ -38,7 +38,7 @@ def getFuncionarios():
 # OBTENER SOLO ESPECIALISTAS
 # ============================================
 @funcionarioapi.route('/funcionarios/especialistas', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getFuncionariosEspecialistas():
     """Obtiene solo los funcionarios que son especialistas"""
     funcionariodao = FuncionarioDao()
@@ -64,7 +64,7 @@ def getFuncionariosEspecialistas():
 # OBTENER ESPECIALIDADES POR ESPECIALISTA
 # ============================================
 @funcionarioapi.route('/funcionarios/especialistas/<int:id_especialista>/especialidades', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEspecialidadesEspecialista(id_especialista):
     """Obtiene las especialidades de un especialista por su id_especialista"""
     funcionariodao = FuncionarioDao()

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
+from app.dao.agendamiento.cita.CitaDao import CitaDao
 from app.auth.utils.decorators import role_required
 
 consultaapi = Blueprint('consultaapi', __name__)
@@ -83,23 +84,35 @@ def getConsultaDesdeCita(id_cita):
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 
-@consultaapi.route('/consultas', methods=['POST'])
-@role_required(*ROLES_CONSULTA)
-def addConsulta():
-    data = request.get_json() or {}
+@consultaapi.route('/citas/<int:id_cita>/iniciar-consulta', methods=['POST'])
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO", "RECEPCION")
+def iniciarConsultaDesdeCita(id_cita):
+    """Crea (o recupera, si ya existe) la consulta vinculada a la cita y la pasa a
+    EN_CONSULTA. Toda consulta nace de una cita — no hay alta manual suelta.
 
-    campos_requeridos = ['id_paciente', 'id_especialista', 'consulta_fecha', 'consulta_motivo']
-    for campo in campos_requeridos:
-        if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
-
+    RECEPCION incluido a propósito: el botón "Iniciar consulta" ya era accesible
+    para ese rol desde citas-index (antes solo cambiaba el estado de la cita); se
+    mantiene el mismo alcance de acceso aunque ahora también cree la consulta."""
     try:
-        id_consulta = ConsultaDao().guardarConsulta(data, usuario_creacion=session.get('id_usuario'))
+        cita = CitaDao().getCitaById(id_cita)
+        if not cita:
+            return jsonify({'success': False, 'error': 'No se encontró la cita indicada.'}), 404
+
+        cod_estado = cita['cod_estado_cita']
+        if cod_estado in ('CANCELADA', 'AUSENTE'):
+            return jsonify({'success': False, 'error': f'No se puede iniciar una consulta para una cita en estado "{cod_estado}".'}), 400
+
+        usuario = session.get('id_usuario')
+        id_consulta = ConsultaDao().getOrCrearDesdeCita(cita, usuario_creacion=usuario)
         if id_consulta is None:
-            return jsonify({'success': False, 'error': 'No se pudo guardar la consulta.'}), 500
-        return jsonify({'success': True, 'data': {'id_consulta': id_consulta}, 'error': None}), 201
+            return jsonify({'success': False, 'error': 'No se pudo iniciar la consulta.'}), 500
+
+        if cod_estado not in ('EN_CONSULTA', 'COMPLETADA'):
+            CitaDao().cambiarEstadoCita(id_cita, 'EN_CONSULTA', usuario_modificacion=usuario)
+
+        return jsonify({'success': True, 'data': {'id_consulta': id_consulta}, 'error': None}), 200
     except Exception as e:
-        app.logger.error(f"Error al guardar consulta: {str(e)}", exc_info=True)
+        app.logger.error(f"Error al iniciar consulta desde cita: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 

@@ -28,6 +28,8 @@ from app.rutas.agendamiento.cita.cita_routes import citamod
 from app.rutas.agendamiento.cita.cita_api import citaapi
 from app.rutas.agendamiento.lista_espera.lista_espera_routes import listaesperamod
 from app.rutas.agendamiento.lista_espera.lista_espera_api import listaesperaapi
+from app.rutas.agendamiento.mi_agenda.mi_agenda_routes import miagendamod
+from app.rutas.agendamiento.mi_agenda.mi_agenda_api import miagendaapi
 from app.rutas.clinico.referenciales.signo.signo_routes import signomod
 from app.rutas.clinico.referenciales.signo.signo_api import signoapi
 from app.rutas.clinico.referenciales.sintoma.sintoma_routes import sintomamod
@@ -48,9 +50,21 @@ from app.rutas.clinico.referenciales.tipo_certificado_medico.tipo_certificado_me
 from app.rutas.clinico.referenciales.tipo_certificado_medico.tipo_certificado_medico_api import tipocertificadomedicoapi
 from app.rutas.clinico.referenciales.instrumento.instrumento_routes import instrumentomod
 from app.rutas.clinico.referenciales.instrumento.instrumento_api import instrumentoapi
+from app.rutas.clinico.referenciales.insumo.insumo_routes import insumomod
+from app.rutas.clinico.referenciales.insumo.insumo_api import insumoapi
 from app.rutas.clinico.movimientos.consulta.consulta_routes import consultamod
 from app.rutas.clinico.movimientos.consulta.consulta_api import consultaapi
 from app.rutas.clinico.movimientos.consulta.anamnesis_api import anamnesisapi
+from app.rutas.clinico.movimientos.registro_clinico.registro_clinico_api import registroclinicoapi
+from app.rutas.clinico.movimientos.tratamiento.tratamiento_api import tratamientoapi
+from app.rutas.clinico.movimientos.orden.orden_api import ordenapi
+from app.rutas.clinico.movimientos.receta.receta_api import recetaapi
+from app.rutas.clinico.movimientos.certificado_medico.certificado_medico_api import certificadomedicoapi
+from app.rutas.clinico.movimientos.pei.pei_routes import peimod
+from app.rutas.clinico.movimientos.pei.pei_api import peiapi
+from app.rutas.clinico.movimientos.ficha.ficha_routes import fichamod
+from app.rutas.clinico.movimientos.ficha.ficha_api import fichaapi
+from app.rutas.clinico.movimientos.derivacion.derivacion_api import derivacionapi
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -93,6 +107,8 @@ app.register_blueprint(citamod, url_prefix='/agendamiento/citas')
 app.register_blueprint(citaapi, url_prefix='/api/v1')
 app.register_blueprint(listaesperamod, url_prefix='/agendamiento/lista-espera')
 app.register_blueprint(listaesperaapi, url_prefix='/api/v1')
+app.register_blueprint(miagendamod, url_prefix='/agendamiento')
+app.register_blueprint(miagendaapi, url_prefix='/api/v1')
 app.register_blueprint(signomod, url_prefix='/clinico/referenciales/signo')
 app.register_blueprint(signoapi, url_prefix='/api/v1')
 app.register_blueprint(sintomamod, url_prefix='/clinico/referenciales/sintoma')
@@ -113,9 +129,21 @@ app.register_blueprint(tipo_certificado_medicomod, url_prefix='/clinico/referenc
 app.register_blueprint(tipocertificadomedicoapi, url_prefix='/api/v1')
 app.register_blueprint(instrumentomod, url_prefix='/clinico/referenciales/instrumento')
 app.register_blueprint(instrumentoapi, url_prefix='/api/v1')
+app.register_blueprint(insumomod, url_prefix='/clinico/referenciales/insumo')
+app.register_blueprint(insumoapi, url_prefix='/api/v1')
 app.register_blueprint(consultamod, url_prefix='/clinico/consulta')
 app.register_blueprint(consultaapi, url_prefix='/api/v1')
 app.register_blueprint(anamnesisapi, url_prefix='/api/v1')
+app.register_blueprint(registroclinicoapi, url_prefix='/api/v1')
+app.register_blueprint(tratamientoapi, url_prefix='/api/v1')
+app.register_blueprint(ordenapi, url_prefix='/api/v1')
+app.register_blueprint(recetaapi, url_prefix='/api/v1')
+app.register_blueprint(certificadomedicoapi, url_prefix='/api/v1')
+app.register_blueprint(peimod, url_prefix='/clinico/pei')
+app.register_blueprint(peiapi, url_prefix='/api/v1')
+app.register_blueprint(fichamod, url_prefix='/clinico/ficha')
+app.register_blueprint(fichaapi, url_prefix='/api/v1')
+app.register_blueprint(derivacionapi, url_prefix='/api/v1')
 
 # Context processors y helpers de template
 init_context_processors(app)

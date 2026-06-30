@@ -5,7 +5,7 @@ from app.auth.utils.decorators import role_required
 
 listaesperaapi = Blueprint('listaesperaapi', __name__)
 
-ROLES_LISTA_ESPERA = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+ROLES_LISTA_ESPERA = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 
 
 @listaesperaapi.route('/lista-espera', methods=['GET'])

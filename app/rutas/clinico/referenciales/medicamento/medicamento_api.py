@@ -7,7 +7,7 @@ medicamentoapi = Blueprint('medicamentoapi', __name__)
 
 
 @medicamentoapi.route('/medicamentos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getMedicamentos():
     try:
         data = MedicamentoDao().getMedicamentos()

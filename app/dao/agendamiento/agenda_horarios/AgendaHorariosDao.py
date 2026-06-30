@@ -151,7 +151,7 @@ class AgendaHorariosDao(BaseDAO):
                 DELETE FROM slots_agenda
                 WHERE id_agenda_horario = %s
                   AND estado_slot = 'DISPONIBLE'
-                  AND slot_inicio >= now()
+                  AND slot_inicio >= (now() AT TIME ZONE 'America/Asuncion')
                 """,
                 (id_agenda_horario,),
             )

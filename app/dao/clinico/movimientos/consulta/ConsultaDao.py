@@ -63,7 +63,8 @@ class ConsultaDao(BaseDAO):
         } for f in filas]
 
     def getConsultaById(self, id_consulta):
-        """Detalle completo de una consulta para visualización."""
+        """Detalle completo de una consulta para visualización, incluye datos de la cita
+        de origen (de solo lectura — paciente/especialista/fecha quedan fijos desde la cita)."""
         sql = """
             SELECT
                 c.id_consulta,
@@ -81,13 +82,18 @@ class ConsultaDao(BaseDAO):
                 pp.per_apellido AS paciente_apellido,
                 pp.per_cedula AS paciente_cedula,
                 pe.per_nombre || ' ' || pe.per_apellido AS especialista_nombre,
-                e.esp_matricula
+                e.esp_matricula,
+                cit.motivo AS cita_motivo_original,
+                ec.cod_estado_cita AS cita_estado_cod,
+                ec.des_estado_cita AS cita_estado_des
             FROM consultas c
             JOIN pacientes pac ON c.id_paciente = pac.id_paciente
             JOIN personas pp ON pac.id_persona = pp.id_persona
             JOIN especialistas e ON c.id_especialista = e.id_especialista
             JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
             JOIN personas pe ON f.id_persona = pe.id_persona
+            JOIN citas cit ON c.id_cita = cit.id_cita
+            JOIN estados_citas ec ON cit.id_estado_cita = ec.id_estado_cita
             WHERE c.id_consulta = %s
         """
         f = self.execute_query_one(sql, (id_consulta,))
@@ -110,6 +116,9 @@ class ConsultaDao(BaseDAO):
             'paciente_cedula': f['paciente_cedula'],
             'especialista_nombre': f['especialista_nombre'],
             'esp_matricula': f['esp_matricula'],
+            'cita_motivo_original': f['cita_motivo_original'],
+            'cita_estado_cod': f['cita_estado_cod'],
+            'cita_estado_des': f['cita_estado_des'],
         }
 
     def getConsultaParaEditar(self, id_consulta):
@@ -157,24 +166,28 @@ class ConsultaDao(BaseDAO):
         f = self.execute_query_one(sql, (id_cita,))
         return self.getConsultaById(f['id_consulta']) if f else None
 
-    def guardarConsulta(self, datos, usuario_creacion=None):
-        """Crea una nueva consulta. `datos` trae las claves del formulario (ver consulta_api.py)."""
+    def getOrCrearDesdeCita(self, cita, usuario_creacion=None):
+        """Idempotente: si ya existe una consulta para `cita['id_cita']` la devuelve, si no
+        la crea tomando paciente/especialista/fecha/motivo de la cita (no de un formulario
+        libre — toda consulta nace de una cita, ver
+        docs_reestructuracion/sql_nueva_bd/migraciones/m1_consultas_id_cita_obligatorio.sql)."""
+        existente = self.getConsultaDesdeCita(cita['id_cita'])
+        if existente:
+            return existente['id_consulta']
+
         sql = """
             INSERT INTO consultas(
                 id_cita, id_paciente, id_especialista, consulta_fecha, consulta_motivo,
-                consulta_estado, des_consulta, consulta_observaciones, usuario_creacion
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                consulta_estado, usuario_creacion
+            ) VALUES (%s, %s, %s, %s, %s, 'EN_ATENCION', %s)
             RETURNING id_consulta
         """
         fila = self.execute_query_one(sql, (
-            datos.get('id_cita'),
-            datos['id_paciente'],
-            datos['id_especialista'],
-            datos['consulta_fecha'],
-            datos['consulta_motivo'],
-            datos.get('consulta_estado', 'PENDIENTE'),
-            datos.get('des_consulta'),
-            datos.get('consulta_observaciones'),
+            cita['id_cita'],
+            cita['id_paciente'],
+            cita['id_especialista'],
+            cita['cita_inicio'],
+            cita.get('motivo') or 'Consulta iniciada desde agenda',
             usuario_creacion,
         ), commit=True)
         return fila['id_consulta'] if fila else None

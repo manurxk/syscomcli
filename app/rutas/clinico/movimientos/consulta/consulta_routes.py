@@ -12,9 +12,9 @@ def consultaIndex():
     return render_template('consulta-index.html')
 
 
-@consultamod.route('/consulta-agregar')
 @consultamod.route('/consulta-editar/<int:id_consulta>')
 @role_required(*ROLES_CONSULTA)
-def consultaAgregar(id_consulta=None):
-    """Página para registrar/editar una consulta, con sección de anamnesis del paciente."""
+def consultaAgregar(id_consulta):
+    """Página de atención de una consulta (anamnesis + registro clínico). Solo se llega acá
+    después de 'Iniciar consulta' desde una cita — no hay alta manual suelta."""
     return render_template('consulta-agregar.html', id_consulta=id_consulta)

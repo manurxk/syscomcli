@@ -7,7 +7,7 @@ signoapi = Blueprint('signoapi', __name__)
 
 
 @signoapi.route('/signos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSignos():
     try:
         data = SignoDao().getSignos()
@@ -18,7 +18,7 @@ def getSignos():
 
 
 @signoapi.route('/signos/<int:signo_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSigno(signo_id):
     try:
         registro = SignoDao().getSignoById(signo_id)

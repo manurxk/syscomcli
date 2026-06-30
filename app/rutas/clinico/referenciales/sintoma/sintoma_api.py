@@ -7,7 +7,7 @@ sintomaapi = Blueprint('sintomaapi', __name__)
 
 
 @sintomaapi.route('/sintomas', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSintomas():
     try:
         data = SintomaDao().getSintomas()
@@ -18,7 +18,7 @@ def getSintomas():
 
 
 @sintomaapi.route('/sintomas/<int:sintoma_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSintoma(sintoma_id):
     try:
         registro = SintomaDao().getSintomaById(sintoma_id)

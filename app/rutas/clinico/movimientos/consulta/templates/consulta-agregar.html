@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block titulo %}
-Registrar Consulta
+Atender Consulta
 {% endblock %}
 
 {% block contenido %}
@@ -10,8 +10,8 @@ Registrar Consulta
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
-          <h1 class="page-header-title" id="tituloPagina">Registrar Nueva Consulta</h1>
-          <div class="page-header-subtitle" id="subtituloPagina">Complete los datos de la atención clínica</div>
+          <h1 class="page-header-title">Atender Consulta</h1>
+          <div class="page-header-subtitle">Paciente, especialista y fecha quedan fijos: vienen de la cita de origen</div>
         </div>
         <div class="col-12 col-xl-auto mt-4">
           <a href="{{ url_for('consulta.consultaIndex') }}" class="btn btn-light btn-sm shadow-sm">
@@ -28,67 +28,55 @@ Registrar Consulta
     <div class="card-body">
       <form id="formConsulta">
 
-        <!-- SECCIÓN 1: PACIENTE -->
+        <!-- SECCIÓN 1: DATOS DE LA CITA (solo lectura) -->
         <div class="card mb-3 border-0 shadow-sm">
           <div class="card-header bg-light">
-            <h6 class="mb-0 fw-bold text-primary">Paciente</h6>
+            <h6 class="mb-0 fw-bold text-primary">Datos de la Cita</h6>
           </div>
           <div class="card-body">
             <input type="hidden" id="id_paciente">
-
-            <div class="form-group">
-              <label class="fw-semibold">Paciente <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <input type="text" class="form-control" placeholder="Haga clic para buscar paciente" id="txtPaciente" readonly required>
-                <button class="btn btn-primary" type="button" id="btnBuscarPaciente">Buscar</button>
+            <div class="row">
+              <div class="col-lg-3 col-md-6 mb-2">
+                <small class="text-muted d-block">Paciente</small>
+                <strong id="infoPacNombre">—</strong>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <small class="text-muted d-block">CI</small>
+                <strong id="infoPacCedula">—</strong>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <small class="text-muted d-block">HC</small>
+                <strong id="infoPacHC">—</strong>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <small class="text-muted d-block">Especialista</small>
+                <strong id="infoEspecialista">—</strong>
               </div>
             </div>
-
-            <div id="infoPaciente" style="display: none;">
-              <div class="alert alert-primary border-0 mt-3">
-                <div class="row">
-                  <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
-                    <small class="text-muted d-block">Nombre</small>
-                    <strong id="infoPacNombre"></strong>
-                  </div>
-                  <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
-                    <small class="text-muted d-block">CI</small>
-                    <strong id="infoPacCedula"></strong>
-                  </div>
-                  <div class="col-lg-3 col-md-6">
-                    <small class="text-muted d-block">HC</small>
-                    <strong id="infoPacHC"></strong>
-                  </div>
-                </div>
+            <div class="row mt-2">
+              <div class="col-lg-4 col-md-6 mb-2">
+                <small class="text-muted d-block">Fecha y hora de la cita</small>
+                <strong id="infoFechaCita">—</strong>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <small class="text-muted d-block">Estado de la cita</small>
+                <span id="infoEstadoCita" class="badge border border-secondary text-secondary">—</span>
+              </div>
+              <div class="col-lg-5 col-md-12 mb-2">
+                <small class="text-muted d-block">Motivo original (agendado)</small>
+                <span id="infoMotivoCita">—</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- SECCIÓN 2: ESPECIALISTA Y DATOS DE LA CONSULTA -->
+        <!-- SECCIÓN 2: ATENCIÓN CLÍNICA -->
         <div class="card mb-3 border-0 shadow-sm">
           <div class="card-header bg-light">
-            <h6 class="mb-0 fw-bold text-success">Datos de la Consulta</h6>
+            <h6 class="mb-0 fw-bold text-success">Atención Clínica</h6>
           </div>
           <div class="card-body">
             <div class="row">
-              <div class="col-lg-6 col-md-6">
-                <div class="form-group">
-                  <label class="fw-semibold">Especialista <span class="text-danger">*</span></label>
-                  <select class="form-control" id="selectEspecialista" required>
-                    <option value="">-- Seleccione un especialista --</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-lg-6 col-md-6">
-                <div class="form-group">
-                  <label class="fw-semibold">Fecha y hora <span class="text-danger">*</span></label>
-                  <input type="datetime-local" class="form-control" id="txtFechaConsulta" required>
-                </div>
-              </div>
-            </div>
-
-            <div class="row mt-2">
               <div class="col-lg-4 col-md-6">
                 <div class="form-group">
                   <label class="fw-semibold">Estado</label>
@@ -130,7 +118,7 @@ Registrar Consulta
         <div class="d-flex justify-content-end mt-4">
           <a href="{{ url_for('consulta.consultaIndex') }}" class="btn btn-secondary me-2">Cancelar</a>
           <button type="button" class="btn btn-success" id="btnGuardarConsulta">
-            <i class="fas fa-save"></i> <span id="textoBtnGuardar">Guardar Consulta</span>
+            <i class="fas fa-save"></i> Guardar Cambios
           </button>
         </div>
       </form>
@@ -150,31 +138,144 @@ Registrar Consulta
       <p class="text-muted mb-0">Este paciente todavía no tiene anamnesis registrada.</p>
     </div>
   </div>
-</div>
 
-<!-- MODAL: BUSCAR PACIENTE -->
-<div class="modal fade" id="modalBuscarPaciente" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header border-bottom">
-        <h5 class="modal-title fw-bold">Buscar Paciente</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
+  <!-- SECCIÓN 4: REGISTRO CLÍNICO DE LA CONSULTA -->
+  <div class="card mb-4 border-0 shadow-sm" id="cardRegistroClinico" style="display:none;">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold text-warning">Registro Clínico de la Consulta</h6>
+    </div>
+    <div class="card-body">
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Diagnósticos</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="diagnosticos">+ Agregar</button>
+        </div>
         <div class="table-responsive">
-          <table class="table table-hover table-bordered align-middle w-100" id="tblPacientes">
-            <thead class="table-light">
-              <tr>
-                <th>HC</th>
-                <th>Nombre Completo</th>
-                <th>CI</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Diagnóstico</th><th>Tipo</th><th>Gravedad</th><th>Obs.</th><th></th></tr></thead>
+            <tbody id="tbody-diagnosticos"><tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr></tbody>
           </table>
         </div>
       </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Signos</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="signos">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Signo</th><th>Intensidad</th><th>Obs.</th><th></th></tr></thead>
+            <tbody id="tbody-signos"><tr><td colspan="4" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Síntomas</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="sintomas">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Síntoma</th><th>Intensidad</th><th>Obs.</th><th></th></tr></thead>
+            <tbody id="tbody-sintomas"><tr><td colspan="4" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Procedimientos</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="procedimientos">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Procedimiento</th><th>Duración</th><th>Resultado</th><th>Obs.</th><th></th></tr></thead>
+            <tbody id="tbody-procedimientos"><tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Insumos utilizados</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="insumos">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Insumo</th><th>Cantidad</th><th>Obs.</th><th></th></tr></thead>
+            <tbody id="tbody-insumos"><tr><td colspan="4" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Tratamientos</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="tratamientos">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Tipo</th><th>Descripción</th><th>Fecha inicio</th><th>Sesiones</th><th>Estado</th><th>Obs.</th><th></th></tr></thead>
+            <tbody id="tbody-tratamientos"><tr><td colspan="7" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Órdenes (Estudios / Análisis)</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="btnAbrirModalOrden">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>N°</th><th>Fecha</th><th>Ítems</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody-ordenes"><tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Recetas</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="btnAbrirModalReceta">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>N°</th><th>Fecha</th><th>Medicamentos</th><th>Validez</th><th></th></tr></thead>
+            <tbody id="tbody-recetas"><tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Certificados Médicos</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="certificados">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Tipo</th><th>N°</th><th>Fecha</th><th>Motivo</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody-certificados"><tr><td colspan="6" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="border rounded p-3">
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="mb-0 fw-bold flex-grow-1">Derivaciones</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="derivaciones">+ Agregar</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Especialidad destino</th><th>Motivo</th><th>Observaciones</th><th></th></tr></thead>
+            <tbody id="tbody-derivaciones"><tr><td colspan="4" class="text-muted text-center">Sin registros</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -310,6 +411,253 @@ Registrar Consulta
     </div>
   </div>
 </div>
+<!-- MODAL: AGREGAR ITEM DE REGISTRO CLÍNICO (diagnóstico/signo/síntoma/procedimiento/insumo) -->
+<div class="modal fade" id="modalRegistroItem" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="ri_titulo">Agregar Registro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ri_tipo">
+        <div class="form-group">
+          <label class="fw-semibold" id="ri_catalogo_label">Elemento <span class="text-danger">*</span></label>
+          <select class="form-control" id="ri_catalogo">
+            <option value="">-- Seleccione --</option>
+          </select>
+        </div>
+        <div class="form-group mt-2 fld-tipo" style="display:none">
+          <label class="fw-semibold">Tipo</label>
+          <select class="form-control" id="ri_tipo_dx">
+            <option value="PRESUNTIVO">Presuntivo</option>
+            <option value="DEFINITIVO">Definitivo</option>
+            <option value="DIFERENCIAL">Diferencial</option>
+          </select>
+        </div>
+        <div class="form-group mt-2 fld-gravedad" style="display:none">
+          <label class="fw-semibold">Gravedad</label>
+          <select class="form-control" id="ri_gravedad">
+            <option value="">-- N/A --</option>
+            <option value="LEVE">Leve</option>
+            <option value="MODERADO">Moderado</option>
+            <option value="GRAVE">Grave</option>
+          </select>
+        </div>
+        <div class="form-group mt-2 fld-intensidad" style="display:none">
+          <label class="fw-semibold">Intensidad</label>
+          <select class="form-control" id="ri_intensidad">
+            <option value="">-- N/A --</option>
+            <option value="LEVE">Leve</option>
+            <option value="MODERADO">Moderado</option>
+            <option value="GRAVE">Grave</option>
+          </select>
+        </div>
+        <div class="form-group mt-2 fld-desc" style="display:none">
+          <label class="fw-semibold" id="ri_desc_label">Descripción</label>
+          <textarea class="form-control" id="ri_desc" rows="2"></textarea>
+        </div>
+        <div class="form-group mt-2 fld-duracion" style="display:none">
+          <label class="fw-semibold">Duración (minutos)</label>
+          <input type="number" class="form-control" id="ri_duracion" min="0">
+        </div>
+        <div class="form-group mt-2 fld-resultado" style="display:none">
+          <label class="fw-semibold" id="ri_resultado_label">Resultado</label>
+          <textarea class="form-control" id="ri_resultado" rows="2"></textarea>
+        </div>
+        <div class="form-group mt-2 fld-cantidad" style="display:none">
+          <label class="fw-semibold" id="ri_cantidad_label">Cantidad</label>
+          <input type="number" class="form-control" id="ri_cantidad" min="0" step="0.01">
+        </div>
+        <div class="form-group mt-2 fld-objetivos" style="display:none">
+          <label class="fw-semibold">Objetivos</label>
+          <textarea class="form-control" id="ri_objetivos" rows="2"></textarea>
+        </div>
+        <div class="form-group mt-2 fld-fecha_inicio" style="display:none">
+          <label class="fw-semibold">Fecha de inicio <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" id="ri_fecha_inicio">
+        </div>
+        <div class="form-group mt-2 fld-numero_sesiones" style="display:none">
+          <label class="fw-semibold">N° de sesiones</label>
+          <input type="number" class="form-control" id="ri_numero_sesiones" min="0">
+        </div>
+        <div class="form-group mt-2 fld-frecuencia_sesiones" style="display:none">
+          <label class="fw-semibold">Frecuencia de sesiones</label>
+          <input type="text" class="form-control" id="ri_frecuencia_sesiones" placeholder="Ej. Semanal, Quincenal">
+        </div>
+        <div class="form-group mt-2 fld-fecha" style="display:none">
+          <label class="fw-semibold">Fecha <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" id="ri_fecha">
+        </div>
+        <div class="form-group mt-2 fld-dias_reposo" style="display:none">
+          <label class="fw-semibold">Días de reposo</label>
+          <input type="number" class="form-control" id="ri_dias_reposo" min="0">
+        </div>
+        <div class="form-group mt-2 fld-fecha_desde" style="display:none">
+          <label class="fw-semibold">Vigente desde</label>
+          <input type="date" class="form-control" id="ri_fecha_desde">
+        </div>
+        <div class="form-group mt-2 fld-fecha_hasta" style="display:none">
+          <label class="fw-semibold">Vigente hasta</label>
+          <input type="date" class="form-control" id="ri_fecha_hasta">
+        </div>
+        <div class="form-group mt-2 fld-observaciones" style="display:none">
+          <label class="fw-semibold" id="ri_observaciones_label">Observaciones</label>
+          <textarea class="form-control" id="ri_observaciones" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarRegistroItem">
+          <i data-feather="save" class="icon-sm"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVA ORDEN (estudios/análisis, cabecera+detalle con líneas dinámicas) -->
+<div class="modal fade" id="modalOrden" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Nueva Orden (Estudios / Análisis)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="form-group">
+              <label class="fw-semibold">Fecha <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="ord_fecha">
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="form-group">
+              <label class="fw-semibold">Indicaciones</label>
+              <input type="text" class="form-control" id="ord_indicaciones">
+            </div>
+          </div>
+        </div>
+        <div class="form-group mt-2">
+          <label class="fw-semibold">Observaciones</label>
+          <textarea class="form-control" id="ord_observaciones" rows="2"></textarea>
+        </div>
+
+        <hr>
+        <h6 class="fw-bold text-primary">Ítems de la orden</h6>
+        <div class="row align-items-end">
+          <div class="col-lg-3">
+            <label class="fw-semibold">Tipo</label>
+            <select class="form-control" id="ord_item_tipo">
+              <option value="ESTUDIO">Estudio</option>
+              <option value="ANALISIS">Análisis</option>
+            </select>
+          </div>
+          <div class="col-lg-6">
+            <label class="fw-semibold">Estudio / Análisis</label>
+            <select class="form-control" id="ord_item_catalogo">
+              <option value="">-- Seleccione --</option>
+            </select>
+          </div>
+          <div class="col-lg-3">
+            <button type="button" class="btn btn-outline-primary w-100" id="btnAgregarItemOrden">+ Añadir ítem</button>
+          </div>
+        </div>
+        <div class="table-responsive mt-2">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Tipo</th><th>Descripción</th><th></th></tr></thead>
+            <tbody id="tbody-ord-items"><tr><td colspan="3" class="text-muted text-center">Sin ítems agregados</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarOrden">
+          <i data-feather="save" class="icon-sm"></i> Guardar Orden
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVA RECETA (cabecera+detalle con líneas dinámicas de medicamentos) -->
+<div class="modal fade" id="modalReceta" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Nueva Receta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="form-group">
+              <label class="fw-semibold">Fecha <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="rec_fecha">
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="form-group">
+              <label class="fw-semibold">Validez (días)</label>
+              <input type="number" class="form-control" id="rec_validez_dias" value="30" min="1">
+            </div>
+          </div>
+        </div>
+        <div class="form-group mt-2">
+          <label class="fw-semibold">Indicaciones generales</label>
+          <textarea class="form-control" id="rec_indicaciones_generales" rows="2"></textarea>
+        </div>
+        <div class="form-group mt-2">
+          <label class="fw-semibold">Observaciones</label>
+          <textarea class="form-control" id="rec_observaciones" rows="2"></textarea>
+        </div>
+
+        <hr>
+        <h6 class="fw-bold text-primary">Medicamentos</h6>
+        <div class="row align-items-end">
+          <div class="col-lg-4">
+            <label class="fw-semibold">Medicamento</label>
+            <select class="form-control" id="rec_item_medicamento">
+              <option value="">-- Seleccione --</option>
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <label class="fw-semibold">Dosis</label>
+            <input type="text" class="form-control" id="rec_item_dosis">
+          </div>
+          <div class="col-lg-2">
+            <label class="fw-semibold">Frecuencia</label>
+            <input type="text" class="form-control" id="rec_item_frecuencia">
+          </div>
+          <div class="col-lg-2">
+            <label class="fw-semibold">Duración</label>
+            <input type="text" class="form-control" id="rec_item_duracion">
+          </div>
+          <div class="col-lg-2">
+            <button type="button" class="btn btn-outline-primary w-100" id="btnAgregarItemReceta">+ Añadir</button>
+          </div>
+        </div>
+        <div class="form-group mt-2">
+          <label class="fw-semibold">Indicaciones del ítem</label>
+          <input type="text" class="form-control" id="rec_item_indicaciones">
+        </div>
+        <div class="table-responsive mt-2">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light"><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th></th></tr></thead>
+            <tbody id="tbody-rec-items"><tr><td colspan="5" class="text-muted text-center">Sin medicamentos agregados</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarReceta">
+          <i data-feather="save" class="icon-sm"></i> Guardar Receta
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block js %}
@@ -334,70 +682,13 @@ Registrar Consulta
     'terapia_individual', 'terapia_familiar', 'terapia_grupal', 'terapia_ocupacional'
   ];
 
-  // ==========================================
-  // PACIENTE
-  // ==========================================
-  const initPacientesDatatable = () => {
-    if ($.fn.DataTable.isDataTable('#tblPacientes')) $('#tblPacientes').DataTable().destroy();
-
-    $('#tblPacientes').DataTable({
-      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax: {
-        url: '/api/v1/pacientes',
-        dataSrc: (json) => json.success ? json.data : []
-      },
-      columns: [
-        { data: 'historia_clinica', render: (d) => d || 'N/A' },
-        { data: null, render: (d, t, row) => `${row.nombre || ''} ${row.apellido || ''}`.trim() },
-        { data: 'cedula' },
-        {
-          data: null,
-          orderable: false,
-          className: 'text-center',
-          render: (d, t, row) => `
-            <button type="button" class="btn btn-success btn-sm btn-select-paciente"
-                    data-id="${row.id_paciente}" data-nombre="${row.nombre || ''} ${row.apellido || ''}"
-                    data-cedula="${row.cedula}" data-hc="${row.historia_clinica || 'N/A'}">
-              Seleccionar
-            </button>`
-        }
-      ],
-      pageLength: 8,
-      order: [[1, 'asc']]
-    });
-  };
-
-  const seleccionarPaciente = () => {
-    $('#tblPacientes').on('click', '.btn-select-paciente', function () {
-      const data = $(this).data();
-      $('#id_paciente').val(data.id);
-      $('#txtPaciente').val(data.nombre);
-      $('#infoPacNombre').text(data.nombre);
-      $('#infoPacCedula').text(data.cedula);
-      $('#infoPacHC').text(data.hc);
-      $('#infoPaciente').fadeIn();
-
-      (bootstrap.Modal.getInstance(document.getElementById("modalBuscarPaciente")) || new bootstrap.Modal(document.getElementById("modalBuscarPaciente"))).hide();
-
-      cargarAnamnesisPaciente(data.id);
-    });
-  };
-
-  // ==========================================
-  // ESPECIALISTAS
-  // ==========================================
-  const cargarEspecialistas = () => {
-    return fetch('/api/v1/consultas/especialistas')
-      .then(resp => resp.json())
-      .then(data => {
-        const select = $('#selectEspecialista');
-        select.find('option:not(:first)').remove();
-        if (data.success && data.data) {
-          data.data.forEach(esp => {
-            select.append(`<option value="${esp.id_especialista}">${esp.nombre_completo} - ${esp.esp_matricula}</option>`);
-          });
-        }
-      });
+  const ESTADOS_CITA_BADGE = {
+    AGENDADA: 'bg-info-subtle text-info fw-semibold',
+    CONFIRMADA: 'bg-primary-subtle text-primary fw-semibold',
+    EN_CONSULTA: 'bg-warning-subtle text-warning fw-semibold',
+    COMPLETADA: 'bg-success-subtle text-success fw-semibold',
+    AUSENTE: 'bg-secondary-subtle text-secondary fw-semibold',
+    CANCELADA: 'bg-danger-subtle text-danger fw-semibold'
   };
 
   // ==========================================
@@ -503,54 +794,587 @@ Registrar Consulta
   };
 
   // ==========================================
+  // REGISTRO CLÍNICO (diagnósticos, signos, síntomas, procedimientos, insumos)
+  // ==========================================
+  const REGISTRO_CONFIG = {
+    diagnosticos: {
+      catalogUrl: '/api/v1/diagnosticos', activeField: 'est_diagnostico',
+      catalogLabel: 'Diagnóstico', idKeyRow: 'id_registro_diagnostico',
+      optLabel: d => (d.cod_cie10 ? d.cod_cie10 + ' - ' : '') + d.des_diagnostico,
+      fields: ['tipo', 'gravedad', 'desc', 'observaciones'], descLabel: 'Descripción específica',
+      deleteUrl: id => `/api/v1/registro-diagnosticos/${id}`,
+      cols: row => [
+        (row.cod_cie10 ? row.cod_cie10 + ' - ' : '') + row.des_diagnostico,
+        row.registro_tipo, row.registro_gravedad || '-', row.registro_observaciones || '-'
+      ],
+      buildPayload: () => ({
+        id_diagnostico: parseInt($('#ri_catalogo').val()),
+        registro_tipo: $('#ri_tipo_dx').val(),
+        registro_gravedad: $('#ri_gravedad').val() || null,
+        des_registro_diagnostico: $('#ri_desc').val() || null,
+        registro_observaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    signos: {
+      catalogUrl: '/api/v1/signos', activeField: 'est_signo',
+      catalogLabel: 'Signo', idKeyRow: 'id_registro_signo', optLabel: d => d.des_signo,
+      fields: ['intensidad', 'observaciones'],
+      deleteUrl: id => `/api/v1/registro-signos/${id}`,
+      cols: row => [row.des_signo, row.registro_intensidad || '-', row.registro_observaciones || '-'],
+      buildPayload: () => ({
+        id_signo: parseInt($('#ri_catalogo').val()),
+        registro_intensidad: $('#ri_intensidad').val() || null,
+        registro_observaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    sintomas: {
+      catalogUrl: '/api/v1/sintomas', activeField: 'est_sintoma',
+      catalogLabel: 'Síntoma', idKeyRow: 'id_registro_sintoma', optLabel: d => d.des_sintoma,
+      fields: ['intensidad', 'observaciones'],
+      deleteUrl: id => `/api/v1/registro-sintomas/${id}`,
+      cols: row => [row.des_sintoma, row.registro_intensidad || '-', row.registro_observaciones || '-'],
+      buildPayload: () => ({
+        id_sintoma: parseInt($('#ri_catalogo').val()),
+        registro_intensidad: $('#ri_intensidad').val() || null,
+        registro_observaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    procedimientos: {
+      catalogUrl: '/api/v1/tipos-procedimientos', activeField: 'est_tipo_procedimiento',
+      catalogLabel: 'Tipo de procedimiento', idKeyRow: 'id_registro_procedimiento', optLabel: d => d.des_tipo_procedimiento,
+      fields: ['desc', 'duracion', 'resultado', 'observaciones'], descLabel: 'Descripción de lo realizado',
+      deleteUrl: id => `/api/v1/registro-procedimientos/${id}`,
+      cols: row => [
+        row.des_tipo_procedimiento,
+        row.registro_duracion ? row.registro_duracion + ' min' : '-',
+        row.registro_resultado || '-', row.registro_observaciones || '-'
+      ],
+      buildPayload: () => ({
+        id_tipo_procedimiento: parseInt($('#ri_catalogo').val()),
+        des_registro_procedimiento: $('#ri_desc').val() || null,
+        registro_duracion: $('#ri_duracion').val() ? parseInt($('#ri_duracion').val()) : null,
+        registro_resultado: $('#ri_resultado').val() || null,
+        registro_observaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    insumos: {
+      catalogUrl: '/api/v1/insumos', activeField: 'est_insumo',
+      catalogLabel: 'Insumo', idKeyRow: 'id_registro_insumo',
+      optLabel: d => `${d.des_insumo} (stock: ${d.stock_actual} ${d.insumo_unidad_medida})`,
+      fields: ['cantidad', 'observaciones'], cantidadLabel: 'Cantidad utilizada',
+      deleteUrl: id => `/api/v1/registro-insumos/${id}`,
+      cols: row => [`${row.des_insumo} (${row.insumo_unidad_medida})`, row.registro_cantidad, row.registro_observaciones || '-'],
+      buildPayload: () => ({
+        id_insumo: parseInt($('#ri_catalogo').val()),
+        registro_cantidad: parseFloat($('#ri_cantidad').val()),
+        registro_observaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    tratamientos: {
+      catalogUrl: '/api/v1/tipos-tratamientos', activeField: 'est_tipo_tratamiento',
+      catalogLabel: 'Tipo de tratamiento', idKeyRow: 'id_tratamiento', optLabel: d => d.des_tipo_tratamiento,
+      fields: ['desc', 'objetivos', 'fecha_inicio', 'numero_sesiones', 'frecuencia_sesiones', 'duracion', 'observaciones'],
+      descLabel: 'Descripción del tratamiento', requiredFields: [{ id: 'ri_desc', label: 'La descripción' }, { id: 'ri_fecha_inicio', label: 'La fecha de inicio' }],
+      deleteUrl: id => `/api/v1/tratamientos/${id}`,
+      cols: row => [
+        row.des_tipo_tratamiento, row.des_tratamiento, row.tratamiento_fecha_inicio,
+        row.numero_sesiones ? `${row.numero_sesiones} (${row.frecuencia_sesiones || '-'})` : '-',
+        row.tratamiento_estado, row.tratamiento_observaciones || '-'
+      ],
+      buildPayload: () => ({
+        id_tipo_tratamiento: parseInt($('#ri_catalogo').val()),
+        des_tratamiento: $('#ri_desc').val().trim(),
+        tratamiento_objetivos: $('#ri_objetivos').val() || null,
+        tratamiento_fecha_inicio: $('#ri_fecha_inicio').val(),
+        numero_sesiones: $('#ri_numero_sesiones').val() ? parseInt($('#ri_numero_sesiones').val()) : null,
+        frecuencia_sesiones: $('#ri_frecuencia_sesiones').val() || null,
+        duracion_sesion: $('#ri_duracion').val() ? parseInt($('#ri_duracion').val()) : null,
+        tratamiento_observaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    certificados: {
+      catalogUrl: '/api/v1/tipos-certificados-medicos', activeField: 'est_tipo_certificado_medico',
+      catalogLabel: 'Tipo de certificado', idKeyRow: 'id_certificado', optLabel: d => d.des_tipo_certificado_medico,
+      fields: ['fecha', 'desc', 'dias_reposo', 'fecha_desde', 'fecha_hasta', 'resultado', 'observaciones'],
+      descLabel: 'Motivo', resultadoLabel: 'Diagnóstico', observacionesLabel: 'Recomendaciones',
+      requiredFields: [{ id: 'ri_fecha', label: 'La fecha' }, { id: 'ri_desc', label: 'El motivo' }],
+      deleteUrl: id => `/api/v1/certificados/${id}`,
+      cols: row => [
+        row.des_tipo_certificado_medico, row.certificado_numero, row.certificado_fecha,
+        row.certificado_motivo, row.certificado_estado
+      ],
+      buildPayload: () => ({
+        id_tipo_certificado_medico: parseInt($('#ri_catalogo').val()),
+        certificado_fecha: $('#ri_fecha').val(),
+        certificado_motivo: $('#ri_desc').val().trim(),
+        certificado_dias_reposo: $('#ri_dias_reposo').val() ? parseInt($('#ri_dias_reposo').val()) : null,
+        certificado_desde_fecha: $('#ri_fecha_desde').val() || null,
+        certificado_hasta_fecha: $('#ri_fecha_hasta').val() || null,
+        certificado_diagnostico: $('#ri_resultado').val() || null,
+        certificado_recomendaciones: $('#ri_observaciones').val() || null
+      })
+    },
+    derivaciones: {
+      catalogUrl: '/api/v1/especialidades', activeField: 'est_especialidad',
+      catalogLabel: 'Especialidad de destino', idKeyRow: 'id_derivacion',
+      optLabel: d => d.des_especialidad,
+      fields: ['desc', 'observaciones'],
+      descLabel: 'Motivo de derivación',
+      requiredFields: [{ id: 'ri_desc', label: 'El motivo de derivación' }],
+      deleteUrl: id => `/api/v1/derivaciones/${id}`,
+      cols: row => [row.des_especialidad, row.motivo_derivacion, row.derivacion_observaciones || '-'],
+      buildPayload: () => ({
+        id_especialidad_destino: parseInt($('#ri_catalogo').val()),
+        motivo_derivacion: $('#ri_desc').val().trim(),
+        derivacion_observaciones: $('#ri_observaciones').val() || null
+      })
+    }
+  };
+
+  const cargarTablaRegistro = (tipo) => {
+    const cfg = REGISTRO_CONFIG[tipo];
+    fetch(`/api/v1/consultas/${idConsultaEdit}/${tipo}`)
+      .then(resp => resp.json())
+      .then(data => {
+        const tbody = $(`#tbody-${tipo}`);
+        const nCols = cfg.cols({}).length + 1;
+        if (data.success && data.data.length > 0) {
+          tbody.html(data.data.map(row => {
+            const cols = cfg.cols(row).map(c => `<td>${c}</td>`).join('');
+            return `<tr>${cols}<td class="text-center">
+              <button type="button" class="btn btn-sm btn-outline-danger btn-borrar-registro" data-tipo="${tipo}" data-id="${row[cfg.idKeyRow]}">&times;</button>
+            </td></tr>`;
+          }).join(''));
+        } else {
+          tbody.html(`<tr><td colspan="${nCols}" class="text-muted text-center">Sin registros</td></tr>`);
+        }
+      });
+  };
+
+  const cargarTodosRegistros = () => {
+    Object.keys(REGISTRO_CONFIG).forEach(cargarTablaRegistro);
+  };
+
+  const abrirModalRegistro = () => {
+    $('.btn-agregar-registro').on('click', function () {
+      const tipo = $(this).data('tipo');
+      const cfg = REGISTRO_CONFIG[tipo];
+
+      $('#ri_tipo').val(tipo);
+      $('#ri_titulo').text(`Agregar ${cfg.catalogLabel}`);
+      $('#ri_catalogo_label').html(`${cfg.catalogLabel} <span class="text-danger">*</span>`);
+      $('#ri_desc_label').text(cfg.descLabel || 'Descripción');
+      $('#ri_cantidad_label').text(cfg.cantidadLabel || 'Cantidad');
+      $('#ri_resultado_label').text(cfg.resultadoLabel || 'Resultado');
+      $('#ri_observaciones_label').text(cfg.observacionesLabel || 'Observaciones');
+
+      $('#modalRegistroItem .form-group.mt-2').hide();
+      cfg.fields.forEach(f => $(`.fld-${f}`).show());
+      $('.fld-observaciones').show();
+
+      $('#ri_tipo_dx, #ri_gravedad, #ri_intensidad, #ri_desc, #ri_duracion, #ri_resultado, #ri_cantidad, #ri_observaciones, #ri_objetivos, #ri_fecha_inicio, #ri_numero_sesiones, #ri_frecuencia_sesiones, #ri_fecha, #ri_dias_reposo, #ri_fecha_desde, #ri_fecha_hasta').val('');
+
+      const select = $('#ri_catalogo');
+      select.html('<option value="">Cargando...</option>');
+      fetch(cfg.catalogUrl)
+        .then(resp => resp.json())
+        .then(data => {
+          select.html('<option value="">-- Seleccione --</option>');
+          if (data.success) {
+            data.data.filter(d => d[cfg.activeField] !== false).forEach(d => {
+              const id = d.id_diagnostico ?? d.id_signo ?? d.id_sintoma ?? d.id_tipo_procedimiento ?? d.id_insumo ?? d.id_tipo_tratamiento ?? d.id_tipo_certificado_medico ?? d.id_especialidad;
+              select.append(`<option value="${id}">${cfg.optLabel(d)}</option>`);
+            });
+          }
+        });
+
+      new bootstrap.Modal(document.getElementById('modalRegistroItem')).show();
+    });
+  };
+
+  const guardarRegistroItem = () => {
+    $('#btnGuardarRegistroItem').on('click', function () {
+      const tipo = $('#ri_tipo').val();
+      const cfg = REGISTRO_CONFIG[tipo];
+
+      if (!$('#ri_catalogo').val()) {
+        Swal.fire('Atención', `Seleccione ${cfg.catalogLabel.toLowerCase()}.`, 'warning');
+        return;
+      }
+      if (cfg.fields.includes('cantidad') && !($('#ri_cantidad').val() > 0)) {
+        Swal.fire('Atención', 'La cantidad debe ser mayor a cero.', 'warning');
+        return;
+      }
+      if (cfg.requiredFields) {
+        for (const rf of cfg.requiredFields) {
+          if (!$(`#${rf.id}`).val()) {
+            Swal.fire('Atención', `${rf.label} es obligatoria.`, 'warning');
+            return;
+          }
+        }
+      }
+
+      fetch(`/api/v1/consultas/${idConsultaEdit}/${tipo}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(cfg.buildPayload())
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalRegistroItem')).hide();
+            cargarTablaRegistro(tipo);
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar el registro.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar el registro.', 'error'));
+    });
+  };
+
+  const borrarRegistroItem = () => {
+    $(document).on('click', '.btn-borrar-registro', function () {
+      const tipo = $(this).data('tipo');
+      const id = $(this).data('id');
+      const cfg = REGISTRO_CONFIG[tipo];
+
+      Swal.fire({
+        title: '¿Eliminar este registro?', icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Eliminar', cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        fetch(cfg.deleteUrl(id), { method: 'DELETE', headers: { 'X-CSRFToken': CSRFToken } })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              cargarTablaRegistro(tipo);
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo eliminar el registro.', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'Ocurrió un error al eliminar el registro.', 'error'));
+      });
+    });
+  };
+
+  // ==========================================
+  // ÓRDENES (estudios/análisis) — cabecera+detalle, líneas dinámicas
+  // ==========================================
+  let lineasOrden = [];
+
+  const cargarCatalogoOrdenItem = () => {
+    const tipo = $('#ord_item_tipo').val();
+    const url = tipo === 'ESTUDIO' ? '/api/v1/tipos-estudios' : '/api/v1/tipos-analisis';
+    const activeField = tipo === 'ESTUDIO' ? 'est_tipo_estudio' : 'est_tipo_analisis';
+    const idField = tipo === 'ESTUDIO' ? 'id_tipo_estudio' : 'id_tipo_analisis';
+    const desField = tipo === 'ESTUDIO' ? 'des_tipo_estudio' : 'des_tipo_analisis';
+    const select = $('#ord_item_catalogo');
+    select.html('<option value="">Cargando...</option>');
+    fetch(url).then(resp => resp.json()).then(data => {
+      select.html('<option value="">-- Seleccione --</option>');
+      if (data.success) {
+        data.data.filter(d => d[activeField] !== false).forEach(d => {
+          select.append(`<option value="${d[idField]}">${d[desField]}</option>`);
+        });
+      }
+    });
+  };
+
+  const renderItemsOrden = () => {
+    const tbody = $('#tbody-ord-items');
+    if (lineasOrden.length === 0) {
+      tbody.html('<tr><td colspan="3" class="text-muted text-center">Sin ítems agregados</td></tr>');
+      return;
+    }
+    tbody.html(lineasOrden.map((it, idx) => `
+      <tr><td>${it.tipo_orden}</td><td>${it.descripcion}</td>
+      <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-quitar-item-orden" data-idx="${idx}">&times;</button></td></tr>
+    `).join(''));
+  };
+
+  const abrirModalOrden = () => {
+    $('#btnAbrirModalOrden').on('click', function () {
+      lineasOrden = [];
+      renderItemsOrden();
+      $('#ord_fecha, #ord_indicaciones, #ord_observaciones').val('');
+      cargarCatalogoOrdenItem();
+      new bootstrap.Modal(document.getElementById('modalOrden')).show();
+    });
+    $('#ord_item_tipo').on('change', cargarCatalogoOrdenItem);
+  };
+
+  const agregarItemOrden = () => {
+    $('#btnAgregarItemOrden').on('click', function () {
+      const tipo = $('#ord_item_tipo').val();
+      const select = $('#ord_item_catalogo');
+      const id = select.val();
+      if (!id) {
+        Swal.fire('Atención', 'Seleccione un estudio o análisis.', 'warning');
+        return;
+      }
+      const item = { tipo_orden: tipo, descripcion: select.find('option:selected').text() };
+      if (tipo === 'ESTUDIO') item.id_tipo_estudio = parseInt(id);
+      else item.id_tipo_analisis = parseInt(id);
+      lineasOrden.push(item);
+      renderItemsOrden();
+      select.val('');
+    });
+    $(document).on('click', '.btn-quitar-item-orden', function () {
+      lineasOrden.splice($(this).data('idx'), 1);
+      renderItemsOrden();
+    });
+  };
+
+  const guardarOrden = () => {
+    $('#btnGuardarOrden').on('click', function () {
+      const fecha = $('#ord_fecha').val();
+      if (!fecha) {
+        Swal.fire('Atención', 'La fecha de la orden es obligatoria.', 'warning');
+        return;
+      }
+      if (lineasOrden.length === 0) {
+        Swal.fire('Atención', 'Agregue al menos un ítem a la orden.', 'warning');
+        return;
+      }
+      const payload = {
+        orden_fecha: fecha,
+        orden_indicaciones: $('#ord_indicaciones').val() || null,
+        orden_observaciones: $('#ord_observaciones').val() || null,
+        detalles: lineasOrden.map(it => ({
+          tipo_orden: it.tipo_orden,
+          id_tipo_estudio: it.id_tipo_estudio || null,
+          id_tipo_analisis: it.id_tipo_analisis || null
+        }))
+      };
+      fetch(`/api/v1/consultas/${idConsultaEdit}/ordenes`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalOrden')).hide();
+            cargarOrdenes();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar la orden.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar la orden.', 'error'));
+    });
+  };
+
+  const cargarOrdenes = () => {
+    fetch(`/api/v1/consultas/${idConsultaEdit}/ordenes`)
+      .then(resp => resp.json())
+      .then(data => {
+        const tbody = $('#tbody-ordenes');
+        if (data.success && data.data.length > 0) {
+          tbody.html(data.data.map(o => `
+            <tr><td>${o.orden_numero}</td><td>${o.orden_fecha}</td>
+            <td>${o.detalles.map(d => d.descripcion).join(', ')}</td>
+            <td>${o.orden_estado}</td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-borrar-orden" data-id="${o.id_orden}">&times;</button></td></tr>
+          `).join(''));
+        } else {
+          tbody.html('<tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr>');
+        }
+      });
+  };
+
+  const borrarOrden = () => {
+    $(document).on('click', '.btn-borrar-orden', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: '¿Eliminar esta orden?', icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Eliminar', cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/ordenes/${id}`, { method: 'DELETE', headers: { 'X-CSRFToken': CSRFToken } })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              cargarOrdenes();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo eliminar la orden.', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'Ocurrió un error al eliminar la orden.', 'error'));
+      });
+    });
+  };
+
+  // ==========================================
+  // RECETAS — cabecera+detalle, líneas dinámicas de medicamentos
+  // ==========================================
+  let lineasReceta = [];
+
+  const cargarCatalogoMedicamentos = () => {
+    const select = $('#rec_item_medicamento');
+    select.html('<option value="">Cargando...</option>');
+    fetch('/api/v1/medicamentos').then(resp => resp.json()).then(data => {
+      select.html('<option value="">-- Seleccione --</option>');
+      if (data.success) {
+        data.data.filter(d => d.est_medicamento !== false).forEach(d => {
+          select.append(`<option value="${d.id_medicamento}">${d.des_medicamento}</option>`);
+        });
+      }
+    });
+  };
+
+  const renderItemsReceta = () => {
+    const tbody = $('#tbody-rec-items');
+    if (lineasReceta.length === 0) {
+      tbody.html('<tr><td colspan="5" class="text-muted text-center">Sin medicamentos agregados</td></tr>');
+      return;
+    }
+    tbody.html(lineasReceta.map((it, idx) => `
+      <tr><td>${it.des_medicamento}</td><td>${it.medicamento_dosis}</td><td>${it.medicamento_frecuencia}</td><td>${it.medicamento_duracion || '-'}</td>
+      <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-quitar-item-receta" data-idx="${idx}">&times;</button></td></tr>
+    `).join(''));
+  };
+
+  const abrirModalReceta = () => {
+    $('#btnAbrirModalReceta').on('click', function () {
+      lineasReceta = [];
+      renderItemsReceta();
+      $('#rec_fecha, #rec_indicaciones_generales, #rec_observaciones, #rec_item_dosis, #rec_item_frecuencia, #rec_item_duracion, #rec_item_indicaciones').val('');
+      $('#rec_validez_dias').val(30);
+      cargarCatalogoMedicamentos();
+      new bootstrap.Modal(document.getElementById('modalReceta')).show();
+    });
+  };
+
+  const agregarItemReceta = () => {
+    $('#btnAgregarItemReceta').on('click', function () {
+      const select = $('#rec_item_medicamento');
+      const id = select.val();
+      const dosis = $('#rec_item_dosis').val().trim();
+      const frecuencia = $('#rec_item_frecuencia').val().trim();
+      if (!id) {
+        Swal.fire('Atención', 'Seleccione un medicamento.', 'warning');
+        return;
+      }
+      if (!dosis || !frecuencia) {
+        Swal.fire('Atención', 'Indique dosis y frecuencia.', 'warning');
+        return;
+      }
+      lineasReceta.push({
+        id_medicamento: parseInt(id), des_medicamento: select.find('option:selected').text(),
+        medicamento_dosis: dosis, medicamento_frecuencia: frecuencia,
+        medicamento_duracion: $('#rec_item_duracion').val() || null,
+        medicamento_indicaciones: $('#rec_item_indicaciones').val() || null
+      });
+      renderItemsReceta();
+      select.val('');
+      $('#rec_item_dosis, #rec_item_frecuencia, #rec_item_duracion, #rec_item_indicaciones').val('');
+    });
+    $(document).on('click', '.btn-quitar-item-receta', function () {
+      lineasReceta.splice($(this).data('idx'), 1);
+      renderItemsReceta();
+    });
+  };
+
+  const guardarReceta = () => {
+    $('#btnGuardarReceta').on('click', function () {
+      const fecha = $('#rec_fecha').val();
+      if (!fecha) {
+        Swal.fire('Atención', 'La fecha de la receta es obligatoria.', 'warning');
+        return;
+      }
+      if (lineasReceta.length === 0) {
+        Swal.fire('Atención', 'Agregue al menos un medicamento.', 'warning');
+        return;
+      }
+      const payload = {
+        receta_fecha: fecha,
+        receta_validez_dias: parseInt($('#rec_validez_dias').val()) || 30,
+        receta_indicaciones_generales: $('#rec_indicaciones_generales').val() || null,
+        receta_observaciones: $('#rec_observaciones').val() || null,
+        detalles: lineasReceta
+      };
+      fetch(`/api/v1/consultas/${idConsultaEdit}/recetas`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalReceta')).hide();
+            cargarRecetas();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar la receta.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar la receta.', 'error'));
+    });
+  };
+
+  const cargarRecetas = () => {
+    fetch(`/api/v1/consultas/${idConsultaEdit}/recetas`)
+      .then(resp => resp.json())
+      .then(data => {
+        const tbody = $('#tbody-recetas');
+        if (data.success && data.data.length > 0) {
+          tbody.html(data.data.map(r => `
+            <tr><td>${r.receta_numero}</td><td>${r.receta_fecha}</td>
+            <td>${r.detalles.map(d => d.des_medicamento).join(', ')}</td>
+            <td>${r.receta_validez_dias} días</td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-borrar-receta" data-id="${r.id_receta}">&times;</button></td></tr>
+          `).join(''));
+        } else {
+          tbody.html('<tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr>');
+        }
+      });
+  };
+
+  const borrarReceta = () => {
+    $(document).on('click', '.btn-borrar-receta', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: '¿Eliminar esta receta?', icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Eliminar', cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/recetas/${id}`, { method: 'DELETE', headers: { 'X-CSRFToken': CSRFToken } })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              cargarRecetas();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo eliminar la receta.', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'Ocurrió un error al eliminar la receta.', 'error'));
+      });
+    });
+  };
+
+  // ==========================================
   // GUARDAR CONSULTA
   // ==========================================
   const guardarConsulta = () => {
     $('#btnGuardarConsulta').on('click', function () {
-      const idPaciente = $('#id_paciente').val();
-      const idEspecialista = $('#selectEspecialista').val();
-      const fecha = $('#txtFechaConsulta').val();
       const motivo = $('#txtMotivo').val().trim();
 
-      const faltantes = [];
-      if (!idPaciente) faltantes.push('Paciente');
-      if (!idEspecialista) faltantes.push('Especialista');
-      if (!fecha) faltantes.push('Fecha y hora');
-      if (!motivo) faltantes.push('Motivo de consulta');
-
-      if (faltantes.length > 0) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Campos incompletos',
-          html: `<p>Complete los siguientes campos obligatorios:</p><ul class="text-start">${faltantes.map(c => `<li>${c}</li>`).join('')}</ul>`
-        });
+      if (!motivo) {
+        Swal.fire('Atención', 'El motivo de consulta es obligatorio.', 'warning');
         return;
       }
 
       const datos = {
-        id_paciente: parseInt(idPaciente),
-        id_especialista: parseInt(idEspecialista),
-        consulta_fecha: fecha,
+        consulta_fecha: consultaFechaCruda,
         consulta_motivo: motivo,
         consulta_estado: $('#selectEstado').val(),
         des_consulta: $('#txtDescripcion').val() || null,
         consulta_observaciones: $('#txtObservaciones').val() || null
       };
 
-      if (idConsultaEdit) {
-        delete datos.id_paciente;
-        delete datos.id_especialista;
-      }
-
       const btn = $(this);
       const textoOriginal = btn.html();
       btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
 
-      const url = idConsultaEdit ? `/api/v1/consultas/${idConsultaEdit}` : '/api/v1/consultas';
-      const method = idConsultaEdit ? 'PUT' : 'POST';
-
-      fetch(url, {
-        method: method,
+      fetch(`/api/v1/consultas/${idConsultaEdit}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
         body: JSON.stringify(datos)
       })
@@ -558,8 +1382,7 @@ Registrar Consulta
         .then(data => {
           btn.prop('disabled', false).html(textoOriginal);
           if (data.success) {
-            Swal.fire({ icon: 'success', title: '¡Éxito!', text: idConsultaEdit ? 'Consulta actualizada correctamente.' : 'Consulta registrada correctamente.' })
-              .then(() => { window.location.href = "{{ url_for('consulta.consultaIndex') }}"; });
+            Swal.fire({ icon: 'success', title: '¡Éxito!', text: 'Consulta actualizada correctamente.' });
           } else {
             Swal.fire('Error', data.error || 'Ocurrió un error al guardar la consulta', 'error');
           }
@@ -572,15 +1395,11 @@ Registrar Consulta
   };
 
   // ==========================================
-  // MODO EDICIÓN
+  // CARGA INICIAL (siempre hay una consulta real, nace de una cita)
   // ==========================================
-  const cargarConsultaParaEditar = () => {
-    if (!idConsultaEdit) return Promise.resolve();
+  let consultaFechaCruda = null;
 
-    $('#tituloPagina').text('Editar Consulta');
-    $('#subtituloPagina').text('Paciente y especialista quedan fijos una vez creada la consulta.');
-    $('#textoBtnGuardar').text('Guardar Cambios');
-
+  const cargarConsulta = () => {
     return fetch(`/api/v1/consultas/${idConsultaEdit}/editar`)
       .then(resp => resp.json())
       .then(data => {
@@ -590,11 +1409,9 @@ Registrar Consulta
           return;
         }
         const c = data.data;
+        consultaFechaCruda = c.consulta_fecha;
 
         $('#id_paciente').val(c.id_paciente);
-        $('#btnBuscarPaciente').prop('disabled', true);
-        $('#selectEspecialista').val(c.id_especialista).prop('disabled', true);
-        $('#txtFechaConsulta').val(c.consulta_fecha);
         $('#selectEstado').val(c.consulta_estado);
         $('#txtMotivo').val(c.consulta_motivo);
         $('#txtObservaciones').val(c.consulta_observaciones || '');
@@ -604,31 +1421,43 @@ Registrar Consulta
           .then(resp => resp.json())
           .then(detalle => {
             if (detalle.success) {
-              $('#txtPaciente').val(`${detalle.data.paciente_nombre} ${detalle.data.paciente_apellido}`);
-              $('#infoPacNombre').text(`${detalle.data.paciente_nombre} ${detalle.data.paciente_apellido}`);
-              $('#infoPacCedula').text(detalle.data.paciente_cedula);
-              $('#infoPacHC').text(detalle.data.pac_historia_clinica || 'N/A');
-              $('#infoPaciente').show();
+              const d = detalle.data;
+              $('#infoPacNombre').text(`${d.paciente_nombre} ${d.paciente_apellido}`);
+              $('#infoPacCedula').text(d.paciente_cedula);
+              $('#infoPacHC').text(d.pac_historia_clinica || 'N/A');
+              $('#infoEspecialista').text(d.especialista_nombre);
+              $('#infoFechaCita').text(d.consulta_fecha);
+              $('#infoMotivoCita').text(d.cita_motivo_original || 'Sin motivo registrado');
+              const clase = ESTADOS_CITA_BADGE[d.cita_estado_cod] || 'border border-secondary text-secondary';
+              $('#infoEstadoCita').attr('class', `badge ${clase}`).text(d.cita_estado_des);
             }
+            $('#cardRegistroClinico').show();
+            cargarTodosRegistros();
+            cargarOrdenes();
+            cargarRecetas();
             cargarAnamnesisPaciente(c.id_paciente);
           });
       });
   };
 
   $(document).ready(function () {
-    initPacientesDatatable();
-    cargarEspecialistas().then(cargarConsultaParaEditar);
+    cargarConsulta();
 
-    seleccionarPaciente();
     abrirNuevaVersionAnamnesis();
     guardarAnamnesis();
     verHistorialAnamnesis();
     guardarConsulta();
-
-    $('#btnBuscarPaciente').on('click', function () {
-      new bootstrap.Modal(document.getElementById("modalBuscarPaciente")).show();
-      $('#tblPacientes').DataTable().ajax.reload();
-    });
+    abrirModalRegistro();
+    guardarRegistroItem();
+    borrarRegistroItem();
+    abrirModalOrden();
+    agregarItemOrden();
+    guardarOrden();
+    borrarOrden();
+    abrirModalReceta();
+    agregarItemReceta();
+    guardarReceta();
+    borrarReceta();
   });
 </script>
 {% endblock %}

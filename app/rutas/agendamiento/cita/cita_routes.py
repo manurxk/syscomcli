@@ -5,12 +5,12 @@ citamod = Blueprint('cita', __name__, template_folder='templates')
 
 
 @citamod.route('/citas-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def citaIndex():
     return render_template('cita-index.html')
 
 
 @citamod.route('/citas-agregar')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def citaAgregar():
     return render_template('cita-agregar.html')

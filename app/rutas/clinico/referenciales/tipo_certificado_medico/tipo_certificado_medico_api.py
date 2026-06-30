@@ -7,7 +7,7 @@ tipocertificadomedicoapi = Blueprint('tipocertificadomedicoapi', __name__)
 
 
 @tipocertificadomedicoapi.route('/tipos-certificados-medicos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposCertificadosMedicos():
     try:
         data = TipoCertificadoMedicoDao().getTiposCertificadosMedicos()

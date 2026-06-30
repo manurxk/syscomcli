@@ -7,7 +7,7 @@ diagnosticoapi = Blueprint('diagnosticoapi', __name__)
 
 
 @diagnosticoapi.route('/diagnosticos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getDiagnosticos():
     try:
         data = DiagnosticoDao().getDiagnosticos()
@@ -18,7 +18,7 @@ def getDiagnosticos():
 
 
 @diagnosticoapi.route('/diagnosticos/<int:diagnostico_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getDiagnostico(diagnostico_id):
     try:
         registro = DiagnosticoDao().getDiagnosticoById(diagnostico_id)

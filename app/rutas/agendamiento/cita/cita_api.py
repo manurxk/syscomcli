@@ -8,7 +8,7 @@ from app.services.UltraMsgService import UltraMsgService
 
 citaapi = Blueprint('citaapi', __name__)
 
-ROLES_CITAS = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+ROLES_CITAS = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 
 ESTADOS_VALIDOS = ('AGENDADA', 'CONFIRMADA', 'EN_CONSULTA', 'COMPLETADA', 'AUSENTE', 'CANCELADA')
 

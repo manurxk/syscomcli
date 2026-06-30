@@ -1,0 +1,574 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Ficha Médica{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title" id="titulo-ficha">Ficha Médica</h1>
+          <div class="page-header-subtitle" id="subtitulo-ficha">Cargando datos del paciente…</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('ficha.fichaIndex') }}" class="btn btn-light btn-sm">
+            <i data-feather="arrow-left"></i> Volver
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10" id="contenido-ficha">
+
+  <!-- DATOS DEL PACIENTE -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <i data-feather="user" class="me-2"></i>
+      <span class="fw-bold">Datos del Paciente</span>
+    </div>
+    <div class="card-body" id="sec-paciente">
+      <div class="text-muted">Cargando…</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- PRÓXIMAS CITAS -->
+    <div class="col-xl-5 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center">
+          <i data-feather="calendar" class="me-2"></i>
+          <span class="fw-bold">Próximas Citas</span>
+        </div>
+        <div class="card-body p-0" id="sec-citas">
+          <div class="p-3 text-muted">Cargando…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRATAMIENTOS ACTIVOS -->
+    <div class="col-xl-7 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center">
+          <i data-feather="activity" class="me-2"></i>
+          <span class="fw-bold">Tratamientos</span>
+        </div>
+        <div class="card-body p-0" id="sec-tratamientos">
+          <div class="p-3 text-muted">Cargando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANAMNESIS -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-anamnesis" style="cursor:pointer">
+      <i data-feather="file-text" class="me-2"></i>
+      <span class="fw-bold">Anamnesis</span>
+      <i data-feather="chevron-down" class="ms-auto"></i>
+    </div>
+    <div class="collapse" id="collapse-anamnesis">
+      <div class="card-body" id="sec-anamnesis">
+        <div class="text-muted">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PEI -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-pei" style="cursor:pointer">
+      <i data-feather="book-open" class="me-2"></i>
+      <span class="fw-bold">PEI — Plan Educativo Individual</span>
+      <i data-feather="chevron-down" class="ms-auto"></i>
+    </div>
+    <div class="collapse" id="collapse-pei">
+      <div class="card-body" id="sec-pei">
+        <div class="text-muted">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIAGNÓSTICOS -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-diagnosticos" style="cursor:pointer">
+      <i data-feather="crosshair" class="me-2"></i>
+      <span class="fw-bold">Diagnósticos</span>
+      <i data-feather="chevron-down" class="ms-auto"></i>
+    </div>
+    <div class="collapse" id="collapse-diagnosticos">
+      <div class="card-body p-0" id="sec-diagnosticos">
+        <div class="p-3 text-muted">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCEDIMIENTOS -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-procedimientos" style="cursor:pointer">
+      <i data-feather="tool" class="me-2"></i>
+      <span class="fw-bold">Procedimientos Recientes</span>
+      <i data-feather="chevron-down" class="ms-auto"></i>
+    </div>
+    <div class="collapse" id="collapse-procedimientos">
+      <div class="card-body p-0" id="sec-procedimientos">
+        <div class="p-3 text-muted">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSULTAS -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-consultas" style="cursor:pointer">
+      <i data-feather="clipboard" class="me-2"></i>
+      <span class="fw-bold">Consultas Recientes</span>
+      <i data-feather="chevron-down" class="ms-auto"></i>
+    </div>
+    <div class="collapse" id="collapse-consultas">
+      <div class="card-body p-0" id="sec-consultas">
+        <div class="p-3 text-muted">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTAS CLÍNICAS -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <i data-feather="edit-3" class="me-2"></i>
+      <span class="fw-bold">Notas Clínicas</span>
+      <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modalNota">
+        + Nueva nota
+      </button>
+    </div>
+    <div class="card-body p-0" id="sec-notas">
+      <div class="p-3 text-muted">Cargando…</div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-timeline" style="cursor:pointer">
+      <i data-feather="clock" class="me-2"></i>
+      <span class="fw-bold">Timeline de Eventos</span>
+      <i data-feather="chevron-down" class="ms-auto"></i>
+    </div>
+    <div class="collapse" id="collapse-timeline">
+      <div class="card-body p-0" id="sec-timeline">
+        <div class="p-3 text-muted">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- MODAL NUEVA NOTA -->
+<div class="modal fade" id="modalNota" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nueva nota clínica</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="alerta-nota" class="alert d-none"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Nota <span class="text-danger">*</span></label>
+          <textarea id="input-nota" class="form-control" rows="5" placeholder="Escribí la nota clínica…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-guardar-nota">Guardar nota</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ID_PACIENTE = {{ id_paciente }};
+const API_FICHA  = `/api/v1/clinico/ficha/${ID_PACIENTE}`;
+const API_NOTAS  = `/api/v1/clinico/ficha/${ID_PACIENTE}/notas`;
+
+// -------------------------------------------------------
+// Utilidades
+// -------------------------------------------------------
+const badge = (txt, cls) => `<span class="badge bg-${cls} me-1">${txt || '—'}</span>`;
+const fv = v => v || '<span class="text-muted">—</span>';
+const tf = b => b ? badge('Sí', 'success') : badge('No', 'secondary');
+
+function renderVacio(msg) {
+  return `<div class="p-3 text-muted fst-italic">${msg}</div>`;
+}
+
+// -------------------------------------------------------
+// DATOS DEL PACIENTE
+// -------------------------------------------------------
+function renderPaciente(p) {
+  if (!p) { document.getElementById('sec-paciente').innerHTML = renderVacio('Sin datos.'); return; }
+  document.getElementById('titulo-ficha').textContent = `Ficha: ${p.nombre_completo}`;
+  document.getElementById('subtitulo-ficha').textContent = `HC: ${p.historia_clinica || '—'} | Cédula: ${p.cedula || '—'}`;
+  document.getElementById('sec-paciente').innerHTML = `
+    <div class="row g-3">
+      <div class="col-md-4"><small class="text-muted">Nombre completo</small><div class="fw-semibold">${fv(p.nombre_completo)}</div></div>
+      <div class="col-md-2"><small class="text-muted">Cédula</small><div>${fv(p.cedula)}</div></div>
+      <div class="col-md-2"><small class="text-muted">Fecha nacimiento</small><div>${fv(p.fecha_nacimiento)}</div></div>
+      <div class="col-md-1"><small class="text-muted">Edad</small><div>${fv(p.edad)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Género</small><div>${fv(p.genero)}</div></div>
+
+      <div class="col-md-3"><small class="text-muted">Teléfono</small><div>${fv(p.telefono)}</div></div>
+      <div class="col-md-4"><small class="text-muted">Correo</small><div>${fv(p.correo)}</div></div>
+      <div class="col-md-5"><small class="text-muted">Domicilio</small><div>${fv(p.domicilio)}</div></div>
+
+      <div class="col-md-3"><small class="text-muted">Ciudad</small><div>${fv(p.ciudad)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Estado civil</small><div>${fv(p.estado_civil)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Instrucción</small><div>${fv(p.nivel_instruccion)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Profesión</small><div>${fv(p.profesion)}</div></div>
+
+      ${p.es_menor ? `
+      <div class="col-12"><hr class="my-1"><small class="text-muted fw-semibold">Datos de representantes (menor)</small></div>
+      <div class="col-md-3"><small class="text-muted">Nombre madre</small><div>${fv(p.madre_nombre)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Tel. madre</small><div>${fv(p.madre_telefono)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Nombre padre</small><div>${fv(p.padre_nombre)}</div></div>
+      <div class="col-md-3"><small class="text-muted">Tel. padre</small><div>${fv(p.padre_telefono)}</div></div>
+      <div class="col-md-4"><small class="text-muted">Colegio</small><div>${fv(p.colegio)}</div></div>
+      ` : ''}
+
+      <div class="col-12"><small class="text-muted">Observaciones</small><div>${fv(p.observaciones)}</div></div>
+    </div>`;
+}
+
+// -------------------------------------------------------
+// ANAMNESIS
+// -------------------------------------------------------
+function renderAnamnesis(a) {
+  const el = document.getElementById('sec-anamnesis');
+  if (!a) { el.innerHTML = renderVacio('Sin anamnesis registrada.'); return; }
+  el.innerHTML = `
+    <p class="mb-1"><small class="text-muted">Versión ${a.nro_version} — Creada: ${a.fecha_creacion || '—'} — Modificada: ${a.fecha_modificacion || '—'}</small></p>
+    <div class="row g-3 mt-1">
+      <div class="col-md-4"><small class="text-muted">Informante</small><div>${fv(a.informante)}</div></div>
+      <div class="col-md-4"><small class="text-muted">Relación informante</small><div>${fv(a.relacion_informante)}</div></div>
+      <div class="col-12"><small class="text-muted">Motivo de consulta</small><div>${fv(a.motivo_consulta)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Historia del problema actual</small><div>${fv(a.historia_problema_actual)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Antecedentes patológicos personales</small><div>${fv(a.antecedentes_patologicos_personales)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Antecedentes familiares similares</small><div>${fv(a.antecedentes_familiares_similares)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Antecedentes patológicos familiares</small><div>${fv(a.antecedentes_patologicos_familiares)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Historia familiar</small><div>${fv(a.historia_familiar)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Historia desarrollo</small><div>${fv(a.historia_desarrollo)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Medicación actual</small><div>${fv(a.medicacion_actual)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Medicación psiquiátrica previa</small><div>${fv(a.medicacion_psiquiatrica_previa)}</div></div>
+      <div class="col-12"><small class="text-muted">Impresión diagnóstica</small><div>${fv(a.impresion_diagnostica)}</div></div>
+      <div class="col-12"><small class="text-muted">Plan de trabajo</small><div>${fv(a.plan_trabajo)}</div></div>
+      <div class="col-12">
+        <small class="text-muted fw-semibold">Evaluaciones indicadas</small><br>
+        ${tf(a.eval_neuropsicologica)} Neuropsicológica &nbsp;
+        ${tf(a.eval_psicologica)} Psicológica &nbsp;
+        ${tf(a.eval_psicopedagogica)} Psicopedagógica &nbsp;
+        ${tf(a.eval_fonoaudiologica)} Fonoaudiológica &nbsp;
+        ${tf(a.eval_psicomotora)} Psicomotora
+      </div>
+      <div class="col-12">
+        <small class="text-muted fw-semibold">Terapias indicadas</small><br>
+        ${tf(a.terapia_individual)} Individual &nbsp;
+        ${tf(a.terapia_familiar)} Familiar &nbsp;
+        ${tf(a.terapia_grupal)} Grupal &nbsp;
+        ${tf(a.terapia_ocupacional)} Ocupacional
+        ${a.otra_terapia ? `<br><small class="text-muted">Otra:</small> ${a.otra_terapia}` : ''}
+      </div>
+      <div class="col-12"><small class="text-muted">Observaciones</small><div>${fv(a.observaciones)}</div></div>
+      <div class="col-12"><small class="text-muted">Indicaciones</small><div>${fv(a.indicaciones)}</div></div>
+    </div>`;
+}
+
+// -------------------------------------------------------
+// PEI
+// -------------------------------------------------------
+function renderPei(p) {
+  const el = document.getElementById('sec-pei');
+  if (!p) { el.innerHTML = renderVacio('Sin PEI registrado.'); return; }
+  const estadoBadge = p.pei_estado === 'ACTIVO' ? badge('ACTIVO', 'success') : badge(p.pei_estado, 'secondary');
+  el.innerHTML = `
+    <p class="mb-1"><small class="text-muted">Versión ${p.nro_version} ${estadoBadge} — Especialista: ${p.especialista_nombre || '—'} — Creado: ${p.fecha_creacion || '—'}</small></p>
+    <div class="row g-3 mt-1">
+      <div class="col-12"><small class="text-muted">Objetivos</small><div>${fv(p.pei_objetivos)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Áreas de intervención</small><div>${fv(p.pei_areas_intervencion)}</div></div>
+      <div class="col-md-6"><small class="text-muted">Estrategias</small><div>${fv(p.pei_estrategias)}</div></div>
+      <div class="col-12"><small class="text-muted">Cronograma de seguimiento</small><div>${fv(p.pei_cronograma_seguimiento)}</div></div>
+    </div>`;
+}
+
+// -------------------------------------------------------
+// DIAGNÓSTICOS
+// -------------------------------------------------------
+function renderDiagnosticos(lista) {
+  const el = document.getElementById('sec-diagnosticos');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin diagnósticos registrados.'); return; }
+  const gravBadge = g => ({LEVE:'success', MODERADO:'warning', GRAVE:'danger', MUY_GRAVE:'dark'}[g] || 'secondary');
+  el.innerHTML = `
+    <table class="table table-sm table-bordered align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Fecha</th><th>CIE-10</th><th>Diagnóstico</th>
+          <th>Tipo</th><th>Gravedad</th><th>Profesional</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lista.map(d => `
+          <tr>
+            <td>${d.fecha || '—'}</td>
+            <td><code>${d.cod_cie10 || '—'}</code></td>
+            <td>${d.diagnostico || '—'}<br><small class="text-muted">${d.descripcion_especifica || ''}</small></td>
+            <td>${badge(d.tipo, d.tipo === 'DEFINITIVO' ? 'primary' : 'warning')}</td>
+            <td>${badge(d.gravedad, gravBadge(d.gravedad))}</td>
+            <td>${d.profesional || '—'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// -------------------------------------------------------
+// TRATAMIENTOS
+// -------------------------------------------------------
+function renderTratamientos(lista) {
+  const el = document.getElementById('sec-tratamientos');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin tratamientos registrados.'); return; }
+  el.innerHTML = `
+    <table class="table table-sm table-bordered align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Tipo</th><th>Descripción</th><th>Inicio</th>
+          <th>Sesiones</th><th>Estado</th><th>Profesional</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lista.map(t => `
+          <tr>
+            <td>${t.tipo_tratamiento || '—'}</td>
+            <td>${t.descripcion || '—'}</td>
+            <td>${t.fecha_inicio || '—'}</td>
+            <td>${t.numero_sesiones != null ? t.numero_sesiones : '—'}</td>
+            <td>${badge(t.estado, t.estado === 'ACTIVO' ? 'success' : 'secondary')}</td>
+            <td>${t.profesional || '—'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// -------------------------------------------------------
+// PROCEDIMIENTOS
+// -------------------------------------------------------
+function renderProcedimientos(lista) {
+  const el = document.getElementById('sec-procedimientos');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin procedimientos registrados.'); return; }
+  el.innerHTML = `
+    <table class="table table-sm table-bordered align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Fecha</th><th>Procedimiento</th><th>Descripción</th><th>Resultado</th><th>Profesional</th></tr>
+      </thead>
+      <tbody>
+        ${lista.map(p => `
+          <tr>
+            <td>${p.fecha || '—'}</td>
+            <td>${p.tipo_procedimiento || '—'}</td>
+            <td>${p.descripcion || '—'}</td>
+            <td>${p.resultado || '—'}</td>
+            <td>${p.profesional || '—'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// -------------------------------------------------------
+// CONSULTAS
+// -------------------------------------------------------
+function renderConsultas(lista) {
+  const el = document.getElementById('sec-consultas');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin consultas registradas.'); return; }
+  el.innerHTML = `
+    <table class="table table-sm table-bordered align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Fecha</th><th>Motivo</th><th>Estado</th><th>Profesional</th><th>Dx</th><th>Proc.</th></tr>
+      </thead>
+      <tbody>
+        ${lista.map(c => `
+          <tr>
+            <td>${c.fecha || '—'}</td>
+            <td>${c.motivo || '—'}</td>
+            <td>${badge(c.estado, 'secondary')}</td>
+            <td>${c.profesional || '—'}</td>
+            <td class="text-center">${c.total_diagnosticos}</td>
+            <td class="text-center">${c.total_procedimientos}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// -------------------------------------------------------
+// PRÓXIMAS CITAS
+// -------------------------------------------------------
+function renderCitas(lista) {
+  const el = document.getElementById('sec-citas');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin citas próximas.'); return; }
+  el.innerHTML = `
+    <ul class="list-group list-group-flush">
+      ${lista.map(c => `
+        <li class="list-group-item px-3 py-2">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-semibold">${c.fecha || '—'} ${c.hora_inicio || ''} – ${c.hora_fin || ''}</div>
+              <small class="text-muted">${c.especialista || '—'} · ${c.especialidad || '—'}</small>
+              ${c.motivo ? `<div class="small">${c.motivo}</div>` : ''}
+            </div>
+            <span class="badge bg-secondary">${c.dias_hasta_cita != null ? 'en ' + c.dias_hasta_cita + ' d.' : ''}</span>
+          </div>
+        </li>`).join('')}
+    </ul>`;
+}
+
+// -------------------------------------------------------
+// NOTAS
+// -------------------------------------------------------
+function renderNotas(lista) {
+  const el = document.getElementById('sec-notas');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin notas clínicas.'); return; }
+  el.innerHTML = `
+    <ul class="list-group list-group-flush">
+      ${lista.map(n => `
+        <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-start">
+          <div>
+            <div>${n.contenido}</div>
+            <small class="text-muted">${n.especialista || '—'} — ${n.fecha || '—'}</small>
+          </div>
+          <button class="btn btn-sm btn-outline-danger ms-3 btn-del-nota" data-id="${n.id_nota}" title="Eliminar">
+            <i data-feather="trash-2"></i>
+          </button>
+        </li>`).join('')}
+    </ul>`;
+  document.querySelectorAll('.btn-del-nota').forEach(btn => {
+    btn.addEventListener('click', () => eliminarNota(parseInt(btn.dataset.id)));
+  });
+  if (window.feather) feather.replace();
+}
+
+// -------------------------------------------------------
+// TIMELINE
+// -------------------------------------------------------
+const TIPO_COLOR = {
+  CONSULTA: 'primary', DIAGNOSTICO: 'danger', PROCEDIMIENTO: 'warning',
+  TRATAMIENTO: 'success', NOTA: 'info'
+};
+function renderTimeline(lista) {
+  const el = document.getElementById('sec-timeline');
+  if (!lista.length) { el.innerHTML = renderVacio('Sin eventos registrados.'); return; }
+  el.innerHTML = `
+    <ul class="list-group list-group-flush">
+      ${lista.map(e => `
+        <li class="list-group-item px-3 py-2">
+          <div class="d-flex align-items-start gap-3">
+            <span class="badge bg-${TIPO_COLOR[e.tipo_evento] || 'secondary'} mt-1" style="min-width:110px">${e.tipo_evento}</span>
+            <div>
+              <div class="fw-semibold">${e.descripcion || '—'}</div>
+              <small class="text-muted">${e.fecha || '—'} · ${e.profesional || '—'}${e.detalle ? ' · ' + e.detalle : ''}</small>
+            </div>
+          </div>
+        </li>`).join('')}
+    </ul>`;
+}
+
+// -------------------------------------------------------
+// ACCIONES NOTAS
+// -------------------------------------------------------
+function guardarNota() {
+  const contenido = document.getElementById('input-nota').value.trim();
+  const alerta = document.getElementById('alerta-nota');
+  if (!contenido) {
+    alerta.className = 'alert alert-warning';
+    alerta.textContent = 'Escribí el contenido de la nota.';
+    return;
+  }
+  alerta.className = 'alert d-none';
+  document.getElementById('btn-guardar-nota').disabled = true;
+
+  fetch(API_NOTAS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+    body: JSON.stringify({ nota_contenido: contenido })
+  })
+    .then(r => r.json())
+    .then(res => {
+      document.getElementById('btn-guardar-nota').disabled = false;
+      if (!res.success) {
+        alerta.className = 'alert alert-danger';
+        alerta.textContent = res.error || 'Error al guardar.';
+        return;
+      }
+      document.getElementById('input-nota').value = '';
+      bootstrap.Modal.getInstance(document.getElementById('modalNota')).hide();
+      recargarNotas();
+    })
+    .catch(() => {
+      document.getElementById('btn-guardar-nota').disabled = false;
+      alerta.className = 'alert alert-danger';
+      alerta.textContent = 'Error de conexión.';
+    });
+}
+
+function eliminarNota(id_nota) {
+  if (!confirm('¿Eliminás esta nota?')) return;
+  fetch(`/api/v1/clinico/ficha/notas/${id_nota}`, {
+    method: 'DELETE',
+    headers: { 'X-CSRFToken': getCsrf() }
+  })
+    .then(r => r.json())
+    .then(res => { if (res.success) recargarNotas(); })
+    .catch(() => alert('Error al eliminar la nota.'));
+}
+
+function recargarNotas() {
+  fetch(API_NOTAS)
+    .then(r => r.json())
+    .then(res => { if (res.success) renderNotas(res.data); });
+}
+
+function getCsrf() {
+  const m = document.cookie.match(/csrftoken=([^;]+)/);
+  if (m) return m[1];
+  const el = document.querySelector('meta[name="csrf-token"]');
+  return el ? el.content : '';
+}
+
+// -------------------------------------------------------
+// INIT
+// -------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  fetch(API_FICHA)
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success) {
+        document.getElementById('contenido-ficha').innerHTML =
+          `<div class="alert alert-danger">Error: ${res.error || 'No se pudo cargar la ficha.'}</div>`;
+        return;
+      }
+      const d = res.data;
+      renderPaciente(d.paciente);
+      renderAnamnesis(d.anamnesis);
+      renderPei(d.pei);
+      renderConsultas(d.consultas_recientes || []);
+      renderDiagnosticos(d.diagnosticos || []);
+      renderTratamientos(d.tratamientos_activos || []);
+      renderProcedimientos(d.procedimientos || []);
+      renderCitas(d.proximas_citas || []);
+      renderNotas(d.notas || []);
+      renderTimeline(d.timeline || []);
+      if (window.feather) feather.replace();
+    })
+    .catch(() => {
+      document.getElementById('contenido-ficha').innerHTML =
+        '<div class="alert alert-danger">Error de conexión al cargar la ficha.</div>';
+    });
+
+  document.getElementById('btn-guardar-nota').addEventListener('click', guardarNota);
+});
+</script>
+{% endblock %}

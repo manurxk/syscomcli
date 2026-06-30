@@ -7,7 +7,7 @@ tipoestudioapi = Blueprint('tipoestudioapi', __name__)
 
 
 @tipoestudioapi.route('/tipos-estudios', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposEstudios():
     try:
         data = TipoEstudioDao().getTiposEstudios()

@@ -7,7 +7,7 @@ especialidadapi = Blueprint('especialidadapi', __name__)
 
 
 @especialidadapi.route('/especialidades', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO", "RECEPCION")
 def getEspecialidades():
     try:
         data = EspecialidadDao().getEspecialidades()
@@ -18,7 +18,7 @@ def getEspecialidades():
 
 
 @especialidadapi.route('/especialidades/<int:especialidad_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO", "RECEPCION")
 def getEspecialidad(especialidad_id):
     try:
         especialidad = EspecialidadDao().getEspecialidadById(especialidad_id)

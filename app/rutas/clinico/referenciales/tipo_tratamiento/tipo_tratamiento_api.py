@@ -7,7 +7,7 @@ tipotratamientoapi = Blueprint('tipotratamientoapi', __name__)
 
 
 @tipotratamientoapi.route('/tipos-tratamientos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposTratamientos():
     try:
         data = TipoTratamientoDao().getTiposTratamientos()
@@ -18,7 +18,7 @@ def getTiposTratamientos():
 
 
 @tipotratamientoapi.route('/tipos-tratamientos/<int:tipo_tratamiento_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoTratamiento(tipo_tratamiento_id):
     try:
         registro = TipoTratamientoDao().getTipoTratamientoById(tipo_tratamiento_id)

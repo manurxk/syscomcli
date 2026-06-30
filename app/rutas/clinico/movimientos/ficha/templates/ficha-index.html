@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Fichas Médicas{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Fichas Médicas</h1>
+          <div class="page-header-subtitle">Seleccioná un paciente para ver su historia clínica completa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Pacientes</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Historia clínica</th>
+              <th>Nombre</th>
+              <th>Cédula</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tbody = document.querySelector('#tbl tbody');
+
+  fetch('/api/v1/pacientes')
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success || !res.data.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin pacientes registrados.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = res.data.map(p => `
+        <tr>
+          <td>${p.pac_historia_clinica || ''}</td>
+          <td>${p.nombre_completo || ''}</td>
+          <td>${p.per_cedula || ''}</td>
+          <td>
+            <a href="/clinico/ficha/ficha-paciente/${p.id_paciente}"
+               class="btn btn-sm btn-outline-primary">
+              <i data-feather="clipboard"></i> Ver ficha
+            </a>
+          </td>
+        </tr>
+      `).join('');
+      if (window.feather) feather.replace();
+      if ($.fn && $.fn.DataTable) $('#tbl').DataTable({ language: { url: '/static/datatables/es.json' }, pageLength: 20 });
+    })
+    .catch(() => {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center">Error al cargar pacientes.</td></tr>';
+    });
+});
+</script>
+{% endblock %}

@@ -25,7 +25,7 @@ def _listar(dao_fn, campo_id, campo_desc):
 # CIUDADES
 # ============================================
 @referencialesapi.route('/ciudades', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getCiudades():
     try:
         ciudades = CiudadDao().getCiudades()
@@ -37,7 +37,7 @@ def getCiudades():
 
 
 @referencialesapi.route('/ciudades/<int:id_ciudad>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getCiudad(id_ciudad):
     try:
         ciudad = CiudadDao().getCiudadById(id_ciudad)
@@ -65,7 +65,7 @@ def getCiudad(id_ciudad):
 # DEPARTAMENTOS Y PAÍSES
 # ============================================
 @referencialesapi.route('/departamentos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getDepartamentos():
     try:
         data = _listar(DepartamentoDao().getDepartamentos, 'id_departamento', 'des_departamento')
@@ -76,7 +76,7 @@ def getDepartamentos():
 
 
 @referencialesapi.route('/paises', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getPaises():
     try:
         data = _listar(PaisDao().getPaises, 'id_pais', 'des_pais')
@@ -90,7 +90,7 @@ def getPaises():
 # GÉNEROS Y ESTADOS CIVILES
 # ============================================
 @referencialesapi.route('/generos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getGeneros():
     try:
         data = _listar(GeneroDao().getGeneros, 'id_genero', 'des_genero')
@@ -101,7 +101,7 @@ def getGeneros():
 
 
 @referencialesapi.route('/estados-civiles', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEstadosCiviles():
     try:
         data = _listar(EstadoCivilDao().getEstadosCiviles, 'id_estado_civil', 'des_estado_civil')
@@ -115,7 +115,7 @@ def getEstadosCiviles():
 # NIVELES DE INSTRUCCIÓN Y PROFESIONES
 # ============================================
 @referencialesapi.route('/niveles-instruccion', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getNivelesInstruccion():
     try:
         data = _listar(NivelInstruccionDao().getNivelesInstruccion, 'id_nivel_instruccion', 'des_nivel_instruccion')
@@ -126,7 +126,7 @@ def getNivelesInstruccion():
 
 
 @referencialesapi.route('/profesiones', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getProfesiones():
     try:
         data = _listar(ProfesionDao().getProfesiones, 'id_profesion', 'des_profesion')
@@ -158,7 +158,7 @@ def getCargosPermitidos():
 # ESPECIALIDADES
 # ============================================
 @referencialesapi.route('/especialidades-permitidas', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEspecialidades():
     try:
         data = _listar(EspecialidadDao().getEspecialidades, 'id_especialidad', 'des_especialidad')

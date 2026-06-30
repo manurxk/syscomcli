@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Plan Educativo Individual (PEI){% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Plan Educativo Individual (PEI)</h1>
+          <div class="page-header-subtitle">Registrá o revisá el plan de intervención del paciente</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('pei.peiIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Búsqueda de paciente (solo si no viene id_paciente en la URL) -->
+  {% if not id_paciente %}
+  <div class="card shadow-sm mb-4 border-start-primary" id="card-busqueda">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="search" class="icon-sm"></i> Buscar Paciente
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-8 mb-3 mb-md-0 position-relative">
+          <label class="small mb-1" for="txtBuscarPaciente">Nombre, apellido o historia clínica</label>
+          <input class="form-control" id="txtBuscarPaciente" type="text" placeholder="Escriba para buscar..." autocomplete="off">
+          <div class="list-group" id="sugerenciasPaciente" style="position:absolute;top:100%;left:0;right:0;z-index:1050;display:none;"></div>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" id="btnSeleccionarPaciente" disabled>Seleccionar y continuar</button>
+        </div>
+      </div>
+      <input type="hidden" id="hidIdPaciente">
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Formulario PEI (oculto hasta tener paciente) -->
+  <div id="contenedor-pei" {% if not id_paciente %}style="display:none"{% endif %}>
+
+    <!-- Info del paciente -->
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="user" class="icon-sm"></i> Paciente
+        </h6>
+        <span class="badge bg-light text-dark border" id="badgeVersion"></span>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-6">
+            <label class="small text-muted">Nombre completo</label>
+            <p class="fw-bold mb-0" id="lblPacienteNombre">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Historia clínica</label>
+            <p class="mb-0" id="lblHistoriaClinica">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Especialista responsable</label>
+            <p class="mb-0" id="lblEspecialista">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de versiones -->
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="clock" class="icon-sm"></i> Historial de versiones
+        </h6>
+      </div>
+      <div class="card-body" id="contenedorHistorial">
+        <p class="text-muted small mb-0">Sin versiones anteriores para este paciente.</p>
+      </div>
+    </div>
+
+    <!-- Formulario nueva versión -->
+    <form id="formPei">
+      <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" id="hidIdPacienteForm" value="{{ id_paciente or '' }}">
+
+      <div class="card shadow-sm mb-4 border-start-primary">
+        <div class="card-header py-3">
+          <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+            <i data-feather="file-text" class="icon-sm"></i> Nueva versión del PEI
+          </h6>
+        </div>
+        <div class="card-body">
+
+          <div class="mb-3">
+            <label class="small mb-1 fw-bold" for="txtObjetivos">Objetivos <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="txtObjetivos" rows="4"
+              placeholder="Describa los objetivos generales y específicos del plan de intervención..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="small mb-1 fw-bold" for="txtAreas">Áreas de intervención</label>
+            <textarea class="form-control" id="txtAreas" rows="3"
+              placeholder="Ej: área cognitiva, socioemocional, comunicación, motricidad..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="small mb-1 fw-bold" for="txtEstrategias">Estrategias</label>
+            <textarea class="form-control" id="txtEstrategias" rows="3"
+              placeholder="Metodologías, técnicas y estrategias terapéuticas a utilizar..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="small mb-1 fw-bold" for="txtCronograma">Cronograma de seguimiento</label>
+            <textarea class="form-control" id="txtCronograma" rows="3"
+              placeholder="Frecuencia de sesiones, hitos de evaluación, fechas de revisión del plan..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="small mb-1 fw-bold" for="selEstado">Estado del plan</label>
+            <select class="form-select" id="selEstado" style="max-width:200px">
+              <option value="ACTIVO">Activo</option>
+              <option value="CERRADO">Cerrado</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-5">
+        <div class="card-body d-flex justify-content-between py-3">
+          <button type="button" class="btn btn-outline-secondary px-4" id="btnCancelar">Cancelar</button>
+          <button type="button" class="btn btn-primary px-5 fw-600" id="btnGuardar">Guardar versión</button>
+        </div>
+      </div>
+    </form>
+
+  </div><!-- /contenedor-pei -->
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+  const ID_PACIENTE_INICIAL = {{ id_paciente | tojson }};
+
+  // ============================================================
+  // BÚSQUEDA DE PACIENTE (solo cuando no viene en la URL)
+  // ============================================================
+  let pacienteSeleccionado = null;
+  let pacientesCache = [];
+
+  const normalizarTexto = (txt) => (txt || '')
+    .toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
+
+  const cargarPacientesCache = () => {
+    fetch('/api/v1/pacientes')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) pacientesCache = data.data || [];
+      })
+      .catch(err => console.error('Error cargando pacientes:', err));
+  };
+
+  const bindBuscadorPaciente = () => {
+    const $input = $('#txtBuscarPaciente');
+    const $sugerencias = $('#sugerenciasPaciente');
+    const $btnSel = $('#btnSeleccionarPaciente');
+    const $hidden = $('#hidIdPaciente');
+
+    $input.on('input', function () {
+      const termino = normalizarTexto($(this).val());
+      pacienteSeleccionado = null;
+      $hidden.val('');
+      $btnSel.prop('disabled', true);
+
+      if (termino.length < 2) { $sugerencias.hide().empty(); return; }
+
+      const coincidencias = pacientesCache.filter(p => {
+        const nombre = normalizarTexto((p.nombre || '') + ' ' + (p.apellido || ''));
+        const hc = normalizarTexto(p.historia_clinica || p.pac_historia_clinica || '');
+        return nombre.includes(termino) || hc.includes(termino);
+      }).slice(0, 8);
+
+      if (!coincidencias.length) {
+        $sugerencias.html('<div class="list-group-item text-muted small">Sin coincidencias</div>').show();
+        return;
+      }
+
+      const html = coincidencias.map(p => {
+        const nombre = `${p.nombre || ''} ${p.apellido || ''}`.trim();
+        const hc = p.historia_clinica || p.pac_historia_clinica || '';
+        return `<button type="button" class="list-group-item list-group-item-action" data-id="${p.id_paciente}" data-nombre="${nombre}">
+          <strong>${nombre}</strong> <span class="text-muted small ms-2">${hc}</span>
+        </button>`;
+      }).join('');
+
+      $sugerencias.html(html).show();
+    });
+
+    $sugerencias.on('click', '.list-group-item-action', function () {
+      pacienteSeleccionado = { id: $(this).data('id'), nombre: $(this).data('nombre') };
+      $input.val($(this).data('nombre'));
+      $hidden.val($(this).data('id'));
+      $btnSel.prop('disabled', false);
+      $sugerencias.hide().empty();
+    });
+
+    $input.on('blur', () => setTimeout(() => $sugerencias.hide(), 150));
+
+    $btnSel.on('click', function () {
+      const idPac = parseInt($hidden.val());
+      if (!idPac) return;
+      cargarDatosPaciente(idPac);
+      $('#card-busqueda').hide();
+      $('#contenedor-pei').show();
+      $('#hidIdPacienteForm').val(idPac);
+    });
+  };
+
+  // ============================================================
+  // CARGAR DATOS DEL PACIENTE Y HISTORIAL
+  // ============================================================
+  const cargarDatosPaciente = (idPaciente) => {
+    fetch(`/api/v1/pei/paciente/${idPaciente}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const pei = data.data;
+          $('#lblPacienteNombre').text(pei.paciente_nombre);
+          $('#lblHistoriaClinica').text(pei.pac_historia_clinica || '—');
+          $('#lblEspecialista').text(pei.especialista_nombre);
+          $('#badgeVersion').text(`Versión vigente: v${pei.nro_version}`);
+          // Pre-llenar formulario con versión actual para facilitar la revisión
+          $('#txtObjetivos').val(pei.pei_objetivos || '');
+          $('#txtAreas').val(pei.pei_areas_intervencion || '');
+          $('#txtEstrategias').val(pei.pei_estrategias || '');
+          $('#txtCronograma').val(pei.pei_cronograma_seguimiento || '');
+          $('#selEstado').val(pei.pei_estado || 'ACTIVO');
+        } else {
+          // No tiene PEI aún — igual muestra el nombre si podemos
+          fetch(`/api/v1/pacientes/${idPaciente}`)
+            .then(r => r.json())
+            .then(pd => {
+              if (pd.success && pd.data) {
+                const p = pd.data;
+                const nombre = `${p.per_nombre || p.nombre || ''} ${p.per_apellido || p.apellido || ''}`.trim();
+                $('#lblPacienteNombre').text(nombre || '—');
+                $('#lblHistoriaClinica').text(p.pac_historia_clinica || '—');
+              }
+            });
+          $('#lblEspecialista').text('(será asignado al guardar)');
+          $('#badgeVersion').text('Sin PEI previo');
+        }
+      })
+      .catch(err => console.error('Error cargando PEI actual:', err));
+
+    fetch(`/api/v1/pei/paciente/${idPaciente}/historial`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success || !data.data.length) return;
+        let html = '<ul class="list-group list-group-flush">';
+        data.data.forEach(v => {
+          const badge = v.es_version_actual
+            ? '<span class="badge bg-success ms-2">Vigente</span>'
+            : '';
+          const estadoBadge = v.pei_estado === 'ACTIVO'
+            ? '<span class="badge border border-success text-success">Activo</span>'
+            : '<span class="badge border border-secondary text-secondary">Cerrado</span>';
+          html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><strong>v${v.nro_version}</strong>${badge} — ${v.especialista_nombre} — ${v.fecha_creacion}</span>
+            ${estadoBadge}
+          </li>`;
+        });
+        html += '</ul>';
+        $('#contenedorHistorial').html(html);
+      })
+      .catch(err => console.error('Error cargando historial PEI:', err));
+  };
+
+  // ============================================================
+  // GUARDAR NUEVA VERSIÓN
+  // ============================================================
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idPaciente = parseInt($('#hidIdPacienteForm').val());
+      if (!idPaciente) {
+        Swal.fire('Atención', 'No se determinó el paciente.', 'warning');
+        return;
+      }
+
+      const objetivos = $('#txtObjetivos').val().trim();
+      if (!objetivos) {
+        $('#txtObjetivos').addClass('is-invalid');
+        Swal.fire('Atención', 'Los objetivos son obligatorios.', 'warning');
+        return;
+      }
+      $('#txtObjetivos').removeClass('is-invalid');
+
+      const payload = {
+        pei_objetivos: objetivos,
+        pei_areas_intervencion: $('#txtAreas').val().trim() || null,
+        pei_estrategias: $('#txtEstrategias').val().trim() || null,
+        pei_cronograma_seguimiento: $('#txtCronograma').val().trim() || null,
+        pei_estado: $('#selEstado').val(),
+      };
+
+      const btn = $(this);
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
+
+      fetch(`/api/v1/pei/paciente/${idPaciente}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify(payload)
+      })
+        .then(r => r.json())
+        .then(data => {
+          btn.prop('disabled', false).text('Guardar versión');
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: '¡PEI guardado!',
+              text: 'La nueva versión del PEI fue registrada correctamente.',
+              confirmButtonText: 'Ir al Listado'
+            }).then(() => {
+              window.location.href = "{{ url_for('pei.peiIndex') }}";
+            });
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar el PEI.', 'error');
+          }
+        })
+        .catch(err => {
+          btn.prop('disabled', false).text('Guardar versión');
+          console.error('Error guardando PEI:', err);
+          Swal.fire('Error', 'Ocurrió un error al guardar.', 'error');
+        });
+    });
+  };
+
+  // ============================================================
+  // INICIALIZACIÓN
+  // ============================================================
+  $(document).ready(function () {
+    $('#btnCancelar').on('click', () => {
+      window.location.href = "{{ url_for('pei.peiIndex') }}";
+    });
+
+    guardar();
+
+    if (ID_PACIENTE_INICIAL) {
+      cargarDatosPaciente(ID_PACIENTE_INICIAL);
+    } else {
+      cargarPacientesCache();
+      bindBuscadorPaciente();
+    }
+  });
+</script>
+{% endblock %}

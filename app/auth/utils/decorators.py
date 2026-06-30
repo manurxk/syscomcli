@@ -8,7 +8,7 @@ def role_required(*roles):
     """Exige que el usuario tenga alguno de los roles indicados.
 
     Uso:
-        @role_required("ADMINISTRADOR", "RECEPCIONISTA")
+        @role_required("ADMINISTRADOR", "RECEPCION")
     """
 
     def decorator(view_func):

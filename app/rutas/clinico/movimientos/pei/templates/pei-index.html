@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block titulo %}PEI — Plan Educativo Individual{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Plan Educativo Individual (PEI)</h1>
+          <div class="page-header-subtitle">Gestión de planes de intervención psicológica por paciente</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">PEI vigentes</span>
+      <a href="{{ url_for('pei.peiAgregarNuevo') }}" class="btn btn-sm btn-primary ms-auto">Nuevo PEI</a>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Paciente</th>
+              <th>Historia clínica</th>
+              <th>Especialista</th>
+              <th>Versión</th>
+              <th>Estado</th>
+              <th>Fecha creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: '/api/v1/pei',
+        dataSrc: function (json) {
+          if (!json.success) { console.error('Error:', json.error); return []; }
+          return json.data;
+        }
+      },
+      columns: [
+        { data: 'paciente_nombre' },
+        { data: 'pac_historia_clinica', defaultContent: '<span class="text-muted">-</span>' },
+        { data: 'especialista_nombre' },
+        { data: 'nro_version', className: 'text-center' },
+        {
+          data: function (row) {
+            return row.pei_estado === 'ACTIVO'
+              ? '<span class="badge border border-success text-success">Activo</span>'
+              : '<span class="badge border border-secondary text-secondary">Cerrado</span>';
+          },
+          className: 'text-center'
+        },
+        { data: 'fecha_creacion' },
+        {
+          data: function (row) {
+            const urlBase = "{{ url_for('pei.peiAgregar', id_paciente=0) }}".replace(/0$/, row.id_paciente);
+            return `
+              <a href="${urlBase}" class="btn btn-datatable btn-icon btn-outline-primary me-1" title="Ver / Nueva versión">
+                <i class="fas fa-eye"></i>
+              </a>`;
+          },
+          className: 'text-center',
+          orderable: false
+        }
+      ],
+      order: [[0, 'asc']]
+    });
+  };
+
+  $(document).ready(function () {
+    initDatatable();
+  });
+</script>
+{% endblock %}

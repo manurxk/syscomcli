@@ -19,7 +19,7 @@ pacienteapi = Blueprint('pacienteapi', __name__)
 # GENERAR PDF DE PACIENTE
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>/pdf', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def generarPDF(pac_id):
     """Genera un PDF profesional con la ficha del paciente"""
     pacientedao = PacienteDao()
@@ -204,7 +204,7 @@ def generarPDF(pac_id):
 # GENERAR EXCEL DE PACIENTE
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>/excel', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def generarExcel(pac_id):
     """Genera un archivo Excel con los datos del paciente"""
     pacientedao = PacienteDao()
@@ -276,7 +276,7 @@ def generarExcel(pac_id):
 # OBTENER TODOS LOS PACIENTES
 # ============================================
 @pacienteapi.route('/pacientes', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getPacientes():
     """
     Obtiene la lista de pacientes con paginación opcional.
@@ -324,7 +324,7 @@ def getPacientes():
 # OBTENER SOLO PACIENTES MENORES
 # ============================================
 @pacienteapi.route('/pacientes/menores', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getPacientesMenores():
     """Obtiene solo los pacientes menores de edad (calculado automáticamente)"""
     pacientedao = PacienteDao()
@@ -350,7 +350,7 @@ def getPacientesMenores():
 # OBTENER PACIENTE POR ID
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getPaciente(pac_id):
     """Obtiene un paciente específico por su ID"""
     pacientedao = PacienteDao()
@@ -382,7 +382,7 @@ def getPaciente(pac_id):
 # OBTENER PACIENTE PARA EDITAR
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>/editar', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getPacienteParaEditar(pac_id):
     """Obtiene paciente con IDs originales para formulario de edición"""
     pacientedao = PacienteDao()
@@ -414,7 +414,7 @@ def getPacienteParaEditar(pac_id):
 # CREAR NUEVO PACIENTE
 # ============================================
 @pacienteapi.route('/pacientes', methods=['POST'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def addPaciente():
     """Crea un nuevo paciente con todos sus datos."""
     data = request.get_json()
@@ -485,7 +485,7 @@ def addPaciente():
 # ACTUALIZAR PACIENTE EXISTENTE
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def updatePaciente(pac_id):
     data = request.get_json()
     pacientedao = PacienteDao()

@@ -7,7 +7,7 @@ tipoprocedimientoapi = Blueprint('tipoprocedimientoapi', __name__)
 
 
 @tipoprocedimientoapi.route('/tipos-procedimientos', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposProcedimientos():
     try:
         data = TipoProcedimientoDao().getTiposProcedimientos()
@@ -18,7 +18,7 @@ def getTiposProcedimientos():
 
 
 @tipoprocedimientoapi.route('/tipos-procedimientos/<int:tipo_procedimiento_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoProcedimiento(tipo_procedimiento_id):
     try:
         registro = TipoProcedimientoDao().getTipoProcedimientoById(tipo_procedimiento_id)

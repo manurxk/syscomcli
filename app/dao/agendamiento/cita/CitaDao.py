@@ -6,6 +6,34 @@ class CitaDao(BaseDAO):
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
+    def getEspecialistaPorFuncionario(self, id_funcionario):
+        """Resuelve el id_especialista del usuario logueado a partir de session['id_funcionario'].
+        Reemplaza al helper legacy especialista_helper.py (usaba Conexion() vieja y
+        session['id_grupo'], que no existe en el modelo de roles nuevo)."""
+        sql = "SELECT id_especialista FROM especialistas WHERE id_funcionario = %s"
+        fila = self.execute_query_one(sql, (id_funcionario,))
+        return fila['id_especialista'] if fila else None
+
+    def getCitasHoyByEspecialista(self, id_especialista):
+        """Citas del día actual para un especialista — usada por la vista 'Mi Agenda'."""
+        sql = """
+            SELECT c.id_cita, c.id_paciente, pp.per_nombre AS paciente_nombre,
+                   pp.per_apellido AS paciente_apellido, pp.per_telefono AS paciente_telefono,
+                   p.pac_historia_clinica,
+                   TO_CHAR(c.cita_inicio, 'HH24:MI') AS cita_hora_inicio,
+                   TO_CHAR(c.cita_fin, 'HH24:MI') AS cita_hora_fin,
+                   c.cita_es_primera_vez, c.cita_numero_sesion, c.motivo AS cita_motivo,
+                   c.id_estado_cita, ec.cod_estado_cita, ec.des_estado_cita
+            FROM citas c
+            JOIN pacientes p ON c.id_paciente = p.id_paciente
+            JOIN personas pp ON p.id_persona = pp.id_persona
+            JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
+            WHERE c.id_especialista = %s AND c.est_cita = TRUE
+              AND c.cita_inicio >= CURRENT_DATE AND c.cita_inicio < CURRENT_DATE + INTERVAL '1 day'
+            ORDER BY c.cita_inicio
+        """
+        return self.execute_query(sql, (id_especialista,))
+
     def getEstadosCitas(self):
         sql = """
             SELECT id_estado_cita, cod_estado_cita, des_estado_cita, orden, es_final
@@ -22,7 +50,7 @@ class CitaDao(BaseDAO):
                    TO_CHAR(sa.slot_fin, 'YYYY-MM-DD HH24:MI') AS slot_fin
             FROM slots_agenda sa
             WHERE sa.estado_slot = 'DISPONIBLE'
-              AND sa.slot_inicio >= now()
+              AND sa.slot_inicio >= (now() AT TIME ZONE 'America/Asuncion') - INTERVAL '10 minutes'
               AND (%(id_especialista)s IS NULL OR sa.id_especialista = %(id_especialista)s)
               AND (%(desde)s IS NULL OR sa.slot_inicio >= %(desde)s::DATE)
               AND (%(hasta)s IS NULL OR sa.slot_inicio < (%(hasta)s::DATE + INTERVAL '1 day'))
@@ -373,6 +401,15 @@ class CitaDao(BaseDAO):
                 cur.execute(
                     "UPDATE citas SET id_slot_agenda = NULL WHERE id_cita = %s",
                     (id_cita,),
+                )
+
+            if cod_estado_nuevo == "COMPLETADA":
+                cur.execute(
+                    """
+                    UPDATE consultas SET consulta_estado = 'FINALIZADA', usuario_modificacion = %s
+                    WHERE id_cita = %s AND consulta_estado != 'FINALIZADA'
+                    """,
+                    (usuario_modificacion, id_cita),
                 )
 
             if cod_estado_nuevo == "CONFIRMADA":

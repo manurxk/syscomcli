@@ -217,10 +217,11 @@ Citas
               acciones += `<a class="btn btn-sm btn-outline-primary me-1" href="/agendamiento/citas/citas-agregar?id_cita=${row.id_cita}" title="Editar / Reprogramar"><i class="fas fa-edit me-1"></i>Editar</a>`;
             }
             opciones.forEach(([cod, label, icono, color], idx) => {
+              const nombreBtn = cod === 'EN_CONSULTA' ? 'btn_iniciar_consulta' : 'btn_cambiar_estado';
               if (idx === 0) {
-                acciones += `<button class="btn btn-sm btn-outline-${color} me-1" type="button" name="btn_cambiar_estado" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono} me-1"></i>${label}</button>`;
+                acciones += `<button class="btn btn-sm btn-outline-${color} me-1" type="button" name="${nombreBtn}" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono} me-1"></i>${label}</button>`;
               } else {
-                acciones += `<button class="btn btn-sm btn-icon btn-outline-${color} me-1" type="button" name="btn_cambiar_estado" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i><span class="visually-hidden">${label}</span></button>`;
+                acciones += `<button class="btn btn-sm btn-icon btn-outline-${color} me-1" type="button" name="${nombreBtn}" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i><span class="visually-hidden">${label}</span></button>`;
               }
             });
             return acciones;
@@ -395,11 +396,43 @@ Citas
     });
   };
 
+  // ==========================================
+  // INICIAR CONSULTA (crea/recupera la consulta vinculada; no redirige acá —
+  // quien atiende clínicamente entra por Mi Agenda, esta pantalla es de recepción/admin)
+  // ==========================================
+  const iniciarConsultaDesdeCita = () => {
+    $('#tbl').on('click', 'button[name="btn_iniciar_consulta"]', function () {
+      const idCita = $(this).data('id');
+      const $btn = $(this);
+      $btn.prop('disabled', true);
+
+      fetch(`/api/v1/citas/${idCita}/iniciar-consulta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire({ title: '¡Consulta iniciada!', icon: 'success', timer: 2000, showConfirmButton: false });
+            $('#tbl').DataTable().ajax.reload();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo iniciar la consulta.', 'error');
+            $btn.prop('disabled', false);
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Ocurrió un error al iniciar la consulta.', 'error');
+          $btn.prop('disabled', false);
+        });
+    });
+  };
+
   $(document).ready(function () {
     initDatatable();
     verLogsCita();
     verRecordatoriosCita();
     cambiarEstado();
+    iniciarConsultaDesdeCita();
   });
 </script>
 {% endblock %}

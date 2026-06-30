@@ -18,7 +18,7 @@ def build_sidebar():
             "html_icon": '<i data-feather="briefcase"></i>'
         })
 
-    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA"}:
+    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCION"}:
         items.append({
             "title": "Pacientes",
             "endpoint": "paciente.pacienteIndex",
@@ -40,14 +40,14 @@ def build_sidebar():
             "html_icon": '<i data-feather="calendar"></i>'
         })
 
-    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA"}:
+    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCION"}:
         agendamiento_items.append({
             "title": "Citas",
             "endpoint": "cita.citaIndex",
             "html_icon": '<i data-feather="clipboard"></i>'
         })
 
-    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCIONISTA"}:
+    if roles & {"ADMINISTRADOR", "SUPERADMIN", "RECEPCION"}:
         agendamiento_items.append({
             "title": "Lista de Espera",
             "endpoint": "lista_espera.listaEsperaIndex",
@@ -57,9 +57,24 @@ def build_sidebar():
     clinico_items = []
     if roles & {"ADMINISTRADOR", "SUPERADMIN", "CLINICO"}:
         clinico_items.append({
+            "title": "Mi Agenda",
+            "endpoint": "mi_agenda.miAgendaIndex",
+            "html_icon": '<i data-feather="calendar"></i>'
+        })
+        clinico_items.append({
             "title": "Consultas",
             "endpoint": "consulta.consultaIndex",
             "html_icon": '<i data-feather="file-text"></i>'
+        })
+        clinico_items.append({
+            "title": "PEI",
+            "endpoint": "pei.peiIndex",
+            "html_icon": '<i data-feather="book-open"></i>'
+        })
+        clinico_items.append({
+            "title": "Fichas Médicas",
+            "endpoint": "ficha.fichaIndex",
+            "html_icon": '<i data-feather="clipboard"></i>'
         })
 
     config_items = []
