@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block titulo %}Arqueos de Caja{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Arqueos de Caja</h1>
+          <div class="page-header-subtitle">Recuento físico vs saldo esperado del sistema</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('arqueo_caja.arqueoAgregar') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i>Nuevo Arqueo
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Lista de Arqueos</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblArqueos">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Número</th>
+              <th>Caja</th>
+              <th>Fecha arqueo</th>
+              <th>Monto esperado</th>
+              <th>Monto real</th>
+              <th>Diferencia</th>
+              <th>Estado</th>
+              <th>Apertura</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<div class="modal fade" id="modalDetalleArqueo" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle de Arqueo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="cuerpoDetalleArqueo">
+        <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}";
+
+const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
+
+const badgeEstado = est => {
+  const map = { CONCILIADO: 'success', CON_DIFERENCIA: 'danger' };
+  return `<span class="badge bg-${map[est]||'secondary'}">${est.replace('_',' ')}</span>`;
+};
+
+$('#tblArqueos').DataTable({
+  language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+  ajax: {
+    url: '/api/v1/arqueos',
+    dataSrc: json => json.success ? json.data : []
+  },
+  columns: [
+    { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
+    { data: 'arqueo_numero' },
+    { data: 'caja' },
+    { data: 'fecha_arqueo' },
+    { data: row => 'Gs. ' + fmt(row.monto_esperado), className: 'text-end' },
+    { data: row => 'Gs. ' + fmt(row.monto_real), className: 'text-end' },
+    {
+      data: row => {
+        const dif = parseFloat(row.diferencia || 0);
+        const cls = dif < 0 ? 'text-danger' : dif > 0 ? 'text-warning' : 'text-success';
+        return `<span class="${cls} fw-bold">Gs. ${fmt(dif)}</span>`;
+      },
+      className: 'text-end'
+    },
+    { data: row => badgeEstado(row.est_arqueo), className: 'text-center' },
+    { data: 'fecha_apertura' },
+    {
+      data: row => `
+        <button class="btn btn-datatable btn-icon btn-outline-primary" onclick="verDetalle(${row.id_arqueo})" title="Ver detalle">
+          <i class="fas fa-eye"></i>
+        </button>`,
+      className: 'text-center', orderable: false
+    }
+  ],
+  order: [[3, 'desc']]
+});
+
+async function verDetalle(idArqueo) {
+  document.getElementById('cuerpoDetalleArqueo').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+  new bootstrap.Modal(document.getElementById('modalDetalleArqueo')).show();
+  try {
+    const res = await fetch(`/api/v1/arqueos/${idArqueo}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    const d = json.data;
+    const dif = parseFloat(d.diferencia || 0);
+    const difCls = dif < 0 ? 'text-danger' : dif > 0 ? 'text-warning' : 'text-success';
+    document.getElementById('cuerpoDetalleArqueo').innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="small text-muted">Número arqueo</label>
+          <p class="fw-bold">${d.arqueo_numero}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="small text-muted">Fecha arqueo</label>
+          <p class="fw-bold">${d.fecha_arqueo}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="small text-muted">Caja</label>
+          <p class="fw-bold">${d.caja}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="small text-muted">Apertura asociada</label>
+          <p class="fw-bold">${d.fecha_apertura || '—'}</p>
+        </div>
+        <div class="col-md-4">
+          <label class="small text-muted">Monto esperado</label>
+          <p class="fw-bold">Gs. ${fmt(d.monto_esperado)}</p>
+        </div>
+        <div class="col-md-4">
+          <label class="small text-muted">Monto real</label>
+          <p class="fw-bold">Gs. ${fmt(d.monto_real)}</p>
+        </div>
+        <div class="col-md-4">
+          <label class="small text-muted">Diferencia</label>
+          <p class="fw-bold ${difCls}">Gs. ${fmt(d.diferencia)}</p>
+        </div>
+        <div class="col-12">
+          <label class="small text-muted">Estado</label><br>
+          <span class="badge bg-${d.est_arqueo==='CONCILIADO'?'success':'danger'}">${d.est_arqueo.replace('_',' ')}</span>
+        </div>
+        ${d.observaciones ? `<div class="col-12"><label class="small text-muted">Observaciones</label><p>${d.observaciones}</p></div>` : ''}
+      </div>`;
+  } catch(e) {
+    document.getElementById('cuerpoDetalleArqueo').innerHTML = '<p class="text-danger">No se pudo cargar el detalle.</p>';
+  }
+}
+</script>
+{% endblock %}

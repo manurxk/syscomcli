@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block titulo %}Facturas{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Facturas</h1>
+          <div class="page-header-subtitle">Listado de comprobantes emitidos</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-primary btn-sm" href="{{ url_for('factura.facturaAgregar') }}">Nueva Factura</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Comprobantes emitidos</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>N° Factura</th><th>Paciente</th><th>Cédula</th>
+              <th>Fecha</th><th>Condición</th><th>Total (Gs.)</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="tituloDetalle">Detalle de Factura</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6"><strong>Paciente:</strong> <span id="dlPaciente"></span></div>
+          <div class="col-md-3"><strong>Fecha:</strong> <span id="dlFecha"></span></div>
+          <div class="col-md-3"><strong>Condición:</strong> <span id="dlCondicion"></span></div>
+        </div>
+        <div class="table-responsive mb-3">
+          <table class="table table-sm table-bordered align-middle" id="tblDetalle">
+            <thead class="table-light">
+              <tr><th>Descripción</th><th>Cant.</th><th>Precio c/IVA</th><th>IVA %</th><th>IVA Gs.</th><th>Total</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="row justify-content-end">
+          <div class="col-md-4">
+            <table class="table table-sm">
+              <tr><td class="text-muted">Subtotal</td><td class="text-end fw-bold" id="dlSubtotal"></td></tr>
+              <tr><td class="text-muted">IVA</td><td class="text-end fw-bold" id="dlIva"></td></tr>
+              <tr><td class="text-muted">Descuento</td><td class="text-end fw-bold text-danger" id="dlDescuento"></td></tr>
+              <tr class="table-primary"><td class="fw-bold">TOTAL</td><td class="text-end fw-bold" id="dlTotal"></td></tr>
+            </table>
+            <p class="text-muted small" id="dlLetras"></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/facturas';
+let tbl, facturaActual;
+
+function fmt(n) { return Number(n || 0).toLocaleString('es-PY'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    order: [[0, 'desc']],
+    columns: [
+      { data: 'id_factura' },
+      { data: 'factura_numero' },
+      { data: 'paciente_nombre' },
+      { data: 'paciente_cedula' },
+      { data: 'fecha_factura_fmt' },
+      { data: 'des_condicion_venta' },
+      { data: 'factura_total', render: v => fmt(v) },
+      { data: 'des_estado_factura', render: v => {
+          const cls = v === 'EMITIDA' ? 'success' : v === 'ANULADA' ? 'danger' : 'secondary';
+          return `<span class="badge bg-${cls}">${v}</span>`;
+        }
+      },
+      { data: null, orderable: false, render: row =>
+          `<button class="btn btn-xs btn-info" onclick="verDetalle(${row.id_factura})">
+             <i data-feather="eye" class="icon-xs"></i>
+           </button>` }
+    ]
+  });
+  cargar();
+  document.getElementById('btnAnular').addEventListener('click', anular);
+});
+
+async function cargar() {
+  const r = await fetch(API);
+  const j = await r.json();
+  tbl.clear().rows.add(j.data || []).draw();
+  feather.replace();
+}
+
+async function verDetalle(id) {
+  const r = await fetch(`${API}/${id}`);
+  const j = await r.json();
+  if (!j.success) return alert(j.error);
+  const d = j.data;
+  facturaActual = d;
+
+  document.getElementById('tituloDetalle').textContent = `Factura ${d.factura_numero}`;
+  document.getElementById('dlPaciente').textContent = d.paciente_nombre || '';
+  document.getElementById('dlFecha').textContent = d.fecha_factura || '';
+  document.getElementById('dlCondicion').textContent = d.des_condicion_venta || '';
+  document.getElementById('dlSubtotal').textContent = 'Gs. ' + fmt(d.factura_subtotal);
+  document.getElementById('dlIva').textContent = 'Gs. ' + fmt(d.factura_impuestos);
+  document.getElementById('dlDescuento').textContent = 'Gs. ' + fmt(d.factura_descuento);
+  document.getElementById('dlTotal').textContent = 'Gs. ' + fmt(d.factura_total);
+  document.getElementById('dlLetras').textContent = d.factura_total_letras || '';
+
+  const tbody = document.querySelector('#tblDetalle tbody');
+  tbody.innerHTML = '';
+  (d.detalle || []).forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${item.item_descripcion}</td>
+      <td class="text-center">${item.item_cantidad}</td>
+      <td class="text-end">Gs. ${fmt(item.item_precio_con_iva)}</td>
+      <td class="text-center">${item.impuesto_porcentaje}%</td>
+      <td class="text-end">Gs. ${fmt(item.impuesto_monto)}</td>
+      <td class="text-end fw-bold">Gs. ${fmt(item.item_total)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  const btnAnular = document.getElementById('btnAnular');
+  btnAnular.classList.toggle('d-none', d.des_estado_factura === 'ANULADA');
+
+  new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+}
+
+async function anular() {
+  if (!facturaActual || !confirm(`¿Anular la factura ${facturaActual.factura_numero}? Esta acción no se puede revertir.`)) return;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}/${facturaActual.id_factura}/anular`, {
+    method: 'PUT',
+    headers: { 'X-CSRFToken': csrf }
+  });
+  const j = await r.json();
+  if (j.success) {
+    bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+    cargar();
+  } else {
+    alert(j.error || 'No se pudo anular.');
+  }
+}
+</script>
+{% endblock %}

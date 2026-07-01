@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block titulo %}Historial de Caja{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Historial de Caja</h1>
+          <div class="page-header-subtitle">Registro de aperturas y cierres</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('apertura_cierre_caja.cajaEstado') }}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-cash-register me-1"></i>Estado actual
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+      <span class="fw-bold">Aperturas y Cierres</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblHistorial">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Caja</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Saldo Inicial</th>
+              <th>Saldo Final</th>
+              <th>Efectivo</th>
+              <th>Cheques</th>
+              <th>Tarjetas</th>
+              <th>Transferencias</th>
+              <th>Estado</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}";
+
+const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
+
+const badgeTipo = tipo => {
+  const map = { APERTURA: 'success', CIERRE: 'danger' };
+  return `<span class="badge bg-${map[tipo]||'secondary'}">${tipo}</span>`;
+};
+
+const badgeEstado = est => {
+  return est === 'A'
+    ? '<span class="badge bg-success">ACTIVA</span>'
+    : '<span class="badge bg-secondary">CERRADA</span>';
+};
+
+$('#tblHistorial').DataTable({
+  language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+  ajax: {
+    url: '/api/v1/aperturas-cierres',
+    dataSrc: json => json.success ? json.data : []
+  },
+  columns: [
+    { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
+    { data: 'des_caja' },
+    { data: row => badgeTipo(row.tipo_operacion), className: 'text-center' },
+    { data: 'fecha_operacion' },
+    { data: row => 'Gs. ' + fmt(row.saldo_inicial), className: 'text-end' },
+    { data: row => row.saldo_final != null ? 'Gs. ' + fmt(row.saldo_final) : '<span class="text-muted">—</span>', className: 'text-end' },
+    { data: row => 'Gs. ' + fmt(row.monto_efectivo), className: 'text-end' },
+    { data: row => 'Gs. ' + fmt(row.monto_cheques), className: 'text-end' },
+    { data: row => 'Gs. ' + fmt(row.monto_tarjetas), className: 'text-end' },
+    { data: row => 'Gs. ' + fmt(row.monto_transferencias), className: 'text-end' },
+    { data: row => badgeEstado(row.est_apertura_cierre), className: 'text-center' },
+    { data: 'usuario' },
+  ],
+  order: [[3, 'desc']]
+});
+</script>
+{% endblock %}

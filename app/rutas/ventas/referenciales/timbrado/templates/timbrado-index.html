@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block titulo %}Timbrados{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Gestión de Timbrados</h1>
+          <div class="page-header-subtitle">Configuración de timbrados SET para facturación</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Listado de Timbrados</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnAgregar">Agregar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>N° Timbrado</th><th>Cód. Establecimiento</th>
+              <th>Vigencia desde</th><th>Vigencia hasta</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Timbrado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="txtId">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="fw-semibold">N° Timbrado SET <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtNumero" placeholder="12345678" maxlength="8">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Cód. Establecimiento <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtCodEstab" placeholder="001" maxlength="3" value="001">
+          </div>
+          <div class="col-md-6">
+            <label class="fw-semibold">Fecha inicio <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="txtFechaInicio">
+          </div>
+          <div class="col-md-6">
+            <label class="fw-semibold">Fecha vencimiento <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="txtFechaVenc">
+          </div>
+          <div class="col-12">
+            <label class="fw-semibold">Observaciones</label>
+            <textarea class="form-control" id="txtObservaciones" rows="2"></textarea>
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+              <label class="form-check-label fw-semibold" for="chkEstado">Activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnGuardar">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/timbrados';
+let tbl;
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    columns: [
+      { data: 'id_timbrado' },
+      { data: 'numero_timbrado' },
+      { data: 'codigo_establecimiento' },
+      { data: 'fecha_inicio' },
+      { data: 'fecha_vencimiento' },
+      { data: 'est_timbrado', render: v => v
+        ? '<span class="badge bg-success">Activo</span>'
+        : '<span class="badge bg-secondary">Inactivo</span>' },
+      { data: null, orderable: false, render: row =>
+        `<button class="btn btn-xs btn-warning me-1" onclick="editar(${row.id_timbrado})"><i data-feather="edit-2" class="icon-xs"></i></button>
+         <button class="btn btn-xs btn-danger" onclick="eliminar(${row.id_timbrado})"><i data-feather="trash-2" class="icon-xs"></i></button>` }
+    ]
+  });
+  cargar();
+  document.getElementById('btnAgregar').addEventListener('click', abrirNuevo);
+  document.getElementById('btnGuardar').addEventListener('click', guardar);
+});
+
+async function cargar() {
+  const r = await fetch(API);
+  const j = await r.json();
+  tbl.clear().rows.add(j.data || []).draw();
+  feather.replace();
+}
+
+function abrirNuevo() {
+  document.getElementById('txtId').value = '';
+  document.getElementById('txtNumero').value = '';
+  document.getElementById('txtCodEstab').value = '001';
+  document.getElementById('txtFechaInicio').value = '';
+  document.getElementById('txtFechaVenc').value = '';
+  document.getElementById('txtObservaciones').value = '';
+  document.getElementById('chkEstado').checked = true;
+  document.getElementById('modalTitle').textContent = 'Nuevo Timbrado';
+  new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+}
+
+async function editar(id) {
+  const r = await fetch(`${API}/${id}`);
+  const j = await r.json();
+  if (!j.success) return alert(j.error);
+  const d = j.data;
+  document.getElementById('txtId').value = d.id_timbrado;
+  document.getElementById('txtNumero').value = d.numero_timbrado || '';
+  document.getElementById('txtCodEstab').value = d.codigo_establecimiento || '001';
+  document.getElementById('txtFechaInicio').value = d.fecha_inicio || '';
+  document.getElementById('txtFechaVenc').value = d.fecha_vencimiento || '';
+  document.getElementById('txtObservaciones').value = d.observaciones || '';
+  document.getElementById('chkEstado').checked = d.est_timbrado;
+  document.getElementById('modalTitle').textContent = 'Editar Timbrado';
+  new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+}
+
+async function guardar() {
+  const id = document.getElementById('txtId').value;
+  const body = {
+    numero_timbrado: document.getElementById('txtNumero').value.trim(),
+    codigo_establecimiento: document.getElementById('txtCodEstab').value.trim(),
+    fecha_inicio: document.getElementById('txtFechaInicio').value,
+    fecha_vencimiento: document.getElementById('txtFechaVenc').value,
+    observaciones: document.getElementById('txtObservaciones').value.trim(),
+    est_timbrado: document.getElementById('chkEstado').checked
+  };
+  const url = id ? `${API}/${id}` : API;
+  const method = id ? 'PUT' : 'POST';
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body: JSON.stringify(body)
+  });
+  const j = await r.json();
+  if (j.success) {
+    bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide();
+    cargar();
+  } else {
+    alert(j.error || 'Error al guardar.');
+  }
+}
+
+async function eliminar(id) {
+  if (!confirm('¿Desactivar este timbrado?')) return;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}/${id}`, { method: 'DELETE', headers: { 'X-CSRFToken': csrf } });
+  const j = await r.json();
+  if (j.success) cargar();
+  else alert(j.error || 'No se pudo desactivar.');
+}
+</script>
+{% endblock %}

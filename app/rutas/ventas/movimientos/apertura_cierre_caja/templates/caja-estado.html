@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% block titulo %}Estado de Cajas{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Estado de Cajas</h1>
+          <div class="page-header-subtitle">Apertura y cierre de caja operacional</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('apertura_cierre_caja.cajaHistorial') }}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-history me-1"></i>Ver Historial
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div id="spinner-cajas" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-2 text-muted">Cargando estado de cajas...</p>
+  </div>
+
+  <div id="contenedor-cajas" class="row g-4" style="display:none;"></div>
+
+  <div id="sin-cajas" style="display:none;" class="text-center py-5 text-muted">
+    <i class="fas fa-cash-register fa-3x mb-3"></i>
+    <p>No hay cajas configuradas. Agregue cajas en <a href="/ventas/referenciales/caja/caja-index">Referenciales → Cajas</a>.</p>
+  </div>
+
+</div>
+
+<!-- Modal: Abrir Caja -->
+<div class="modal fade" id="modalAbrirCaja" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fas fa-lock-open me-2"></i>Abrir Caja</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="abrirIdCaja">
+        <p class="fw-bold mb-3" id="abrirNombreCaja">—</p>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Saldo Inicial (Gs.)</label>
+          <input type="number" class="form-control" id="abrirSaldoInicial" value="0" min="0" step="1000">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Observaciones</label>
+          <textarea class="form-control" id="abrirObservaciones" rows="2" placeholder="Opcional"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnConfirmarApertura">
+          <span id="spinnerApertura" class="spinner-border spinner-border-sm me-1 d-none"></span>
+          Abrir Caja
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cerrar Caja -->
+<div class="modal fade" id="modalCerrarCaja" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fas fa-lock me-2"></i>Cerrar Caja</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cerrarIdCaja">
+        <p class="fw-bold mb-3" id="cerrarNombreCaja">—</p>
+
+        <div class="alert alert-info py-2 mb-3" id="resumenSaldo">
+          <div class="row text-center">
+            <div class="col-6 col-md-3">
+              <div class="small text-muted">Saldo Inicial</div>
+              <div class="fw-bold" id="lblSaldoInicial">—</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="small text-muted">Efectivo cobrado</div>
+              <div class="fw-bold text-success" id="lblEfectivoCobrado">—</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="small text-muted">Otros cobros</div>
+              <div class="fw-bold text-info" id="lblOtrosCobrados">—</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="small text-muted">Saldo Esperado</div>
+              <div class="fw-bold text-primary fs-5" id="lblSaldoEsperado">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Saldo Final (Gs.) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="cerrarSaldoFinal" min="0" step="1000" placeholder="Total en caja">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Efectivo (Gs.)</label>
+            <input type="number" class="form-control" id="cerrarMontoEfectivo" value="0" min="0" step="1000">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Cheques (Gs.)</label>
+            <input type="number" class="form-control" id="cerrarMontoCheques" value="0" min="0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Tarjetas (Gs.)</label>
+            <input type="number" class="form-control" id="cerrarMontoTarjetas" value="0" min="0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Transferencias (Gs.)</label>
+            <input type="number" class="form-control" id="cerrarMontoTransferencias" value="0" min="0">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Observaciones</label>
+            <textarea class="form-control" id="cerrarObservaciones" rows="2" placeholder="Opcional"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger btn-sm" id="btnConfirmarCierre">
+          <span id="spinnerCierre" class="spinner-border spinner-border-sm me-1 d-none"></span>
+          Cerrar Caja
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}";
+
+const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
+
+async function cargarCajas() {
+  const res = await fetch('/api/v1/cajas-estado');
+  const json = await res.json();
+  document.getElementById('spinner-cajas').style.display = 'none';
+
+  if (!json.success || !json.data.length) {
+    document.getElementById('sin-cajas').style.display = '';
+    return;
+  }
+
+  const cont = document.getElementById('contenedor-cajas');
+  cont.style.display = '';
+  cont.innerHTML = json.data.map(c => {
+    const abierta = c.caja_estado === 'ABIERTA';
+    const badgeClass = abierta ? 'bg-success' : 'bg-secondary';
+    const badgeText = abierta ? 'ABIERTA' : 'CERRADA';
+    const borderClass = abierta ? 'border-start-success' : 'border-start-secondary';
+    const btnAccion = abierta
+      ? `<button class="btn btn-danger btn-sm w-100" onclick="prepararCierre(${c.id_caja},'${c.des_caja}')">
+           <i class="fas fa-lock me-1"></i>Cerrar Caja
+         </button>`
+      : `<button class="btn btn-success btn-sm w-100" onclick="prepararApertura(${c.id_caja},'${c.des_caja}')">
+           <i class="fas fa-lock-open me-1"></i>Abrir Caja
+         </button>`;
+    const infoApertura = abierta && c.fecha_apertura
+      ? `<div class="small text-muted mt-2">Abierta: ${c.fecha_apertura} — ${c.usuario_apertura || ''}</div>`
+      : '';
+    return `
+      <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm ${borderClass} mb-0">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0">${c.des_caja}</h6>
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+            ${abierta ? `<div class="small mb-1"><span class="text-muted">Saldo inicial:</span> <span class="fw-bold">Gs. ${fmt(c.saldo_inicial)}</span></div>` : ''}
+            ${infoApertura}
+            <div class="mt-3">${btnAccion}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function prepararApertura(idCaja, nomCaja) {
+  document.getElementById('abrirIdCaja').value = idCaja;
+  document.getElementById('abrirNombreCaja').textContent = nomCaja;
+  document.getElementById('abrirSaldoInicial').value = 0;
+  document.getElementById('abrirObservaciones').value = '';
+  new bootstrap.Modal(document.getElementById('modalAbrirCaja')).show();
+}
+
+async function prepararCierre(idCaja, nomCaja) {
+  document.getElementById('cerrarIdCaja').value = idCaja;
+  document.getElementById('cerrarNombreCaja').textContent = nomCaja;
+  document.getElementById('cerrarSaldoFinal').value = '';
+  document.getElementById('cerrarMontoEfectivo').value = 0;
+  document.getElementById('cerrarMontoCheques').value = 0;
+  document.getElementById('cerrarMontoTarjetas').value = 0;
+  document.getElementById('cerrarMontoTransferencias').value = 0;
+  document.getElementById('cerrarObservaciones').value = '';
+
+  document.getElementById('lblSaldoInicial').textContent = '...';
+  document.getElementById('lblEfectivoCobrado').textContent = '...';
+  document.getElementById('lblOtrosCobrados').textContent = '...';
+  document.getElementById('lblSaldoEsperado').textContent = '...';
+
+  new bootstrap.Modal(document.getElementById('modalCerrarCaja')).show();
+
+  try {
+    const res = await fetch(`/api/v1/cajas/${idCaja}/saldo-esperado`);
+    const json = await res.json();
+    if (json.success) {
+      const d = json.data;
+      document.getElementById('lblSaldoInicial').textContent = 'Gs. ' + fmt(d.saldo_inicial);
+      document.getElementById('lblEfectivoCobrado').textContent = 'Gs. ' + fmt(d.total_efectivo);
+      document.getElementById('lblOtrosCobrados').textContent = 'Gs. ' + fmt((d.total_cheques||0)+(d.total_tarjetas||0)+(d.total_transferencias||0));
+      document.getElementById('lblSaldoEsperado').textContent = 'Gs. ' + fmt(d.saldo_esperado);
+      document.getElementById('cerrarMontoEfectivo').value = d.total_efectivo || 0;
+      document.getElementById('cerrarMontoCheques').value = d.total_cheques || 0;
+      document.getElementById('cerrarMontoTarjetas').value = d.total_tarjetas || 0;
+      document.getElementById('cerrarMontoTransferencias').value = d.total_transferencias || 0;
+      document.getElementById('cerrarSaldoFinal').value = d.saldo_esperado || 0;
+    }
+  } catch(e) {
+    document.getElementById('lblSaldoEsperado').textContent = 'Error al calcular';
+  }
+}
+
+document.getElementById('btnConfirmarApertura').addEventListener('click', async () => {
+  const idCaja = document.getElementById('abrirIdCaja').value;
+  const spin = document.getElementById('spinnerApertura');
+  spin.classList.remove('d-none');
+  try {
+    const res = await fetch('/api/v1/apertura-caja', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken},
+      body: JSON.stringify({
+        id_caja: parseInt(idCaja),
+        saldo_inicial: parseFloat(document.getElementById('abrirSaldoInicial').value) || 0,
+        observaciones: document.getElementById('abrirObservaciones').value,
+      })
+    });
+    const json = await res.json();
+    bootstrap.Modal.getInstance(document.getElementById('modalAbrirCaja')).hide();
+    if (json.success) {
+      Swal.fire({icon:'success', title:'Caja abierta', text:'La apertura fue registrada correctamente.', timer:2000, showConfirmButton:false})
+        .then(() => cargarCajas());
+    } else {
+      Swal.fire({icon:'error', title:'Error', text: json.error || 'No se pudo abrir la caja.'});
+    }
+  } catch(e) {
+    Swal.fire({icon:'error', title:'Error', text:'Ocurrió un error inesperado.'});
+  } finally {
+    spin.classList.add('d-none');
+  }
+});
+
+document.getElementById('btnConfirmarCierre').addEventListener('click', async () => {
+  const idCaja = document.getElementById('cerrarIdCaja').value;
+  const saldoFinal = document.getElementById('cerrarSaldoFinal').value;
+  if (!saldoFinal && saldoFinal !== '0') {
+    Swal.fire({icon:'warning', title:'Dato requerido', text:'Ingresá el saldo final de la caja.'});
+    return;
+  }
+  const spin = document.getElementById('spinnerCierre');
+  spin.classList.remove('d-none');
+  try {
+    const res = await fetch('/api/v1/cierre-caja', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken},
+      body: JSON.stringify({
+        id_caja: parseInt(idCaja),
+        saldo_final: parseFloat(saldoFinal),
+        monto_efectivo: parseFloat(document.getElementById('cerrarMontoEfectivo').value) || 0,
+        monto_cheques: parseFloat(document.getElementById('cerrarMontoCheques').value) || 0,
+        monto_tarjetas: parseFloat(document.getElementById('cerrarMontoTarjetas').value) || 0,
+        monto_transferencias: parseFloat(document.getElementById('cerrarMontoTransferencias').value) || 0,
+        observaciones: document.getElementById('cerrarObservaciones').value,
+      })
+    });
+    const json = await res.json();
+    bootstrap.Modal.getInstance(document.getElementById('modalCerrarCaja')).hide();
+    if (json.success) {
+      Swal.fire({icon:'success', title:'Caja cerrada', text:'El cierre fue registrado correctamente.', timer:2000, showConfirmButton:false})
+        .then(() => cargarCajas());
+    } else {
+      Swal.fire({icon:'error', title:'Error', text: json.error || 'No se pudo cerrar la caja.'});
+    }
+  } catch(e) {
+    Swal.fire({icon:'error', title:'Error', text:'Ocurrió un error inesperado.'});
+  } finally {
+    spin.classList.add('d-none');
+  }
+});
+
+cargarCajas();
+</script>
+{% endblock %}

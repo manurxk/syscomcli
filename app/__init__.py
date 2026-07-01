@@ -95,6 +95,16 @@ from app.rutas.ventas.movimientos.pedido.pedido_routes import pedidomod
 from app.rutas.ventas.movimientos.pedido.pedido_api import pedidoapi
 from app.rutas.ventas.movimientos.presupuesto.presupuesto_routes import presupuestomod
 from app.rutas.ventas.movimientos.presupuesto.presupuesto_api import presupuestoapi
+from app.rutas.ventas.movimientos.apertura_cierre_caja.apertura_cierre_caja_routes import aperturacierrecajamod
+from app.rutas.ventas.movimientos.apertura_cierre_caja.apertura_cierre_caja_api import aperturacierrecajaapi
+from app.rutas.ventas.movimientos.arqueo_caja.arqueo_caja_routes import arqueocajamod
+from app.rutas.ventas.movimientos.arqueo_caja.arqueo_caja_api import arqueocajaapi
+from app.rutas.ventas.referenciales.timbrado.timbrado_routes import timbradomod
+from app.rutas.ventas.referenciales.timbrado.timbrado_api import timbradoapi
+from app.rutas.ventas.referenciales.punto_expedicion.punto_expedicion_routes import puntoexpedicionmod
+from app.rutas.ventas.referenciales.punto_expedicion.punto_expedicion_api import puntoexpedicionapi
+from app.rutas.ventas.movimientos.factura.factura_routes import facturamod
+from app.rutas.ventas.movimientos.factura.factura_api import facturaapi
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -204,6 +214,16 @@ app.register_blueprint(pedidomod, url_prefix='/ventas/movimientos/pedido')
 app.register_blueprint(pedidoapi, url_prefix='/api/v1')
 app.register_blueprint(presupuestomod, url_prefix='/ventas/movimientos/presupuesto')
 app.register_blueprint(presupuestoapi, url_prefix='/api/v1')
+app.register_blueprint(aperturacierrecajamod, url_prefix='/ventas/movimientos/caja')
+app.register_blueprint(aperturacierrecajaapi, url_prefix='/api/v1')
+app.register_blueprint(arqueocajamod, url_prefix='/ventas/movimientos/arqueo-caja')
+app.register_blueprint(arqueocajaapi, url_prefix='/api/v1')
+app.register_blueprint(timbradomod, url_prefix='/ventas/referenciales/timbrado')
+app.register_blueprint(timbradoapi, url_prefix='/api/v1')
+app.register_blueprint(puntoexpedicionmod, url_prefix='/ventas/referenciales/punto-expedicion')
+app.register_blueprint(puntoexpedicionapi, url_prefix='/api/v1')
+app.register_blueprint(facturamod, url_prefix='/ventas/movimientos/factura')
+app.register_blueprint(facturaapi, url_prefix='/api/v1')
 
 # Context processors y helpers de template
 init_context_processors(app)

@@ -89,6 +89,21 @@ def build_sidebar():
             "endpoint": "presupuesto.presupuestoIndex",
             "html_icon": '<i data-feather="file-text"></i>'
         })
+        ventas_items.append({
+            "title": "Estado de Caja",
+            "endpoint": "apertura_cierre_caja.cajaEstado",
+            "html_icon": '<i data-feather="unlock"></i>'
+        })
+        ventas_items.append({
+            "title": "Historial de Caja",
+            "endpoint": "apertura_cierre_caja.cajaHistorial",
+            "html_icon": '<i data-feather="clock"></i>'
+        })
+        ventas_items.append({
+            "title": "Arqueos de Caja",
+            "endpoint": "arqueo_caja.arqueoIndex",
+            "html_icon": '<i data-feather="check-square"></i>'
+        })
 
     config_items = []
     if roles & {"ADMINISTRADOR", "SUPERADMIN"}:

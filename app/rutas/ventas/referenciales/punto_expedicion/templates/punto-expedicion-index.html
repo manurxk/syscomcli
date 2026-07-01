@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block titulo %}Puntos de Expedición{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Puntos de Expedición</h1>
+          <div class="page-header-subtitle">Configuración de puntos de emisión de comprobantes</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Listado de Puntos de Expedición</h6>
+      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnAgregar">Agregar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>Timbrado</th><th>Cód. Punto</th><th>Nombre</th>
+              <th>Último N°</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Punto de Expedición</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="txtId">
+        <input type="hidden" id="hidIdTimbrado">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Timbrado <span class="text-danger">*</span></label>
+            <select class="form-select" id="selTimbrado"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Código (3 dígitos) <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtCodigo" placeholder="001" maxlength="3">
+          </div>
+          <div class="col-md-8">
+            <label class="fw-semibold">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtNombre" placeholder="Caja 1 / Consultorio Principal">
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="chkEstado" checked>
+              <label class="form-check-label fw-semibold" for="chkEstado">Activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnGuardar">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/puntos-expedicion';
+const API_TIM = '/api/v1/timbrados';
+let tbl;
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    columns: [
+      { data: 'id_punto_expedicion' },
+      { data: 'numero_timbrado' },
+      { data: 'codigo_punto_expedicion' },
+      { data: 'nombre_punto_expedicion' },
+      { data: 'ultimo_numero_usado' },
+      { data: 'est_punto_expedicion', render: v => v
+        ? '<span class="badge bg-success">Activo</span>'
+        : '<span class="badge bg-secondary">Inactivo</span>' },
+      { data: null, orderable: false, render: row =>
+        `<button class="btn btn-xs btn-warning me-1" onclick="editar(${row.id_punto_expedicion})"><i data-feather="edit-2" class="icon-xs"></i></button>
+         <button class="btn btn-xs btn-danger" onclick="eliminar(${row.id_punto_expedicion})"><i data-feather="trash-2" class="icon-xs"></i></button>` }
+    ]
+  });
+  cargar();
+  document.getElementById('btnAgregar').addEventListener('click', abrirNuevo);
+  document.getElementById('btnGuardar').addEventListener('click', guardar);
+});
+
+async function cargarTimbrados(selId = null) {
+  const r = await fetch(API_TIM);
+  const j = await r.json();
+  const sel = document.getElementById('selTimbrado');
+  sel.innerHTML = '<option value="">Seleccioná un timbrado...</option>';
+  (j.data || []).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id_timbrado;
+    opt.textContent = `${t.numero_timbrado} (estab. ${t.codigo_establecimiento})`;
+    if (selId && t.id_timbrado == selId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+async function cargar() {
+  const r = await fetch(API);
+  const j = await r.json();
+  tbl.clear().rows.add(j.data || []).draw();
+  feather.replace();
+}
+
+async function abrirNuevo() {
+  document.getElementById('txtId').value = '';
+  document.getElementById('txtCodigo').value = '';
+  document.getElementById('txtNombre').value = '';
+  document.getElementById('chkEstado').checked = true;
+  document.getElementById('modalTitle').textContent = 'Nuevo Punto de Expedición';
+  await cargarTimbrados();
+  new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+}
+
+async function editar(id) {
+  const r = await fetch(`${API}/${id}`);
+  const j = await r.json();
+  if (!j.success) return alert(j.error);
+  const d = j.data;
+  document.getElementById('txtId').value = d.id_punto_expedicion;
+  document.getElementById('txtCodigo').value = d.codigo_punto_expedicion || '';
+  document.getElementById('txtNombre').value = d.nombre_punto_expedicion || '';
+  document.getElementById('chkEstado').checked = d.est_punto_expedicion;
+  document.getElementById('modalTitle').textContent = 'Editar Punto de Expedición';
+  await cargarTimbrados(d.id_timbrado);
+  new bootstrap.Modal(document.getElementById('modalFormulario')).show();
+}
+
+async function guardar() {
+  const id = document.getElementById('txtId').value;
+  const body = {
+    id_timbrado: parseInt(document.getElementById('selTimbrado').value) || null,
+    codigo_punto_expedicion: document.getElementById('txtCodigo').value.trim(),
+    nombre_punto_expedicion: document.getElementById('txtNombre').value.trim(),
+    est_punto_expedicion: document.getElementById('chkEstado').checked
+  };
+  const url = id ? `${API}/${id}` : API;
+  const method = id ? 'PUT' : 'POST';
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body: JSON.stringify(body)
+  });
+  const j = await r.json();
+  if (j.success) {
+    bootstrap.Modal.getInstance(document.getElementById('modalFormulario')).hide();
+    cargar();
+  } else {
+    alert(j.error || 'Error al guardar.');
+  }
+}
+
+async function eliminar(id) {
+  if (!confirm('¿Desactivar este punto de expedición?')) return;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}/${id}`, { method: 'DELETE', headers: { 'X-CSRFToken': csrf } });
+  const j = await r.json();
+  if (j.success) cargar();
+  else alert(j.error || 'No se pudo desactivar.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,585 @@
+{% extends 'base.html' %}
+{% block titulo %}Nueva Factura{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nueva Factura</h1>
+          <div class="page-header-subtitle">Emisión de comprobante de venta</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('factura.facturaIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Buscar Paciente -->
+  <div class="card shadow-sm mb-4 border-start-primary" id="card-busqueda">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="search" class="icon-sm"></i> Buscar Paciente
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-8 mb-3 mb-md-0 position-relative">
+          <label class="small mb-1" for="txtBuscarPaciente">Nombre, apellido o historia clínica</label>
+          <input class="form-control" id="txtBuscarPaciente" type="text" placeholder="Escriba para buscar..." autocomplete="off">
+          <div class="list-group" id="sugerenciasPaciente" style="position:absolute;top:100%;left:0;right:0;z-index:1050;display:none;"></div>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" id="btnSeleccionarPaciente" disabled>Seleccionar y continuar</button>
+        </div>
+      </div>
+      <input type="hidden" id="hidIdPaciente">
+    </div>
+  </div>
+
+  <!-- Formulario factura (oculto hasta seleccionar paciente) -->
+  <div id="contenedor-factura" style="display:none;">
+
+    <!-- Info Paciente -->
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="user" class="icon-sm"></i> Paciente seleccionado
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="small text-muted">Nombre completo</label>
+            <p class="fw-bold mb-0" id="lblPacienteNombre">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Cédula</label>
+            <p class="mb-0" id="lblPacienteCedula">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Historia clínica</label>
+            <p class="mb-0" id="lblHistoriaClinica">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cabecera Factura -->
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="file-text" class="icon-sm"></i> Datos de la Factura
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Timbrado <span class="text-danger">*</span></label>
+            <select class="form-select" id="selTimbrado">
+              <option value="">Seleccioná un timbrado...</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Punto de Expedición <span class="text-danger">*</span></label>
+            <select class="form-select" id="selPuntoExpedicion">
+              <option value="">Seleccioná un punto...</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Tipo de Comprobante <span class="text-danger">*</span></label>
+            <select class="form-select" id="selTipoComprobante"></select>
+          </div>
+        </div>
+        <div class="row gx-3 mb-3">
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">Condición de Venta <span class="text-danger">*</span></label>
+            <select class="form-select" id="selCondicionVenta"></select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">Moneda <span class="text-danger">*</span></label>
+            <select class="form-select" id="selMoneda"></select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">Fecha Factura <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="txtFechaFactura">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">Pedido de origen (opcional)</label>
+            <input type="number" class="form-control" id="txtIdPedido" placeholder="N° de pedido">
+          </div>
+        </div>
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Descuento general (Gs.)</label>
+            <input type="number" class="form-control" id="txtDescuento" value="0" min="0">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Código SIFEN (opcional)</label>
+            <input type="text" class="form-control" id="txtCodigoSifen" placeholder="CDC — ingreso manual">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="txtObservaciones">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle de ítems -->
+    <div class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2">
+          <i data-feather="list" class="icon-sm"></i> Ítems del Detalle
+        </h6>
+        <button type="button" class="btn btn-success btn-sm ms-auto" id="btnAgregarItem">
+          <i data-feather="plus" class="icon-xs me-1"></i> Agregar ítem
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover table-bordered align-middle mb-0" id="tblDetalle">
+            <thead class="table-light">
+              <tr>
+                <th>Descripción</th><th class="text-center" style="width:70px">Cant.</th>
+                <th class="text-end" style="width:130px">Precio c/IVA</th>
+                <th class="text-center" style="width:70px">IVA %</th>
+                <th class="text-end" style="width:110px">IVA Gs.</th>
+                <th class="text-end" style="width:130px">Total</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDetalle">
+              <tr id="filaVacia"><td colspan="7" class="text-center text-muted py-3">Sin ítems. Hacé clic en "Agregar ítem".</td></tr>
+            </tbody>
+            <tfoot>
+              <tr class="table-light">
+                <td colspan="4" class="text-end fw-bold">Subtotal (base)</td>
+                <td class="text-end" id="footIva">Gs. 0</td>
+                <td class="text-end fw-bold" id="footTotal">Gs. 0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen de totales -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row justify-content-end">
+          <div class="col-md-4">
+            <table class="table table-sm">
+              <tr><td class="text-muted">Subtotal (base sin IVA)</td><td class="text-end fw-bold" id="resSubtotal">Gs. 0</td></tr>
+              <tr><td class="text-muted">Total IVA</td><td class="text-end fw-bold" id="resIva">Gs. 0</td></tr>
+              <tr><td class="text-muted">Descuento</td><td class="text-end fw-bold text-danger" id="resDescuento">Gs. 0</td></tr>
+              <tr class="table-primary"><td class="fw-bold">TOTAL A PAGAR</td><td class="text-end fw-bold fs-5" id="resTotal">Gs. 0</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-2">
+          <a class="btn btn-secondary" href="{{ url_for('factura.facturaIndex') }}">Cancelar</a>
+          <button type="button" class="btn btn-primary" id="btnEmitir">Emitir Factura</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /contenedor-factura -->
+</div>
+
+<!-- Modal Agregar Ítem -->
+<div class="modal fade" id="modalItem" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Agregar Ítem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editIdx" value="-1">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="itemDesc" placeholder="Servicio o producto">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Cantidad <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="itemCant" value="1" min="1">
+          </div>
+          <div class="col-md-8">
+            <label class="fw-semibold">Precio c/IVA (Gs.) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="itemPrecio" value="0" min="0">
+          </div>
+          <div class="col-md-6">
+            <label class="fw-semibold">IVA %</label>
+            <select class="form-select" id="selItemImpuesto">
+              <option value="0" data-porc="0">Exento (0%)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="fw-semibold">Descuento ítem (Gs.)</label>
+            <input type="number" class="form-control" id="itemDesc2" value="0" min="0">
+          </div>
+          <div class="col-12">
+            <label class="fw-semibold">Ítem de catálogo (opcional)</label>
+            <select class="form-select" id="selItemServicio">
+              <option value="">Sin ítem de catálogo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnConfirmarItem">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_FAC  = '/api/v1/facturas';
+const API_TIM  = '/api/v1/timbrados';
+const API_PE   = '/api/v1/puntos-expedicion';
+const API_TC   = '/api/v1/tipos-comprobantes';
+const API_CV   = '/api/v1/condiciones-venta';
+const API_MON  = '/api/v1/monedas';
+const API_EF   = '/api/v1/estados-factura';
+const API_TI   = '/api/v1/tipos-impuestos';
+const API_IS   = '/api/v1/items-servicios';
+const API_PAC  = '/api/v1/pacientes';
+
+let detalles = [];
+
+function fmt(n) { return Number(n || 0).toLocaleString('es-PY'); }
+
+function recalcular() {
+  let subtotal = 0, iva = 0;
+  detalles.forEach(d => { subtotal += d._subtotal; iva += d._iva_monto; });
+  const desc = parseInt(document.getElementById('txtDescuento').value) || 0;
+  const total = subtotal + iva - desc;
+  document.getElementById('resSubtotal').textContent = 'Gs. ' + fmt(subtotal);
+  document.getElementById('resIva').textContent      = 'Gs. ' + fmt(iva);
+  document.getElementById('resDescuento').textContent = 'Gs. ' + fmt(desc);
+  document.getElementById('resTotal').textContent    = 'Gs. ' + fmt(total);
+  document.getElementById('footIva').textContent     = 'Gs. ' + fmt(iva);
+  document.getElementById('footTotal').textContent   = 'Gs. ' + fmt(total);
+}
+
+function calcItem(precio, cant, porc, dscto) {
+  const total = (precio * cant) - dscto;
+  const div   = 1 + (porc / 100);
+  const base  = Math.round(total / div);
+  const iva   = total - base;
+  return { _total: total, _subtotal: base, _iva_monto: iva };
+}
+
+function renderTabla() {
+  const tbody = document.getElementById('tbodyDetalle');
+  const filaVacia = document.getElementById('filaVacia');
+  if (!detalles.length) {
+    filaVacia.style.display = '';
+    while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+    return;
+  }
+  filaVacia.style.display = 'none';
+  while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+  detalles.forEach((d, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.item_descripcion}</td>
+      <td class="text-center">${d.item_cantidad}</td>
+      <td class="text-end">Gs. ${fmt(d.item_precio_con_iva)}</td>
+      <td class="text-center">${d.impuesto_porcentaje}%</td>
+      <td class="text-end">Gs. ${fmt(d._iva_monto)}</td>
+      <td class="text-end fw-bold">Gs. ${fmt(d._total)}</td>
+      <td class="text-center">
+        <button class="btn btn-xs btn-danger" onclick="quitarItem(${i})">
+          <i data-feather="x" class="icon-xs"></i>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  feather.replace();
+}
+
+function quitarItem(i) {
+  detalles.splice(i, 1);
+  renderTabla();
+  recalcular();
+}
+
+// Autocomplete paciente
+let pacienteTimer;
+document.getElementById('txtBuscarPaciente').addEventListener('input', function() {
+  clearTimeout(pacienteTimer);
+  const q = this.value.trim();
+  if (q.length < 2) { document.getElementById('sugerenciasPaciente').style.display = 'none'; return; }
+  pacienteTimer = setTimeout(async () => {
+    const r = await fetch(`${API_PAC}/buscar?q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    const lista = document.getElementById('sugerenciasPaciente');
+    lista.innerHTML = '';
+    (j.data || []).slice(0, 8).forEach(p => {
+      const a = document.createElement('a');
+      a.className = 'list-group-item list-group-item-action';
+      a.textContent = `${p.per_nombre} ${p.per_apellido} — HC: ${p.pac_historia_clinica}`;
+      a.href = '#';
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('hidIdPaciente').value = p.id_paciente;
+        document.getElementById('txtBuscarPaciente').value = `${p.per_nombre} ${p.per_apellido}`;
+        document.getElementById('btnSeleccionarPaciente').disabled = false;
+        document.getElementById('btnSeleccionarPaciente').dataset.nombre = `${p.per_nombre} ${p.per_apellido}`;
+        document.getElementById('btnSeleccionarPaciente').dataset.cedula = p.per_cedula;
+        document.getElementById('btnSeleccionarPaciente').dataset.hc = p.pac_historia_clinica;
+        lista.style.display = 'none';
+      });
+      lista.appendChild(a);
+    });
+    lista.style.display = lista.children.length ? 'block' : 'none';
+  }, 300);
+});
+
+document.getElementById('btnSeleccionarPaciente').addEventListener('click', function() {
+  document.getElementById('lblPacienteNombre').textContent = this.dataset.nombre;
+  document.getElementById('lblPacienteCedula').textContent = this.dataset.cedula;
+  document.getElementById('lblHistoriaClinica').textContent = this.dataset.hc;
+  document.getElementById('card-busqueda').style.display = 'none';
+  document.getElementById('contenedor-factura').style.display = '';
+  feather.replace();
+});
+
+// Cargar filtro de puntos al cambiar timbrado
+document.getElementById('selTimbrado').addEventListener('change', async function() {
+  const id = this.value;
+  const sel = document.getElementById('selPuntoExpedicion');
+  sel.innerHTML = '<option value="">Cargando...</option>';
+  if (!id) { sel.innerHTML = '<option value="">Seleccioná un punto...</option>'; return; }
+  const r = await fetch(`${API_PE}?id_timbrado=${id}`);
+  const j = await r.json();
+  sel.innerHTML = '<option value="">Seleccioná un punto...</option>';
+  (j.data || []).forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id_punto_expedicion;
+    o.textContent = `${p.codigo_punto_expedicion} — ${p.nombre_punto_expedicion}`;
+    sel.appendChild(o);
+  });
+});
+
+document.getElementById('txtDescuento').addEventListener('input', recalcular);
+
+// Abrir modal ítem
+document.getElementById('btnAgregarItem').addEventListener('click', () => {
+  document.getElementById('editIdx').value = -1;
+  document.getElementById('itemDesc').value = '';
+  document.getElementById('itemCant').value = 1;
+  document.getElementById('itemPrecio').value = 0;
+  document.getElementById('itemDesc2').value = 0;
+  document.getElementById('selItemServicio').value = '';
+  new bootstrap.Modal(document.getElementById('modalItem')).show();
+});
+
+// Autocompletar desde catálogo de ítems
+document.getElementById('selItemServicio').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('itemDesc').value = opt.dataset.desc || opt.textContent;
+  document.getElementById('itemPrecio').value = opt.dataset.precio || 0;
+});
+
+document.getElementById('btnConfirmarItem').addEventListener('click', () => {
+  const desc = document.getElementById('itemDesc').value.trim();
+  const cant = parseInt(document.getElementById('itemCant').value) || 1;
+  const precio = parseInt(document.getElementById('itemPrecio').value) || 0;
+  const dscto = parseInt(document.getElementById('itemDesc2').value) || 0;
+  const selImp = document.getElementById('selItemImpuesto');
+  const porc = parseFloat(selImp.options[selImp.selectedIndex].dataset.porc || 0);
+  const id_tipo_impuesto = selImp.value ? parseInt(selImp.value) : null;
+  const id_item_servicio = document.getElementById('selItemServicio').value || null;
+
+  if (!desc) { alert('La descripción es obligatoria.'); return; }
+  if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
+  if (precio < 0) { alert('El precio no puede ser negativo.'); return; }
+
+  const calc = calcItem(precio, cant, porc, dscto);
+  const item = {
+    item_descripcion: desc,
+    item_cantidad: cant,
+    item_precio_con_iva: precio,
+    impuesto_porcentaje: porc,
+    item_descuento: dscto,
+    id_tipo_impuesto: id_tipo_impuesto,
+    id_item_servicio: id_item_servicio ? parseInt(id_item_servicio) : null,
+    ...calc
+  };
+
+  const idx = parseInt(document.getElementById('editIdx').value);
+  if (idx >= 0) detalles[idx] = item;
+  else detalles.push(item);
+
+  bootstrap.Modal.getInstance(document.getElementById('modalItem')).hide();
+  renderTabla();
+  recalcular();
+});
+
+// Emitir factura
+document.getElementById('btnEmitir').addEventListener('click', async () => {
+  if (!detalles.length) { alert('Debe agregar al menos un ítem.'); return; }
+
+  const idPaciente = document.getElementById('hidIdPaciente').value;
+  const idTimbrado = document.getElementById('selTimbrado').value;
+  const idPunto = document.getElementById('selPuntoExpedicion').value;
+  const idTipoComp = document.getElementById('selTipoComprobante').value;
+  const idCondicion = document.getElementById('selCondicionVenta').value;
+  const idMoneda = document.getElementById('selMoneda').value;
+  const idEstado = document.getElementById('selEstadoFactura').value;
+  const fecha = document.getElementById('txtFechaFactura').value;
+
+  if (!idTimbrado || !idPunto || !idTipoComp || !idCondicion || !idMoneda || !fecha) {
+    alert('Completá todos los campos obligatorios antes de emitir.');
+    return;
+  }
+
+  const body = {
+    id_paciente: parseInt(idPaciente),
+    id_timbrado: parseInt(idTimbrado),
+    id_punto_expedicion: parseInt(idPunto),
+    id_tipo_comprobante: parseInt(idTipoComp),
+    id_condicion_venta: parseInt(idCondicion),
+    id_moneda: parseInt(idMoneda),
+    id_estado_factura: parseInt(idEstado),
+    fecha_factura: fecha,
+    factura_descuento: parseInt(document.getElementById('txtDescuento').value) || 0,
+    codigo_sifen: document.getElementById('txtCodigoSifen').value.trim() || null,
+    observaciones: document.getElementById('txtObservaciones').value.trim() || null,
+    id_pedido: parseInt(document.getElementById('txtIdPedido').value) || null,
+    detalles: detalles.map(d => ({
+      item_descripcion: d.item_descripcion,
+      item_cantidad: d.item_cantidad,
+      item_precio_con_iva: d.item_precio_con_iva,
+      impuesto_porcentaje: d.impuesto_porcentaje,
+      item_descuento: d.item_descuento,
+      id_tipo_impuesto: d.id_tipo_impuesto,
+      id_item_servicio: d.id_item_servicio,
+    }))
+  };
+
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  try {
+    const r = await fetch(API_FAC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    if (j.success) {
+      window.location.href = "{{ url_for('factura.facturaIndex') }}";
+    } else {
+      alert(j.error || 'Error al emitir la factura.');
+    }
+  } catch (e) {
+    alert('Error de conexión al emitir la factura.');
+  }
+});
+
+// Carga inicial de selectores
+async function inicializar() {
+  // Fecha hoy por defecto
+  document.getElementById('txtFechaFactura').value = new Date().toISOString().slice(0, 10);
+
+  const [rTim, rTC, rCV, rMon, rEF, rTI, rIS] = await Promise.all([
+    fetch(API_TIM).then(r => r.json()),
+    fetch(API_TC).then(r => r.json()),
+    fetch(API_CV).then(r => r.json()),
+    fetch(API_MON).then(r => r.json()),
+    fetch(API_EF).then(r => r.json()),
+    fetch(API_TI).then(r => r.json()),
+    fetch(API_IS).then(r => r.json()),
+  ]);
+
+  // Timbrados vigentes ya filtrados
+  const selTim = document.getElementById('selTimbrado');
+  selTim.innerHTML = '<option value="">Seleccioná...</option>';
+  (rTim.data || []).filter(t => t.est_timbrado).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id_timbrado;
+    o.textContent = `${t.numero_timbrado} (estab. ${t.codigo_establecimiento})`;
+    selTim.appendChild(o);
+  });
+
+  // Tipos de comprobante
+  const selTC = document.getElementById('selTipoComprobante');
+  selTC.innerHTML = '';
+  (rTC.data || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id_tipo_comprobante;
+    o.textContent = t.des_tipo_comprobante;
+    selTC.appendChild(o);
+  });
+
+  // Condiciones de venta
+  const selCV = document.getElementById('selCondicionVenta');
+  selCV.innerHTML = '';
+  (rCV.data || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id_condicion_venta;
+    o.textContent = t.des_condicion_venta;
+    selCV.appendChild(o);
+  });
+
+  // Monedas
+  const selMon = document.getElementById('selMoneda');
+  selMon.innerHTML = '';
+  (rMon.data || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id_moneda;
+    o.textContent = `${t.des_moneda} (${t.cod_moneda})`;
+    if (t.es_moneda_local) o.selected = true;
+    selMon.appendChild(o);
+  });
+
+  // Estados factura — inyectar hidden select (oculto, siempre EMITIDA)
+  const selEF = document.createElement('select');
+  selEF.id = 'selEstadoFactura';
+  selEF.style.display = 'none';
+  (rEF.data || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id_estado_factura;
+    o.textContent = t.des_estado_factura;
+    if ((t.des_estado_factura || '').toUpperCase().includes('EMIT')) o.selected = true;
+    selEF.appendChild(o);
+  });
+  document.getElementById('contenedor-factura').appendChild(selEF);
+
+  // Tipos de impuesto para modal
+  const selTI = document.getElementById('selItemImpuesto');
+  selTI.innerHTML = '';
+  (rTI.data || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id_tipo_impuesto;
+    o.dataset.porc = t.porcentaje_impuesto || 0;
+    o.textContent = `${t.des_tipo_impuesto} (${t.porcentaje_impuesto || 0}%)`;
+    selTI.appendChild(o);
+  });
+
+  // Ítems de catálogo
+  const selIS = document.getElementById('selItemServicio');
+  selIS.innerHTML = '<option value="">Sin ítem de catálogo</option>';
+  (rIS.data || []).filter(i => i.est_item_servicio).forEach(i => {
+    const o = document.createElement('option');
+    o.value = i.id_item_servicio;
+    o.textContent = i.des_item_servicio;
+    o.dataset.desc = i.des_item_servicio;
+    o.dataset.precio = i.precio_venta || 0;
+    selIS.appendChild(o);
+  });
+}
+
+inicializar();
+</script>
+{% endblock %}

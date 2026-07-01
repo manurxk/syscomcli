@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% block titulo %}Nuevo Arqueo de Caja{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nuevo Arqueo de Caja</h1>
+          <div class="page-header-subtitle">Registrá el recuento físico de la caja</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('arqueo_caja.arqueoIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Selección de caja -->
+  <div class="card shadow-sm mb-4 border-start-primary">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="inbox" class="icon-sm"></i> Seleccionar Caja
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label small fw-bold">Caja <span class="text-danger">*</span></label>
+          <select class="form-select" id="selCaja">
+            <option value="">— Seleccione una caja —</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-primary w-100" id="btnCargarApertura" disabled>
+            <i class="fas fa-search me-1"></i>Cargar apertura activa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info apertura activa (oculto hasta cargar) -->
+  <div id="contenedorArqueo" style="display:none;">
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="info" class="icon-sm"></i> Apertura activa
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="small text-muted">ID Apertura</label>
+            <p class="fw-bold mb-0" id="lblAperturaId">—</p>
+            <input type="hidden" id="hidIdAperturaCierre">
+            <input type="hidden" id="hidIdCaja">
+          </div>
+          <div class="col-md-4">
+            <label class="small text-muted">Fecha apertura</label>
+            <p class="fw-bold mb-0" id="lblFechaApertura">—</p>
+          </div>
+          <div class="col-md-4">
+            <label class="small text-muted">Saldo inicial</label>
+            <p class="fw-bold mb-0" id="lblSaldoInicialArqueo">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="dollar-sign" class="icon-sm"></i> Datos del Arqueo
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Monto esperado (sistema)</label>
+            <div class="input-group">
+              <span class="input-group-text">Gs.</span>
+              <input type="text" class="form-control bg-light fw-bold" id="lblMontoEsperado" readonly value="...">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Monto real (recuento físico) <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">Gs.</span>
+              <input type="number" class="form-control" id="txtMontoReal" min="0" step="1000" placeholder="0">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Diferencia</label>
+            <div class="input-group">
+              <span class="input-group-text">Gs.</span>
+              <input type="text" class="form-control bg-light fw-bold" id="lblDiferencia" readonly value="—">
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Observaciones</label>
+            <textarea class="form-control" id="txtObservaciones" rows="2" placeholder="Opcional"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end mb-4">
+      <a href="{{ url_for('arqueo_caja.arqueoIndex') }}" class="btn btn-secondary btn-sm">Cancelar</a>
+      <button class="btn btn-warning btn-sm" id="btnCalcularDiferencia">
+        <i class="fas fa-calculator me-1"></i>Calcular diferencia
+      </button>
+      <button class="btn btn-primary btn-sm" id="btnGuardarArqueo" disabled>
+        <span id="spinnerGuardar" class="spinner-border spinner-border-sm me-1 d-none"></span>
+        <i class="fas fa-save me-1"></i>Guardar Arqueo
+      </button>
+    </div>
+  </div>
+
+  <div id="sinAperturaActiva" style="display:none;" class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    Esta caja no tiene una apertura activa. <a href="{{ url_for('apertura_cierre_caja.cajaEstado') }}">Abrir caja</a> primero.
+  </div>
+
+</div>
+{% endblock %}
+{% block js %}
+<script>
+const CSRFToken = "{{ csrf_token() }}";
+
+const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
+
+let montoEsperado = 0;
+
+async function cargarCajas() {
+  const res = await fetch('/api/v1/cajas-estado');
+  const json = await res.json();
+  const sel = document.getElementById('selCaja');
+  if (json.success) {
+    json.data.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id_caja;
+      opt.textContent = `${c.des_caja} (${c.caja_estado})`;
+      opt.dataset.estado = c.caja_estado;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+document.getElementById('selCaja').addEventListener('change', function() {
+  document.getElementById('btnCargarApertura').disabled = !this.value;
+  document.getElementById('contenedorArqueo').style.display = 'none';
+  document.getElementById('sinAperturaActiva').style.display = 'none';
+});
+
+document.getElementById('btnCargarApertura').addEventListener('click', async () => {
+  const idCaja = document.getElementById('selCaja').value;
+  if (!idCaja) return;
+  try {
+    const res = await fetch(`/api/v1/cajas/${idCaja}/apertura-activa`);
+    const json = await res.json();
+    if (!json.success || !json.data) {
+      document.getElementById('sinAperturaActiva').style.display = '';
+      document.getElementById('contenedorArqueo').style.display = 'none';
+      return;
+    }
+    const apertura = json.data;
+    document.getElementById('hidIdAperturaCierre').value = apertura.id_apertura_cierre;
+    document.getElementById('hidIdCaja').value = idCaja;
+    document.getElementById('lblAperturaId').textContent = apertura.id_apertura_cierre;
+    document.getElementById('lblFechaApertura').textContent = apertura.fecha_operacion || '—';
+    document.getElementById('lblSaldoInicialArqueo').textContent = 'Gs. ' + fmt(apertura.saldo_inicial);
+    document.getElementById('sinAperturaActiva').style.display = 'none';
+    document.getElementById('contenedorArqueo').style.display = '';
+
+    // Calcular monto esperado
+    const resSaldo = await fetch(`/api/v1/aperturas-cierres/${apertura.id_apertura_cierre}/monto-esperado?id_caja=${idCaja}`);
+    const jsonSaldo = await resSaldo.json();
+    if (jsonSaldo.success) {
+      montoEsperado = parseFloat(jsonSaldo.data.monto_esperado || 0);
+      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado);
+    } else {
+      montoEsperado = parseFloat(apertura.saldo_inicial || 0);
+      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado) + ' (estimado)';
+    }
+  } catch(e) {
+    Swal.fire({icon:'error', title:'Error', text:'No se pudo cargar la apertura activa.'});
+  }
+});
+
+document.getElementById('btnCalcularDiferencia').addEventListener('click', () => {
+  const real = parseFloat(document.getElementById('txtMontoReal').value) || 0;
+  const dif = real - montoEsperado;
+  const span = document.getElementById('lblDiferencia');
+  span.value = fmt(dif);
+  span.className = 'form-control bg-light fw-bold ' + (dif < 0 ? 'text-danger' : dif > 0 ? 'text-warning' : 'text-success');
+  document.getElementById('btnGuardarArqueo').disabled = false;
+});
+
+document.getElementById('txtMontoReal').addEventListener('input', () => {
+  document.getElementById('btnGuardarArqueo').disabled = true;
+  document.getElementById('lblDiferencia').value = '—';
+});
+
+document.getElementById('btnGuardarArqueo').addEventListener('click', async () => {
+  const idApertura = document.getElementById('hidIdAperturaCierre').value;
+  const idCaja = document.getElementById('hidIdCaja').value;
+  const montoReal = document.getElementById('txtMontoReal').value;
+
+  if (!montoReal && montoReal !== '0') {
+    Swal.fire({icon:'warning', title:'Dato requerido', text:'Ingresá el monto real del recuento físico.'});
+    return;
+  }
+
+  const spin = document.getElementById('spinnerGuardar');
+  spin.classList.remove('d-none');
+  document.getElementById('btnGuardarArqueo').disabled = true;
+
+  try {
+    const res = await fetch('/api/v1/arqueos', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken},
+      body: JSON.stringify({
+        id_apertura_cierre: parseInt(idApertura),
+        id_caja: parseInt(idCaja),
+        monto_real: parseFloat(montoReal),
+        observaciones: document.getElementById('txtObservaciones').value,
+      })
+    });
+    const json = await res.json();
+    if (json.success) {
+      Swal.fire({icon:'success', title:'Arqueo guardado', text:'El arqueo fue registrado correctamente.', timer:2000, showConfirmButton:false})
+        .then(() => window.location.href = "{{ url_for('arqueo_caja.arqueoIndex') }}");
+    } else {
+      Swal.fire({icon:'error', title:'Error', text: json.error || 'No se pudo guardar el arqueo.'});
+      document.getElementById('btnGuardarArqueo').disabled = false;
+    }
+  } catch(e) {
+    Swal.fire({icon:'error', title:'Error', text:'Ocurrió un error inesperado.'});
+    document.getElementById('btnGuardarArqueo').disabled = false;
+  } finally {
+    spin.classList.add('d-none');
+  }
+});
+
+cargarCajas();
+</script>
+{% endblock %}
