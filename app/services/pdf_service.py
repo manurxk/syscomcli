@@ -4,7 +4,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, HRFlowable
 from reportlab.platypus import Image as RLImage
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from io import BytesIO
@@ -19,23 +19,21 @@ class FichaMedicaPDFService:
     
     def __init__(self):
         self.styles = getSampleStyleSheet()
-        # Paleta de colores moderna y profesional
+        # Paleta de colores institucional: un solo tono principal (marino) para
+        # estructura, y colores semánticos reservados solo para alertas/estados.
         self.colores = {
-            'primario': colors.HexColor('#2563eb'),  # Azul moderno
-            'primario_oscuro': colors.HexColor('#1e40af'),  # Azul oscuro
-            'secundario': colors.HexColor('#0891b2'),  # Cyan
-            'accento': colors.HexColor('#7c3aed'),  # Púrpura
-            'exito': colors.HexColor('#10b981'),  # Verde
-            'advertencia': colors.HexColor('#f59e0b'),  # Amarillo
-            'peligro': colors.HexColor('#ef4444'),  # Rojo
+            'primario': colors.HexColor('#1e3a5f'),        # Azul marino (marca/estructura)
+            'primario_claro': colors.HexColor('#3b5980'),
+            'acento': colors.HexColor('#2563eb'),          # Azul para datos destacados
+            'exito': colors.HexColor('#15803d'),
+            'advertencia': colors.HexColor('#b45309'),
+            'peligro': colors.HexColor('#b91c1c'),
             'gris_oscuro': colors.HexColor('#1f2937'),
             'gris_medio': colors.HexColor('#6b7280'),
             'gris_claro': colors.HexColor('#f3f4f6'),
-            'gris_borde': colors.HexColor('#e5e7eb'),
+            'gris_borde': colors.HexColor('#d1d5db'),
             'fondo_claro': colors.HexColor('#f9fafb'),
-            'fondo_azul': colors.HexColor('#eff6ff'),
-            'fondo_verde': colors.HexColor('#ecfdf5'),
-            'fondo_amarillo': colors.HexColor('#fffbeb'),
+            'fondo_seccion': colors.HexColor('#eef2f7'),   # Fondo único para todos los títulos de sección
         }
         self._configurar_estilos()
     
@@ -45,29 +43,36 @@ class FichaMedicaPDFService:
         self.styles.add(ParagraphStyle(
             name='TituloFicha',
             parent=self.styles['Heading1'],
-            fontSize=24,
-            textColor=self.colores['primario_oscuro'],
-            spaceAfter=16,
+            fontSize=22,
+            textColor=self.colores['primario'],
+            spaceAfter=4,
             spaceBefore=0,
             alignment=TA_CENTER,
             fontName='Helvetica-Bold',
-            leading=28
+            leading=26
         ))
-        
-        # Estilo para subtítulos (secciones principales)
+
+        # Subtítulo bajo el título principal (nombre del paciente)
+        self.styles.add(ParagraphStyle(
+            name='SubtituloPaciente',
+            parent=self.styles['Normal'],
+            fontSize=13,
+            textColor=self.colores['gris_medio'],
+            spaceAfter=16,
+            alignment=TA_CENTER,
+            fontName='Helvetica'
+        ))
+
+        # Estilo para subtítulos (título de cada sección, dentro de _titulo_seccion)
         self.styles.add(ParagraphStyle(
             name='Subtitulo',
             parent=self.styles['Heading2'],
-            fontSize=16,
+            fontSize=12.5,
             textColor=self.colores['primario'],
-            spaceAfter=14,
-            spaceBefore=20,
+            spaceAfter=0,
+            spaceBefore=0,
             fontName='Helvetica-Bold',
-            leading=20,
-            borderWidth=0,
-            borderPadding=0,
-            borderColor=self.colores['gris_borde'],
-            backColor=self.colores['fondo_azul']
+            leading=15
         ))
         
         # Estilo para secciones secundarias
@@ -126,15 +131,48 @@ class FichaMedicaPDFService:
             fontName='Helvetica-Bold',
             leading=11
         ))
-    
-    def generar_ficha_completa(self, ficha_data, config_empresa=None):
+
+    def _titulo_seccion(self, texto):
+        """
+        Encabezado de sección unificado: barra de acento a la izquierda +
+        fondo neutro, el mismo para todas las secciones del documento.
+        """
+        tabla = Table(
+            [[Paragraph(texto.upper(), self.styles['Subtitulo'])]],
+            colWidths=[7 * inch],
+            rowHeights=[0.38 * inch]
+        )
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_seccion']),
+            ('LINEBEFORE', (0, 0), (0, -1), 3, self.colores['primario']),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 14),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        return [tabla, Spacer(1, 0.16 * inch)]
+
+    @staticmethod
+    def _pie_pagina_numerado(canvas_obj, doc):
+        """Dibuja el número de página en el pie de cada hoja."""
+        canvas_obj.saveState()
+        canvas_obj.setFont('Helvetica', 8)
+        canvas_obj.setFillColor(colors.HexColor('#6b7280'))
+        texto = f"Página {doc.page}"
+        canvas_obj.drawRightString(A4[0] - 50, 25, texto)
+        canvas_obj.restoreState()
+
+    def generar_ficha_completa(self, ficha_data, config_empresa=None, generado_por=None):
         """
         Genera un PDF completo con toda la información de la ficha médica
-        
+
         Args:
             ficha_data (dict): Diccionario con toda la información
             config_empresa (dict, optional): Configuración de la clínica (logo, nombre, etc.)
-            
+            generado_por (dict, optional): Datos del especialista que genera el documento
+                (nombre_completo, matricula, especialidades)
+
         Returns:
             BytesIO: Buffer con el PDF generado
         """
@@ -159,50 +197,59 @@ class FichaMedicaPDFService:
         elementos.extend(self._crear_encabezado_clinica(config_empresa))
         elementos.append(Spacer(1, 0.2 * inch))
         
-        # Título de la Ficha
+        # Título de la Ficha + identificación rápida del paciente
         elementos.append(Paragraph("FICHA MÉDICA DEL PACIENTE", self.styles['TituloFicha']))
-        elementos.append(Spacer(1, 0.1 * inch))
-        
+        paciente_data = ficha_data.get('paciente', {}) or {}
+        if paciente_data.get('nombre_completo'):
+            subtitulo = paciente_data['nombre_completo']
+            if paciente_data.get('historia_clinica'):
+                subtitulo += f"  ·  HC: {paciente_data['historia_clinica']}"
+            elementos.append(Paragraph(subtitulo, self.styles['SubtituloPaciente']))
+        elementos.append(Spacer(1, 0.05 * inch))
+
         # Agregar información del paciente
-        elementos.extend(self._crear_info_paciente(ficha_data.get('paciente', {})))
-        
+        elementos.extend(self._crear_info_paciente(paciente_data))
+
         # Agregar estadísticas
         elementos.extend(self._crear_estadisticas(ficha_data.get('estadisticas', {})))
-        
+
         # Agregar anamnesis si existe
         if ficha_data.get('anamnesis'):
             elementos.extend(self._crear_anamnesis(ficha_data.get('anamnesis', {})))
-        
+
         # Agregar timeline de eventos
         if ficha_data.get('timeline'):
             elementos.extend(self._crear_timeline(ficha_data.get('timeline', [])))
-        
+
         # Agregar tratamientos activos
         if ficha_data.get('tratamientos_activos'):
             elementos.extend(self._crear_tratamientos(ficha_data.get('tratamientos_activos', [])))
-        
+
         # Agregar diagnósticos
         if ficha_data.get('diagnosticos'):
             elementos.extend(self._crear_diagnosticos(ficha_data.get('diagnosticos', [])))
-        
+
         # Agregar consultas recientes
         if ficha_data.get('consultas_recientes'):
             elementos.extend(self._crear_consultas(ficha_data.get('consultas_recientes', [])))
-        
+
         # Agregar procedimientos
         if ficha_data.get('procedimientos'):
             elementos.extend(self._crear_procedimientos(ficha_data.get('procedimientos', [])))
-        
+
         # Agregar próximas citas
         if ficha_data.get('proximas_citas'):
             elementos.extend(self._crear_citas(ficha_data.get('proximas_citas', [])))
-        
+
+        # Agregar datos del especialista que genera el documento
+        elementos.extend(self._crear_info_generador(generado_por))
+
         # Agregar pie de página
         elementos.extend(self._crear_pie_pagina())
-        
-        # Construir PDF
-        doc.build(elementos)
-        
+
+        # Construir PDF (con numeración de página en cada hoja)
+        doc.build(elementos, onFirstPage=self._pie_pagina_numerado, onLaterPages=self._pie_pagina_numerado)
+
         # Posicionar el buffer al inicio
         buffer.seek(0)
         return buffer
@@ -237,8 +284,11 @@ class FichaMedicaPDFService:
         
         # Título
         elementos.append(Paragraph("RESUMEN DE FICHA MÉDICA", self.styles['TituloFicha']))
-        elementos.append(Spacer(1, 0.1 * inch))
-        
+        paciente_data = ficha_data.get('paciente', {}) or {}
+        if paciente_data.get('nombre_completo'):
+            elementos.append(Paragraph(paciente_data['nombre_completo'], self.styles['SubtituloPaciente']))
+        elementos.append(Spacer(1, 0.05 * inch))
+
         # Agregar información del paciente
         elementos.extend(self._crear_info_paciente(ficha_data.get('paciente', {})))
         
@@ -255,11 +305,11 @@ class FichaMedicaPDFService:
         
         # Agregar pie de página
         elementos.extend(self._crear_pie_pagina())
-        
-        doc.build(elementos)
+
+        doc.build(elementos, onFirstPage=self._pie_pagina_numerado, onLaterPages=self._pie_pagina_numerado)
         buffer.seek(0)
         return buffer
-    
+
     def _crear_encabezado_clinica(self, config_empresa):
         """Crea el encabezado con el logo y datos de la clínica"""
         elementos = []
@@ -331,24 +381,8 @@ class FichaMedicaPDFService:
     def _crear_info_paciente(self, paciente):
         """Crea la sección de información del paciente con diseño mejorado"""
         elementos = []
-        
-        # Título de sección con fondo
-        titulo_seccion = Table(
-            [[Paragraph("DATOS DEL PACIENTE", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
+        elementos.extend(self._titulo_seccion("Datos del Paciente"))
+
         # Crear tabla con información del paciente
         datos = [
             ['Historia Clínica:', paciente.get('historia_clinica', 'N/A')],
@@ -394,23 +428,8 @@ class FichaMedicaPDFService:
             return elementos
         
         elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("TRATAMIENTOS ACTIVOS", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_verde']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
+        elementos.extend(self._titulo_seccion("Tratamientos Activos"))
+
         for i, t in enumerate(tratamientos, 1):
             elementos.append(Paragraph(f"<b>Tratamiento {i}:</b> {t.get('descripcion', 'Sin descripción')}", 
                                      self.styles['Seccion']))
@@ -430,8 +449,8 @@ class FichaMedicaPDFService:
             
             tabla_trat = Table(datos_trat, colWidths=[1.5*inch, 4.5*inch])
             tabla_trat.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_verde']),
-                ('TEXTCOLOR', (0, 0), (0, -1), self.colores['exito']),
+                ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_claro']),
+                ('TEXTCOLOR', (0, 0), (0, -1), self.colores['primario']),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 9.5),
@@ -457,23 +476,8 @@ class FichaMedicaPDFService:
             return elementos
         
         elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("DIAGNÓSTICOS REGISTRADOS", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
+        elementos.extend(self._titulo_seccion("Diagnósticos Registrados"))
+
         datos = [['Fecha', 'Diagnóstico', 'CIE-10', 'Tipo', 'Gravedad', 'Profesional']]
         
         for d in diagnosticos[:15]:  # Limitar a 15 diagnósticos
@@ -530,23 +534,8 @@ class FichaMedicaPDFService:
             return elementos
         
         elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("CONSULTAS RECIENTES", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
+        elementos.extend(self._titulo_seccion("Consultas Recientes"))
+
         for i, c in enumerate(consultas[:10], 1):  # Limitar a 10 consultas
             elementos.append(Paragraph(
                 f"<b>Consulta {i} - {c.get('fecha', 'N/A')}</b>", 
@@ -567,7 +556,7 @@ class FichaMedicaPDFService:
             
             tabla_consulta = Table(datos_consulta, colWidths=[1.5*inch, 4.5*inch])
             tabla_consulta.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_azul']),
+                ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_claro']),
                 ('TEXTCOLOR', (0, 0), (0, -1), self.colores['primario']),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
@@ -594,23 +583,8 @@ class FichaMedicaPDFService:
             return elementos
         
         elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("PROCEDIMIENTOS REALIZADOS", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
+        elementos.extend(self._titulo_seccion("Procedimientos Realizados"))
+
         datos = [['Fecha', 'Tipo de Procedimiento', 'Duración', 'Resultado', 'Profesional']]
         
         for p in procedimientos[:15]:  # Limitar a 15 procedimientos
@@ -623,6 +597,469 @@ class FichaMedicaPDFService:
             ])
         
         tabla = Table(datos, colWidths=[1.1*inch, 1.8*inch, 0.9*inch, 1.2*inch, 1.3*inch])
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.colores['primario']),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        
+        elementos.append(tabla)
+        elementos.append(Spacer(1, 0.3 * inch))
+        
+        return elementos
+
+    def _crear_citas(self, citas):
+        """Crea la sección de próximas citas"""
+        elementos = []
+        
+        if not citas:
+            return elementos
+        
+        elementos.append(PageBreak())
+        elementos.extend(self._titulo_seccion("Próximas Citas Programadas"))
+
+        for i, c in enumerate(citas, 1):
+            elementos.append(Paragraph(
+                f"<b>Cita {i} - {c.get('fecha', 'N/A')} a las {c.get('hora_inicio', 'N/A')}</b>",
+                self.styles['Seccion']
+            ))
+            
+            datos_cita = [
+                ['Especialidad:', c.get('especialidad', 'N/A')],
+                ['Especialista:', c.get('especialista', 'N/A')],
+                ['Tipo:', c.get('tipo', 'N/A')],
+                ['Horario:', f"{c.get('hora_inicio', 'N/A')} - {c.get('hora_fin', 'N/A')}"],
+                ['Estado:', c.get('estado', 'N/A')],
+                ['Días faltantes:', f"{c.get('dias_hasta_cita', 0)} días"],
+            ]
+            
+            if c.get('motivo'):
+                datos_cita.append(['Motivo:', c.get('motivo')])
+            
+            tabla_cita = Table(datos_cita, colWidths=[1.5*inch, 4.5*inch])
+
+            # Color según urgencia (días faltantes) — único uso de color semántico
+            bg_color = self.colores['fondo_claro']
+            text_color = self.colores['exito']
+
+            dias = c.get('dias_hasta_cita', 999)
+            if dias <= 3:
+                bg_color = colors.HexColor('#fee2e2')  # Rojo claro
+                text_color = self.colores['peligro']
+            elif dias <= 7:
+                bg_color = colors.HexColor('#fef3c7')  # Ámbar claro
+                text_color = self.colores['advertencia']
+            
+            tabla_cita.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), bg_color),
+                ('TEXTCOLOR', (0, 0), (0, -1), text_color),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+            ]))
+            
+            elementos.append(tabla_cita)
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        return elementos
+    
+    def _crear_info_generador(self, generado_por):
+        """Crea la sección que identifica al especialista que generó el documento"""
+        elementos = []
+        if not generado_por:
+            return elementos
+
+        elementos.append(Spacer(1, 0.3 * inch))
+        tabla = Table(
+            [[Paragraph(
+                f"<b>Documento generado por:</b> {generado_por.get('nombre_completo', 'N/A')}<br/>"
+                f"<b>Matrícula profesional:</b> {generado_por.get('matricula') or 'N/A'}<br/>"
+                f"<b>Especialidad:</b> {generado_por.get('especialidades') or 'N/A'}<br/>"
+                f"<b>Fecha de generación:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+                self.styles['TextoNormal']
+            )]],
+            colWidths=[7 * inch]
+        )
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_claro']),
+            ('BOX', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elementos.append(tabla)
+        return elementos
+
+    def _crear_pie_pagina(self):
+        """Crea el pie de página del documento con diseño mejorado"""
+        elementos = []
+        
+        elementos.append(Spacer(1, 0.4 * inch))
+        
+        # Línea separadora
+        linea_separadora = Table(
+            [['']],
+            colWidths=[7*inch],
+            rowHeights=[1]
+        )
+        linea_separadora.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.colores['gris_borde']),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        elementos.append(linea_separadora)
+        elementos.append(Spacer(1, 0.2 * inch))
+        
+        # Texto del pie de página
+        elementos.append(Paragraph(
+            f"<font color='{self.colores['gris_medio']}'><i>Este documento es confidencial y contiene información médica sensible.<br/>"
+            "Su uso está restringido a profesionales autorizados.</i></font>",
+            ParagraphStyle(
+                'PiePagina',
+                parent=self.styles['Normal'],
+                fontSize=8,
+                textColor=self.colores['gris_medio'],
+                alignment=TA_CENTER,
+                leading=10
+            )
+        ))
+        
+        return elementos
+
+    
+    def _crear_estadisticas(self, estadisticas):
+        """Crea la sección de estadísticas con diseño mejorado"""
+        elementos = []
+        elementos.extend(self._titulo_seccion("Resumen Estadístico"))
+
+        datos = [
+            ['Métrica', 'Valor'],
+            ['Total de Consultas', str(estadisticas.get('total_consultas', 0))],
+            ['Tratamientos Activos', str(estadisticas.get('tratamientos_activos', 0))],
+            ['Total de Diagnósticos', str(estadisticas.get('total_diagnosticos', 0))],
+            ['Diagnósticos Graves', str(estadisticas.get('diagnosticos_graves', 0))],
+            ['Tiene Anamnesis', 'Sí' if estadisticas.get('tiene_anamnesis') else 'No'],
+            ['Próxima Cita', estadisticas.get('proxima_cita', 'Sin citas programadas')]
+        ]
+        
+        tabla = Table(datos, colWidths=[3.5*inch, 3.5*inch])
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.colores['primario']),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 1), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        elementos.append(tabla)
+        elementos.append(Spacer(1, 0.35 * inch))
+        
+        return elementos
+    
+    def _crear_anamnesis(self, anamnesis):
+        """Crea la sección completa de anamnesis"""
+        elementos = []
+        
+        elementos.append(PageBreak())
+        elementos.extend(self._titulo_seccion("Anamnesis Psicológica"))
+
+        # Información básica
+        datos_basicos = [
+            ['Fecha de Elaboración:', anamnesis.get('fecha_elaboracion', 'N/A')],
+            ['Última Modificación:', anamnesis.get('fecha_ultima_modificacion', 'N/A')],
+            ['Versión:', str(anamnesis.get('version', 1))],
+            ['Elaborada por:', anamnesis.get('elaborado_por', 'N/A')],
+        ]
+        
+        if anamnesis.get('informante'):
+            datos_basicos.append(['Informante:', anamnesis.get('informante')])
+        if anamnesis.get('relacion_informante'):
+            datos_basicos.append(['Relación:', anamnesis.get('relacion_informante')])
+        
+        tabla_basica = Table(datos_basicos, colWidths=[2*inch, 4*inch])
+        tabla_basica.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_claro']),
+            ('TEXTCOLOR', (0, 0), (0, -1), self.colores['primario']),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+        ]))
+        
+        elementos.append(tabla_basica)
+        elementos.append(Spacer(1, 0.2 * inch))
+        
+        # Motivo de Consulta
+        if anamnesis.get('motivo_consulta'):
+            elementos.append(Paragraph("Motivo de Consulta", self.styles['Seccion']))
+            elementos.append(Paragraph(anamnesis.get('motivo_consulta'), self.styles['TextoBloque']))
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Antecedentes
+        antecedentes = anamnesis.get('antecedentes', {})
+        if any(antecedentes.values()):
+            elementos.append(Paragraph("Antecedentes", self.styles['Seccion']))
+            
+            if antecedentes.get('patologicos_personales'):
+                elementos.append(Paragraph("<b>Personales:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(antecedentes.get('patologicos_personales'), self.styles['TextoBloque']))
+            
+            if antecedentes.get('patologicos_familiares'):
+                elementos.append(Paragraph("<b>Familiares:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(antecedentes.get('patologicos_familiares'), self.styles['TextoBloque']))
+            
+            if antecedentes.get('historia_familiar'):
+                elementos.append(Paragraph("<b>Historia Familiar:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(antecedentes.get('historia_familiar'), self.styles['TextoBloque']))
+            
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Historias
+        historias = anamnesis.get('historias', {})
+        if any(historias.values()):
+            elementos.append(PageBreak())
+            elementos.append(Paragraph("Historia Clínica", self.styles['Seccion']))
+            
+            if historias.get('problema_actual'):
+                elementos.append(Paragraph("<b>Problema Actual:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(historias.get('problema_actual'), self.styles['TextoBloque']))
+            
+            if historias.get('desarrollo'):
+                elementos.append(Paragraph("<b>Desarrollo:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(historias.get('desarrollo'), self.styles['TextoBloque']))
+            
+            if historias.get('academica'):
+                elementos.append(Paragraph("<b>Historia Académica:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(historias.get('academica'), self.styles['TextoBloque']))
+            
+            if historias.get('laboral'):
+                elementos.append(Paragraph("<b>Historia Laboral:</b>", self.styles['TextoNormal']))
+                elementos.append(Paragraph(historias.get('laboral'), self.styles['TextoBloque']))
+            
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Medicación
+        medicacion = anamnesis.get('medicacion', {})
+        if any(medicacion.values()):
+            elementos.append(Paragraph("Medicación y Sustancias", self.styles['Seccion']))
+            
+            if medicacion.get('actual'):
+                elementos.append(Paragraph("<b>Actual:</b> " + medicacion.get('actual'), self.styles['TextoBloque']))
+            
+            if medicacion.get('psiquiatrica_previa'):
+                elementos.append(Paragraph("<b>Psiquiátrica Previa:</b> " + medicacion.get('psiquiatrica_previa'), self.styles['TextoBloque']))
+            
+            if medicacion.get('consumo_sustancias'):
+                elementos.append(Paragraph("<b>Consumo de Sustancias:</b> " + medicacion.get('consumo_sustancias'), self.styles['TextoBloque']))
+            
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Áreas de Funcionamiento
+        areas = anamnesis.get('areas_funcionamiento', {})
+        if any(areas.values()):
+            elementos.append(PageBreak())
+            elementos.append(Paragraph("Áreas de Funcionamiento", self.styles['Seccion']))
+            
+            datos_areas = []
+            if areas.get('relaciones_interpersonales'):
+                datos_areas.append(['Relaciones Interpersonales:', areas.get('relaciones_interpersonales')])
+            if areas.get('actividad_fisica'):
+                datos_areas.append(['Actividad Física:', areas.get('actividad_fisica')])
+            if areas.get('patron_sueno'):
+                datos_areas.append(['Patrón de Sueño:', areas.get('patron_sueno')])
+            if areas.get('patron_alimentacion'):
+                datos_areas.append(['Patrón de Alimentación:', areas.get('patron_alimentacion')])
+            if areas.get('actividad_emocional'):
+                datos_areas.append(['Actividad Emocional:', areas.get('actividad_emocional')])
+            if areas.get('actividad_sexual'):
+                datos_areas.append(['Actividad Sexual:', areas.get('actividad_sexual')])
+            
+            if datos_areas:
+                tabla_areas = Table(datos_areas, colWidths=[2*inch, 4*inch])
+                tabla_areas.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_claro']),
+                    ('TEXTCOLOR', (0, 0), (0, -1), self.colores['primario']),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                    ('TOPPADDING', (0, 0), (-1, -1), 10),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+                ]))
+                elementos.append(tabla_areas)
+                elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Impresión Diagnóstica y Plan
+        if anamnesis.get('impresion_diagnostica'):
+            elementos.append(Paragraph("Impresión Diagnóstica", self.styles['Seccion']))
+            elementos.append(Paragraph(anamnesis.get('impresion_diagnostica'), self.styles['TextoBloque']))
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        if anamnesis.get('plan_trabajo'):
+            elementos.append(Paragraph("Plan de Trabajo", self.styles['Seccion']))
+            elementos.append(Paragraph(anamnesis.get('plan_trabajo'), self.styles['TextoBloque']))
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Evaluaciones y Terapias Requeridas
+        evaluaciones = anamnesis.get('evaluaciones', {})
+        terapias = anamnesis.get('terapias', {})
+        
+        if any(evaluaciones.values()) or any(terapias.values()):
+            elementos.append(Paragraph("Intervenciones Requeridas", self.styles['Seccion']))
+            
+            datos_intervenciones = []
+            
+            # Evaluaciones
+            if evaluaciones.get('neuropsicologica'):
+                datos_intervenciones.append(['✓', 'Evaluación Neuropsicológica'])
+            if evaluaciones.get('psicologica'):
+                datos_intervenciones.append(['✓', 'Evaluación Psicológica'])
+            if evaluaciones.get('psicopedagogica'):
+                datos_intervenciones.append(['✓', 'Evaluación Psicopedagógica'])
+            if evaluaciones.get('fonoaudiologica'):
+                datos_intervenciones.append(['✓', 'Evaluación Fonoaudiológica'])
+            if evaluaciones.get('psicomotora'):
+                datos_intervenciones.append(['✓', 'Evaluación Psicomotora'])
+            
+            # Terapias
+            if terapias.get('individual'):
+                datos_intervenciones.append(['✓', 'Terapia Individual'])
+            if terapias.get('familiar'):
+                datos_intervenciones.append(['✓', 'Terapia Familiar'])
+            if terapias.get('grupal'):
+                datos_intervenciones.append(['✓', 'Terapia Grupal'])
+            if terapias.get('ocupacional'):
+                datos_intervenciones.append(['✓', 'Terapia Ocupacional'])
+            if terapias.get('otra'):
+                datos_intervenciones.append(['✓', f"Otra: {terapias.get('otra')}"])
+            
+            if datos_intervenciones:
+                tabla_intervenciones = Table(datos_intervenciones, colWidths=[0.5*inch, 5.5*inch])
+                tabla_intervenciones.setStyle(TableStyle([
+                    ('TEXTCOLOR', (0, 0), (0, -1), self.colores['exito']),
+                    ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+                    ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+                    ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                elementos.append(tabla_intervenciones)
+                elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Observaciones e Indicaciones
+        if anamnesis.get('observaciones'):
+            elementos.append(Paragraph("Observaciones", self.styles['Seccion']))
+            elementos.append(Paragraph(anamnesis.get('observaciones'), self.styles['TextoBloque']))
+            elementos.append(Spacer(1, 0.15 * inch))
+        
+        if anamnesis.get('indicaciones'):
+            elementos.append(Paragraph("Indicaciones", self.styles['Seccion']))
+            elementos.append(Paragraph(anamnesis.get('indicaciones'), self.styles['TextoBloque']))
+        
+        return elementos
+    
+    def _crear_anamnesis_resumen(self, anamnesis):
+        """Crea un resumen condensado de la anamnesis para la ficha básica"""
+        elementos = []
+        elementos.extend(self._titulo_seccion("Anamnesis (Resumen)"))
+
+        datos = [
+            ['Fecha:', anamnesis.get('fecha_elaboracion', 'N/A')],
+            ['Versión:', str(anamnesis.get('version', 1))],
+        ]
+        
+        if anamnesis.get('motivo_consulta'):
+            motivo_corto = anamnesis.get('motivo_consulta')[:200] + '...' if len(anamnesis.get('motivo_consulta', '')) > 200 else anamnesis.get('motivo_consulta')
+            datos.append(['Motivo:', motivo_corto])
+        
+        if anamnesis.get('impresion_diagnostica'):
+            impresion_corta = anamnesis.get('impresion_diagnostica')[:200] + '...' if len(anamnesis.get('impresion_diagnostica', '')) > 200 else anamnesis.get('impresion_diagnostica')
+            datos.append(['Impresión Diagnóstica:', impresion_corta])
+        
+        tabla = Table(datos, colWidths=[1.5*inch, 4.5*inch])
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_claro']),
+            ('TEXTCOLOR', (0, 0), (0, -1), self.colores['primario']),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
+        ]))
+
+        elementos.append(tabla)
+        elementos.append(Spacer(1, 0.2 * inch))
+
+        return elementos
+
+    def _crear_timeline(self, timeline):
+        """Crea la sección de timeline de eventos"""
+        elementos = []
+        
+        if not timeline:
+            return elementos
+        
+        elementos.append(PageBreak())
+        elementos.extend(self._titulo_seccion("Línea de Tiempo Médica"))
+
+        datos = [['Fecha', 'Tipo', 'Descripción', 'Profesional']]
+        
+        for evento in timeline[:20]:  # Limitar a 20 eventos
+            datos.append([
+                evento.get('fecha', 'N/A'),
+                evento.get('tipo_evento', 'N/A'),
+                evento.get('descripcion', 'N/A')[:50] + '...' if len(evento.get('descripcion', '')) > 50 else evento.get('descripcion', 'N/A'),
+                evento.get('profesional', 'N/A')
+            ])
+        
+        tabla = Table(datos, colWidths=[1.2*inch, 1.3*inch, 2.3*inch, 1.5*inch])
         tabla.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), self.colores['primario']),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -746,499 +1183,3 @@ class CertificadoPDFService:
         buffer.seek(0)
         return buffer
     
-    def _crear_citas(self, citas):
-        """Crea la sección de próximas citas"""
-        elementos = []
-        
-        if not citas:
-            return elementos
-        
-        elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("PRÓXIMAS CITAS PROGRAMADAS", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_amarillo']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        for i, c in enumerate(citas, 1):
-            elementos.append(Paragraph(
-                f"<b>Cita {i} - {c.get('fecha', 'N/A')} a las {c.get('hora_inicio', 'N/A')}</b>",
-                self.styles['Seccion']
-            ))
-            
-            datos_cita = [
-                ['Especialidad:', c.get('especialidad', 'N/A')],
-                ['Especialista:', c.get('especialista', 'N/A')],
-                ['Tipo:', c.get('tipo', 'N/A')],
-                ['Horario:', f"{c.get('hora_inicio', 'N/A')} - {c.get('hora_fin', 'N/A')}"],
-                ['Estado:', c.get('estado', 'N/A')],
-                ['Días faltantes:', f"{c.get('dias_hasta_cita', 0)} días"],
-            ]
-            
-            if c.get('motivo'):
-                datos_cita.append(['Motivo:', c.get('motivo')])
-            
-            tabla_cita = Table(datos_cita, colWidths=[1.5*inch, 4.5*inch])
-            
-            # Color según días faltantes
-            bg_color = self.colores['fondo_verde']  # Verde por defecto
-            text_color = self.colores['exito']
-            
-            dias = c.get('dias_hasta_cita', 999)
-            if dias <= 3:
-                bg_color = colors.HexColor('#fee2e2')  # Rojo claro
-                text_color = self.colores['peligro']
-            elif dias <= 7:
-                bg_color = self.colores['fondo_amarillo']  # Amarillo
-                text_color = self.colores['advertencia']
-            
-            tabla_cita.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), bg_color),
-                ('TEXTCOLOR', (0, 0), (0, -1), text_color),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9.5),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('TOPPADDING', (0, 0), (-1, -1), 10),
-                ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-            ]))
-            
-            elementos.append(tabla_cita)
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        return elementos
-    
-    def _crear_pie_pagina(self):
-        """Crea el pie de página del documento con diseño mejorado"""
-        elementos = []
-        
-        elementos.append(Spacer(1, 0.4 * inch))
-        
-        # Línea separadora
-        linea_separadora = Table(
-            [['']],
-            colWidths=[7*inch],
-            rowHeights=[1]
-        )
-        linea_separadora.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['gris_borde']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        elementos.append(linea_separadora)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        # Texto del pie de página
-        elementos.append(Paragraph(
-            f"<font color='{self.colores['gris_medio']}'><i>Este documento es confidencial y contiene información médica sensible.<br/>"
-            "Su uso está restringido a profesionales autorizados.</i></font>",
-            ParagraphStyle(
-                'PiePagina',
-                parent=self.styles['Normal'],
-                fontSize=8,
-                textColor=self.colores['gris_medio'],
-                alignment=TA_CENTER,
-                leading=10
-            )
-        ))
-        
-        return elementos
-
-    
-    def _crear_estadisticas(self, estadisticas):
-        """Crea la sección de estadísticas con diseño mejorado"""
-        elementos = []
-        
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("RESUMEN ESTADÍSTICO", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        datos = [
-            ['Métrica', 'Valor'],
-            ['Total de Consultas', str(estadisticas.get('total_consultas', 0))],
-            ['Tratamientos Activos', str(estadisticas.get('tratamientos_activos', 0))],
-            ['Total de Diagnósticos', str(estadisticas.get('total_diagnosticos', 0))],
-            ['Diagnósticos Graves', str(estadisticas.get('diagnosticos_graves', 0))],
-            ['Tiene Anamnesis', 'Sí' if estadisticas.get('tiene_anamnesis') else 'No'],
-            ['Próxima Cita', estadisticas.get('proxima_cita', 'Sin citas programadas')]
-        ]
-        
-        tabla = Table(datos, colWidths=[3.5*inch, 3.5*inch])
-        tabla.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), self.colores['primario']),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 1), (1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('TOPPADDING', (0, 0), (-1, -1), 12),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        
-        elementos.append(tabla)
-        elementos.append(Spacer(1, 0.35 * inch))
-        
-        return elementos
-    
-    def _crear_anamnesis(self, anamnesis):
-        """Crea la sección completa de anamnesis"""
-        elementos = []
-        
-        elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("ANAMNESIS PSICOLÓGICA", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        # Información básica
-        datos_basicos = [
-            ['Fecha de Elaboración:', anamnesis.get('fecha_elaboracion', 'N/A')],
-            ['Última Modificación:', anamnesis.get('fecha_ultima_modificacion', 'N/A')],
-            ['Versión:', str(anamnesis.get('version', 1))],
-            ['Elaborada por:', anamnesis.get('elaborado_por', 'N/A')],
-        ]
-        
-        if anamnesis.get('informante'):
-            datos_basicos.append(['Informante:', anamnesis.get('informante')])
-        if anamnesis.get('relacion_informante'):
-            datos_basicos.append(['Relación:', anamnesis.get('relacion_informante')])
-        
-        tabla_basica = Table(datos_basicos, colWidths=[2*inch, 4*inch])
-        tabla_basica.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_amarillo']),
-            ('TEXTCOLOR', (0, 0), (0, -1), self.colores['advertencia']),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-        ]))
-        
-        elementos.append(tabla_basica)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        # Motivo de Consulta
-        if anamnesis.get('motivo_consulta'):
-            elementos.append(Paragraph("Motivo de Consulta", self.styles['Seccion']))
-            elementos.append(Paragraph(anamnesis.get('motivo_consulta'), self.styles['TextoBloque']))
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Antecedentes
-        antecedentes = anamnesis.get('antecedentes', {})
-        if any(antecedentes.values()):
-            elementos.append(Paragraph("Antecedentes", self.styles['Seccion']))
-            
-            if antecedentes.get('patologicos_personales'):
-                elementos.append(Paragraph("<b>Personales:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(antecedentes.get('patologicos_personales'), self.styles['TextoBloque']))
-            
-            if antecedentes.get('patologicos_familiares'):
-                elementos.append(Paragraph("<b>Familiares:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(antecedentes.get('patologicos_familiares'), self.styles['TextoBloque']))
-            
-            if antecedentes.get('historia_familiar'):
-                elementos.append(Paragraph("<b>Historia Familiar:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(antecedentes.get('historia_familiar'), self.styles['TextoBloque']))
-            
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Historias
-        historias = anamnesis.get('historias', {})
-        if any(historias.values()):
-            elementos.append(PageBreak())
-            elementos.append(Paragraph("Historia Clínica", self.styles['Seccion']))
-            
-            if historias.get('problema_actual'):
-                elementos.append(Paragraph("<b>Problema Actual:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(historias.get('problema_actual'), self.styles['TextoBloque']))
-            
-            if historias.get('desarrollo'):
-                elementos.append(Paragraph("<b>Desarrollo:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(historias.get('desarrollo'), self.styles['TextoBloque']))
-            
-            if historias.get('academica'):
-                elementos.append(Paragraph("<b>Historia Académica:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(historias.get('academica'), self.styles['TextoBloque']))
-            
-            if historias.get('laboral'):
-                elementos.append(Paragraph("<b>Historia Laboral:</b>", self.styles['TextoNormal']))
-                elementos.append(Paragraph(historias.get('laboral'), self.styles['TextoBloque']))
-            
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Medicación
-        medicacion = anamnesis.get('medicacion', {})
-        if any(medicacion.values()):
-            elementos.append(Paragraph("Medicación y Sustancias", self.styles['Seccion']))
-            
-            if medicacion.get('actual'):
-                elementos.append(Paragraph("<b>Actual:</b> " + medicacion.get('actual'), self.styles['TextoBloque']))
-            
-            if medicacion.get('psiquiatrica_previa'):
-                elementos.append(Paragraph("<b>Psiquiátrica Previa:</b> " + medicacion.get('psiquiatrica_previa'), self.styles['TextoBloque']))
-            
-            if medicacion.get('consumo_sustancias'):
-                elementos.append(Paragraph("<b>Consumo de Sustancias:</b> " + medicacion.get('consumo_sustancias'), self.styles['TextoBloque']))
-            
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Áreas de Funcionamiento
-        areas = anamnesis.get('areas_funcionamiento', {})
-        if any(areas.values()):
-            elementos.append(PageBreak())
-            elementos.append(Paragraph("Áreas de Funcionamiento", self.styles['Seccion']))
-            
-            datos_areas = []
-            if areas.get('relaciones_interpersonales'):
-                datos_areas.append(['Relaciones Interpersonales:', areas.get('relaciones_interpersonales')])
-            if areas.get('actividad_fisica'):
-                datos_areas.append(['Actividad Física:', areas.get('actividad_fisica')])
-            if areas.get('patron_sueno'):
-                datos_areas.append(['Patrón de Sueño:', areas.get('patron_sueno')])
-            if areas.get('patron_alimentacion'):
-                datos_areas.append(['Patrón de Alimentación:', areas.get('patron_alimentacion')])
-            if areas.get('actividad_emocional'):
-                datos_areas.append(['Actividad Emocional:', areas.get('actividad_emocional')])
-            if areas.get('actividad_sexual'):
-                datos_areas.append(['Actividad Sexual:', areas.get('actividad_sexual')])
-            
-            if datos_areas:
-                tabla_areas = Table(datos_areas, colWidths=[2*inch, 4*inch])
-                tabla_areas.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_verde']),
-                    ('TEXTCOLOR', (0, 0), (0, -1), self.colores['exito']),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9.5),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                    ('TOPPADDING', (0, 0), (-1, -1), 10),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                    ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-                ]))
-                elementos.append(tabla_areas)
-                elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Impresión Diagnóstica y Plan
-        if anamnesis.get('impresion_diagnostica'):
-            elementos.append(Paragraph("Impresión Diagnóstica", self.styles['Seccion']))
-            elementos.append(Paragraph(anamnesis.get('impresion_diagnostica'), self.styles['TextoBloque']))
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        if anamnesis.get('plan_trabajo'):
-            elementos.append(Paragraph("Plan de Trabajo", self.styles['Seccion']))
-            elementos.append(Paragraph(anamnesis.get('plan_trabajo'), self.styles['TextoBloque']))
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Evaluaciones y Terapias Requeridas
-        evaluaciones = anamnesis.get('evaluaciones', {})
-        terapias = anamnesis.get('terapias', {})
-        
-        if any(evaluaciones.values()) or any(terapias.values()):
-            elementos.append(Paragraph("Intervenciones Requeridas", self.styles['Seccion']))
-            
-            datos_intervenciones = []
-            
-            # Evaluaciones
-            if evaluaciones.get('neuropsicologica'):
-                datos_intervenciones.append(['✓', 'Evaluación Neuropsicológica'])
-            if evaluaciones.get('psicologica'):
-                datos_intervenciones.append(['✓', 'Evaluación Psicológica'])
-            if evaluaciones.get('psicopedagogica'):
-                datos_intervenciones.append(['✓', 'Evaluación Psicopedagógica'])
-            if evaluaciones.get('fonoaudiologica'):
-                datos_intervenciones.append(['✓', 'Evaluación Fonoaudiológica'])
-            if evaluaciones.get('psicomotora'):
-                datos_intervenciones.append(['✓', 'Evaluación Psicomotora'])
-            
-            # Terapias
-            if terapias.get('individual'):
-                datos_intervenciones.append(['✓', 'Terapia Individual'])
-            if terapias.get('familiar'):
-                datos_intervenciones.append(['✓', 'Terapia Familiar'])
-            if terapias.get('grupal'):
-                datos_intervenciones.append(['✓', 'Terapia Grupal'])
-            if terapias.get('ocupacional'):
-                datos_intervenciones.append(['✓', 'Terapia Ocupacional'])
-            if terapias.get('otra'):
-                datos_intervenciones.append(['✓', f"Otra: {terapias.get('otra')}"])
-            
-            if datos_intervenciones:
-                tabla_intervenciones = Table(datos_intervenciones, colWidths=[0.5*inch, 5.5*inch])
-                tabla_intervenciones.setStyle(TableStyle([
-                    ('TEXTCOLOR', (0, 0), (0, -1), self.colores['exito']),
-                    ('ALIGN', (0, 0), (0, -1), 'CENTER'),
-                    ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 10),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                    ('TOPPADDING', (0, 0), (-1, -1), 8),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                    ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-                    ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ]))
-                elementos.append(tabla_intervenciones)
-                elementos.append(Spacer(1, 0.15 * inch))
-        
-        # Observaciones e Indicaciones
-        if anamnesis.get('observaciones'):
-            elementos.append(Paragraph("Observaciones", self.styles['Seccion']))
-            elementos.append(Paragraph(anamnesis.get('observaciones'), self.styles['TextoBloque']))
-            elementos.append(Spacer(1, 0.15 * inch))
-        
-        if anamnesis.get('indicaciones'):
-            elementos.append(Paragraph("Indicaciones", self.styles['Seccion']))
-            elementos.append(Paragraph(anamnesis.get('indicaciones'), self.styles['TextoBloque']))
-        
-        return elementos
-    
-    def _crear_anamnesis_resumen(self, anamnesis):
-        """Crea un resumen condensado de la anamnesis para la ficha básica"""
-        elementos = []
-        
-        elementos.append(Paragraph("ANAMNESIS (Resumen)", self.styles['Subtitulo']))
-        
-        datos = [
-            ['Fecha:', anamnesis.get('fecha_elaboracion', 'N/A')],
-            ['Versión:', str(anamnesis.get('version', 1))],
-        ]
-        
-        if anamnesis.get('motivo_consulta'):
-            motivo_corto = anamnesis.get('motivo_consulta')[:200] + '...' if len(anamnesis.get('motivo_consulta', '')) > 200 else anamnesis.get('motivo_consulta')
-            datos.append(['Motivo:', motivo_corto])
-        
-        if anamnesis.get('impresion_diagnostica'):
-            impresion_corta = anamnesis.get('impresion_diagnostica')[:200] + '...' if len(anamnesis.get('impresion_diagnostica', '')) > 200 else anamnesis.get('impresion_diagnostica')
-            datos.append(['Impresión Diagnóstica:', impresion_corta])
-        
-        tabla = Table(datos, colWidths=[1.5*inch, 4.5*inch])
-        tabla.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), self.colores['fondo_amarillo']),
-            ('TEXTCOLOR', (0, 0), (0, -1), self.colores['advertencia']),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-        ]))
-        
-        elementos.append(tabla)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        return elementos
-    
-    def _crear_timeline(self, timeline):
-        """Crea la sección de timeline de eventos"""
-        elementos = []
-        
-        if not timeline:
-            return elementos
-        
-        elementos.append(PageBreak())
-        # Título con fondo
-        titulo_seccion = Table(
-            [[Paragraph("LÍNEA DE TIEMPO MÉDICA", self.styles['Subtitulo'])]],
-            colWidths=[7*inch],
-            rowHeights=[0.5*inch]
-        )
-        titulo_seccion.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.colores['fondo_azul']),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        elementos.append(titulo_seccion)
-        elementos.append(Spacer(1, 0.2 * inch))
-        
-        datos = [['Fecha', 'Tipo', 'Descripción', 'Profesional']]
-        
-        for evento in timeline[:20]:  # Limitar a 20 eventos
-            datos.append([
-                evento.get('fecha', 'N/A'),
-                evento.get('tipo_evento', 'N/A'),
-                evento.get('descripcion', 'N/A')[:50] + '...' if len(evento.get('descripcion', '')) > 50 else evento.get('descripcion', 'N/A'),
-                evento.get('profesional', 'N/A')
-            ])
-        
-        tabla = Table(datos, colWidths=[1.2*inch, 1.3*inch, 2.3*inch, 1.5*inch])
-        tabla.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), self.colores['primario']),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, self.colores['gris_borde']),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.colores['fondo_claro']]),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
-        
-        elementos.append(tabla)
-        elementos.append(Spacer(1, 0.3 * inch))
-        
-        return elementos

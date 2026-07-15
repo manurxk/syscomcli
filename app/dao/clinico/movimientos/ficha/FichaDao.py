@@ -413,6 +413,33 @@ class FichaDao(BaseDAO):
         return self.execute_query(sql, (id_nota,), commit=True) > 0
 
     # ----------------------------------------
+    # DATOS DEL ESPECIALISTA QUE GENERA EL DOCUMENTO
+    # ----------------------------------------
+
+    def getDatosGenerador(self, id_especialista):
+        sql = """
+            SELECT
+                pe.per_nombre || ' ' || pe.per_apellido AS nombre_completo,
+                e.esp_matricula,
+                STRING_AGG(DISTINCT esp.des_especialidad, ', ' ORDER BY esp.des_especialidad) AS especialidades
+            FROM especialistas e
+            JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+            JOIN personas pe ON f.id_persona = pe.id_persona
+            LEFT JOIN especialista_especialidades ee ON ee.id_especialista = e.id_especialista AND ee.est_especialista_especialidad = TRUE
+            LEFT JOIN especialidades esp ON ee.id_especialidad = esp.id_especialidad
+            WHERE e.id_especialista = %s
+            GROUP BY pe.per_nombre, pe.per_apellido, e.esp_matricula
+        """
+        f = self.execute_query_one(sql, (id_especialista,))
+        if not f:
+            return None
+        return {
+            'nombre_completo': f['nombre_completo'],
+            'matricula': f['esp_matricula'],
+            'especialidades': f['especialidades'] or 'N/A',
+        }
+
+    # ----------------------------------------
     # TIMELINE
     # ----------------------------------------
 

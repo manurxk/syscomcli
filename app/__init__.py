@@ -14,6 +14,8 @@ from app.rutas.mantenimiento.referenciales.referenciales_api import referenciale
 from app.rutas.mantenimiento.referenciales.referenciales_routes import referencialesmod
 from app.rutas.mantenimiento.referenciales.cargo.cargo_routes import cargomod
 from app.rutas.mantenimiento.referenciales.cargo.cargo_api import cargoapi
+from app.rutas.mantenimiento.referenciales.permisos.permisos_routes import permisosmod
+from app.rutas.mantenimiento.referenciales.permisos.permisos_api import permisosapi
 from app.rutas.mantenimiento.referenciales.empresa.empresa_routes import empresamod
 from app.rutas.mantenimiento.referenciales.empresa.empresa_api import empresaapi
 from app.rutas.mantenimiento.referenciales.sede.sede_routes import sedemod
@@ -105,6 +107,20 @@ from app.rutas.ventas.referenciales.punto_expedicion.punto_expedicion_routes imp
 from app.rutas.ventas.referenciales.punto_expedicion.punto_expedicion_api import puntoexpedicionapi
 from app.rutas.ventas.movimientos.factura.factura_routes import facturamod
 from app.rutas.ventas.movimientos.factura.factura_api import facturaapi
+from app.rutas.ventas.movimientos.remision.remision_routes import remisionmod
+from app.rutas.ventas.movimientos.remision.remision_api import remisionapi
+from app.rutas.ventas.movimientos.nota_credito.nota_credito_routes import notacreditomod
+from app.rutas.ventas.movimientos.nota_credito.nota_credito_api import notacreditoapi
+from app.rutas.ventas.movimientos.nota_debito.nota_debito_routes import notadebitomod
+from app.rutas.ventas.movimientos.nota_debito.nota_debito_api import notadebitoapi
+from app.rutas.ventas.movimientos.cuenta_cobrar.cuenta_cobrar_routes import cuentacobrarmod
+from app.rutas.ventas.movimientos.cuenta_cobrar.cuenta_cobrar_api import cuentacobrarapi
+from app.rutas.ventas.movimientos.cobranza.cobranza_routes import cobranzamod
+from app.rutas.ventas.movimientos.cobranza.cobranza_api import cobranzaapi
+from app.rutas.ventas.movimientos.recaudacion.recaudacion_routes import recaudacionmod
+from app.rutas.ventas.movimientos.recaudacion.recaudacion_api import recaudacionapi
+from app.rutas.ventas.movimientos.libro_ventas.libro_ventas_routes import libroventasmod
+from app.rutas.ventas.movimientos.libro_ventas.libro_ventas_api import libroventasapi
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -133,6 +149,8 @@ app.register_blueprint(referencialesapi, url_prefix='/api/v1')
 app.register_blueprint(referencialesmod, url_prefix='/mantenimiento/referenciales')
 app.register_blueprint(cargomod, url_prefix='/mantenimiento/referenciales/cargo')
 app.register_blueprint(cargoapi, url_prefix='/api/v1')
+app.register_blueprint(permisosmod, url_prefix='/mantenimiento/referenciales/permisos')
+app.register_blueprint(permisosapi, url_prefix='/api/v1')
 app.register_blueprint(empresamod, url_prefix='/mantenimiento/referenciales/empresa')
 app.register_blueprint(empresaapi, url_prefix='/api/v1')
 app.register_blueprint(sedemod, url_prefix='/mantenimiento/referenciales/sede')
@@ -224,6 +242,20 @@ app.register_blueprint(puntoexpedicionmod, url_prefix='/ventas/referenciales/pun
 app.register_blueprint(puntoexpedicionapi, url_prefix='/api/v1')
 app.register_blueprint(facturamod, url_prefix='/ventas/movimientos/factura')
 app.register_blueprint(facturaapi, url_prefix='/api/v1')
+app.register_blueprint(remisionmod, url_prefix='/ventas/movimientos/remision')
+app.register_blueprint(remisionapi, url_prefix='/api/v1')
+app.register_blueprint(notacreditomod, url_prefix='/ventas/movimientos/nota-credito')
+app.register_blueprint(notacreditoapi, url_prefix='/api/v1')
+app.register_blueprint(notadebitomod, url_prefix='/ventas/movimientos/nota-debito')
+app.register_blueprint(notadebitoapi, url_prefix='/api/v1')
+app.register_blueprint(cuentacobrarmod, url_prefix='/ventas/movimientos/cuenta-cobrar')
+app.register_blueprint(cuentacobrarapi, url_prefix='/api/v1')
+app.register_blueprint(cobranzamod, url_prefix='/ventas/movimientos/cobranza')
+app.register_blueprint(cobranzaapi, url_prefix='/api/v1')
+app.register_blueprint(recaudacionmod, url_prefix='/ventas/movimientos/recaudacion')
+app.register_blueprint(recaudacionapi, url_prefix='/api/v1')
+app.register_blueprint(libroventasmod, url_prefix='/ventas/movimientos/libro-ventas')
+app.register_blueprint(libroventasapi, url_prefix='/api/v1')
 
 # Context processors y helpers de template
 init_context_processors(app)

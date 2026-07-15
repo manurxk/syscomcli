@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify, current_app as app, session
+from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
+from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
+from app.services.factura_pdf_service import FacturaPDFService
 from app.auth.utils.decorators import role_required
 
 facturaapi = Blueprint('facturaapi', __name__)
@@ -83,6 +85,42 @@ def addFactura():
     except Exception as e:
         app.logger.error(f"Error al guardar factura: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@facturaapi.route('/facturas/<int:id_factura>/pdf', methods=['GET'])
+@role_required(*ROLES_VENTAS)
+def getFacturaPDF(id_factura):
+    dao = FacturaDao()
+    factura = dao.getFacturaById(id_factura)
+    if not factura:
+        return jsonify({'success': False, 'error': 'No se encontró la factura.'}), 404
+    detalle = dao.getFacturaDetalle(id_factura)
+
+    empresa = EmpresaDao().getEmpresaPrincipal() or {}
+    ruc = f"{empresa.get('ruc_nit', '')}-{empresa.get('digito_verificador', '')}"
+    config_empresa = {
+        'ruc': ruc,
+        'nombre_empresa': empresa.get('razon_social', ''),
+        'direccion': empresa.get('direccion', ''),
+        'ciudad': '',
+        'telefono': empresa.get('telefono', '') or empresa.get('celular', ''),
+        'email': empresa.get('email', ''),
+        'actividad_economica': empresa.get('actividad_economica_principal', ''),
+    }
+
+    factura_data = dict(factura)
+    factura_data['ruc_emisor'] = ruc
+    factura_data['condicion_venta'] = factura.get('des_condicion_venta', 'Contado')
+    factura_data['moneda'] = factura.get('cod_moneda', 'PYG')
+
+    try:
+        buffer = FacturaPDFService().generar_factura_pdf(factura_data, detalle, config_empresa)
+        nombre = f"factura_{factura['factura_numero'].replace('-', '_')}.pdf"
+        return send_file(buffer, mimetype='application/pdf',
+                         as_attachment=False, download_name=nombre)
+    except Exception as e:
+        app.logger.error(f"Error al generar PDF de factura {id_factura}: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'No se pudo generar el PDF.'}), 500
 
 
 @facturaapi.route('/facturas/<int:id_factura>/anular', methods=['PUT'])

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block titulo %}Nueva Recaudación{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nueva Recaudación</h1>
+          <div class="page-header-subtitle">Registrar agrupación de cobros para depósito bancario</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('recaudacion.recaudacionIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Datos de la Recaudación</h6>
+    </div>
+    <div class="card-body">
+      <form id="frmRecaudacion" novalidate>
+        <div class="row gx-3">
+
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Caja <span class="text-danger">*</span></label>
+            <select class="form-select" id="selCaja" required>
+              <option value="">— Seleccione —</option>
+            </select>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Depósito (banco/cuenta destino) <span class="text-danger">*</span></label>
+            <select class="form-select" id="selDeposito" required>
+              <option value="">— Seleccione —</option>
+            </select>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Fecha de Depósito</label>
+            <input type="date" class="form-control" id="inputFechaDeposito">
+            <div class="form-text">Dejar vacío si aún no se depositó.</div>
+          </div>
+
+        </div>
+
+        <hr>
+        <h6 class="fw-bold mb-3">Desglose de Montos</h6>
+        <div class="row gx-3">
+
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Efectivo (Gs.)</label>
+            <input type="number" class="form-control monto-desglose" id="inEfectivo" min="0" value="0">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Cheques (Gs.)</label>
+            <input type="number" class="form-control monto-desglose" id="inCheques" min="0" value="0">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Tarjetas (Gs.)</label>
+            <input type="number" class="form-control monto-desglose" id="inTarjetas" min="0" value="0">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Total calculado</label>
+            <div class="form-control bg-light fw-bold text-primary" id="lblTotal">0 Gs.</div>
+          </div>
+
+        </div>
+
+        <div class="mb-3">
+          <label class="small mb-1">Observaciones</label>
+          <textarea class="form-control" id="inObs" rows="2"></textarea>
+        </div>
+
+        <div id="alertError" class="alert alert-danger d-none py-2"></div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Recaudación</button>
+          <a href="{{ url_for('recaudacion.recaudacionIndex') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+function gs(v) { return Number(v || 0).toLocaleString('es-PY') + ' Gs.'; }
+
+async function cargarCatalogo(url, sel, campo_id, campo_des) {
+  const r = await fetch(url);
+  const j = await r.json();
+  (j.data || []).forEach(item => {
+    const opt = document.createElement('option');
+    opt.value       = item[campo_id];
+    opt.textContent = item[campo_des];
+    sel.appendChild(opt);
+  });
+}
+
+function recalcularTotal() {
+  const t = ['inEfectivo', 'inCheques', 'inTarjetas']
+    .reduce((s, id) => s + (parseInt(document.getElementById(id).value) || 0), 0);
+  document.getElementById('lblTotal').textContent = gs(t);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarCatalogo('/api/v1/cajas',     document.getElementById('selCaja'),     'id_caja',     'des_caja');
+  cargarCatalogo('/api/v1/depositos', document.getElementById('selDeposito'), 'id_deposito', 'des_deposito');
+
+  document.querySelectorAll('.monto-desglose').forEach(el =>
+    el.addEventListener('input', recalcularTotal)
+  );
+
+  document.getElementById('frmRecaudacion').addEventListener('submit', async e => {
+    e.preventDefault();
+    const alerta = document.getElementById('alertError');
+    alerta.classList.add('d-none');
+
+    const payload = {
+      id_caja:        document.getElementById('selCaja').value,
+      id_deposito:    document.getElementById('selDeposito').value,
+      fecha_deposito: document.getElementById('inputFechaDeposito').value || null,
+      monto_efectivo: parseInt(document.getElementById('inEfectivo').value) || 0,
+      monto_cheques:  parseInt(document.getElementById('inCheques').value)  || 0,
+      monto_tarjetas: parseInt(document.getElementById('inTarjetas').value) || 0,
+      observaciones:  document.getElementById('inObs').value.trim() || null,
+    };
+
+    if (!payload.id_caja || !payload.id_deposito) {
+      alerta.textContent = 'Seleccione caja y depósito.';
+      alerta.classList.remove('d-none');
+      return;
+    }
+    const total = payload.monto_efectivo + payload.monto_cheques + payload.monto_tarjetas;
+    if (total <= 0) {
+      alerta.textContent = 'El monto total debe ser mayor a cero.';
+      alerta.classList.remove('d-none');
+      return;
+    }
+
+    document.getElementById('btnGuardar').disabled = true;
+    const r = await fetch('/api/v1/recaudaciones', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body:    JSON.stringify(payload)
+    });
+    const j = await r.json();
+    document.getElementById('btnGuardar').disabled = false;
+
+    if (j.success) {
+      window.location.href = "{{ url_for('recaudacion.recaudacionIndex') }}";
+    } else {
+      alerta.textContent = j.error || 'Ocurrió un error al guardar.';
+      alerta.classList.remove('d-none');
+    }
+  });
+});
+</script>
+{% endblock %}

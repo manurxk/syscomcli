@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block titulo %}Recaudaciones{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Recaudaciones</h1>
+          <div class="page-header-subtitle">Agrupación de cobros para depósito bancario</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-primary btn-sm" href="{{ url_for('recaudacion.recaudacionAgregar') }}">Nueva Recaudación</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Recaudaciones registradas</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>N° Recaudación</th>
+              <th>Caja</th>
+              <th>Depósito</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Efectivo</th>
+              <th class="text-end">Cheques</th>
+              <th class="text-end">Tarjetas</th>
+              <th>Fecha Recaud.</th>
+              <th>Fecha Depósito</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle / acciones -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="tituloDetalle">Detalle de Recaudación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>N° Recaudación:</strong> <span id="dlNumero"></span></div>
+          <div class="col-md-4"><strong>Caja:</strong> <span id="dlCaja"></span></div>
+          <div class="col-md-4"><strong>Depósito:</strong> <span id="dlDeposito"></span></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>Fecha Recaudación:</strong> <span id="dlFechaRec"></span></div>
+          <div class="col-md-4"><strong>Fecha Depósito:</strong> <span id="dlFechaDep"></span></div>
+          <div class="col-md-4"><strong>Estado:</strong> <span id="dlEstado"></span></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-3"><strong>Total:</strong> <span id="dlTotal" class="fw-bold text-primary"></span></div>
+          <div class="col-md-3"><strong>Efectivo:</strong> <span id="dlEfectivo"></span></div>
+          <div class="col-md-3"><strong>Cheques:</strong> <span id="dlCheques"></span></div>
+          <div class="col-md-3"><strong>Tarjetas:</strong> <span id="dlTarjetas"></span></div>
+        </div>
+        <div class="mb-2"><strong>Observaciones:</strong> <span id="dlObs">—</span></div>
+
+        <!-- Formulario para depositar (visible solo si PENDIENTE) -->
+        <div id="bloqueDepositar" class="border rounded p-3 mt-3 d-none bg-light">
+          <h6 class="fw-bold mb-2">Marcar como Depositada</h6>
+          <div class="row gx-2 align-items-end">
+            <div class="col-md-6">
+              <label class="small mb-1">Fecha de Depósito <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" id="inputFechaDeposito">
+            </div>
+            <div class="col-md-6">
+              <button class="btn btn-success btn-sm w-100" id="btnDepositar">Confirmar Depósito</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/recaudaciones';
+let tbl, recActual;
+
+function gs(v) { return v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '— Gs.'; }
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    order: [[0, 'desc']],
+    columns: [
+      { data: 'id_recaudacion' },
+      { data: 'recaudacion_numero' },
+      { data: 'des_caja' },
+      { data: 'des_deposito' },
+      { data: 'monto_total',    className: 'text-end', render: gs },
+      { data: 'monto_efectivo', className: 'text-end', render: gs },
+      { data: 'monto_cheques',  className: 'text-end', render: gs },
+      { data: 'monto_tarjetas', className: 'text-end', render: gs },
+      { data: 'fecha_recaudacion_fmt', defaultContent: '—' },
+      { data: 'fecha_deposito_fmt',    defaultContent: '—' },
+      { data: 'est_recaudacion', render: v => {
+          const cls = v === 'ANULADA' ? 'danger' : v === 'DEPOSITADA' ? 'success' : 'warning';
+          return `<span class="badge bg-${cls}">${v}</span>`;
+        }
+      },
+      { data: null, orderable: false, render: row =>
+          `<button class="btn btn-xs btn-info" onclick="verDetalle(${row.id_recaudacion})">
+             <i data-feather="eye" class="icon-xs"></i>
+           </button>`
+      }
+    ]
+  });
+  cargar();
+  document.getElementById('btnAnular').addEventListener('click',    anular);
+  document.getElementById('btnDepositar').addEventListener('click', depositar);
+});
+
+async function cargar() {
+  const r = await fetch(API);
+  const j = await r.json();
+  tbl.clear().rows.add(j.data || []).draw();
+  feather.replace();
+}
+
+async function verDetalle(id) {
+  const r = await fetch(`${API}/${id}`);
+  const j = await r.json();
+  if (!j.success) return alert(j.error);
+  const d = j.data;
+  recActual = d;
+
+  document.getElementById('tituloDetalle').textContent      = `Recaudación ${d.recaudacion_numero}`;
+  document.getElementById('dlNumero').textContent           = d.recaudacion_numero || '—';
+  document.getElementById('dlCaja').textContent             = d.des_caja           || '—';
+  document.getElementById('dlDeposito').textContent         = d.des_deposito        || '—';
+  document.getElementById('dlFechaRec').textContent         = d.fecha_recaudacion_fmt || '—';
+  document.getElementById('dlFechaDep').textContent         = d.fecha_deposito_fmt  || 'Sin depositar';
+  document.getElementById('dlTotal').textContent            = gs(d.monto_total);
+  document.getElementById('dlEfectivo').textContent         = gs(d.monto_efectivo);
+  document.getElementById('dlCheques').textContent          = gs(d.monto_cheques);
+  document.getElementById('dlTarjetas').textContent         = gs(d.monto_tarjetas);
+  document.getElementById('dlObs').textContent              = d.observaciones || '—';
+
+  const est = d.est_recaudacion || '';
+  const cls = est === 'ANULADA' ? 'danger' : est === 'DEPOSITADA' ? 'success' : 'warning';
+  document.getElementById('dlEstado').innerHTML = `<span class="badge bg-${cls}">${est}</span>`;
+
+  document.getElementById('bloqueDepositar').classList.toggle('d-none', est !== 'PENDIENTE');
+  document.getElementById('btnAnular').classList.toggle('d-none', est === 'ANULADA');
+
+  new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+}
+
+async function depositar() {
+  if (!recActual) return;
+  const fecha = document.getElementById('inputFechaDeposito').value;
+  if (!fecha) return alert('Ingrese la fecha de depósito.');
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}/${recActual.id_recaudacion}/depositar`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body:    JSON.stringify({ fecha_deposito: fecha })
+  });
+  const j = await r.json();
+  if (j.success) {
+    bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+    cargar();
+  } else {
+    alert(j.error || 'No se pudo confirmar el depósito.');
+  }
+}
+
+async function anular() {
+  if (!recActual || !confirm(`¿Anular la recaudación ${recActual.recaudacion_numero}?`)) return;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}/${recActual.id_recaudacion}/anular`, {
+    method:  'PUT',
+    headers: { 'X-CSRFToken': csrf }
+  });
+  const j = await r.json();
+  if (j.success) {
+    bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+    cargar();
+  } else {
+    alert(j.error || 'No se pudo anular la recaudación.');
+  }
+}
+</script>
+{% endblock %}

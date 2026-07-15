@@ -12,6 +12,9 @@
           <div class="page-header-subtitle" id="subtitulo-ficha">Cargando datos del paciente…</div>
         </div>
         <div class="col-auto mt-4">
+          <button class="btn btn-light btn-sm me-2" id="btn-ficha-pdf">
+            <i data-feather="file-text"></i> Generar PDF
+          </button>
           <a href="{{ url_for('ficha.fichaIndex') }}" class="btn btn-light btn-sm">
             <i data-feather="arrow-left"></i> Volver
           </a>
@@ -569,6 +572,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
   document.getElementById('btn-guardar-nota').addEventListener('click', guardarNota);
+
+  document.getElementById('btn-ficha-pdf').addEventListener('click', () => {
+    fetch(`${API_FICHA}/pdf`, { method: 'GET' })
+      .then(res => {
+        if (res.status === 403) {
+          return res.json().then(r => { throw new Error(r.error || 'Solo un especialista puede generar este documento.'); });
+        }
+        if (!res.ok) throw new Error('No se pudo generar el PDF.');
+        return res.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      })
+      .catch(err => alert(err.message));
+  });
 });
 </script>
 {% endblock %}

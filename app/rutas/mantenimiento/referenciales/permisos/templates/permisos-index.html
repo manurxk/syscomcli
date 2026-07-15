@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Roles y Permisos
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Roles y Permisos</h1>
+          <div class="page-header-subtitle">Qué puede hacer cada rol sobre cada módulo del sistema</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <label class="fw-semibold mb-0" for="selRol">Rol</label>
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="selRol">
+            <option value="">Seleccione un rol...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle" id="tblMatriz">
+          <thead class="table-light" id="theadMatriz"></thead>
+          <tbody id="tbodyMatriz">
+            <tr><td class="text-center text-muted py-4">Seleccione un rol para ver su matriz de permisos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-end">
+      <button type="button" class="btn btn-primary" id="btnGuardar" disabled>
+        <i data-feather="save" class="icon-sm"></i> Guardar cambios
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+  const CSRFToken = "{{ csrf_token() }}";
+  const puedeEditar = {{ ('SUPERADMIN' in roles_usuario or 'ADMINISTRADOR' in roles_usuario) | tojson }};
+  const esSuperAdmin = {{ ('SUPERADMIN' in roles_usuario) | tojson }};
+
+  let acciones = [];
+  let matrizActual = [];
+
+  const cargarRoles = () => {
+    fetch('/api/v1/roles')
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) return;
+        const $sel = $('#selRol');
+        data.data.forEach(rol => {
+          if (rol.cod_rol === 'SUPERADMIN' && !esSuperAdmin) return;
+          $sel.append(`<option value="${rol.id_rol}">${rol.des_rol}</option>`);
+        });
+      });
+  }
+
+  const cargarAcciones = () => {
+    return fetch('/api/v1/permisos/acciones')
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) acciones = data.data;
+      });
+  }
+
+  const renderCabecera = () => {
+    const cols = acciones.map(a => `<th class="text-center">${a.des_accion}</th>`).join('');
+    $('#theadMatriz').html(`<tr><th>Módulo</th>${cols}</tr>`);
+  }
+
+  const renderMatriz = (idRol) => {
+    fetch(`/api/v1/permisos/roles/${idRol}`)
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) {
+          Swal.fire('Error', data.error || 'No se pudo cargar la matriz de permisos.', 'error');
+          return;
+        }
+        matrizActual = data.data;
+
+        const porModulo = {};
+        matrizActual.forEach(fila => {
+          if (!porModulo[fila.id_modulo]) {
+            porModulo[fila.id_modulo] = { des_modulo: fila.des_modulo, acciones: {} };
+          }
+          porModulo[fila.id_modulo].acciones[fila.id_accion] = fila.permitido;
+        });
+
+        const $tbody = $('#tbodyMatriz').empty();
+        Object.keys(porModulo).forEach(idModulo => {
+          const modulo = porModulo[idModulo];
+          const celdas = acciones.map(a => {
+            const checked = modulo.acciones[a.id_accion] ? 'checked' : '';
+            const disabled = puedeEditar ? '' : 'disabled';
+            return `<td class="text-center">
+              <input type="checkbox" class="form-check-input chk-permiso" data-id-modulo="${idModulo}" data-id-accion="${a.id_accion}" ${checked} ${disabled}>
+            </td>`;
+          }).join('');
+          $tbody.append(`<tr><td>${modulo.des_modulo}</td>${celdas}</tr>`);
+        });
+
+        if (puedeEditar) $('#btnGuardar').prop('disabled', false);
+      });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idRol = $('#selRol').val();
+      if (!idRol) return;
+
+      const cambios = [];
+      $('.chk-permiso').each(function () {
+        cambios.push({
+          id_modulo: parseInt($(this).data('id-modulo'), 10),
+          id_accion: parseInt($(this).data('id-accion'), 10),
+          permitido: $(this).is(':checked')
+        });
+      });
+
+      fetch(`/api/v1/permisos/roles/${idRol}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify({ cambios })
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Éxito', 'Permisos actualizados.', 'success');
+          } else {
+            Swal.fire('Error', data.error || 'No se pudieron guardar los permisos.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar los permisos.', 'error'));
+    });
+  }
+
+  $(function () {
+    cargarRoles();
+    cargarAcciones().then(renderCabecera);
+    $('#selRol').on('change', function () {
+      const idRol = $(this).val();
+      $('#btnGuardar').prop('disabled', true);
+      if (idRol) {
+        renderMatriz(idRol);
+      } else {
+        $('#tbodyMatriz').html('<tr><td class="text-center text-muted py-4">Seleccione un rol para ver su matriz de permisos.</td></tr>');
+      }
+    });
+    guardar();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block titulo %}Cobranzas{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Cobranzas</h1>
+          <div class="page-header-subtitle">Registro de cobros efectivos sobre cuentas a cobrar</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-primary btn-sm" href="{{ url_for('cobranza.cobranzaAgregar') }}">Nueva Cobranza</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Cobranzas registradas</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>N° Cobranza</th>
+              <th>Cuenta</th>
+              <th>Factura</th>
+              <th>Paciente</th>
+              <th>Caja</th>
+              <th class="text-end">Monto</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="tituloDetalle">Detalle de Cobranza</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>Paciente:</strong> <span id="dlPaciente"></span></div>
+          <div class="col-md-3"><strong>Factura N°:</strong> <span id="dlFactura"></span></div>
+          <div class="col-md-3"><strong>Fecha:</strong> <span id="dlFecha"></span></div>
+          <div class="col-md-2"><strong>Estado:</strong> <span id="dlEstado"></span></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-3"><strong>Cuenta:</strong> <span id="dlCuenta"></span></div>
+          <div class="col-md-3"><strong>Caja:</strong> <span id="dlCaja"></span></div>
+          <div class="col-md-3"><strong>Monto Total:</strong> <span id="dlMonto" class="fw-bold text-primary"></span></div>
+          <div class="col-md-3"><strong>Observaciones:</strong> <span id="dlObs">—</span></div>
+        </div>
+        <h6 class="fw-bold mb-2">Detalle por forma de cobro</h6>
+        <div class="table-responsive mb-3">
+          <table class="table table-sm table-bordered align-middle" id="tblDetalle">
+            <thead class="table-light">
+              <tr>
+                <th>Forma de Cobro</th>
+                <th>Complemento</th>
+                <th class="text-end">Monto</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/cobranzas';
+let tbl, cobActual;
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    order: [[0, 'desc']],
+    columns: [
+      { data: 'id_cobranza' },
+      { data: 'cobranza_numero' },
+      { data: 'cuenta_numero', defaultContent: '—' },
+      { data: 'factura_numero' },
+      { data: 'paciente_nombre' },
+      { data: 'des_caja', defaultContent: '—' },
+      { data: 'monto_cobrado', className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—' },
+      { data: 'fecha_cobranza_fmt', defaultContent: '—' },
+      { data: 'est_cobranza', render: v => {
+          const cls = v === 'ANULADA' ? 'danger' : 'success';
+          return `<span class="badge bg-${cls}">${v}</span>`;
+        }
+      },
+      { data: null, orderable: false, render: row =>
+          `<button class="btn btn-xs btn-info" onclick="verDetalle(${row.id_cobranza})">
+             <i data-feather="eye" class="icon-xs"></i>
+           </button>` }
+    ]
+  });
+  cargar();
+  document.getElementById('btnAnular').addEventListener('click', anular);
+});
+
+async function cargar() {
+  const r = await fetch(API);
+  const j = await r.json();
+  tbl.clear().rows.add(j.data || []).draw();
+  feather.replace();
+}
+
+async function verDetalle(id) {
+  const r = await fetch(`${API}/${id}`);
+  const j = await r.json();
+  if (!j.success) return alert(j.error);
+  const d = j.data;
+  cobActual = d;
+
+  document.getElementById('tituloDetalle').textContent = `Cobranza ${d.cobranza_numero}`;
+  document.getElementById('dlPaciente').textContent = d.paciente_nombre   || '—';
+  document.getElementById('dlFactura').textContent  = d.factura_numero    || '—';
+  document.getElementById('dlFecha').textContent    = d.fecha_cobranza_fmt || '—';
+  document.getElementById('dlCuenta').textContent   = d.cuenta_numero     || '—';
+  document.getElementById('dlCaja').textContent     = d.des_caja          || '—';
+  document.getElementById('dlMonto').textContent    = d.monto_cobrado ? Number(d.monto_cobrado).toLocaleString('es-PY') + ' Gs.' : '—';
+  document.getElementById('dlObs').textContent      = d.observaciones     || '—';
+
+  const est = d.est_cobranza || '';
+  const cls = est === 'ANULADA' ? 'danger' : 'success';
+  document.getElementById('dlEstado').innerHTML = `<span class="badge bg-${cls}">${est}</span>`;
+
+  const tbody = document.querySelector('#tblDetalle tbody');
+  tbody.innerHTML = '';
+  (d.detalle || []).forEach(det => {
+    const complemento = [
+      det.numero_cheque  ? `Cheque: ${det.numero_cheque}`        : '',
+      det.numero_tarjeta ? `Tarjeta: ${det.numero_tarjeta}`      : '',
+      det.marca_tarjeta  ? `Marca: ${det.marca_tarjeta}`         : '',
+      det.entidad_adherida ? `Entidad: ${det.entidad_adherida}`  : '',
+      det.entidad_emisora  ? `Emisor: ${det.entidad_emisora}`    : '',
+      det.numero_cuotas > 1 ? `${det.numero_cuotas} cuotas`     : '',
+    ].filter(Boolean).join(' | ') || '—';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${det.des_forma_cobro}</td>
+      <td class="small text-muted">${complemento}</td>
+      <td class="text-end">${det.monto_cobrado ? Number(det.monto_cobrado).toLocaleString('es-PY') + ' Gs.' : '—'}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('btnAnular').classList.toggle('d-none', est === 'ANULADA');
+  new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+}
+
+async function anular() {
+  if (!cobActual || !confirm(`¿Anular la cobranza ${cobActual.cobranza_numero}? El pago será revertido en la cuenta a cobrar.`)) return;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}/${cobActual.id_cobranza}/anular`, {
+    method: 'PUT',
+    headers: { 'X-CSRFToken': csrf }
+  });
+  const j = await r.json();
+  if (j.success) {
+    bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+    cargar();
+  } else {
+    alert(j.error || 'No se pudo anular la cobranza.');
+  }
+}
+</script>
+{% endblock %}

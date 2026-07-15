@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block titulo %}Cuentas a Cobrar{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Cuentas a Cobrar</h1>
+          <div class="page-header-subtitle">Deudas pendientes de clientes con condición de crédito</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-primary btn-sm" href="{{ url_for('cobranza.cobranzaAgregar') }}">Nueva Cobranza</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Cuentas a cobrar registradas</h6>
+      <div class="ms-auto d-flex gap-2">
+        <select id="filtroEstado" class="form-select form-select-sm" style="width:180px">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="PARCIAL">Parcial</option>
+          <option value="COBRADA">Cobrada</option>
+          <option value="VENCIDA">Vencida</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>N° Cuenta</th>
+              <th>Factura</th>
+              <th>Paciente</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Pagado</th>
+              <th class="text-end">Pendiente</th>
+              <th>Vencimiento</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="tituloDetalle">Detalle de Cuenta a Cobrar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>Paciente:</strong> <span id="dlPaciente"></span></div>
+          <div class="col-md-3"><strong>Factura N°:</strong> <span id="dlFactura"></span></div>
+          <div class="col-md-2"><strong>Emisión:</strong> <span id="dlEmision"></span></div>
+          <div class="col-md-3"><strong>Vencimiento:</strong> <span id="dlVencimiento"></span></div>
+        </div>
+        <div class="row mb-4">
+          <div class="col-md-3"><strong>Total:</strong> <span id="dlTotal" class="fw-bold"></span></div>
+          <div class="col-md-3"><strong>Pagado:</strong> <span id="dlPagado" class="text-success fw-bold"></span></div>
+          <div class="col-md-3"><strong>Pendiente:</strong> <span id="dlPendiente" class="text-danger fw-bold"></span></div>
+          <div class="col-md-3"><strong>Estado:</strong> <span id="dlEstado"></span></div>
+        </div>
+        <h6 class="fw-bold mb-2">Historial de cobranzas</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle" id="tblCobranzas">
+            <thead class="table-light">
+              <tr>
+                <th>N° Cobranza</th>
+                <th>Fecha</th>
+                <th class="text-end">Monto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <a id="btnNuevaCobranza" class="btn btn-primary btn-sm d-none"
+           href="{{ url_for('cobranza.cobranzaAgregar') }}">Registrar Cobranza</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1/cuentas-cobrar';
+let tbl, datos = [];
+
+const COLORES = {
+  PENDIENTE: 'warning',
+  PARCIAL:   'info',
+  COBRADA:   'success',
+  VENCIDA:   'danger',
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    order: [[7, 'asc']],
+    columns: [
+      { data: 'id_cuenta_cobrar' },
+      { data: 'cuenta_numero' },
+      { data: 'factura_numero' },
+      { data: 'paciente_nombre' },
+      { data: 'monto_total',     className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—' },
+      { data: 'monto_pagado',    className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '0 Gs.' },
+      { data: 'monto_pendiente', className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '0 Gs.' },
+      { data: 'fecha_vencimiento_fmt', defaultContent: '—' },
+      { data: 'est_cuenta_cobrar', render: v => {
+          const cls = COLORES[v] || 'secondary';
+          return `<span class="badge bg-${cls}">${v}</span>`;
+        }
+      },
+      { data: null, orderable: false, render: row =>
+          `<button class="btn btn-xs btn-info" onclick="verDetalle(${row.id_cuenta_cobrar})">
+             <i data-feather="eye" class="icon-xs"></i>
+           </button>` }
+    ]
+  });
+  cargar();
+
+  document.getElementById('filtroEstado').addEventListener('change', function() {
+    const est = this.value;
+    tbl.clear().rows.add(est ? datos.filter(d => d.est_cuenta_cobrar === est) : datos).draw();
+    feather.replace();
+  });
+});
+
+async function cargar() {
+  const r = await fetch(API);
+  const j = await r.json();
+  datos = j.data || [];
+  tbl.clear().rows.add(datos).draw();
+  feather.replace();
+}
+
+async function verDetalle(id) {
+  const r = await fetch(`${API}/${id}`);
+  const j = await r.json();
+  if (!j.success) return alert(j.error);
+  const d = j.data;
+
+  document.getElementById('tituloDetalle').textContent = `Cuenta ${d.cuenta_numero}`;
+  document.getElementById('dlPaciente').textContent    = d.paciente_nombre   || '—';
+  document.getElementById('dlFactura').textContent     = d.factura_numero    || '—';
+  document.getElementById('dlEmision').textContent     = d.fecha_emision_fmt || '—';
+  document.getElementById('dlVencimiento').textContent = d.fecha_vencimiento_fmt || '—';
+  document.getElementById('dlTotal').textContent    = d.monto_total    ? Number(d.monto_total).toLocaleString('es-PY') + ' Gs.'    : '—';
+  document.getElementById('dlPagado').textContent   = d.monto_pagado   ? Number(d.monto_pagado).toLocaleString('es-PY') + ' Gs.'   : '0 Gs.';
+  document.getElementById('dlPendiente').textContent = d.monto_pendiente ? Number(d.monto_pendiente).toLocaleString('es-PY') + ' Gs.' : '0 Gs.';
+
+  const est = d.est_cuenta_cobrar || '';
+  const cls = COLORES[est] || 'secondary';
+  document.getElementById('dlEstado').innerHTML = `<span class="badge bg-${cls}">${est}</span>`;
+
+  const tbody = document.querySelector('#tblCobranzas tbody');
+  tbody.innerHTML = '';
+  const cobs = d.cobranzas || [];
+  if (!cobs.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin cobranzas registradas.</td></tr>';
+  } else {
+    cobs.forEach(c => {
+      const clsCob = c.est_cobranza === 'ANULADA' ? 'danger' : 'success';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${c.cobranza_numero}</td>
+        <td>${c.fecha_cobranza_fmt || '—'}</td>
+        <td class="text-end">${c.monto_cobrado ? Number(c.monto_cobrado).toLocaleString('es-PY') + ' Gs.' : '—'}</td>
+        <td><span class="badge bg-${clsCob}">${c.est_cobranza}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const btnCob = document.getElementById('btnNuevaCobranza');
+  btnCob.classList.toggle('d-none', est === 'COBRADA' || est === 'ANULADA');
+
+  new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+}
+</script>
+{% endblock %}

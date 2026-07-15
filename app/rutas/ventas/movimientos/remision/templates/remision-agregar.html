@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% block titulo %}Nueva Remisión{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nueva Nota de Remisión</h1>
+          <div class="page-header-subtitle">Documento de entrega física de bienes</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('remision.remisionIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Buscar Paciente -->
+  <div class="card shadow-sm mb-4 border-start-primary" id="card-busqueda">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="search" class="icon-sm"></i> Buscar Paciente
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-8 mb-3 mb-md-0 position-relative">
+          <label class="small mb-1" for="txtBuscarPaciente">Nombre, apellido o historia clínica</label>
+          <input class="form-control" id="txtBuscarPaciente" type="text" placeholder="Escriba para buscar..." autocomplete="off">
+          <div class="list-group" id="sugerenciasPaciente" style="position:absolute;top:100%;left:0;right:0;z-index:1050;display:none;"></div>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" id="btnSeleccionarPaciente" disabled>Seleccionar y continuar</button>
+        </div>
+      </div>
+      <input type="hidden" id="hidIdPaciente">
+    </div>
+  </div>
+
+  <!-- Formulario (oculto hasta seleccionar paciente) -->
+  <div id="contenedor-remision" style="display:none;">
+
+    <!-- Info Paciente -->
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="user" class="icon-sm"></i> Paciente seleccionado
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="small text-muted">Nombre completo</label>
+            <p class="fw-bold mb-0" id="lblPacienteNombre">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Cédula</label>
+            <p class="mb-0" id="lblPacienteCedula">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Historia clínica</label>
+            <p class="mb-0" id="lblHistoriaClinica">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cabecera Remisión -->
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="truck" class="icon-sm"></i> Datos de la Remisión
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">Fecha de Remisión <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="txtFechaRemision">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">Fecha de Entrega estimada</label>
+            <input type="date" class="form-control" id="txtFechaEntrega">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">N° de Pedido (opcional)</label>
+            <input type="number" class="form-control" id="txtIdPedido" placeholder="ID del pedido">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="fw-semibold">N° de Factura (opcional)</label>
+            <input type="number" class="form-control" id="txtIdFactura" placeholder="ID de la factura">
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-12 mb-3">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="txtObservaciones" placeholder="Observaciones generales de la remisión">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle de ítems -->
+    <div class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2">
+          <i data-feather="list" class="icon-sm"></i> Ítems a Remitir
+        </h6>
+        <button type="button" class="btn btn-success btn-sm ms-auto" id="btnAgregarItem">
+          <i data-feather="plus" class="icon-xs me-1"></i> Agregar ítem
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover table-bordered align-middle mb-0" id="tblDetalle">
+            <thead class="table-light">
+              <tr>
+                <th>Descripción</th>
+                <th class="text-center" style="width:100px">Cantidad</th>
+                <th style="width:120px">Unidad</th>
+                <th>Observaciones</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDetalle">
+              <tr id="filaVacia"><td colspan="5" class="text-center text-muted py-3">Sin ítems. Hacé clic en "Agregar ítem".</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-end gap-2">
+          <a class="btn btn-secondary" href="{{ url_for('remision.remisionIndex') }}">Cancelar</a>
+          <button type="button" class="btn btn-primary" id="btnGuardar">Guardar Remisión</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /contenedor-remision -->
+</div>
+
+<!-- Modal Agregar Ítem -->
+<div class="modal fade" id="modalItem" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Agregar Ítem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editIdx" value="-1">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="itemDesc" placeholder="Nombre del bien o servicio">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Cantidad <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="itemCant" value="1" min="0.01" step="0.01">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Unidad</label>
+            <input type="text" class="form-control" id="itemUnidad" placeholder="ej. unidades, cajas">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="itemObs" placeholder="Opcional">
+          </div>
+          <div class="col-12">
+            <label class="fw-semibold">Ítem de catálogo (opcional)</label>
+            <select class="form-select" id="selItemServicio">
+              <option value="">Sin ítem de catálogo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnConfirmarItem">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_REM = '/api/v1/remisiones';
+const API_PAC = '/api/v1/pacientes';
+const API_IS  = '/api/v1/items-servicios';
+
+let detalles = [];
+
+// Autocomplete paciente
+let pacienteTimer;
+document.getElementById('txtBuscarPaciente').addEventListener('input', function() {
+  clearTimeout(pacienteTimer);
+  const q = this.value.trim();
+  if (q.length < 2) { document.getElementById('sugerenciasPaciente').style.display = 'none'; return; }
+  pacienteTimer = setTimeout(async () => {
+    const r = await fetch(`${API_PAC}/buscar?q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    const lista = document.getElementById('sugerenciasPaciente');
+    lista.innerHTML = '';
+    (j.data || []).slice(0, 8).forEach(p => {
+      const a = document.createElement('a');
+      a.className = 'list-group-item list-group-item-action';
+      a.textContent = `${p.per_nombre} ${p.per_apellido} — HC: ${p.pac_historia_clinica}`;
+      a.href = '#';
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('hidIdPaciente').value = p.id_paciente;
+        document.getElementById('txtBuscarPaciente').value = `${p.per_nombre} ${p.per_apellido}`;
+        const btn = document.getElementById('btnSeleccionarPaciente');
+        btn.disabled = false;
+        btn.dataset.nombre = `${p.per_nombre} ${p.per_apellido}`;
+        btn.dataset.cedula = p.per_cedula;
+        btn.dataset.hc = p.pac_historia_clinica;
+        lista.style.display = 'none';
+      });
+      lista.appendChild(a);
+    });
+    lista.style.display = lista.children.length ? 'block' : 'none';
+  }, 300);
+});
+
+document.getElementById('btnSeleccionarPaciente').addEventListener('click', function() {
+  document.getElementById('lblPacienteNombre').textContent = this.dataset.nombre;
+  document.getElementById('lblPacienteCedula').textContent = this.dataset.cedula;
+  document.getElementById('lblHistoriaClinica').textContent = this.dataset.hc;
+  document.getElementById('card-busqueda').style.display = 'none';
+  document.getElementById('contenedor-remision').style.display = '';
+  feather.replace();
+});
+
+// Tabla de ítems
+function renderTabla() {
+  const tbody = document.getElementById('tbodyDetalle');
+  const filaVacia = document.getElementById('filaVacia');
+  if (!detalles.length) {
+    filaVacia.style.display = '';
+    while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+    return;
+  }
+  filaVacia.style.display = 'none';
+  while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+  detalles.forEach((d, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.item_descripcion}</td>
+      <td class="text-center">${d.item_cantidad}</td>
+      <td>${d.item_unidad || '—'}</td>
+      <td>${d.observaciones || '—'}</td>
+      <td class="text-center">
+        <button class="btn btn-xs btn-danger" onclick="quitarItem(${i})">
+          <i data-feather="x" class="icon-xs"></i>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  feather.replace();
+}
+
+function quitarItem(i) {
+  detalles.splice(i, 1);
+  renderTabla();
+}
+
+// Autocompletar desde catálogo
+document.getElementById('selItemServicio').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('itemDesc').value = opt.dataset.desc || opt.textContent;
+});
+
+// Abrir modal
+document.getElementById('btnAgregarItem').addEventListener('click', () => {
+  document.getElementById('editIdx').value = -1;
+  document.getElementById('itemDesc').value = '';
+  document.getElementById('itemCant').value = 1;
+  document.getElementById('itemUnidad').value = '';
+  document.getElementById('itemObs').value = '';
+  document.getElementById('selItemServicio').value = '';
+  new bootstrap.Modal(document.getElementById('modalItem')).show();
+});
+
+// Confirmar ítem
+document.getElementById('btnConfirmarItem').addEventListener('click', () => {
+  const desc = document.getElementById('itemDesc').value.trim();
+  const cant = parseFloat(document.getElementById('itemCant').value) || 0;
+  const unidad = document.getElementById('itemUnidad').value.trim() || null;
+  const obs = document.getElementById('itemObs').value.trim() || null;
+  const id_item_servicio = document.getElementById('selItemServicio').value || null;
+
+  if (!desc) { alert('La descripción es obligatoria.'); return; }
+  if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
+
+  const item = {
+    item_descripcion: desc,
+    item_cantidad: cant,
+    item_unidad: unidad,
+    observaciones: obs,
+    id_item_servicio: id_item_servicio ? parseInt(id_item_servicio) : null
+  };
+
+  const idx = parseInt(document.getElementById('editIdx').value);
+  if (idx >= 0) detalles[idx] = item;
+  else detalles.push(item);
+
+  bootstrap.Modal.getInstance(document.getElementById('modalItem')).hide();
+  renderTabla();
+});
+
+// Guardar remisión
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+  const idPaciente = document.getElementById('hidIdPaciente').value;
+  const fecha = document.getElementById('txtFechaRemision').value;
+
+  if (!idPaciente) { alert('Debés seleccionar un paciente.'); return; }
+  if (!fecha) { alert('La fecha de remisión es obligatoria.'); return; }
+  if (!detalles.length) { alert('Debe agregar al menos un ítem.'); return; }
+
+  const body = {
+    id_paciente: parseInt(idPaciente),
+    fecha_remision: fecha,
+    fecha_entrega: document.getElementById('txtFechaEntrega').value || null,
+    id_pedido: parseInt(document.getElementById('txtIdPedido').value) || null,
+    id_factura: parseInt(document.getElementById('txtIdFactura').value) || null,
+    observaciones: document.getElementById('txtObservaciones').value.trim() || null,
+    detalles: detalles
+  };
+
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  try {
+    const r = await fetch(API_REM, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    if (j.success) {
+      window.location.href = "{{ url_for('remision.remisionIndex') }}";
+    } else {
+      alert(j.error || 'Error al guardar la remisión.');
+    }
+  } catch (e) {
+    alert('Error de conexión al guardar la remisión.');
+  }
+});
+
+// Carga inicial
+async function inicializar() {
+  document.getElementById('txtFechaRemision').value = new Date().toISOString().slice(0, 10);
+
+  const rIS = await fetch(API_IS).then(r => r.json());
+  const selIS = document.getElementById('selItemServicio');
+  selIS.innerHTML = '<option value="">Sin ítem de catálogo</option>';
+  (rIS.data || []).filter(i => i.est_item_servicio).forEach(i => {
+    const o = document.createElement('option');
+    o.value = i.id_item_servicio;
+    o.textContent = i.des_item_servicio;
+    o.dataset.desc = i.des_item_servicio;
+    selIS.appendChild(o);
+  });
+}
+
+inicializar();
+</script>
+{% endblock %}

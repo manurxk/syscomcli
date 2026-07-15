@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% block titulo %}Nueva Nota de Crédito{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nueva Nota de Crédito</h1>
+          <div class="page-header-subtitle">Rectificación a la baja sobre una factura emitida</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('nota_credito.notaCreditoIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Selección de factura -->
+  <div class="card shadow-sm mb-4 border-start-primary" id="card-factura">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="file-text" class="icon-sm"></i> Seleccionar Factura a Rectificar
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-8 mb-3 mb-md-0">
+          <label class="small mb-1" for="selFactura">Factura <span class="text-danger">*</span></label>
+          <select class="form-select" id="selFactura">
+            <option value="">— Seleccione una factura —</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" id="btnSeleccionarFactura" disabled>Seleccionar y continuar</button>
+        </div>
+      </div>
+      <input type="hidden" id="hidIdFactura">
+    </div>
+  </div>
+
+  <!-- Formulario (oculto hasta seleccionar factura) -->
+  <div id="contenedor-nc" style="display:none;">
+
+    <!-- Info de la factura seleccionada -->
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="file-text" class="icon-sm"></i> Factura seleccionada
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <label class="small text-muted">N° Factura</label>
+            <p class="fw-bold mb-0" id="lblFacturaNro">—</p>
+          </div>
+          <div class="col-md-4">
+            <label class="small text-muted">Paciente</label>
+            <p class="mb-0" id="lblPacienteNombre">—</p>
+          </div>
+          <div class="col-md-2">
+            <label class="small text-muted">Cédula</label>
+            <p class="mb-0" id="lblPacienteCedula">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Total Factura</label>
+            <p class="mb-0 fw-bold" id="lblFacturaTotal">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cabecera de la NC -->
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="minus-circle" class="icon-sm"></i> Datos de la Nota de Crédito
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Tipo de Comprobante</label>
+            <select class="form-select" id="selTipoComprobante">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Número de Timbrado (SIFEN)</label>
+            <input type="text" class="form-control" id="txtNumeroTimbrado" placeholder="Opcional — ingreso manual">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="fw-semibold">Código CDC (SIFEN)</label>
+            <input type="text" class="form-control" id="txtCodigoSifen" placeholder="Opcional">
+          </div>
+        </div>
+        <div class="row gx-3">
+          <div class="col-md-12 mb-3">
+            <label class="fw-semibold">Motivo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtMotivo" placeholder="Motivo de la nota de crédito (devolución, error de precio, etc.)">
+          </div>
+          <div class="col-md-12">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="txtObservaciones" placeholder="Observaciones adicionales">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle de ítems -->
+    <div class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2">
+          <i data-feather="list" class="icon-sm"></i> Ítems a Acreditar
+        </h6>
+        <button type="button" class="btn btn-success btn-sm ms-auto" id="btnAgregarItem">
+          <i data-feather="plus" class="icon-xs me-1"></i> Agregar ítem
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover table-bordered align-middle mb-0" id="tblDetalle">
+            <thead class="table-light">
+              <tr>
+                <th>Descripción</th>
+                <th class="text-center" style="width:100px">Cantidad</th>
+                <th class="text-end" style="width:140px">Precio Unit. (Gs.)</th>
+                <th class="text-end" style="width:140px">Monto (Gs.)</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDetalle">
+              <tr id="filaVacia"><td colspan="5" class="text-center text-muted py-3">Sin ítems. Hacé clic en "Agregar ítem".</td></tr>
+            </tbody>
+            <tfoot>
+              <tr class="table-warning d-none" id="filaTotales">
+                <td colspan="3" class="text-end fw-bold">Total a Acreditar:</td>
+                <td class="text-end fw-bold" id="lblTotal">0 Gs.</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-end gap-2">
+          <a class="btn btn-secondary" href="{{ url_for('nota_credito.notaCreditoIndex') }}">Cancelar</a>
+          <button type="button" class="btn btn-primary" id="btnGuardar">Guardar Nota de Crédito</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /contenedor-nc -->
+</div>
+
+<!-- Modal Agregar Ítem -->
+<div class="modal fade" id="modalItem" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Agregar Ítem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editIdx" value="-1">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="itemDesc" placeholder="Descripción del ítem a acreditar">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Cantidad <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="itemCant" value="1" min="1" step="1">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Precio Unit. (Gs.) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="itemPrecio" value="0" min="0" step="1">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Monto (Gs.)</label>
+            <input type="number" class="form-control bg-light" id="itemMonto" value="0" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnConfirmarItem">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_NC  = '/api/v1/notas-credito';
+const API_FAC = '/api/v1/facturas';
+const API_TC  = '/api/v1/tipos-comprobantes';
+
+let detalles = [];
+
+// ── Inicialización ─────────────────────────────────────────────────────────
+async function inicializar() {
+  // Cargar facturas
+  const rFac = await fetch(API_FAC);
+  const jFac = await rFac.json();
+  const sel = document.getElementById('selFactura');
+  (jFac.data || []).forEach(f => {
+    const o = document.createElement('option');
+    o.value = f.id_factura;
+    o.textContent = `${f.factura_numero} — ${f.paciente_nombre}`;
+    o.dataset.numero  = f.factura_numero;
+    o.dataset.nombre  = f.paciente_nombre;
+    o.dataset.cedula  = f.paciente_cedula;
+    o.dataset.total   = f.factura_total;
+    sel.appendChild(o);
+  });
+
+  // Cargar tipos de comprobante
+  const rTC = await fetch(API_TC);
+  const jTC = await rTC.json();
+  const selTC = document.getElementById('selTipoComprobante');
+  (jTC.data || []).forEach(tc => {
+    const o = document.createElement('option');
+    o.value = tc.id_tipo_comprobante;
+    o.textContent = tc.des_tipo_comprobante;
+    selTC.appendChild(o);
+  });
+}
+
+// ── Seleccionar factura ────────────────────────────────────────────────────
+document.getElementById('selFactura').addEventListener('change', function() {
+  document.getElementById('btnSeleccionarFactura').disabled = !this.value;
+});
+
+document.getElementById('btnSeleccionarFactura').addEventListener('click', function() {
+  const opt = document.getElementById('selFactura').selectedOptions[0];
+  if (!opt.value) return;
+  document.getElementById('hidIdFactura').value = opt.value;
+  document.getElementById('lblFacturaNro').textContent    = opt.dataset.numero || '—';
+  document.getElementById('lblPacienteNombre').textContent = opt.dataset.nombre || '—';
+  document.getElementById('lblPacienteCedula').textContent = opt.dataset.cedula || '—';
+  document.getElementById('lblFacturaTotal').textContent  =
+    opt.dataset.total ? Number(opt.dataset.total).toLocaleString('es-PY') + ' Gs.' : '—';
+
+  document.getElementById('card-factura').style.display = 'none';
+  document.getElementById('contenedor-nc').style.display = '';
+  feather.replace();
+});
+
+// ── Tabla de ítems ─────────────────────────────────────────────────────────
+function recalcularMonto() {
+  const cant   = parseFloat(document.getElementById('itemCant').value) || 0;
+  const precio = parseFloat(document.getElementById('itemPrecio').value) || 0;
+  document.getElementById('itemMonto').value = Math.round(cant * precio);
+}
+
+document.getElementById('itemCant').addEventListener('input', recalcularMonto);
+document.getElementById('itemPrecio').addEventListener('input', recalcularMonto);
+
+function renderTabla() {
+  const tbody    = document.getElementById('tbodyDetalle');
+  const filaVacia = document.getElementById('filaVacia');
+  const filaTotales = document.getElementById('filaTotales');
+  if (!detalles.length) {
+    filaVacia.style.display = '';
+    filaTotales.classList.add('d-none');
+    while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+    return;
+  }
+  filaVacia.style.display = 'none';
+  filaTotales.classList.remove('d-none');
+  while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+
+  let totalGral = 0;
+  detalles.forEach((d, i) => {
+    totalGral += d.monto_total;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.item_descripcion}</td>
+      <td class="text-center">${d.item_cantidad}</td>
+      <td class="text-end">${Number(d.item_precio_unitario).toLocaleString('es-PY')}</td>
+      <td class="text-end">${Number(d.monto_total).toLocaleString('es-PY')} Gs.</td>
+      <td class="text-center">
+        <button class="btn btn-xs btn-danger" onclick="quitarItem(${i})">
+          <i data-feather="x" class="icon-xs"></i>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('lblTotal').textContent = Number(totalGral).toLocaleString('es-PY') + ' Gs.';
+  feather.replace();
+}
+
+function quitarItem(i) {
+  detalles.splice(i, 1);
+  renderTabla();
+}
+
+document.getElementById('btnAgregarItem').addEventListener('click', () => {
+  document.getElementById('editIdx').value = -1;
+  document.getElementById('itemDesc').value  = '';
+  document.getElementById('itemCant').value  = 1;
+  document.getElementById('itemPrecio').value = 0;
+  document.getElementById('itemMonto').value  = 0;
+  new bootstrap.Modal(document.getElementById('modalItem')).show();
+});
+
+document.getElementById('btnConfirmarItem').addEventListener('click', () => {
+  const desc   = document.getElementById('itemDesc').value.trim();
+  const cant   = parseFloat(document.getElementById('itemCant').value) || 0;
+  const precio = parseFloat(document.getElementById('itemPrecio').value) || 0;
+  const monto  = Math.round(cant * precio);
+
+  if (!desc)  { alert('La descripción es obligatoria.'); return; }
+  if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
+
+  const item = { item_descripcion: desc, item_cantidad: cant, item_precio_unitario: precio, monto_total: monto };
+  const idx  = parseInt(document.getElementById('editIdx').value);
+  if (idx >= 0) detalles[idx] = item; else detalles.push(item);
+
+  bootstrap.Modal.getInstance(document.getElementById('modalItem')).hide();
+  renderTabla();
+});
+
+// ── Guardar ────────────────────────────────────────────────────────────────
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+  const idFactura = document.getElementById('hidIdFactura').value;
+  const motivo    = document.getElementById('txtMotivo').value.trim();
+
+  if (!idFactura) { alert('Debés seleccionar una factura.'); return; }
+  if (!motivo)    { alert('El motivo es obligatorio.'); return; }
+  if (!detalles.length) { alert('Debe agregar al menos un ítem.'); return; }
+
+  const body = {
+    id_factura:          parseInt(idFactura),
+    id_tipo_comprobante: parseInt(document.getElementById('selTipoComprobante').value) || null,
+    motivo:              motivo,
+    numero_timbrado:     document.getElementById('txtNumeroTimbrado').value.trim() || null,
+    codigo_sifen:        document.getElementById('txtCodigoSifen').value.trim() || null,
+    observaciones:       document.getElementById('txtObservaciones').value.trim() || null,
+    detalles:            detalles
+  };
+
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  try {
+    const r = await fetch(API_NC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    if (j.success) {
+      window.location.href = "{{ url_for('nota_credito.notaCreditoIndex') }}";
+    } else {
+      alert(j.error || 'Error al guardar la nota de crédito.');
+    }
+  } catch (e) {
+    alert('Error de conexión al guardar la nota de crédito.');
+  }
+});
+
+inicializar();
+</script>
+{% endblock %}

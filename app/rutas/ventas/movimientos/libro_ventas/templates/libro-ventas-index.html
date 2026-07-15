@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block titulo %}Libro de Ventas{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Libro de Ventas</h1>
+          <div class="page-header-subtitle">Registro cronológico de facturas, notas de crédito y débito</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Filtros -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body py-3">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-3 mb-2 mb-md-0">
+          <label class="small mb-1">Fecha desde</label>
+          <input type="date" class="form-control form-control-sm" id="inDesde">
+        </div>
+        <div class="col-md-3 mb-2 mb-md-0">
+          <label class="small mb-1">Fecha hasta</label>
+          <input type="date" class="form-control form-control-sm" id="inHasta">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary btn-sm w-100" id="btnFiltrar">
+            <i data-feather="search" class="icon-xs me-1"></i> Filtrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tarjetas de totales -->
+  <div class="row gx-3 mb-4" id="bloqueResumen" style="display:none !important;">
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card border-start-primary shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Total Registros</div>
+          <div class="fw-bold fs-5" id="resTotalReg">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card border-start-success shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Total Gravado</div>
+          <div class="fw-bold fs-5 text-success" id="resTotalGrav">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card border-start-info shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Total IVA</div>
+          <div class="fw-bold fs-5 text-info" id="resTotalIva">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card border-start-warning shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Total General</div>
+          <div class="fw-bold fs-5 text-warning" id="resTotalTotal">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen por tipo -->
+  <div class="card shadow-sm mb-4 d-none" id="cardResumenTipo">
+    <div class="card-header py-2">
+      <h6 class="m-0 fw-bold">Resumen por tipo de comprobante</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0" id="tblResumen">
+          <thead class="table-light">
+            <tr>
+              <th>Tipo</th>
+              <th class="text-center">Cantidad</th>
+              <th class="text-end">Gravado</th>
+              <th class="text-end">Exento</th>
+              <th class="text-end">IVA</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla detalle -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+      <h6 class="m-0 fw-bold">Detalle del Libro de Ventas</h6>
+      <small class="text-muted">Solo lectura — se alimenta automáticamente</small>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>N° Comprobante</th>
+              <th>Paciente</th>
+              <th>Cédula</th>
+              <th class="text-end">Gravado</th>
+              <th class="text-end">Exento</th>
+              <th class="text-end">IVA</th>
+              <th class="text-end">Total</th>
+              <th>Timbrado</th>
+              <th>SIFEN</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = '/api/v1/libro-ventas';
+let tbl;
+
+function gs(v) { return v !== null && v !== undefined ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—'; }
+
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = $('#tbl').DataTable({
+    language: { url: '/static/plugins/datatables/lang/es.json' },
+    order: [[0, 'desc']],
+    columns: [
+      { data: 'id_libro_ventas' },
+      { data: 'libro_fecha_fmt',     defaultContent: '—' },
+      { data: 'tipo_comprobante',    render: v => {
+          const cls = v === 'FACTURA' ? 'primary' : v === 'NOTA_CREDITO' ? 'success' : 'warning';
+          return `<span class="badge bg-${cls}">${v}</span>`;
+        }
+      },
+      { data: 'numero_comprobante',  defaultContent: '—' },
+      { data: 'paciente_nombre',     defaultContent: '—' },
+      { data: 'paciente_cedula',     defaultContent: '—' },
+      { data: 'monto_gravado',  className: 'text-end', render: gs },
+      { data: 'monto_exento',   className: 'text-end', render: gs },
+      { data: 'monto_iva',      className: 'text-end', render: gs },
+      { data: 'monto_total',    className: 'text-end fw-bold', render: gs },
+      { data: 'numero_timbrado', defaultContent: '—' },
+      { data: 'codigo_sifen',    defaultContent: '—', render: v => v ? `<span class="small text-muted">${v.substring(0, 12)}…</span>` : '—' },
+    ]
+  });
+
+  document.getElementById('btnFiltrar').addEventListener('click', cargar);
+  cargar();
+  feather.replace();
+});
+
+async function cargar() {
+  const desde = document.getElementById('inDesde').value;
+  const hasta = document.getElementById('inHasta').value;
+  let url = API;
+  const params = [];
+  if (desde) params.push(`fecha_desde=${desde}`);
+  if (hasta) params.push(`fecha_hasta=${hasta}`);
+  if (params.length) url += '?' + params.join('&');
+
+  const r = await fetch(url);
+  const j = await r.json();
+  if (!j.success) { alert(j.error || 'Error al cargar libro de ventas.'); return; }
+
+  tbl.clear().rows.add(j.data || []).draw();
+
+  const totales = j.totales || {};
+  document.getElementById('resTotalReg').textContent   = totales.total_registros   || 0;
+  document.getElementById('resTotalGrav').textContent  = gs(totales.total_gravado);
+  document.getElementById('resTotalIva').textContent   = gs(totales.total_iva);
+  document.getElementById('resTotalTotal').textContent = gs(totales.total_total);
+  document.getElementById('bloqueResumen').style.removeProperty('display');
+  document.getElementById('bloqueResumen').style.display = '';
+  document.getElementById('bloqueResumen').classList.remove('d-none');
+
+  const tbody = document.querySelector('#tblResumen tbody');
+  tbody.innerHTML = '';
+  (j.resumen || []).forEach(res => {
+    const cls = res.tipo_comprobante === 'FACTURA' ? 'primary' : res.tipo_comprobante === 'NOTA_CREDITO' ? 'success' : 'warning';
+    tbody.innerHTML += `
+      <tr>
+        <td><span class="badge bg-${cls}">${res.tipo_comprobante}</span></td>
+        <td class="text-center">${res.cantidad}</td>
+        <td class="text-end">${gs(res.total_gravado)}</td>
+        <td class="text-end">${gs(res.total_exento)}</td>
+        <td class="text-end">${gs(res.total_iva)}</td>
+        <td class="text-end fw-bold">${gs(res.total_total)}</td>
+      </tr>`;
+  });
+  document.getElementById('cardResumenTipo').classList.toggle('d-none', !(j.resumen || []).length);
+
+  feather.replace();
+}
+</script>
+{% endblock %}

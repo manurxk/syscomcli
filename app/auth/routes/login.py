@@ -4,7 +4,7 @@ from app.auth.services.auth_service import AuthService
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
 
-logmod = Blueprint('login', __name__, template_folder='../../rutas/legacy/seguridad/templates')
+logmod = Blueprint('login', __name__, template_folder='../templates')
 
 
 # FUNCIÓN NUEVA AÑADIDA - SIN MODIFICAR NADA MÁS

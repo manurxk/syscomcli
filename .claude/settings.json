@@ -281,12 +281,35 @@
       "Bash(curl -s \"http://localhost:5005/auth/login\" -c /c/tmp/ck.txt -o /c/tmp/login.html)",
       "Bash(xargs grep -l \"requiere_cambio\\\\|cambio_clave\")",
       "Bash(xargs grep -l \"ventas\\\\|referenciales\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -b cookies.txt http://127.0.0.1:5005/mantenimiento/referenciales/referenciales-index)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -b cookies.txt http://127.0.0.1:5005/mantenimiento/referenciales/referenciales-index)",
+      "Bash(python -m py_compile app/dao/ventas/movimientos/cobranza/*.py app/dao/ventas/movimientos/cuenta_cobrar/*.py app/dao/ventas/movimientos/libro_ventas/*.py app/dao/ventas/movimientos/nota_credito/*.py app/dao/ventas/movimientos/nota_debito/*.py app/dao/ventas/movimientos/recaudacion/*.py app/dao/ventas/movimientos/remision/*.py)",
+      "Bash(echo \"compile exit: $?\")",
+      "Bash(MSYS_NO_PATHCONV=1 docker cp \"docs_reestructuracion/sql_nueva_bd/migraciones/m12_cobranzas.sql\" syscomcli_bd:/tmp/m12_cobranzas.sql)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec syscomcli_bd psql -U postgres -d sysclin_bd -f /tmp/m12_cobranzas.sql)",
+      "Bash(python3 -)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -c /tmp/cj.txt http://localhost:5000/login)",
+      "Bash(curl -s -b /tmp/cj.txt http://localhost:5000/api/v1/roles)",
+      "Bash(curl -s -b /tmp/cj.txt http://localhost:5005/api/v1/permisos/modulos)",
+      "Bash(curl -s -b /tmp/cj.txt http://localhost:5005/api/v1/permisos/acciones)",
+      "Bash(curl -s -b /tmp/cj.txt http://localhost:5005/api/v1/permisos/roles/5)",
+      "Bash(grep -rhA1 \"\\\\.route\\(\" mantenimiento --include=\"*_api.py\")",
+      "Bash(grep -v \"^--$\")",
+      "Bash(grep -rhA1 \"\\\\.route\\(\" agendamiento --include=\"*_api.py\")",
+      "Bash(grep -rhA1 \"\\\\.route\\(\" clinico --include=\"*_api.py\")",
+      "Bash(grep -rhA1 \"\\\\.route\\(\" ventas --include=\"*_api.py\")",
+      "Bash(curl -s -b /tmp/cj.txt http://localhost:5005/api/v1/permisos/roles/4)",
+      "Bash(export LC_ALL=C)",
+      "Bash('/c/Users/MANUEL RAMIREZ/Documents/GIT/syscomcli/venv/Scripts/python.exe' -c ' *)",
+      "Bash(\"/c/Users/MANUEL RAMIREZ/Documents/GIT/syscomcli/venv/Scripts/python.exe\")",
+      "Bash(./venv/Scripts/python.exe -c \"from app import app; print\\('OK', len\\(app.url_map._rules\\), 'rutas'\\)\")",
+      "Bash(./venv/Scripts/python.exe -c ' *)"
     ],
     "additionalDirectories": [
       "\\tmp",
       "c:\\Users\\MANUEL RAMIREZ\\.claude\\projects\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\memory",
-      "C:\\Users\\MANUEL RAMIREZ\\AppData\\Local\\Temp\\claude\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\75ed4d37-61e3-4a4b-9a86-f668f5ae1afb\\scratchpad"
+      "C:\\Users\\MANUEL RAMIREZ\\AppData\\Local\\Temp\\claude\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\75ed4d37-61e3-4a4b-9a86-f668f5ae1afb\\scratchpad",
+      "C:\\Users\\MANUEL RAMIREZ\\AppData\\Local\\Temp\\claude\\c--Users-MANUEL-RAMIREZ-Documents-GIT-syscomcli\\43d9dafc-881e-41a3-b4ce-ff420f0163f0\\scratchpad"
     ]
   }
 }

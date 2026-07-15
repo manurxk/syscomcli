@@ -1,0 +1,486 @@
+{% extends 'base.html' %}
+{% block titulo %}Nueva Cobranza{% endblock %}
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Nueva Cobranza</h1>
+          <div class="page-header-subtitle">Registrar cobro sobre una cuenta a crédito</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('cobranza.cobranzaIndex') }}">Volver al Listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Paso 1: Seleccionar cuenta a cobrar -->
+  <div class="card shadow-sm mb-4 border-start-primary" id="card-cuenta">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2">
+        <i data-feather="credit-card" class="icon-sm"></i> Seleccionar Cuenta a Cobrar
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row gx-3 align-items-end">
+        <div class="col-md-8 mb-3 mb-md-0">
+          <label class="small mb-1">Cuenta a Cobrar <span class="text-danger">*</span></label>
+          <select class="form-select" id="selCuenta">
+            <option value="">— Seleccione una cuenta pendiente —</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" id="btnSeleccionarCuenta" disabled>Seleccionar y continuar</button>
+        </div>
+      </div>
+      <input type="hidden" id="hidIdCuenta">
+      <input type="hidden" id="hidIdFactura">
+    </div>
+  </div>
+
+  <!-- Paso 2: Formulario (oculto hasta seleccionar cuenta) -->
+  <div id="contenedor-cob" style="display:none;">
+
+    <!-- Info de la cuenta seleccionada -->
+    <div class="card shadow-sm mb-4 border-start-info">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2">
+          <i data-feather="info" class="icon-sm"></i> Cuenta seleccionada
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <label class="small text-muted">N° Cuenta</label>
+            <p class="fw-bold mb-0" id="lblCuentaNro">—</p>
+          </div>
+          <div class="col-md-4">
+            <label class="small text-muted">Paciente</label>
+            <p class="mb-0" id="lblPacienteNombre">—</p>
+          </div>
+          <div class="col-md-2">
+            <label class="small text-muted">Factura</label>
+            <p class="mb-0" id="lblFacturaNro">—</p>
+          </div>
+          <div class="col-md-3">
+            <label class="small text-muted">Monto Pendiente</label>
+            <p class="mb-0 fw-bold text-danger" id="lblMontoPendiente">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cabecera de la cobranza -->
+    <div class="card shadow-sm mb-4 border-start-warning">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-warning d-flex align-items-center gap-2">
+          <i data-feather="dollar-sign" class="icon-sm"></i> Datos de la Cobranza
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row gx-3">
+          <div class="col-md-6 mb-3">
+            <label class="fw-semibold">Caja <span class="text-danger">*</span></label>
+            <select class="form-select" id="selCaja">
+              <option value="">— Seleccionar caja —</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="txtObservaciones" placeholder="Observaciones opcionales">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle por forma de cobro -->
+    <div class="card shadow-sm mb-4 border-start-success">
+      <div class="card-header py-3 d-flex align-items-center">
+        <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2">
+          <i data-feather="list" class="icon-sm"></i> Formas de Cobro
+        </h6>
+        <button type="button" class="btn btn-success btn-sm ms-auto" id="btnAgregarForma">
+          <i data-feather="plus" class="icon-xs me-1"></i> Agregar forma de cobro
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover table-bordered align-middle mb-0" id="tblDetalle">
+            <thead class="table-light">
+              <tr>
+                <th>Forma de Cobro</th>
+                <th>Complemento</th>
+                <th class="text-end" style="width:160px">Monto (Gs.)</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDetalle">
+              <tr id="filaVacia"><td colspan="4" class="text-center text-muted py-3">Sin formas de cobro. Hacé clic en "Agregar forma de cobro".</td></tr>
+            </tbody>
+            <tfoot>
+              <tr class="table-warning d-none" id="filaTotales">
+                <td colspan="2" class="text-end fw-bold">Total a Cobrar:</td>
+                <td class="text-end fw-bold" id="lblTotal">0 Gs.</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-end gap-2">
+          <a class="btn btn-secondary" href="{{ url_for('cobranza.cobranzaIndex') }}">Cancelar</a>
+          <button type="button" class="btn btn-primary" id="btnGuardar">Guardar Cobranza</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /contenedor-cob -->
+</div>
+
+<!-- Modal Agregar Forma de Cobro -->
+<div class="modal fade" id="modalForma" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Forma de Cobro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editIdx" value="-1">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="fw-semibold">Forma de Cobro <span class="text-danger">*</span></label>
+            <select class="form-select" id="selFormaCobro">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <!-- Cheque -->
+          <div class="col-12 campo-cheque d-none">
+            <label class="fw-semibold">N° de Cheque</label>
+            <input type="text" class="form-control" id="txtNroCheque" placeholder="Número de cheque">
+          </div>
+          <!-- Tarjeta -->
+          <div class="col-md-6 campo-tarjeta d-none">
+            <label class="fw-semibold">Marca de Tarjeta</label>
+            <select class="form-select" id="selMarcaTarjeta">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="col-md-6 campo-tarjeta d-none">
+            <label class="fw-semibold">Entidad Adherida</label>
+            <select class="form-select" id="selEntidadAdherida">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="col-md-6 campo-tarjeta d-none">
+            <label class="fw-semibold">N° de Tarjeta</label>
+            <input type="text" class="form-control" id="txtNroTarjeta" placeholder="Últimos 4 dígitos">
+          </div>
+          <div class="col-md-6 campo-tarjeta d-none">
+            <label class="fw-semibold">N° de Cuotas</label>
+            <input type="number" class="form-control" id="txtNroCuotas" value="1" min="1" max="48">
+          </div>
+          <!-- Transferencia -->
+          <div class="col-12 campo-transferencia d-none">
+            <label class="fw-semibold">Entidad Emisora</label>
+            <select class="form-select" id="selEntidadEmisora">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <!-- Monto (siempre visible) -->
+          <div class="col-12">
+            <label class="fw-semibold">Monto (Gs.) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="txtMonto" value="0" min="1" step="1">
+          </div>
+          <div class="col-12">
+            <label class="fw-semibold">Observaciones</label>
+            <input type="text" class="form-control" id="txtDetalleObs" placeholder="Opcional">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnConfirmarForma">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_COB  = '/api/v1/cobranzas';
+const API_CTA  = '/api/v1/cuentas-cobrar/pendientes';
+const API_CAJA = '/api/v1/cajas';
+const API_FC   = '/api/v1/formas-cobro';
+const API_MT   = '/api/v1/marcas-tarjeta';
+const API_EA   = '/api/v1/entidades-adheridas';
+const API_EE   = '/api/v1/entidades-emisoras';
+
+let detalles = [];
+let formasCobro = [];
+
+// ── Inicialización ─────────────────────────────────────────────────────────
+async function inicializar() {
+  const [rCta, rCaja, rFC, rMT, rEA, rEE] = await Promise.all([
+    fetch(API_CTA), fetch(API_CAJA), fetch(API_FC), fetch(API_MT), fetch(API_EA), fetch(API_EE)
+  ]);
+  const [jCta, jCaja, jFC, jMT, jEA, jEE] = await Promise.all([
+    rCta.json(), rCaja.json(), rFC.json(), rMT.json(), rEA.json(), rEE.json()
+  ]);
+
+  // Cuentas pendientes
+  const selCta = document.getElementById('selCuenta');
+  (jCta.data || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id_cuenta_cobrar;
+    o.textContent = `${c.cuenta_numero} — ${c.paciente_nombre} — Pendiente: ${Number(c.monto_pendiente).toLocaleString('es-PY')} Gs.`;
+    o.dataset.nro       = c.cuenta_numero;
+    o.dataset.paciente  = c.paciente_nombre;
+    o.dataset.factura   = c.factura_numero;
+    o.dataset.idfactura = c.id_factura;
+    o.dataset.pendiente = c.monto_pendiente;
+    selCta.appendChild(o);
+  });
+
+  // Cajas
+  const selCaja = document.getElementById('selCaja');
+  (jCaja.data || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id_caja;
+    o.textContent = c.des_caja;
+    selCaja.appendChild(o);
+  });
+
+  // Formas de cobro
+  formasCobro = jFC.data || [];
+  const selFC = document.getElementById('selFormaCobro');
+  formasCobro.forEach(fc => {
+    const o = document.createElement('option');
+    o.value = fc.id_forma_cobro;
+    o.textContent = fc.des_forma_cobro;
+    o.dataset.cod = (fc.cod_forma_cobro || '').toUpperCase();
+    selFC.appendChild(o);
+  });
+
+  // Marcas tarjeta
+  const selMT = document.getElementById('selMarcaTarjeta');
+  (jMT.data || []).forEach(mt => {
+    const o = document.createElement('option');
+    o.value = mt.id_marca_tarjeta;
+    o.textContent = mt.des_marca_tarjeta;
+    selMT.appendChild(o);
+  });
+
+  // Entidades adheridas
+  const selEA = document.getElementById('selEntidadAdherida');
+  (jEA.data || []).forEach(ea => {
+    const o = document.createElement('option');
+    o.value = ea.id_entidad_adherida;
+    o.textContent = ea.des_entidad_adherida;
+    selEA.appendChild(o);
+  });
+
+  // Entidades emisoras
+  const selEE = document.getElementById('selEntidadEmisora');
+  (jEE.data || []).forEach(ee => {
+    const o = document.createElement('option');
+    o.value = ee.id_entidad_emisora;
+    o.textContent = ee.des_entidad_emisora;
+    selEE.appendChild(o);
+  });
+
+  feather.replace();
+}
+
+// ── Seleccionar cuenta ─────────────────────────────────────────────────────
+document.getElementById('selCuenta').addEventListener('change', function() {
+  document.getElementById('btnSeleccionarCuenta').disabled = !this.value;
+});
+
+document.getElementById('btnSeleccionarCuenta').addEventListener('click', function() {
+  const opt = document.getElementById('selCuenta').selectedOptions[0];
+  if (!opt.value) return;
+  document.getElementById('hidIdCuenta').value  = opt.value;
+  document.getElementById('hidIdFactura').value = opt.dataset.idfactura;
+  document.getElementById('lblCuentaNro').textContent      = opt.dataset.nro     || '—';
+  document.getElementById('lblPacienteNombre').textContent = opt.dataset.paciente || '—';
+  document.getElementById('lblFacturaNro').textContent     = opt.dataset.factura  || '—';
+  document.getElementById('lblMontoPendiente').textContent =
+    opt.dataset.pendiente ? Number(opt.dataset.pendiente).toLocaleString('es-PY') + ' Gs.' : '—';
+
+  document.getElementById('card-cuenta').style.display   = 'none';
+  document.getElementById('contenedor-cob').style.display = '';
+  feather.replace();
+});
+
+// ── Campos extra según forma de cobro ─────────────────────────────────────
+document.getElementById('selFormaCobro').addEventListener('change', function() {
+  const opt = this.selectedOptions[0];
+  const cod = opt ? opt.dataset.cod : '';
+  const esCheque = cod.includes('CHEQUE');
+  const esTarjeta = cod.includes('TARJETA');
+  const esTransferencia = cod.includes('TRANSFERENCIA');
+
+  document.querySelectorAll('.campo-cheque').forEach(el => el.classList.toggle('d-none', !esCheque));
+  document.querySelectorAll('.campo-tarjeta').forEach(el => el.classList.toggle('d-none', !esTarjeta));
+  document.querySelectorAll('.campo-transferencia').forEach(el => el.classList.toggle('d-none', !esTransferencia));
+});
+
+// ── Tabla de formas de cobro ───────────────────────────────────────────────
+function renderTabla() {
+  const tbody = document.getElementById('tbodyDetalle');
+  const filaVacia = document.getElementById('filaVacia');
+  const filaTotales = document.getElementById('filaTotales');
+  if (!detalles.length) {
+    filaVacia.style.display = '';
+    filaTotales.classList.add('d-none');
+    while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+    return;
+  }
+  filaVacia.style.display = 'none';
+  filaTotales.classList.remove('d-none');
+  while (tbody.children.length > 1) tbody.removeChild(tbody.lastChild);
+
+  let totalGral = 0;
+  detalles.forEach((d, i) => {
+    totalGral += d.monto_cobrado;
+    const complemento = [
+      d.numero_cheque  ? `Cheque: ${d.numero_cheque}`         : '',
+      d.numero_tarjeta ? `Tarjeta: ${d.numero_tarjeta}`       : '',
+      d._marcaNombre   ? `Marca: ${d._marcaNombre}`           : '',
+      d._adheridaNombre ? `Entidad: ${d._adheridaNombre}`     : '',
+      d._emisoraNombre  ? `Emisor: ${d._emisoraNombre}`       : '',
+      d.numero_cuotas > 1 ? `${d.numero_cuotas} cuotas`      : '',
+    ].filter(Boolean).join(' | ') || '—';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d._formaNombre}</td>
+      <td class="small text-muted">${complemento}</td>
+      <td class="text-end">${Number(d.monto_cobrado).toLocaleString('es-PY')} Gs.</td>
+      <td class="text-center">
+        <button class="btn btn-xs btn-danger" onclick="quitarForma(${i})">
+          <i data-feather="x" class="icon-xs"></i>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('lblTotal').textContent = Number(totalGral).toLocaleString('es-PY') + ' Gs.';
+  feather.replace();
+}
+
+function quitarForma(i) {
+  detalles.splice(i, 1);
+  renderTabla();
+}
+
+document.getElementById('btnAgregarForma').addEventListener('click', () => {
+  document.getElementById('editIdx').value = -1;
+  document.getElementById('selFormaCobro').value    = '';
+  document.getElementById('txtNroCheque').value     = '';
+  document.getElementById('txtNroTarjeta').value    = '';
+  document.getElementById('txtNroCuotas').value     = 1;
+  document.getElementById('selMarcaTarjeta').value  = '';
+  document.getElementById('selEntidadAdherida').value = '';
+  document.getElementById('selEntidadEmisora').value  = '';
+  document.getElementById('txtMonto').value         = 0;
+  document.getElementById('txtDetalleObs').value    = '';
+  document.querySelectorAll('.campo-cheque, .campo-tarjeta, .campo-transferencia')
+    .forEach(el => el.classList.add('d-none'));
+  new bootstrap.Modal(document.getElementById('modalForma')).show();
+});
+
+document.getElementById('btnConfirmarForma').addEventListener('click', () => {
+  const selFC = document.getElementById('selFormaCobro');
+  const idFC  = parseInt(selFC.value);
+  if (!idFC) { alert('Seleccioná una forma de cobro.'); return; }
+
+  const monto = parseInt(document.getElementById('txtMonto').value) || 0;
+  if (monto <= 0) { alert('El monto debe ser mayor a 0.'); return; }
+
+  const opt = selFC.selectedOptions[0];
+  const selMT = document.getElementById('selMarcaTarjeta');
+  const selEA = document.getElementById('selEntidadAdherida');
+  const selEE = document.getElementById('selEntidadEmisora');
+
+  const item = {
+    id_forma_cobro:      idFC,
+    _formaNombre:        opt.textContent,
+    numero_cheque:       document.getElementById('txtNroCheque').value.trim()  || null,
+    numero_tarjeta:      document.getElementById('txtNroTarjeta').value.trim() || null,
+    numero_cuotas:       parseInt(document.getElementById('txtNroCuotas').value) || 1,
+    id_marca_tarjeta:    parseInt(selMT.value) || null,
+    _marcaNombre:        selMT.value ? selMT.selectedOptions[0].textContent : '',
+    id_entidad_adherida: parseInt(selEA.value) || null,
+    _adheridaNombre:     selEA.value ? selEA.selectedOptions[0].textContent : '',
+    id_entidad_emisora:  parseInt(selEE.value) || null,
+    _emisoraNombre:      selEE.value ? selEE.selectedOptions[0].textContent : '',
+    monto_cobrado:       monto,
+    observaciones:       document.getElementById('txtDetalleObs').value.trim() || null,
+  };
+
+  const idx = parseInt(document.getElementById('editIdx').value);
+  if (idx >= 0) detalles[idx] = item; else detalles.push(item);
+
+  bootstrap.Modal.getInstance(document.getElementById('modalForma')).hide();
+  renderTabla();
+});
+
+// ── Guardar ────────────────────────────────────────────────────────────────
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+  const idCuenta  = document.getElementById('hidIdCuenta').value;
+  const idFactura = document.getElementById('hidIdFactura').value;
+  const idCaja    = document.getElementById('selCaja').value;
+
+  if (!idCuenta)  { alert('Debés seleccionar una cuenta a cobrar.'); return; }
+  if (!idCaja)    { alert('Debés seleccionar una caja.'); return; }
+  if (!detalles.length) { alert('Debés agregar al menos una forma de cobro.'); return; }
+
+  const body = {
+    id_cuenta_cobrar: parseInt(idCuenta),
+    id_factura:       parseInt(idFactura),
+    id_caja:          parseInt(idCaja),
+    observaciones:    document.getElementById('txtObservaciones').value.trim() || null,
+    detalles:         detalles.map(d => ({
+      id_forma_cobro:      d.id_forma_cobro,
+      id_marca_tarjeta:    d.id_marca_tarjeta,
+      id_entidad_adherida: d.id_entidad_adherida,
+      id_entidad_emisora:  d.id_entidad_emisora,
+      numero_cheque:       d.numero_cheque,
+      numero_tarjeta:      d.numero_tarjeta,
+      numero_cuotas:       d.numero_cuotas,
+      monto_cobrado:       d.monto_cobrado,
+      observaciones:       d.observaciones,
+    }))
+  };
+
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  try {
+    const r = await fetch(API_COB, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    if (j.success) {
+      window.location.href = "{{ url_for('cobranza.cobranzaIndex') }}";
+    } else {
+      alert(j.error || 'Error al guardar la cobranza.');
+    }
+  } catch (e) {
+    alert('Error de conexión al guardar la cobranza.');
+  }
+});
+
+inicializar();
+</script>
+{% endblock %}

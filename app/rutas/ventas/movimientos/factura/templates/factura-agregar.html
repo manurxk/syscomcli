@@ -362,13 +362,15 @@ document.getElementById('selTimbrado').addEventListener('change', async function
   if (!id) { sel.innerHTML = '<option value="">Seleccioná un punto...</option>'; return; }
   const r = await fetch(`${API_PE}?id_timbrado=${id}`);
   const j = await r.json();
-  sel.innerHTML = '<option value="">Seleccioná un punto...</option>';
-  (j.data || []).forEach(p => {
+  const puntos = (j.data || []);
+  sel.innerHTML = puntos.length !== 1 ? '<option value="">Seleccioná un punto...</option>' : '';
+  puntos.forEach(p => {
     const o = document.createElement('option');
     o.value = p.id_punto_expedicion;
     o.textContent = `${p.codigo_punto_expedicion} — ${p.nombre_punto_expedicion}`;
     sel.appendChild(o);
   });
+  if (puntos.length === 1) sel.value = puntos[0].id_punto_expedicion;
 });
 
 document.getElementById('txtDescuento').addEventListener('input', recalcular);
@@ -504,13 +506,18 @@ async function inicializar() {
 
   // Timbrados vigentes ya filtrados
   const selTim = document.getElementById('selTimbrado');
-  selTim.innerHTML = '<option value="">Seleccioná...</option>';
-  (rTim.data || []).filter(t => t.est_timbrado).forEach(t => {
+  const vigentes = (rTim.data || []).filter(t => t.est_timbrado);
+  selTim.innerHTML = vigentes.length !== 1 ? '<option value="">Seleccioná...</option>' : '';
+  vigentes.forEach(t => {
     const o = document.createElement('option');
     o.value = t.id_timbrado;
     o.textContent = `${t.numero_timbrado} (estab. ${t.codigo_establecimiento})`;
     selTim.appendChild(o);
   });
+  if (vigentes.length === 1) {
+    selTim.value = vigentes[0].id_timbrado;
+    selTim.dispatchEvent(new Event('change')); // carga y auto-selecciona el punto si es único
+  }
 
   // Tipos de comprobante
   const selTC = document.getElementById('selTipoComprobante');
@@ -519,6 +526,8 @@ async function inicializar() {
     const o = document.createElement('option');
     o.value = t.id_tipo_comprobante;
     o.textContent = t.des_tipo_comprobante;
+    // Preseleccionar FACTURA si existe
+    if ((t.des_tipo_comprobante || '').toUpperCase().includes('FACTURA')) o.selected = true;
     selTC.appendChild(o);
   });
 

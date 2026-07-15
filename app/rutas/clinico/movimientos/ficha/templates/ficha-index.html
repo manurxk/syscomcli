@@ -50,9 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       tbody.innerHTML = res.data.map(p => `
         <tr>
-          <td>${p.pac_historia_clinica || ''}</td>
-          <td>${p.nombre_completo || ''}</td>
-          <td>${p.per_cedula || ''}</td>
+          <td>${p.historia_clinica || ''}</td>
+          <td>${p.nombre || ''} ${p.apellido || ''}</td>
+          <td>${p.cedula || ''}</td>
           <td>
             <a href="/clinico/ficha/ficha-paciente/${p.id_paciente}"
                class="btn btn-sm btn-outline-primary">

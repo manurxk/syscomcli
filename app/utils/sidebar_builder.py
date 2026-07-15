@@ -104,6 +104,46 @@ def build_sidebar():
             "endpoint": "arqueo_caja.arqueoIndex",
             "html_icon": '<i data-feather="check-square"></i>'
         })
+        ventas_items.append({
+            "title": "Facturas",
+            "endpoint": "factura.facturaIndex",
+            "html_icon": '<i data-feather="file-text"></i>'
+        })
+        ventas_items.append({
+            "title": "Remisiones",
+            "endpoint": "remision.remisionIndex",
+            "html_icon": '<i data-feather="truck"></i>'
+        })
+        ventas_items.append({
+            "title": "Notas de Crédito",
+            "endpoint": "nota_credito.notaCreditoIndex",
+            "html_icon": '<i data-feather="minus-circle"></i>'
+        })
+        ventas_items.append({
+            "title": "Notas de Débito",
+            "endpoint": "nota_debito.notaDebitoIndex",
+            "html_icon": '<i data-feather="plus-circle"></i>'
+        })
+        ventas_items.append({
+            "title": "Cuentas a Cobrar",
+            "endpoint": "cuenta_cobrar.cuentaCobrarIndex",
+            "html_icon": '<i data-feather="credit-card"></i>'
+        })
+        ventas_items.append({
+            "title": "Cobranzas",
+            "endpoint": "cobranza.cobranzaIndex",
+            "html_icon": '<i data-feather="dollar-sign"></i>'
+        })
+        ventas_items.append({
+            "title": "Recaudaciones",
+            "endpoint": "recaudacion.recaudacionIndex",
+            "html_icon": '<i data-feather="archive"></i>'
+        })
+        ventas_items.append({
+            "title": "Libro de Ventas",
+            "endpoint": "libro_ventas.libroVentasIndex",
+            "html_icon": '<i data-feather="book"></i>'
+        })
 
     config_items = []
     if roles & {"ADMINISTRADOR", "SUPERADMIN"}:
@@ -111,6 +151,21 @@ def build_sidebar():
             "title": "Referenciales",
             "endpoint": "referenciales.referencialesIndex",
             "html_icon": '<i data-feather="sliders"></i>'
+        })
+        config_items.append({
+            "title": "Timbrados",
+            "endpoint": "timbrado.timbradoIndex",
+            "html_icon": '<i data-feather="award"></i>'
+        })
+        config_items.append({
+            "title": "Puntos de Expedición",
+            "endpoint": "punto_expedicion.puntoExpedicionIndex",
+            "html_icon": '<i data-feather="map-pin"></i>'
+        })
+        config_items.append({
+            "title": "Roles y Permisos",
+            "endpoint": "permisos.permisosIndex",
+            "html_icon": '<i data-feather="shield"></i>'
         })
 
     if not items and not agendamiento_items and not clinico_items and not ventas_items and not config_items:

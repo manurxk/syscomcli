@@ -347,6 +347,23 @@ def getPacientesMenores():
 
 
 # ============================================
+# BUSCAR PACIENTE (autocomplete)
+# ============================================
+@pacienteapi.route('/pacientes/buscar', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION", "VENTAS")
+def buscarPacientes():
+    q = request.args.get('q', '').strip()
+    if len(q) < 2:
+        return jsonify({'success': True, 'data': [], 'error': None}), 200
+    try:
+        resultados = PacienteDao().buscarPacientes(q, limite=10)
+        return jsonify({'success': True, 'data': resultados, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al buscar pacientes: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno al buscar pacientes.'}), 500
+
+
+# ============================================
 # OBTENER PACIENTE POR ID
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['GET'])

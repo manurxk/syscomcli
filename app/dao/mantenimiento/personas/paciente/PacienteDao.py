@@ -576,3 +576,32 @@ class PacienteDao(BaseDAO):
             'nom_padre': r['pam_nom_padre'],
             'colegio': r['pam_colegio']
         } for r in resultados]
+
+    def buscarPacientes(self, q, limite=10):
+        """Búsqueda rápida por nombre, apellido, cédula o historia clínica."""
+        sql = """
+            SELECT
+                pac.id_paciente,
+                pac.pac_historia_clinica,
+                p.per_nombre,
+                p.per_apellido,
+                p.per_cedula
+            FROM pacientes pac
+            JOIN personas p ON pac.id_persona = p.id_persona
+            WHERE
+                p.per_nombre    ILIKE %s OR
+                p.per_apellido  ILIKE %s OR
+                p.per_cedula    ILIKE %s OR
+                pac.pac_historia_clinica ILIKE %s
+            ORDER BY p.per_apellido, p.per_nombre
+            LIMIT %s
+        """
+        patron = f"%{q}%"
+        rows = self.execute_query(sql, (patron, patron, patron, patron, limite))
+        return [{
+            'id_paciente': r['id_paciente'],
+            'pac_historia_clinica': r['pac_historia_clinica'],
+            'per_nombre': r['per_nombre'],
+            'per_apellido': r['per_apellido'],
+            'per_cedula': r['per_cedula'],
+        } for r in rows]

@@ -74,6 +74,9 @@
       </div>
       <div class="modal-footer border-top">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-info btn-sm" id="btnVerPDF" onclick="verPDF()">
+          <i data-feather="printer" class="icon-xs"></i> Ver PDF
+        </button>
         <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
       </div>
     </div>
@@ -154,6 +157,11 @@ async function verDetalle(id) {
   btnAnular.classList.toggle('d-none', d.des_estado_factura === 'ANULADA');
 
   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+}
+
+function verPDF() {
+  if (!facturaActual) return;
+  window.open(`/api/v1/facturas/${facturaActual.id_factura}/pdf`, '_blank');
 }
 
 async function anular() {
