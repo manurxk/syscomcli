@@ -1,2 +1,0 @@
-ALTER TABLE agenda_horarios
-  ALTER COLUMN id_especialidad DROP NOT NULL;
