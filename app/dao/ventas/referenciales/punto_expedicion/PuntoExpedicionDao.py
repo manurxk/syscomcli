@@ -1,3 +1,4 @@
+import re
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
 
@@ -5,6 +6,10 @@ from app.core.base_dao import BaseDAO
 class PuntoExpedicionDao(BaseDAO):
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
+
+    def validarCodigo(self, codigo):
+        """Mismo criterio que SedeDao.validarCodigoEstablecimiento: 3 dígitos numéricos."""
+        return bool(re.match(r"^[0-9]{3}$", codigo))
 
     def getPuntosExpedicion(self, id_timbrado=None):
         if id_timbrado:

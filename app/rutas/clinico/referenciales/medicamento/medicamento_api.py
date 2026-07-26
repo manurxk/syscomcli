@@ -18,7 +18,7 @@ def getMedicamentos():
 
 
 @medicamentoapi.route('/medicamentos/<int:medicamento_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getMedicamento(medicamento_id):
     try:
         registro = MedicamentoDao().getMedicamentoById(medicamento_id)

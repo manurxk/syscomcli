@@ -27,11 +27,25 @@ class SedeDao(BaseDAO):
         """
         return self.execute_query_one(sql, (sede_id,))
 
+    def validarDescripcion(self, descripcion):
+        """Misma regla que el check constraint chk_sedes_des: letras, números y espacios."""
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 ]+$"
+        return bool(re.match(patron, descripcion))
+
     def validarCodigoEstablecimiento(self, codigo):
         """Misma regla que el check constraint chk_sedes_cod_establecimiento."""
         if not codigo:
             return True
         return bool(re.match(r"^[0-9]{3}$", codigo))
+
+    def descripcionExiste(self, des_sede, id_empresa, excluir_id=None):
+        """Misma restricción que uq_sedes_empresa_des (id_empresa, des_sede)."""
+        sql = "SELECT 1 FROM sedes WHERE id_empresa = %s AND LOWER(des_sede) = LOWER(%s)"
+        params = [id_empresa, des_sede]
+        if excluir_id:
+            sql += " AND id_sede != %s"
+            params.append(excluir_id)
+        return self.execute_query_one(sql, tuple(params)) is not None
 
     def codigoEstablecimientoExiste(self, codigo, id_empresa, excluir_id=None):
         """Misma restricción que uq_sedes_cod_establecimiento (id_empresa, cod_establecimiento_sifen)."""

@@ -3,10 +3,13 @@ API endpoints para autenticación mejorada
 FASE 2: MEJORAS DE SEGURIDAD
 """
 from flask import Blueprint, request, jsonify, session, current_app as app
+from werkzeug.security import check_password_hash
 from app.auth.services.auth_service import AuthService
 from app.dao.auth.auth_dao import AuthDao
 from app.auth.utils.password_validator import validar_politica_password
 from app.auth.utils.decorators import role_required
+from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
+from app.utils.auditoria_constantes import AuditAccion
 
 authapi = Blueprint('auth', __name__, url_prefix='/api/v1/auth')
 
@@ -77,6 +80,13 @@ def login():
                 'message': mensaje
             }), 200
         else:
+            if datos_usuario and datos_usuario.get('requiere_mfa'):
+                return jsonify({
+                    'success': False,
+                    'error': mensaje,
+                    'requiere_mfa': True,
+                    'id_usuario': datos_usuario['id_usuario']
+                }), 401
             return jsonify({
                 'success': False,
                 'error': mensaje,
@@ -199,6 +209,12 @@ def cambiar_password():
                 BaseDAO(db_name_env="DB_NAME_NUEVA").execute_query(sql, (id_usuario, session_token), commit=True)
             
             app.logger.info(f"Password cambiado exitosamente para usuario {id_usuario}")
+            AuditoriaDao().registrar_evento(
+                id_usuario=id_usuario,
+                accion=AuditAccion.PASSWORD_CHANGE,
+                detalle="Cambio de contraseña propio",
+                ip_origen=request.remote_addr
+            )
             return jsonify({
                 'success': True,
                 'message': mensaje
@@ -365,6 +381,12 @@ def confirmar_recuperacion():
         
         if exitoso:
             app.logger.info(f"Password reseteado exitosamente con token {token[:8]}...")
+            AuditoriaDao().registrar_evento(
+                id_usuario=token_data['id_usuario'],
+                accion=AuditAccion.PASSWORD_CHANGE,
+                detalle="Cambio de contraseña por recuperación con token",
+                ip_origen=request.remote_addr
+            )
             return jsonify({
                 'success': True,
                 'message': mensaje
@@ -431,5 +453,128 @@ def obtener_perfil():
             'success': False,
             'error': 'Error interno del servidor'
         }), 500
+
+
+@authapi.route('/mfa/validar-login', methods=['POST'])
+def validar_mfa_login():
+    """
+    Completa el login (API JSON) cuando /login respondió requiere_mfa=True.
+
+    Body:
+        { "id_usuario": 1, "codigo": "123456" }
+    """
+    try:
+        data = request.get_json() or {}
+        id_usuario = data.get('id_usuario')
+        codigo = data.get('codigo')
+
+        if not id_usuario or not codigo:
+            return jsonify({'success': False, 'error': 'id_usuario y codigo son requeridos'}), 400
+
+        exitoso, datos_usuario, mensaje = AuthService.completar_login_mfa(id_usuario, codigo)
+
+        if not exitoso:
+            return jsonify({'success': False, 'error': mensaje}), 401
+
+        session.clear()
+        session.permanent = True
+        session['id_usuario'] = datos_usuario['id_usuario']
+        session['usu_nick'] = datos_usuario['usu_nick']
+        session['nombre_persona'] = datos_usuario['nombre_completo']
+        session['grupo'] = datos_usuario['grupo']
+        session['roles'] = datos_usuario.get('roles', [])
+        session['session_token'] = datos_usuario['session_token']
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'usuario': {
+                    'id_usuario': datos_usuario['id_usuario'],
+                    'usu_nick': datos_usuario['usu_nick'],
+                    'nombre_completo': datos_usuario['nombre_completo'],
+                    'grupo': datos_usuario['grupo'],
+                    'roles': datos_usuario.get('roles', [])
+                },
+                'session_token': datos_usuario['session_token'],
+                'csrf_token': datos_usuario['csrf_token']
+            },
+            'message': mensaje
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error al validar MFA de login: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@authapi.route('/mfa/activar', methods=['POST'])
+@role_required()  # Requiere estar autenticado
+def activar_mfa():
+    """Genera y envía un código al propio correo del usuario, como paso previo a confirmar()."""
+    try:
+        id_usuario = session.get('id_usuario')
+        exito, error = AuthService.generar_y_enviar_codigo_mfa(
+            id_usuario=id_usuario,
+            ip_address=AuthService.obtener_ip_cliente(),
+            user_agent=AuthService.obtener_user_agent()
+        )
+        if not exito:
+            return jsonify({'success': False, 'error': error}), 400
+        return jsonify({'success': True, 'message': 'Código enviado a su correo'}), 200
+    except Exception as e:
+        app.logger.error(f"Error al activar MFA: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@authapi.route('/mfa/confirmar', methods=['POST'])
+@role_required()  # Requiere estar autenticado
+def confirmar_mfa():
+    """Valida el código enviado por activar_mfa() y recién ahí habilita el MFA."""
+    try:
+        id_usuario = session.get('id_usuario')
+        data = request.get_json() or {}
+        codigo = data.get('codigo')
+
+        if not codigo:
+            return jsonify({'success': False, 'error': 'El código es requerido'}), 400
+
+        valido, mensaje_error = AuthService.validar_codigo_mfa(id_usuario, codigo)
+        if not valido:
+            return jsonify({'success': False, 'error': mensaje_error}), 400
+
+        from app.core.base_dao import BaseDAO
+        BaseDAO(db_name_env="DB_NAME_NUEVA").execute_query(
+            "UPDATE usuarios SET mfa_habilitado = TRUE WHERE id_usuario = %s",
+            (id_usuario,), commit=True
+        )
+        return jsonify({'success': True, 'message': 'MFA activado correctamente'}), 200
+    except Exception as e:
+        app.logger.error(f"Error al confirmar MFA: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@authapi.route('/mfa/desactivar', methods=['POST'])
+@role_required()  # Requiere estar autenticado
+def desactivar_mfa():
+    """Desactiva el MFA propio. Requiere confirmar la contraseña actual."""
+    try:
+        id_usuario = session.get('id_usuario')
+        data = request.get_json() or {}
+        password_actual = data.get('password_actual')
+
+        if not password_actual:
+            return jsonify({'success': False, 'error': 'La contraseña actual es requerida'}), 400
+
+        usuario = AuthService.buscar_usuario_seguridad(session.get('usu_nick'))
+        if not usuario or not check_password_hash(usuario['usu_clave'], password_actual):
+            return jsonify({'success': False, 'error': 'Contraseña incorrecta'}), 403
+
+        from app.core.base_dao import BaseDAO
+        BaseDAO(db_name_env="DB_NAME_NUEVA").execute_query(
+            "UPDATE usuarios SET mfa_habilitado = FALSE WHERE id_usuario = %s",
+            (id_usuario,), commit=True
+        )
+        return jsonify({'success': True, 'message': 'MFA desactivado'}), 200
+    except Exception as e:
+        app.logger.error(f"Error al desactivar MFA: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
 
 

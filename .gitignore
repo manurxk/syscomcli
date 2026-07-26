@@ -263,3 +263,8 @@ pyrightconfig.json
 
 # Documentación interna de la reestructuración (tesis) - no se sube al repo
 docs_reestructuracion/
+
+# Documentación / notas en Markdown - no se sube al repo (excepto README.md)
+docs/
+*.md
+!README.md

@@ -36,7 +36,7 @@ def addInsumo():
     data = request.get_json() or {}
     dao = InsumoDao()
 
-    descripcion = (data.get('des_insumo') or '').strip()
+    descripcion = (data.get('des_insumo') or '').strip().upper()
     unidad_medida = (data.get('insumo_unidad_medida') or 'UNIDAD').strip().upper()
     stock_actual = data.get('stock_actual', 0)
     stock_minimo = data.get('stock_minimo', 0)
@@ -45,8 +45,16 @@ def addInsumo():
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+    if not dao.validarDescripcion(descripcion):
+        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
     if dao.insumoExiste(descripcion):
         return jsonify({'success': False, 'error': f'Ya existe un insumo "{descripcion}".'}), 400
+    if stock_actual is not None and float(stock_actual) < 0:
+        return jsonify({'success': False, 'error': 'El stock actual no puede ser negativo.'}), 400
+    if stock_minimo is not None and float(stock_minimo) < 0:
+        return jsonify({'success': False, 'error': 'El stock mínimo no puede ser negativo.'}), 400
+    if precio_unitario is not None and float(precio_unitario) < 0:
+        return jsonify({'success': False, 'error': 'El precio unitario no puede ser negativo.'}), 400
 
     try:
         nuevo_id = dao.guardarInsumo(
@@ -68,7 +76,7 @@ def updateInsumo(insumo_id):
     if not dao.getInsumoById(insumo_id):
         return jsonify({'success': False, 'error': 'No se encontró el registro con el ID proporcionado.'}), 404
 
-    descripcion = (data.get('des_insumo') or '').strip()
+    descripcion = (data.get('des_insumo') or '').strip().upper()
     unidad_medida = (data.get('insumo_unidad_medida') or 'UNIDAD').strip().upper()
     stock_actual = data.get('stock_actual', 0)
     stock_minimo = data.get('stock_minimo', 0)
@@ -77,8 +85,16 @@ def updateInsumo(insumo_id):
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+    if not dao.validarDescripcion(descripcion):
+        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
     if dao.insumoExiste(descripcion, excluir_id=insumo_id):
         return jsonify({'success': False, 'error': f'Ya existe un insumo "{descripcion}".'}), 400
+    if stock_actual is not None and float(stock_actual) < 0:
+        return jsonify({'success': False, 'error': 'El stock actual no puede ser negativo.'}), 400
+    if stock_minimo is not None and float(stock_minimo) < 0:
+        return jsonify({'success': False, 'error': 'El stock mínimo no puede ser negativo.'}), 400
+    if precio_unitario is not None and float(precio_unitario) < 0:
+        return jsonify({'success': False, 'error': 'El precio unitario no puede ser negativo.'}), 400
 
     try:
         dao.updateInsumo(

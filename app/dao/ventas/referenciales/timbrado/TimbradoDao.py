@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
@@ -6,6 +7,14 @@ from app.core.base_dao import BaseDAO
 class TimbradoDao(BaseDAO):
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
+
+    def validarNumeroTimbrado(self, numero):
+        """Formato real de timbrado SET: 8 dígitos numéricos."""
+        return bool(re.match(r"^[0-9]{8}$", numero))
+
+    def validarCodigoEstablecimiento(self, codigo):
+        """Mismo criterio que SedeDao.validarCodigoEstablecimiento: 3 dígitos numéricos."""
+        return bool(re.match(r"^[0-9]{3}$", codigo))
 
     def getTimbrados(self):
         sql = """

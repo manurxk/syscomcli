@@ -55,6 +55,10 @@ def addTimbrado():
 
     if not numero:
         return jsonify({'success': False, 'error': 'El número de timbrado es obligatorio.'}), 400
+    if not dao.validarNumeroTimbrado(numero):
+        return jsonify({'success': False, 'error': 'El número de timbrado debe tener 8 dígitos numéricos.'}), 400
+    if not dao.validarCodigoEstablecimiento(codigo_estab):
+        return jsonify({'success': False, 'error': 'El código de establecimiento debe tener 3 dígitos numéricos.'}), 400
     if not fecha_inicio or not fecha_vencimiento:
         return jsonify({'success': False, 'error': 'Las fechas de inicio y vencimiento son obligatorias.'}), 400
     if fecha_vencimiento < fecha_inicio:
@@ -94,6 +98,10 @@ def updateTimbrado(id_timbrado):
 
     if not numero:
         return jsonify({'success': False, 'error': 'El número de timbrado es obligatorio.'}), 400
+    if not dao.validarNumeroTimbrado(numero):
+        return jsonify({'success': False, 'error': 'El número de timbrado debe tener 8 dígitos numéricos.'}), 400
+    if not dao.validarCodigoEstablecimiento(codigo_estab):
+        return jsonify({'success': False, 'error': 'El código de establecimiento debe tener 3 dígitos numéricos.'}), 400
     if not fecha_inicio or not fecha_vencimiento:
         return jsonify({'success': False, 'error': 'Las fechas son obligatorias.'}), 400
     if fecha_vencimiento < fecha_inicio:

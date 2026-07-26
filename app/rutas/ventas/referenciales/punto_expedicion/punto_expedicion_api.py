@@ -57,6 +57,8 @@ def addPuntoExpedicion():
         return jsonify({'success': False, 'error': 'El timbrado es obligatorio.'}), 400
     if not codigo:
         return jsonify({'success': False, 'error': 'El código es obligatorio (3 dígitos).'}), 400
+    if not dao.validarCodigo(codigo.zfill(3)):
+        return jsonify({'success': False, 'error': 'El código debe tener 3 dígitos numéricos.'}), 400
     if not nombre:
         return jsonify({'success': False, 'error': 'El nombre del punto es obligatorio.'}), 400
     if dao.codigoExiste(id_timbrado, codigo.zfill(3)):
@@ -91,6 +93,8 @@ def updatePuntoExpedicion(id_punto_expedicion):
 
     if not codigo:
         return jsonify({'success': False, 'error': 'El código es obligatorio.'}), 400
+    if not dao.validarCodigo(codigo.zfill(3)):
+        return jsonify({'success': False, 'error': 'El código debe tener 3 dígitos numéricos.'}), 400
     if not nombre:
         return jsonify({'success': False, 'error': 'El nombre es obligatorio.'}), 400
     if dao.codigoExiste(reg['id_timbrado'], codigo.zfill(3), excluir_id=id_punto_expedicion):

@@ -50,12 +50,16 @@ def addSede():
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+    if not sededao.validarDescripcion(descripcion):
+        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
     if not sededao.validarCodigoEstablecimiento(cod_establecimiento_sifen):
         return jsonify({'success': False, 'error': 'El código de establecimiento SIFEN debe tener 3 dígitos numéricos.'}), 400
 
     empresa = EmpresaDao().getEmpresaPrincipal()
     if not empresa:
         return jsonify({'success': False, 'error': 'No hay una empresa configurada. Configure los datos de la empresa antes de crear sedes.'}), 400
+    if sededao.descripcionExiste(descripcion, empresa['id_empresa']):
+        return jsonify({'success': False, 'error': f'Ya existe una sede "{descripcion}".'}), 400
     if sededao.codigoEstablecimientoExiste(cod_establecimiento_sifen, empresa['id_empresa']):
         return jsonify({'success': False, 'error': f'Ya existe una sede con el código de establecimiento "{cod_establecimiento_sifen}".'}), 400
 
@@ -97,8 +101,12 @@ def updateSede(sede_id):
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+    if not sededao.validarDescripcion(descripcion):
+        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
     if not sededao.validarCodigoEstablecimiento(cod_establecimiento_sifen):
         return jsonify({'success': False, 'error': 'El código de establecimiento SIFEN debe tener 3 dígitos numéricos.'}), 400
+    if sededao.descripcionExiste(descripcion, actual['id_empresa'], excluir_id=sede_id):
+        return jsonify({'success': False, 'error': f'Ya existe una sede "{descripcion}".'}), 400
     if sededao.codigoEstablecimientoExiste(cod_establecimiento_sifen, actual['id_empresa'], excluir_id=sede_id):
         return jsonify({'success': False, 'error': f'Ya existe una sede con el código de establecimiento "{cod_establecimiento_sifen}".'}), 400
 

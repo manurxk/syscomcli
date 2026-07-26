@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Verificación en dos pasos - Sistema Sysclin">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
+    <title>Verificación MFA - Sysclin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --blue: #5b21b6;
+            --purple: #9333ea;
+            --gradient: linear-gradient(135deg, #5b21b6 0%, #9333ea 100%);
+            --dark: #1e293b;
+            --muted: #64748b;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(45deg, #0d0a1a, #1e1033, #4c1d95, #0d0a1a);
+        }
+
+        .card {
+            width: 400px;
+            background: white;
+            border-radius: 1.4rem;
+            padding: 2.6rem 2.4rem;
+            box-shadow: 0 60px 90px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        .eyebrow {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--purple);
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-bottom: 0.45rem;
+        }
+
+        h2 { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
+
+        p.subtitle { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; margin-bottom: 1.6rem; }
+
+        .field { margin-bottom: 1.2rem; }
+
+        .field label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            font-family: inherit;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--dark);
+            background: #f1f5ff;
+            border: 1.5px solid transparent;
+            border-radius: 0.85rem;
+            outline: none;
+        }
+
+        .field input:focus {
+            background: #fff;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--gradient);
+            color: white;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 0.85rem;
+            cursor: pointer;
+        }
+
+        .flash {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.83rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .flash-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .flash-primary { background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="eyebrow">Verificación en dos pasos</div>
+        <h2>Ingrese el código</h2>
+        <p class="subtitle">Le enviamos un código de 6 dígitos a su correo. Vence en pocos minutos.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash flash-{{ 'danger' if category == 'danger' else 'primary' }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login.verificar_mfa') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="field">
+                <label for="codigo">Código</label>
+                <input type="text" id="codigo" name="codigo" maxlength="6" inputmode="numeric"
+                    placeholder="000000" required autofocus>
+            </div>
+            <button type="submit" class="btn">Verificar</button>
+        </form>
+    </div>
+</body>
+
+</html>

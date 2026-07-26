@@ -7,6 +7,8 @@ from app.auth.services.auth_service import AuthService
 from app.dao.auth.auth_dao import AuthDao
 from app.auth.utils.decorators import role_required
 from app.core.base_dao import BaseDAO
+from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
+from app.utils.auditoria_constantes import AuditAccion
 from werkzeug.security import generate_password_hash
 import secrets
 
@@ -108,6 +110,12 @@ def resetear_password_admin(id_usuario):
                 #     enviar_email_password_temporal(email, password_temporal)
 
                 app.logger.info(f"Password reseteado por admin para usuario {row['usu_nick']}")
+                AuditoriaDao().registrar_evento(
+                    id_usuario=session.get('id_usuario'),
+                    accion=AuditAccion.PASSWORD_CHANGE,
+                    detalle=f"Contraseña reseteada por administrador para usuario \"{row['usu_nick']}\" (id_usuario={id_usuario})",
+                    ip_origen=request.remote_addr
+                )
 
                 return jsonify({
                     'success': True,

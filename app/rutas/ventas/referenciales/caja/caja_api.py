@@ -5,6 +5,8 @@ from app.auth.utils.decorators import role_required
 
 cajaapi = Blueprint('cajaapi', __name__)
 
+ESTADOS_CAJA_VALIDOS = ('ABIERTA', 'CERRADA')
+
 
 @cajaapi.route('/cajas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
@@ -36,11 +38,17 @@ def addCaja():
     dao = CajaDao()
 
     descripcion = (data.get('des_caja') or '').strip().upper()
+    estado_caja = (data.get('caja_estado') or 'CERRADA').strip().upper()
+    saldo_inicial = float(data.get('caja_saldo_inicial', 0))
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
     if not dao.validarDescripcion(descripcion):
         return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+    if estado_caja not in ESTADOS_CAJA_VALIDOS:
+        return jsonify({'success': False, 'error': f'El estado de caja debe ser uno de: {", ".join(ESTADOS_CAJA_VALIDOS)}.'}), 400
+    if saldo_inicial < 0:
+        return jsonify({'success': False, 'error': 'El saldo inicial no puede ser negativo.'}), 400
     if dao.cajaExiste(descripcion):
         return jsonify({'success': False, 'error': f'Ya existe una caja "{descripcion}".'}), 400
 
@@ -48,8 +56,8 @@ def addCaja():
         nuevo_id = dao.guardarCaja(
             descripcion=descripcion,
             codigo=data.get('cod_caja'),
-            saldo_inicial=float(data.get('caja_saldo_inicial', 0)),
-            estado_caja=data.get('caja_estado', 'CERRADA'),
+            saldo_inicial=saldo_inicial,
+            estado_caja=estado_caja,
             estado=bool(data.get('est_caja', True)),
             usuario_creacion=session.get('id_usuario')
         )
@@ -69,11 +77,19 @@ def updateCaja(id_caja):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404
 
     descripcion = (data.get('des_caja') or '').strip().upper()
+    estado_caja = data.get('caja_estado')
+    estado_caja = estado_caja.strip().upper() if estado_caja else None
+    saldo_inicial = data.get('caja_saldo_inicial')
+    saldo_inicial = float(saldo_inicial) if saldo_inicial is not None else None
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
     if not dao.validarDescripcion(descripcion):
         return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+    if estado_caja is not None and estado_caja not in ESTADOS_CAJA_VALIDOS:
+        return jsonify({'success': False, 'error': f'El estado de caja debe ser uno de: {", ".join(ESTADOS_CAJA_VALIDOS)}.'}), 400
+    if saldo_inicial is not None and saldo_inicial < 0:
+        return jsonify({'success': False, 'error': 'El saldo inicial no puede ser negativo.'}), 400
     if dao.cajaExiste(descripcion, excluir_id=id_caja):
         return jsonify({'success': False, 'error': f'Ya existe una caja "{descripcion}".'}), 400
 
@@ -82,8 +98,8 @@ def updateCaja(id_caja):
             id_caja=id_caja,
             descripcion=descripcion,
             codigo=data.get('cod_caja'),
-            saldo_inicial=float(data.get('caja_saldo_inicial')) if data.get('caja_saldo_inicial') is not None else None,
-            estado_caja=data.get('caja_estado'),
+            saldo_inicial=saldo_inicial,
+            estado_caja=estado_caja,
             estado=bool(data.get('est_caja', True)),
             usuario_modificacion=session.get('id_usuario')
         )

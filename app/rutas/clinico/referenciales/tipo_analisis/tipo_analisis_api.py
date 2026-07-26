@@ -18,7 +18,7 @@ def getTiposAnalisis():
 
 
 @tipoanalisisapi.route('/tipos-analisis/<int:tipo_analisis_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoAnalisis(tipo_analisis_id):
     try:
         registro = TipoAnalisisDao().getTipoAnalisisById(tipo_analisis_id)

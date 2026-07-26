@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Menú
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Menú</h1>
+          <div class="page-header-subtitle">Qué páginas ve cada rol en el menú lateral</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <label class="fw-semibold mb-0" for="selRol">Rol</label>
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="selRol">
+            <option value="">Seleccione un rol...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle" id="tblMatriz">
+          <thead class="table-light">
+            <tr><th>Grupo</th><th>Página</th><th class="text-center">Visible</th></tr>
+          </thead>
+          <tbody id="tbodyMatriz">
+            <tr><td colspan="3" class="text-center text-muted py-4">Seleccione un rol para ver su menú.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-end">
+      <button type="button" class="btn btn-primary" id="btnGuardar" disabled>
+        <i data-feather="save" class="icon-sm"></i> Guardar cambios
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+  const CSRFToken = "{{ csrf_token() }}";
+  const puedeEditar = {{ ('SUPERADMIN' in roles_usuario or 'ADMINISTRADOR' in roles_usuario) | tojson }};
+  const esSuperAdmin = {{ ('SUPERADMIN' in roles_usuario) | tojson }};
+
+  const cargarRoles = () => {
+    fetch('/api/v1/roles')
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) return;
+        const $sel = $('#selRol');
+        data.data.forEach(rol => {
+          if (rol.cod_rol === 'SUPERADMIN' && !esSuperAdmin) return;
+          $sel.append(`<option value="${rol.id_rol}">${rol.des_rol}</option>`);
+        });
+      });
+  }
+
+  const renderMatriz = (idRol) => {
+    fetch(`/api/v1/menu/roles/${idRol}`)
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) {
+          Swal.fire('Error', data.error || 'No se pudo cargar el menú.', 'error');
+          return;
+        }
+
+        const $tbody = $('#tbodyMatriz').empty();
+        data.data.forEach(fila => {
+          const checked = fila.visible ? 'checked' : '';
+          const disabled = puedeEditar ? '' : 'disabled';
+          $tbody.append(`<tr>
+            <td>${fila.grupo_menu || ''}</td>
+            <td>${fila.des_pagina}</td>
+            <td class="text-center">
+              <input type="checkbox" class="form-check-input chk-visible" data-id-pagina="${fila.id_pagina}" ${checked} ${disabled}>
+            </td>
+          </tr>`);
+        });
+
+        if (puedeEditar) $('#btnGuardar').prop('disabled', false);
+      });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function () {
+      const idRol = $('#selRol').val();
+      if (!idRol) return;
+
+      const cambios = [];
+      $('.chk-visible').each(function () {
+        cambios.push({
+          id_pagina: parseInt($(this).data('id-pagina'), 10),
+          visible: $(this).is(':checked')
+        });
+      });
+
+      fetch(`/api/v1/menu/roles/${idRol}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify({ cambios })
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Éxito', 'Menú actualizado.', 'success');
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo guardar el menú.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al guardar el menú.', 'error'));
+    });
+  }
+
+  $(function () {
+    cargarRoles();
+    $('#selRol').on('change', function () {
+      const idRol = $(this).val();
+      $('#btnGuardar').prop('disabled', true);
+      if (idRol) {
+        renderMatriz(idRol);
+      } else {
+        $('#tbodyMatriz').html('<tr><td colspan="3" class="text-center text-muted py-4">Seleccione un rol para ver su menú.</td></tr>');
+      }
+    });
+    guardar();
+  });
+</script>
+{% endblock %}

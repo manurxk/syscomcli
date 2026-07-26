@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Auditoría del Sistema
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Auditoría del Sistema</h1>
+          <div class="page-header-subtitle">Registro de eventos de acceso y modificación de datos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Filtros</h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Desde</label>
+          <input type="date" class="form-control" id="fltFechaDesde">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Hasta</label>
+          <input type="date" class="form-control" id="fltFechaHasta">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Acción</label>
+          <select class="form-select" id="fltAccion">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">ID Usuario</label>
+          <input type="number" class="form-control" id="fltIdUsuario" placeholder="Ej. 12">
+        </div>
+      </div>
+      <div class="mt-3">
+        <button type="button" class="btn btn-primary btn-sm" id="btnFiltrar">Filtrar</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimpiar">Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Eventos de Auditoría</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha/Hora</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Detalle</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  let tabla;
+
+  const construirUrl = () => {
+    const params = new URLSearchParams();
+    const fechaDesde = $('#fltFechaDesde').val();
+    const fechaHasta = $('#fltFechaHasta').val();
+    const accion = $('#fltAccion').val();
+    const idUsuario = $('#fltIdUsuario').val();
+
+    if (fechaDesde) params.append('fecha_desde', fechaDesde);
+    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+    if (accion) params.append('accion', accion);
+    if (idUsuario) params.append('id_usuario', idUsuario);
+    params.append('pagina', 1);
+    params.append('por_pagina', 200);
+
+    return `/api/v1/auditoria?${params.toString()}`;
+  }
+
+  const cargarAcciones = () => {
+    fetch('/api/v1/auditoria/acciones')
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) return;
+        data.data.forEach(item => {
+          $('#fltAccion').append(`<option value="${item.accion}">${item.label}</option>`);
+        });
+      });
+  }
+
+  const initDatatable = () => {
+    tabla = $('#tbl').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: {
+        url: construirUrl(),
+        dataSrc: 'data.datos'
+      },
+      columns: [
+        { data: 'fecha_evento' },
+        {
+          data: function (row) {
+            return row.usu_nick
+              ? `${row.usu_nick} — ${row.funcionario}`
+              : 'Sistema';
+          }
+        },
+        { data: 'accion_label' },
+        { data: 'detalle', defaultContent: '' },
+        { data: 'ip_origen', defaultContent: '' }
+      ],
+      order: [[0, 'desc']]
+    });
+  }
+
+  const filtrar = () => {
+    $('#btnFiltrar').on('click', function () {
+      tabla.ajax.url(construirUrl()).load();
+    });
+    $('#btnLimpiar').on('click', function () {
+      $('#fltFechaDesde, #fltFechaHasta, #fltIdUsuario').val('');
+      $('#fltAccion').val('');
+      tabla.ajax.url(construirUrl()).load();
+    });
+  }
+
+  $(function () {
+    cargarAcciones();
+    initDatatable();
+    filtrar();
+  });
+</script>
+{% endblock %}

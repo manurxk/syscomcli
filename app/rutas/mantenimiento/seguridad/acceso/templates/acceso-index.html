@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Accesos
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Accesos</h1>
+          <div class="page-header-subtitle">Identidad, MFA y sesiones activas por usuario</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tblAccesos">
+          <thead class="table-light">
+            <tr>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Rol</th>
+              <th class="text-center">MFA</th>
+              <th class="text-center">Bloqueado</th>
+              <th class="text-center">Sesiones activas</th>
+              <th>Último login</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyAccesos">
+            <tr><td colspan="8" class="text-center text-muted py-4">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal sesiones -->
+<div class="modal fade" id="modalSesiones" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sesiones activas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-sm" id="tblSesiones">
+            <thead><tr><th>IP</th><th>User Agent</th><th>Última actividad</th><th class="text-end">Acción</th></tr></thead>
+            <tbody id="tbodySesiones"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+
+  const cargarAccesos = () => {
+    fetch('/api/v1/acceso/usuarios')
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) {
+          Swal.fire('Error', data.error || 'No se pudo cargar el estado de acceso.', 'error');
+          return;
+        }
+        const $tbody = $('#tbodyAccesos').empty();
+        if (!data.data.length) {
+          $tbody.append('<tr><td colspan="8" class="text-center text-muted py-4">Sin usuarios registrados.</td></tr>');
+          return;
+        }
+        data.data.forEach(u => {
+          const mfaBadge = u.mfa_habilitado
+            ? '<span class="badge bg-success">Activo</span>'
+            : '<span class="badge bg-secondary">Inactivo</span>';
+          const bloqueadoBadge = u.esta_bloqueado
+            ? '<span class="badge bg-danger">Sí</span>'
+            : '<span class="badge bg-light text-dark">No</span>';
+          const btnRevocar = u.mfa_habilitado
+            ? `<button class="btn btn-sm btn-outline-warning btn-revocar-mfa" data-id-usuario="${u.id_usuario}"><i data-feather="shield-off" class="icon-xs"></i> Revocar MFA</button>`
+            : '';
+          $tbody.append(`<tr>
+            <td>${u.usu_nick}</td>
+            <td>${u.nombre_completo || ''}</td>
+            <td>${u.grupo_nombre || ''}</td>
+            <td class="text-center">${mfaBadge}</td>
+            <td class="text-center">${bloqueadoBadge}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary btn-ver-sesiones" data-id-usuario="${u.id_usuario}" data-nick="${u.usu_nick}">
+                ${u.sesiones_activas} <i data-feather="monitor" class="icon-xs"></i>
+              </button>
+            </td>
+            <td>${u.fecha_ultimo_login || '-'}</td>
+            <td class="text-end">${btnRevocar}</td>
+          </tr>`);
+        });
+        if (window.feather) feather.replace();
+      });
+  }
+
+  const verSesiones = (idUsuario, nick) => {
+    fetch(`/api/v1/acceso/usuarios/${idUsuario}/sesiones`)
+      .then(resp => resp.json())
+      .then(data => {
+        if (!data.success) {
+          Swal.fire('Error', data.error || 'No se pudieron cargar las sesiones.', 'error');
+          return;
+        }
+        $('#modalSesiones .modal-title').text(`Sesiones activas de ${nick}`);
+        const $tbody = $('#tbodySesiones').empty();
+        if (!data.data.length) {
+          $tbody.append('<tr><td colspan="4" class="text-center text-muted py-3">Sin sesiones activas.</td></tr>');
+        }
+        data.data.forEach(s => {
+          $tbody.append(`<tr>
+            <td>${s.ip_address || '-'}</td>
+            <td class="text-truncate" style="max-width:220px" title="${s.user_agent || ''}">${s.user_agent || '-'}</td>
+            <td>${s.fecha_ultimo_ping || '-'}</td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-danger btn-cerrar-sesion" data-id-sesion="${s.id_sesion}" data-id-usuario="${idUsuario}" data-nick="${nick}">
+                Cerrar
+              </button>
+            </td>
+          </tr>`);
+        });
+        new bootstrap.Modal('#modalSesiones').show();
+      });
+  }
+
+  $(function () {
+    cargarAccesos();
+
+    $(document).on('click', '.btn-ver-sesiones', function () {
+      verSesiones($(this).data('id-usuario'), $(this).data('nick'));
+    });
+
+    $(document).on('click', '.btn-cerrar-sesion', function () {
+      const idSesion = $(this).data('id-sesion');
+      const idUsuario = $(this).data('id-usuario');
+      const nick = $(this).data('nick');
+
+      Swal.fire({
+        title: '¿Cerrar esta sesión?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cerrar'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+
+        fetch(`/api/v1/acceso/sesiones/${idSesion}`, {
+          method: 'DELETE',
+          headers: { 'X-CSRFToken': CSRFToken }
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Listo', 'Sesión cerrada.', 'success');
+              verSesiones(idUsuario, nick);
+              cargarAccesos();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo cerrar la sesión.', 'error');
+            }
+          });
+      });
+    });
+
+    $(document).on('click', '.btn-revocar-mfa', function () {
+      const idUsuario = $(this).data('id-usuario');
+
+      Swal.fire({
+        title: '¿Revocar MFA de este usuario?',
+        text: 'Deberá vincularlo nuevamente para volver a usarlo.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, revocar'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+
+        fetch(`/api/v1/acceso/usuarios/${idUsuario}/mfa/revocar`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRFToken }
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Listo', data.mensaje, 'success');
+              cargarAccesos();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo revocar el MFA.', 'error');
+            }
+          });
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -18,7 +18,7 @@ def getTiposEstudios():
 
 
 @tipoestudioapi.route('/tipos-estudios/<int:tipo_estudio_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoEstudio(tipo_estudio_id):
     try:
         registro = TipoEstudioDao().getTipoEstudioById(tipo_estudio_id)

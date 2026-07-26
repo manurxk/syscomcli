@@ -1,7 +1,10 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.auth.user_dao import UsuarioDao
 from app.auth.utils.decorators import role_required
+from app.auth.utils.password_validator import validar_politica_password
 from app.core.base_dao import BaseDAO
+from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
+from app.utils.auditoria_constantes import AuditAccion
 
 
 usuarioapi = Blueprint('usuarioapi', __name__)
@@ -172,10 +175,13 @@ def addUsuario():
                 'error': f'El campo {campo} es obligatorio.'
             }), 400
 
-    if len(data['password']) < 6:
+    password_valida, mensaje_password = validar_politica_password(
+        data['password'], username=data.get('username')
+    )
+    if not password_valida:
         return jsonify({
             'success': False,
-            'error': 'La contraseña debe tener al menos 6 caracteres.'
+            'error': mensaje_password
         }), 400
 
     if data.get('password') != data.get('password_confirmacion'):
@@ -195,6 +201,12 @@ def addUsuario():
         )
 
         if usuario_id:
+            AuditoriaDao().registrar_evento(
+                id_usuario=session.get('id_usuario'),
+                accion=AuditAccion.RECORD_CREATE,
+                detalle=f"Alta de usuario \"{data['username']}\" (id_usuario={usuario_id})",
+                ip_origen=request.remote_addr
+            )
             return jsonify({
                 'success': True,
                 'data': {
@@ -242,10 +254,13 @@ def updateUsuario(id_usuario):
 
     password = data.get('password')
     if password:
-        if len(password) < 6:
+        password_valida, mensaje_password = validar_politica_password(
+            password, username=data.get('username')
+        )
+        if not password_valida:
             return jsonify({
                 'success': False,
-                'error': 'La contraseña debe tener al menos 6 caracteres.'
+                'error': mensaje_password
             }), 400
         if password != data.get('password_confirmacion'):
             return jsonify({
@@ -269,6 +284,20 @@ def updateUsuario(id_usuario):
                 if not rol_actual or rol_actual['id_rol'] != id_rol_nuevo:
                     if not usuariodao.cambiar_rol_principal(id_usuario, id_rol_nuevo, session.get('id_usuario')):
                         usuariodao.asignar_rol_usuario(id_usuario, id_rol_nuevo, es_principal=True, usuario_creacion=session.get('id_usuario'))
+
+            AuditoriaDao().registrar_evento(
+                id_usuario=session.get('id_usuario'),
+                accion=AuditAccion.RECORD_UPDATE,
+                detalle=f"Edición de usuario \"{data['username']}\" (id_usuario={id_usuario})",
+                ip_origen=request.remote_addr
+            )
+            if password:
+                AuditoriaDao().registrar_evento(
+                    id_usuario=session.get('id_usuario'),
+                    accion=AuditAccion.PASSWORD_CHANGE,
+                    detalle=f"Cambio de contraseña de usuario \"{data['username']}\" (id_usuario={id_usuario}) por administrador",
+                    ip_origen=request.remote_addr
+                )
 
             return jsonify({
                 'success': True,
@@ -303,6 +332,12 @@ def desactivarUsuario(id_usuario):
 
     try:
         if usuariodao.desactivarUsuario(id_usuario, session.get('id_usuario')):
+            AuditoriaDao().registrar_evento(
+                id_usuario=session.get('id_usuario'),
+                accion=AuditAccion.RECORD_DELETE,
+                detalle=f"Baja de usuario (id_usuario={id_usuario})",
+                ip_origen=request.remote_addr
+            )
             return jsonify({
                 'success': True,
                 'mensaje': f'Usuario {id_usuario} desactivado correctamente.',

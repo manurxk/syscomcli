@@ -1,3 +1,5 @@
+import re
+
 from app.core.base_dao import BaseDAO
 
 class FuncionarioDao(BaseDAO):
@@ -11,6 +13,20 @@ class FuncionarioDao(BaseDAO):
     def es_cargo_especialista(self, id_cargo):
         """Verifica si un cargo requiere datos de especialista"""
         return id_cargo in self.CARGOS_ESPECIALISTAS
+
+    def validarNombreApellido(self, texto):
+        """Regla más permisiva que los referenciales de catálogo: letras, espacios, guion y apóstrofe (nombres reales)."""
+        patron = r"^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ '\-]+$"
+        return bool(re.match(patron, texto))
+
+    def matriculaExiste(self, esp_matricula, excluir_id_funcionario=None):
+        """Verifica si la matrícula profesional ya está registrada en otro especialista."""
+        sql = "SELECT 1 FROM especialistas WHERE esp_matricula = %s"
+        params = [esp_matricula]
+        if excluir_id_funcionario:
+            sql += " AND id_funcionario != %s"
+            params.append(excluir_id_funcionario)
+        return self.execute_query_one(sql, tuple(params)) is not None
 
     def cedulaExiste(self, cedula, excluir_id_persona=None):
         """Verifica si la cédula ya está registrada en personas (paciente o funcionario)."""
@@ -283,6 +299,8 @@ class FuncionarioDao(BaseDAO):
                 raise ValueError("Matrícula es obligatoria para especialistas")
             if not especialidades or len(especialidades) == 0:
                 raise ValueError("Debe seleccionar al menos una especialidad")
+            if self.matriculaExiste(esp_matricula):
+                raise ValueError(f'Ya existe un especialista registrado con la matrícula "{esp_matricula}".')
 
         if self.cedulaExiste(cedula):
             raise ValueError(f'Ya existe una persona registrada con la cédula "{cedula}".')
@@ -349,6 +367,8 @@ class FuncionarioDao(BaseDAO):
                 raise ValueError("Matrícula es obligatoria para especialistas")
             if not especialidades or len(especialidades) == 0:
                 raise ValueError("Debe seleccionar al menos una especialidad")
+            if self.matriculaExiste(esp_matricula, excluir_id_funcionario=id_funcionario):
+                raise ValueError(f'Ya existe un especialista registrado con la matrícula "{esp_matricula}".')
 
         fila_persona = self.execute_query_one(
             "SELECT id_persona FROM funcionarios WHERE id_funcionario = %s", (id_funcionario,)

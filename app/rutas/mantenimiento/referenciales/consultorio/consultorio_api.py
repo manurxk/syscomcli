@@ -44,6 +44,8 @@ def addConsultorio():
         return jsonify({'success': False, 'error': 'La sede es obligatoria.'}), 400
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+    if not consultoriodao.validarDescripcion(descripcion):
+        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
     if consultoriodao.descripcionExiste(id_sede, descripcion):
         return jsonify({'success': False, 'error': f'Ya existe un consultorio "{descripcion}" en esa sede.'}), 400
 
@@ -75,6 +77,8 @@ def updateConsultorio(consultorio_id):
         return jsonify({'success': False, 'error': 'La sede es obligatoria.'}), 400
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+    if not consultoriodao.validarDescripcion(descripcion):
+        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
     if consultoriodao.descripcionExiste(id_sede, descripcion, excluir_id=consultorio_id):
         return jsonify({'success': False, 'error': f'Ya existe un consultorio "{descripcion}" en esa sede.'}), 400
 

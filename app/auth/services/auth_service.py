@@ -8,8 +8,11 @@ from typing import Dict, Optional, Tuple
 from flask import current_app as app, request
 from werkzeug.security import check_password_hash
 from app.core.base_dao import BaseDAO
+from app.services.EmailService import EmailService
 
 _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
+
+MFA_MAX_INTENTOS_VALIDACION = 5
 
 
 class AuthService:
@@ -40,7 +43,8 @@ class AuthService:
                 fecha_ultimo_login, ip_ultimo_login, fecha_bloqueo, bloqueado_hasta,
                 motivo_bloqueo, requiere_cambio_clave, fecha_cambio_clave,
                 clave_nunca_expira, dias_validez_clave, max_sesiones_simultaneas,
-                sesiones_activas, password_expirada, dias_hasta_expiracion, esta_bloqueado
+                sesiones_activas, password_expirada, dias_hasta_expiracion, esta_bloqueado,
+                mfa_habilitado, correo
             FROM v_usuarios_seguridad
             WHERE usu_nick = %s
         """
@@ -71,7 +75,9 @@ class AuthService:
                 'sesiones_activas': fila['sesiones_activas'],
                 'password_expirada': fila['password_expirada'],
                 'dias_hasta_expiracion': fila['dias_hasta_expiracion'],
-                'esta_bloqueado': fila['esta_bloqueado']
+                'esta_bloqueado': fila['esta_bloqueado'],
+                'mfa_habilitado': fila['mfa_habilitado'],
+                'correo': fila['correo']
             }
         except Exception as e:
             app.logger.error(f"Error al buscar usuario seguridad: {str(e)}")
@@ -170,6 +176,23 @@ class AuthService:
             return False
 
     @staticmethod
+    def contar_intentos_fallidos_ip(ip_address: str, minutos: int = 15) -> int:
+        """Cuenta intentos de login fallidos desde una IP en una ventana de tiempo"""
+        sql = """
+            SELECT COUNT(*) AS total
+            FROM accesos_sistema
+            WHERE ip_origen = %s::inet
+              AND resultado != 'EXITOSO'
+              AND fecha_intento > CURRENT_TIMESTAMP - (%s || ' minutes')::interval
+        """
+        try:
+            fila = _dao.execute_query_one(sql, (ip_address, minutos))
+            return fila['total'] if fila else 0
+        except Exception as e:
+            app.logger.error(f"Error al contar intentos fallidos por IP: {str(e)}")
+            return 0
+
+    @staticmethod
     def login(
         usuario_nombre: str,
         password: str,
@@ -183,6 +206,13 @@ class AuthService:
         """
         ip_address = AuthService.obtener_ip_cliente()
         user_agent = AuthService.obtener_user_agent()
+
+        # 0. Rate limiting por IP - protege contra fuerza bruta distribuida entre usuarios
+        MAX_INTENTOS_FALLIDOS_IP = 10
+        VENTANA_MINUTOS_IP = 15
+        if AuthService.contar_intentos_fallidos_ip(ip_address, VENTANA_MINUTOS_IP) >= MAX_INTENTOS_FALLIDOS_IP:
+            app.logger.warning(f"LOGIN_BLOCKED_IP ip={ip_address} reason=demasiados_intentos")
+            return False, {}, "Demasiados intentos fallidos desde esta IP. Intente nuevamente más tarde."
 
         # 1. Buscar usuario en vista de seguridad
         usuario = AuthService.buscar_usuario_seguridad(usuario_nombre)
@@ -288,7 +318,50 @@ class AuthService:
             )
             return False, usuario, "Su contraseña ha expirado. Debe cambiarla"
 
-        # 7. TODO OK - Crear sesión
+        # 7. Si el usuario tiene MFA habilitado, no crear sesión todavía:
+        # se envía un código por correo y el login se completa en un segundo paso
+        # (ver completar_login_mfa).
+        if usuario.get('mfa_habilitado'):
+            enviado, error_mfa = AuthService.generar_y_enviar_codigo_mfa(
+                id_usuario=id_usuario,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            if not enviado:
+                app.logger.error(f"Error al enviar código MFA para usuario {usuario_nombre}: {error_mfa}")
+                return False, {}, "No se pudo enviar el código de verificación. Intente nuevamente"
+
+            AuthService.registrar_intento_login(
+                usuario_intentado=usuario_nombre,
+                id_usuario=id_usuario,
+                exitoso=True,
+                motivo_fallo=None,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+
+            app.logger.info(f"LOGIN_MFA_PENDIENTE user={usuario_nombre} ip={ip_address}")
+            return False, {'id_usuario': id_usuario, 'usu_nick': usuario['usu_nick'], 'requiere_mfa': True}, \
+                "Se envió un código de verificación a su correo"
+
+        # 8. Sin MFA - crear sesión directamente
+        datos_usuario = AuthService._finalizar_sesion(usuario, usuario_nombre, ip_address, user_agent, csrf_token)
+        if not datos_usuario:
+            return False, {}, "Error al crear sesión. Intente nuevamente"
+
+        return True, datos_usuario, "Login exitoso"
+
+    @staticmethod
+    def _finalizar_sesion(usuario, usuario_nombre, ip_address, user_agent, csrf_token=None):
+        """
+        Crea la sesión, actualiza último login y registra el intento exitoso.
+        Compartido por el login sin MFA y por completar_login_mfa().
+
+        Returns:
+            Optional[Dict]: datos de usuario listos para la sesión, o None si falló.
+        """
+        id_usuario = usuario['id_usuario']
+
         # Generar tokens
         session_token = secrets.token_urlsafe(32)
         refresh_token = secrets.token_urlsafe(32)
@@ -314,7 +387,7 @@ class AuthService:
 
         if not sesion_id:
             app.logger.error(f"Error al crear sesión para usuario {usuario_nombre}")
-            return False, {}, "Error al crear sesión. Intente nuevamente"
+            return None
 
         # Actualizar fecha_ultimo_login
         try:
@@ -368,5 +441,92 @@ class AuthService:
         datos_usuario['advertencias'] = advertencias
 
         app.logger.info(f"LOGIN_SUCCESS user={usuario_nombre} ip={ip_address} sesion={sesion_id}")
+
+        return datos_usuario
+
+    @staticmethod
+    def generar_y_enviar_codigo_mfa(id_usuario, ip_address=None, user_agent=None):
+        """Genera un código OTP de 6 dígitos, lo guarda y lo envía por correo."""
+        fila = _dao.execute_query_one(
+            "SELECT correo FROM v_usuarios_seguridad WHERE id_usuario = %s", (id_usuario,)
+        )
+        correo = fila['correo'] if fila else None
+
+        ttl_minutos = int(app.config.get('MFA_CODE_TTL_MINUTES', 5))
+        codigo = f"{secrets.randbelow(1_000_000):06d}"
+        fecha_expiracion = datetime.utcnow() + timedelta(minutes=ttl_minutos)
+
+        exito, error, _tipo_error = EmailService().enviar_codigo_mfa(correo, codigo, ttl_minutos)
+        if not exito:
+            return False, error
+
+        sql = """
+            INSERT INTO mfa_codigos (id_usuario, codigo, fecha_expiracion, ip_solicitud, user_agent)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        _dao.execute_query(sql, (id_usuario, codigo, fecha_expiracion, ip_address, user_agent), commit=True)
+        return True, None
+
+    @staticmethod
+    def validar_codigo_mfa(id_usuario, codigo):
+        """Valida el último código MFA pendiente del usuario. Retorna (valido: bool, mensaje: str)."""
+        fila = _dao.execute_query_one(
+            """
+            SELECT id_mfa_codigo, codigo, fecha_expiracion, intentos_validacion
+            FROM mfa_codigos
+            WHERE id_usuario = %s AND usado = FALSE
+            ORDER BY fecha_generacion DESC
+            LIMIT 1
+            """,
+            (id_usuario,)
+        )
+
+        if not fila:
+            return False, "No hay un código pendiente. Solicite uno nuevo."
+
+        if fila['intentos_validacion'] >= MFA_MAX_INTENTOS_VALIDACION:
+            return False, "Demasiados intentos fallidos. Solicite un nuevo código."
+
+        if datetime.utcnow() > fila['fecha_expiracion']:
+            return False, "El código expiró. Solicite uno nuevo."
+
+        if fila['codigo'] != (codigo or '').strip():
+            _dao.execute_query(
+                "UPDATE mfa_codigos SET intentos_validacion = intentos_validacion + 1 WHERE id_mfa_codigo = %s",
+                (fila['id_mfa_codigo'],), commit=True
+            )
+            return False, "Código incorrecto."
+
+        _dao.execute_query(
+            "UPDATE mfa_codigos SET usado = TRUE, fecha_uso = CURRENT_TIMESTAMP WHERE id_mfa_codigo = %s",
+            (fila['id_mfa_codigo'],), commit=True
+        )
+        return True, None
+
+    @staticmethod
+    def completar_login_mfa(id_usuario, codigo, csrf_token=None):
+        """
+        Segundo paso del login cuando el usuario tiene MFA habilitado:
+        valida el código y, si es correcto, crea la sesión (mismo camino que
+        un login sin MFA, vía _finalizar_sesion).
+
+        Returns:
+            Tuple[bool, Dict, str]: (exitoso, datos_usuario, mensaje)
+        """
+        valido, mensaje_error = AuthService.validar_codigo_mfa(id_usuario, codigo)
+        if not valido:
+            return False, {}, mensaje_error
+
+        fila_nick = _dao.execute_query_one("SELECT usu_nick FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+        usuario = AuthService.buscar_usuario_seguridad(fila_nick['usu_nick']) if fila_nick else None
+        if not usuario:
+            return False, {}, "Usuario no encontrado"
+
+        ip_address = AuthService.obtener_ip_cliente()
+        user_agent = AuthService.obtener_user_agent()
+
+        datos_usuario = AuthService._finalizar_sesion(usuario, usuario['usu_nick'], ip_address, user_agent, csrf_token)
+        if not datos_usuario:
+            return False, {}, "Error al crear sesión. Intente nuevamente"
 
         return True, datos_usuario, "Login exitoso"

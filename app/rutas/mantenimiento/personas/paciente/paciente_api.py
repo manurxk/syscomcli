@@ -446,6 +446,12 @@ def addPaciente():
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
+    if not pacientedao.validarNombreApellido(data['nombre']) or not pacientedao.validarNombreApellido(data['apellido']):
+        return jsonify({
+            'success': False,
+            'error': 'El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.'
+        }), 400
+
     try:
         paciente_id = pacientedao.guardarPaciente(
             nombre=data['nombre'],
@@ -533,6 +539,12 @@ def updatePaciente(pac_id):
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
+    if not pacientedao.validarNombreApellido(data['nombre']) or not pacientedao.validarNombreApellido(data['apellido']):
+        return jsonify({
+            'success': False,
+            'error': 'El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.'
+        }), 400
+
     try:
         resultado = pacientedao.updatePaciente(
             pac_id=pac_id,
@@ -594,6 +606,12 @@ def updatePaciente(pac_id):
 def deletePaciente(pac_id):
     """Desactiva un paciente (soft-delete, no elimina datos)."""
     pacientedao = PacienteDao()
+
+    if not pacientedao.getPacienteById(pac_id):
+        return jsonify({
+            'success': False,
+            'error': 'No se encontró el paciente con el ID proporcionado.'
+        }), 404
 
     try:
         if pacientedao.desactivarPaciente(pac_id, session.get('id_usuario')):

@@ -173,6 +173,12 @@ def addFuncionario():
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
+    if not funcionariodao.validarNombreApellido(data['nombre']) or not funcionariodao.validarNombreApellido(data['apellido']):
+        return jsonify({
+            'success': False,
+            'error': 'El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.'
+        }), 400
+
     # Validar si es especialista
     if funcionariodao.es_cargo_especialista(data['id_cargo']):
         if not data.get('esp_matricula'):
@@ -180,7 +186,7 @@ def addFuncionario():
                 'success': False,
                 'error': 'La matrícula es obligatoria para especialistas.'
             }), 400
-        
+
         especialidades = data.get('especialidades', [])
         if not especialidades or len(especialidades) == 0:
             return jsonify({
@@ -274,6 +280,12 @@ def updateFuncionario(id_funcionario):
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
+    if not funcionariodao.validarNombreApellido(data['nombre']) or not funcionariodao.validarNombreApellido(data['apellido']):
+        return jsonify({
+            'success': False,
+            'error': 'El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.'
+        }), 400
+
     # Validar si es especialista
     if funcionariodao.es_cargo_especialista(data['id_cargo']):
         if not data.get('esp_matricula'):
@@ -281,7 +293,7 @@ def updateFuncionario(id_funcionario):
                 'success': False,
                 'error': 'La matrícula es obligatoria para especialistas.'
             }), 400
-        
+
         especialidades = data.get('especialidades', [])
         if not especialidades or len(especialidades) == 0:
             return jsonify({
@@ -352,6 +364,12 @@ def updateFuncionario(id_funcionario):
 def deleteFuncionario(id_funcionario):
     """Desactiva un funcionario (soft-delete)"""
     funcionariodao = FuncionarioDao()
+
+    if not funcionariodao.getFuncionarioById(id_funcionario):
+        return jsonify({
+            'success': False,
+            'error': 'No se encontró el funcionario con el ID proporcionado.'
+        }), 404
 
     try:
         if funcionariodao.desactivarFuncionario(id_funcionario, session.get('id_usuario')):

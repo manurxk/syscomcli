@@ -13,6 +13,31 @@ def verificar_sesion():
     return 'usu_nick' in session
 
 
+def _iniciar_sesion_flask(datos_usuario):
+    """Vuelca los datos de AuthService en la sesión Flask. Usado por el login
+    directo y por la confirmación de MFA (completar_login_mfa)."""
+    session.clear()
+    session.permanent = True
+    session['id_usuario'] = datos_usuario['id_usuario']
+
+    AuditoriaDao().registrar_evento(
+        id_usuario=datos_usuario['id_usuario'],
+        accion=AuditAccion.LOGIN,
+        detalle=f"Login exitoso desde {request.remote_addr}",
+        ip_origen=request.remote_addr
+    )
+    session['usu_nick'] = datos_usuario['usu_nick']
+    session['nombre_persona'] = datos_usuario['nombre_completo']
+    session['grupo'] = datos_usuario['grupo']
+    session['roles'] = datos_usuario.get('roles', [])
+    session['id_funcionario'] = datos_usuario.get('id_funcionario')
+    session['session_token'] = datos_usuario.get('session_token')
+
+    advertencias = datos_usuario.get('advertencias', {})
+    if advertencias.get('password_expira_en_dias'):
+        flash(f'Su contraseña expira en {advertencias["password_expira_en_dias"]} días', 'warning')
+
+
 @logmod.route('/login', methods=['GET', 'POST'])
 def login():
     """
@@ -35,50 +60,58 @@ def login():
         )
 
         if exitoso:
-            # Guardar en sesión Flask
-            session.clear()
-            session.permanent = True
-            session['id_usuario'] = datos_usuario['id_usuario']
-            
-            AuditoriaDao().registrar_evento(
-                id_usuario=datos_usuario['id_usuario'],
-                accion=AuditAccion.LOGIN,
-                detalle=f"Login exitoso desde {request.remote_addr}",
-                ip_origen=request.remote_addr
-            )
-            session['usu_nick'] = datos_usuario['usu_nick']
-            session['nombre_persona'] = datos_usuario['nombre_completo']
-            session['grupo'] = datos_usuario['grupo']
-            session['roles'] = datos_usuario.get('roles', [])
-            session['id_funcionario'] = datos_usuario.get('id_funcionario')
-            session['session_token'] = datos_usuario.get('session_token')
-            
-            # Mostrar advertencias si existen
-            advertencias = datos_usuario.get('advertencias', {})
-            if advertencias.get('password_expira_en_dias'):
-                flash(f'Su contraseña expira en {advertencias["password_expira_en_dias"]} días', 'warning')
-            
+            _iniciar_sesion_flask(datos_usuario)
             return redirect(url_for('login.inicio'))
-        else:
-            id_usuario_audit = datos_usuario.get('id_usuario', 0) if datos_usuario else 0
-            AuditoriaDao().registrar_evento(
-                id_usuario=id_usuario_audit,
-                accion=AuditAccion.LOGIN_FAILED,
-                detalle=f"Intento fallido (usuario intentado: '{usuario_nombre}')",
-                ip_origen=request.remote_addr
-            )
-            
-            # Verificar si requiere cambio de password
-            if datos_usuario and 'requiere_cambio_password' in datos_usuario:
-                flash('Debe cambiar su contraseña antes de continuar', 'warning')
-                # Redirigir a página de cambio de contraseña
-                # return redirect(url_for('auth.cambiar_password'))
-            
-            flash(mensaje, 'danger')
-            return redirect(url_for('login.login'))
+
+        if datos_usuario and datos_usuario.get('requiere_mfa'):
+            # Password correcta, falta el código de verificación por correo
+            session['mfa_pendiente_id_usuario'] = datos_usuario['id_usuario']
+            flash(mensaje, 'info')
+            return redirect(url_for('login.verificar_mfa'))
+
+        id_usuario_audit = datos_usuario.get('id_usuario', 0) if datos_usuario else 0
+        AuditoriaDao().registrar_evento(
+            id_usuario=id_usuario_audit,
+            accion=AuditAccion.LOGIN_FAILED,
+            detalle=f"Intento fallido (usuario intentado: '{usuario_nombre}')",
+            ip_origen=request.remote_addr
+        )
+
+        # Verificar si requiere cambio de password
+        if datos_usuario and 'requiere_cambio_password' in datos_usuario:
+            flash('Debe cambiar su contraseña antes de continuar', 'warning')
+            # Redirigir a página de cambio de contraseña
+            # return redirect(url_for('auth.cambiar_password'))
+
+        flash(mensaje, 'danger')
+        return redirect(url_for('login.login'))
 
     # si es GET
     return render_template('login.html')
+
+
+@logmod.route('/login/verificar-mfa', methods=['GET', 'POST'])
+def verificar_mfa():
+    """Segundo paso del login cuando el usuario tiene MFA habilitado."""
+    id_usuario = session.get('mfa_pendiente_id_usuario')
+    if not id_usuario:
+        flash('Inicie sesión nuevamente', 'warning')
+        return redirect(url_for('login.login'))
+
+    if request.method == 'POST':
+        codigo = request.form.get('codigo')
+
+        exitoso, datos_usuario, mensaje = AuthService.completar_login_mfa(id_usuario, codigo)
+
+        if exitoso:
+            session.pop('mfa_pendiente_id_usuario', None)
+            _iniciar_sesion_flask(datos_usuario)
+            return redirect(url_for('login.inicio'))
+
+        flash(mensaje, 'danger')
+        return redirect(url_for('login.verificar_mfa'))
+
+    return render_template('verificar-mfa.html')
 
 
 @logmod.route('/logout')

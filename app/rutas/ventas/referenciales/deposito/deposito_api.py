@@ -5,6 +5,8 @@ from app.auth.utils.decorators import role_required
 
 depositoapi = Blueprint('depositoapi', __name__)
 
+TIPOS_DEPOSITO_VALIDOS = ('BANCO', 'CUENTA_CORRIENTE', 'CAJA_AHORRO', 'BILLETERA_DIGITAL')
+
 
 @depositoapi.route('/depositos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
@@ -36,11 +38,14 @@ def addDeposito():
     dao = DepositoDao()
 
     descripcion = (data.get('des_deposito') or '').strip().upper()
+    tipo_deposito = (data.get('tipo_deposito') or 'BANCO').strip().upper()
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
     if not dao.validarDescripcion(descripcion):
         return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+    if tipo_deposito not in TIPOS_DEPOSITO_VALIDOS:
+        return jsonify({'success': False, 'error': f'El tipo de depósito debe ser uno de: {", ".join(TIPOS_DEPOSITO_VALIDOS)}.'}), 400
     if dao.depositoExiste(descripcion):
         return jsonify({'success': False, 'error': f'Ya existe un depósito "{descripcion}".'}), 400
 
@@ -48,7 +53,7 @@ def addDeposito():
         nuevo_id = dao.guardarDeposito(
             descripcion=descripcion,
             codigo=data.get('cod_deposito'),
-            tipo_deposito=data.get('tipo_deposito', 'BANCO'),
+            tipo_deposito=tipo_deposito,
             numero_cuenta=data.get('numero_cuenta'),
             banco=data.get('banco_deposito'),
             ruc_banco=data.get('ruc_banco'),
@@ -72,11 +77,14 @@ def updateDeposito(id_deposito):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404
 
     descripcion = (data.get('des_deposito') or '').strip().upper()
+    tipo_deposito = (data.get('tipo_deposito') or 'BANCO').strip().upper()
 
     if not descripcion:
         return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
     if not dao.validarDescripcion(descripcion):
         return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+    if tipo_deposito not in TIPOS_DEPOSITO_VALIDOS:
+        return jsonify({'success': False, 'error': f'El tipo de depósito debe ser uno de: {", ".join(TIPOS_DEPOSITO_VALIDOS)}.'}), 400
     if dao.depositoExiste(descripcion, excluir_id=id_deposito):
         return jsonify({'success': False, 'error': f'Ya existe un depósito "{descripcion}".'}), 400
 
@@ -85,7 +93,7 @@ def updateDeposito(id_deposito):
             id_deposito=id_deposito,
             descripcion=descripcion,
             codigo=data.get('cod_deposito'),
-            tipo_deposito=data.get('tipo_deposito', 'BANCO'),
+            tipo_deposito=tipo_deposito,
             numero_cuenta=data.get('numero_cuenta'),
             banco=data.get('banco_deposito'),
             ruc_banco=data.get('ruc_banco'),

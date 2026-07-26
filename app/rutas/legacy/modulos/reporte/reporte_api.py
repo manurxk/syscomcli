@@ -1,10 +1,9 @@
-from flask import Blueprint, request, jsonify, session, current_app as app, send_file
+from flask import Blueprint, request, jsonify, send_file
 from datetime import datetime, date
 import io
 from app.auth.utils.decorators import role_required
 from app.dao.modulos.reporte.ReporteDao import ReporteDao
 from app.services.ReporteService import ReporteService
-from app.dao.AuditoriaDao import AuditoriaDao
 
 reporte_api = Blueprint('reporte_api', __name__)
 
@@ -41,12 +40,6 @@ def api_ventas_data():
     for kpi in list(totales.keys()):
         totales[f'{kpi}_formateado'] = reporte_service._formatear_moneda(totales[kpi])
     
-    AuditoriaDao().registrar_evento(
-        session.get('usuario_id', 0), 
-        'REPORT_VIEW', 'reporte_ventas', None, 
-        f'Generación reporte ventas {fecha_desde} - {fecha_hasta} (Pago: {metodo_pago})'
-    )
-    
     return jsonify({
         "success": True,
         "data": data,
@@ -75,12 +68,6 @@ def reporte_ventas_pdf():
     totales = reporte_service.calcular_totales_ventas(datos_agrupados)
     
     pdf_bytes = reporte_service.generar_pdf_ventas(fecha_desde, fecha_hasta, metodo_pago, datos_detalle, totales)
-    
-    AuditoriaDao().registrar_evento(
-        session.get('usuario_id', 0), 
-        'REPORT_DOWNLOAD', 'reporte_ventas_pdf', None, 
-        f'Descarga PDF reporte ventas {fecha_desde} a {fecha_hasta} (Pago: {metodo_pago})'
-    )
     
     return send_file(
         io.BytesIO(pdf_bytes),
@@ -117,12 +104,6 @@ def api_agendamiento_data():
         elif d['estado'] == 'AUSENTE':
             kpis['ausentes'] += d['cantidad']
             
-    AuditoriaDao().registrar_evento(
-        session.get('usuario_id', 0), 
-        'REPORT_VIEW', 'reporte_agendamiento', None, 
-        f'Generación reporte agendamiento {fecha_desde} - {fecha_hasta}'
-    )
-            
     return jsonify({
         "success": True,
         "totales": kpis,
@@ -157,12 +138,6 @@ def reporte_agendamiento_pdf():
             
     reporte_service = ReporteService()
     pdf_bytes = reporte_service.generar_pdf_agendamiento(fecha_desde, fecha_hasta, datos_diarios, kpis)
-    
-    AuditoriaDao().registrar_evento(
-        session.get('usuario_id', 0), 
-        'REPORT_DOWNLOAD', 'reporte_agendamiento_pdf', None, 
-        f'Descarga PDF reporte agendamiento {fecha_desde} a {fecha_hasta}'
-    )
     
     return send_file(
         io.BytesIO(pdf_bytes),
@@ -201,12 +176,6 @@ def api_consultorio_data():
         
     kpis = {'total_consultas': total_consultas, 'promedio_diario': promedio}
     
-    AuditoriaDao().registrar_evento(
-        session.get('usuario_id', 0), 
-        'REPORT_VIEW', 'reporte_consultorio', None, 
-        f'Generación reporte consultorio {fecha_desde} - {fecha_hasta}'
-    )
-            
     return jsonify({
         "success": True,
         "totales": kpis,
@@ -242,12 +211,6 @@ def reporte_consultorio_pdf():
     
     reporte_service = ReporteService()
     pdf_bytes = reporte_service.generar_pdf_consultorio(fecha_desde, fecha_hasta, especialidades, kpis)
-    
-    AuditoriaDao().registrar_evento(
-        session.get('usuario_id', 0), 
-        'REPORT_DOWNLOAD', 'reporte_consultorio_pdf', None, 
-        f'Descarga PDF reporte consultorio {fecha_desde} a {fecha_hasta}'
-    )
     
     return send_file(
         io.BytesIO(pdf_bytes),

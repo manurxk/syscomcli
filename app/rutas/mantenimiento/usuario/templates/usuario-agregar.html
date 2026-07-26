@@ -95,8 +95,8 @@
         <div class="row gx-3">
           <div class="col-md-4 mb-3 mb-md-0">
             <label class="small mb-1" for="txtPassword">Contraseña <span class="text-danger" id="lblPasswordRequerida">*</span></label>
-            <input class="form-control" id="txtPassword" type="password" placeholder="Ingrese la contraseña" minlength="6">
-            <small id="passwordHelp" class="text-muted">Mínimo 6 caracteres</small>
+            <input class="form-control" id="txtPassword" type="password" placeholder="Ingrese la contraseña" minlength="8">
+            <small id="passwordHelp" class="text-muted">Mínimo 8 caracteres</small>
           </div>
           <div class="col-md-4">
             <label class="small mb-1" for="txtPasswordConfirmacion">Confirmar Contraseña <span class="text-danger" id="lblPasswordConfirmacionRequerida">*</span></label>
@@ -225,8 +225,8 @@
     const password = $('#txtPassword').val();
     const passwordConf = $('#txtPasswordConfirmacion').val();
 
-    if (!idUsuario && (!password || password.length < 6)) {
-      Swal.fire('Atención', 'La contraseña debe tener al menos 6 caracteres', 'warning');
+    if (!idUsuario && (!password || password.length < 8)) {
+      Swal.fire('Atención', 'La contraseña debe tener al menos 8 caracteres', 'warning');
       return false;
     }
     if (password && password !== passwordConf) {

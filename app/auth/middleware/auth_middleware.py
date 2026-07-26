@@ -2,10 +2,14 @@
 Middleware mejorado de autenticación
 FASE 2: MEJORAS DE SEGURIDAD
 """
+from datetime import datetime, timedelta
 from flask import request, session, g, current_app as app
 from app.core.base_dao import BaseDAO
+from app.auth.services.auth_service import AuthService
 
 _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
+
+TIMEOUT_INACTIVIDAD_MINUTOS = 20
 
 
 def verificar_sesion_mejorada():
@@ -23,6 +27,7 @@ def verificar_sesion_mejorada():
     public_endpoints = {
         "login.login",
         "login.logout",
+        "login.verificar_mfa",
         "static",
         "informacion.privacidad",
         "informacion.soporte",
@@ -70,7 +75,7 @@ def verificar_sesion_mejorada():
     # Verificar sesión en BD
     sql = """
         SELECT
-            s.id_sesion, s.id_usuario, s.fecha_expiracion, s.est_sesion,
+            s.id_sesion, s.id_usuario, s.fecha_expiracion, s.fecha_ultimo_ping, s.est_sesion,
             u.usu_nick, u.est_usuario,
             CONCAT(p.per_nombre, ' ', p.per_apellido) AS nombre_completo,
             rp.cod_rol AS rol_principal,
@@ -89,7 +94,7 @@ def verificar_sesion_mejorada():
         WHERE s.token_sesion = %s
           AND s.est_sesion = TRUE
           AND s.fecha_expiracion > CURRENT_TIMESTAMP
-        GROUP BY s.id_sesion, s.id_usuario, s.fecha_expiracion, s.est_sesion,
+        GROUP BY s.id_sesion, s.id_usuario, s.fecha_expiracion, s.fecha_ultimo_ping, s.est_sesion,
                  u.usu_nick, u.est_usuario, p.per_nombre, p.per_apellido, rp.cod_rol
     """
     
@@ -122,6 +127,22 @@ def verificar_sesion_mejorada():
             else:
                 from flask import redirect, url_for, flash
                 flash('Usuario inactivo', 'danger')
+                return redirect(url_for('login.login'))
+
+        # Verificar expiración por inactividad
+        fecha_ultimo_ping = sesion_data['fecha_ultimo_ping']
+        if fecha_ultimo_ping and (datetime.utcnow() - fecha_ultimo_ping) > timedelta(minutes=TIMEOUT_INACTIVIDAD_MINUTOS):
+            AuthService.cerrar_sesion(session_token, tipo_cierre='TIMEOUT')
+            session.clear()
+            if request.path.startswith('/api/'):
+                from flask import jsonify
+                return jsonify({
+                    'success': False,
+                    'error': 'Sesión expirada por inactividad'
+                }), 401
+            else:
+                from flask import redirect, url_for, flash
+                flash('Su sesión expiró por inactividad', 'warning')
                 return redirect(url_for('login.login'))
 
         # Actualizar fecha_ultimo_ping

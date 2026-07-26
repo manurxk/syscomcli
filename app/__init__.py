@@ -3,19 +3,25 @@ from flask_wtf.csrf import CSRFProtect
 
 from app.config.settings import init_settings
 from app.middleware import init_middleware
-from app.auth import login_blueprint
+from app.auth import login_blueprint, auth_api_blueprint, admin_auth_api_blueprint
 from app.rutas.mantenimiento.personas.funcionario.funcionario_routes import funcionariomod
 from app.rutas.mantenimiento.personas.funcionario.funcionario_api import funcionarioapi
 from app.rutas.mantenimiento.personas.paciente.paciente_routes import pacientemod
 from app.rutas.mantenimiento.personas.paciente.paciente_api import pacienteapi
 from app.rutas.mantenimiento.usuario.usuario_routes import usuariomod
 from app.rutas.mantenimiento.usuario.usuario_api import usuarioapi
+from app.rutas.mantenimiento.auditoria.auditoria_routes import auditoriamod
+from app.rutas.mantenimiento.auditoria.auditoria_api import auditoriaapi
 from app.rutas.mantenimiento.referenciales.referenciales_api import referencialesapi
 from app.rutas.mantenimiento.referenciales.referenciales_routes import referencialesmod
 from app.rutas.mantenimiento.referenciales.cargo.cargo_routes import cargomod
 from app.rutas.mantenimiento.referenciales.cargo.cargo_api import cargoapi
 from app.rutas.mantenimiento.referenciales.permisos.permisos_routes import permisosmod
 from app.rutas.mantenimiento.referenciales.permisos.permisos_api import permisosapi
+from app.rutas.mantenimiento.seguridad.menu.menu_routes import menumod
+from app.rutas.mantenimiento.seguridad.menu.menu_api import menuapi
+from app.rutas.mantenimiento.seguridad.acceso.acceso_routes import accesomod
+from app.rutas.mantenimiento.seguridad.acceso.acceso_api import accesoapi
 from app.rutas.mantenimiento.referenciales.empresa.empresa_routes import empresamod
 from app.rutas.mantenimiento.referenciales.empresa.empresa_api import empresaapi
 from app.rutas.mantenimiento.referenciales.sede.sede_routes import sedemod
@@ -139,18 +145,26 @@ init_middleware(app)
 
 # Register Blueprints (Routes)
 app.register_blueprint(login_blueprint)
+app.register_blueprint(auth_api_blueprint)
+app.register_blueprint(admin_auth_api_blueprint)
 app.register_blueprint(funcionariomod, url_prefix='/mantenimiento/funcionario')
 app.register_blueprint(funcionarioapi, url_prefix='/api/v1')
 app.register_blueprint(pacientemod, url_prefix='/mantenimiento/paciente')
 app.register_blueprint(pacienteapi, url_prefix='/api/v1')
 app.register_blueprint(usuariomod, url_prefix='/mantenimiento/usuario')
 app.register_blueprint(usuarioapi, url_prefix='/api/v1')
+app.register_blueprint(auditoriamod, url_prefix='/mantenimiento/auditoria')
+app.register_blueprint(auditoriaapi, url_prefix='/api/v1')
 app.register_blueprint(referencialesapi, url_prefix='/api/v1')
 app.register_blueprint(referencialesmod, url_prefix='/mantenimiento/referenciales')
 app.register_blueprint(cargomod, url_prefix='/mantenimiento/referenciales/cargo')
 app.register_blueprint(cargoapi, url_prefix='/api/v1')
 app.register_blueprint(permisosmod, url_prefix='/mantenimiento/referenciales/permisos')
 app.register_blueprint(permisosapi, url_prefix='/api/v1')
+app.register_blueprint(menumod, url_prefix='/mantenimiento/seguridad/menu')
+app.register_blueprint(menuapi, url_prefix='/api/v1')
+app.register_blueprint(accesomod, url_prefix='/mantenimiento/seguridad/acceso')
+app.register_blueprint(accesoapi, url_prefix='/api/v1')
 app.register_blueprint(empresamod, url_prefix='/mantenimiento/referenciales/empresa')
 app.register_blueprint(empresaapi, url_prefix='/api/v1')
 app.register_blueprint(sedemod, url_prefix='/mantenimiento/referenciales/sede')

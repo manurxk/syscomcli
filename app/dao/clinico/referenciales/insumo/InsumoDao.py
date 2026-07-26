@@ -1,9 +1,16 @@
+import re
+
 from app.core.base_dao import BaseDAO
 
 
 class InsumoDao(BaseDAO):
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
+
+    def validarDescripcion(self, descripcion):
+        """Misma regla que las otras 8 entidades del módulo: letras, números, acentos, espacios y puntos."""
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .]+$"
+        return bool(re.match(patron, descripcion))
 
     def getInsumos(self):
         sql = """

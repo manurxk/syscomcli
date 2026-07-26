@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime
 
 from app.core.base_dao import BaseDAO
@@ -6,6 +7,11 @@ class PacienteDao(BaseDAO):
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
+
+    def validarNombreApellido(self, texto):
+        """Regla más permisiva que los referenciales de catálogo: letras, espacios, guion y apóstrofe (nombres reales)."""
+        patron = r"^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ '\-]+$"
+        return bool(re.match(patron, texto))
 
     def calcular_es_menor(self, fecha_nacimiento):
         """Calcula automáticamente si es menor de edad basado en la fecha de nacimiento"""

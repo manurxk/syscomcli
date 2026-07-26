@@ -1,9 +1,16 @@
+import re
+
 from app.core.base_dao import BaseDAO
 
 
 class ConsultorioDao(BaseDAO):
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
+
+    def validarDescripcion(self, descripcion):
+        """Misma regla que el check constraint chk_consultorios_des: letras, números y espacios."""
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 ]+$"
+        return bool(re.match(patron, descripcion))
 
     def getConsultorios(self, id_sede=None):
         sql = """
