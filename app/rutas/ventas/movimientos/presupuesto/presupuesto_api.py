@@ -6,7 +6,8 @@ from app.auth.utils.decorators import role_required
 presupuestoapi = Blueprint('presupuestoapi', __name__)
 
 ROLES_PRES = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
-ESTADOS_VALIDOS = ('PENDIENTE', 'APROBADO', 'RECHAZADO', 'CONVERTIDO', 'VENCIDO')
+# CONVERTIDO no se asigna a mano: solo lo pone /convertir-pedido al crear el pedido.
+ESTADOS_VALIDOS = ('PENDIENTE', 'APROBADO', 'RECHAZADO', 'VENCIDO')
 
 
 @presupuestoapi.route('/presupuestos', methods=['GET'])
@@ -78,6 +79,19 @@ def updateEstadoPresupuesto(id_presupuesto):
         return jsonify({'success': True, 'data': {'id_presupuesto': id_presupuesto}, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al actualizar estado del presupuesto: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@presupuestoapi.route('/presupuestos/<int:id_presupuesto>/convertir-pedido', methods=['POST'])
+@role_required(*ROLES_PRES)
+def convertirPresupuestoEnPedido(id_presupuesto):
+    try:
+        numero = PresupuestoDao().convertirEnPedido(id_presupuesto, usuario=session.get('id_usuario'))
+        return jsonify({'success': True, 'data': {'pedido_numero': numero}, 'error': None}), 201
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error al convertir presupuesto en pedido: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 

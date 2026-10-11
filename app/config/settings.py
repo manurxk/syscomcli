@@ -1,11 +1,25 @@
 import os
-import secrets
 from datetime import timedelta
+
+SECRET_KEY_LARGO_MINIMO = 32
+
 
 def init_settings(app):
     """Initialize application settings and configuration."""
-    app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
+    # SECRET_KEY obligatoria: sin respaldo aleatorio (cada reinicio invalidaria las sesiones)
+    secret_key = os.getenv('SECRET_KEY', '')
+    if len(secret_key) < SECRET_KEY_LARGO_MINIMO:
+        raise RuntimeError(
+            f"SECRET_KEY ausente o con menos de {SECRET_KEY_LARGO_MINIMO} caracteres en .env. "
+            "Generar una con: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    app.secret_key = secret_key
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)
+
+    # Cookie de sesion: Secure solo con HTTPS (1 en el servidor; 0 en local para que el puerto 5005 por HTTP siga funcionando)
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', '0') == '1'
 
     # WhatsApp Notifications (Ultramsg)
     app.config['ULTRAMSG_INSTANCE_ID'] = os.getenv('ULTRAMSG_INSTANCE_ID')
@@ -13,7 +27,7 @@ def init_settings(app):
     app.config['ULTRAMSG_API_URL'] = os.getenv('ULTRAMSG_API_URL', 'https://api.ultramsg.com')
 
     # General configuration
-    app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'Sysclin')
+    app.config['NOMBRE_CLINICA'] = os.getenv('NOMBRE_CLINICA', 'SYSCLIN')
 
     # MFA por correo (EmailService) - sin credenciales reales aun: log-only
     app.config['SMTP_HOST'] = os.getenv('SMTP_HOST')

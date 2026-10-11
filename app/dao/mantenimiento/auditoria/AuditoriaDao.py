@@ -81,3 +81,121 @@ class AuditoriaDao(BaseDAO):
             "por_pagina": por_pagina,
             "total_paginas": total_paginas,
         }
+
+    def getIntentosAcceso(self, fecha_desde=None, fecha_hasta=None, ip=None,
+                           solo_fallidos=False, pagina=1, por_pagina=50):
+        """Intentos de login (accesos_sistema): un registro por cada intento,
+        exitoso o no, con resultado/IP/user-agent. A diferencia de getEventos()
+        (auditoria_sistema, eventos generales del sistema), esta es la tabla
+        detallada que también usa el rate-limiting por IP."""
+        pagina = max(1, int(pagina))
+        por_pagina = max(1, min(200, int(por_pagina)))
+        offset = (pagina - 1) * por_pagina
+
+        condiciones = []
+        params = []
+
+        if fecha_desde:
+            condiciones.append("a.fecha_intento >= %s")
+            params.append(fecha_desde)
+        if fecha_hasta:
+            condiciones.append("a.fecha_intento < (%s::date + INTERVAL '1 day')")
+            params.append(fecha_hasta)
+        if ip:
+            condiciones.append("a.ip_origen = %s::inet")
+            params.append(ip)
+        if solo_fallidos:
+            condiciones.append("a.resultado != 'EXITOSO'")
+
+        where_sql = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
+
+        total_sql = f"SELECT COUNT(*) AS total FROM accesos_sistema a {where_sql}"
+        total_registros = self.execute_query_one(total_sql, tuple(params))["total"]
+
+        datos_sql = f"""
+            SELECT a.id_acceso, a.id_usuario, a.usuario_intentado, a.resultado,
+                   a.ip_origen, a.user_agent, a.fecha_intento
+            FROM accesos_sistema a
+            {where_sql}
+            ORDER BY a.fecha_intento DESC
+            LIMIT %s OFFSET %s
+        """
+        datos = self.execute_query(datos_sql, tuple(params) + (por_pagina, offset))
+
+        total_paginas = (total_registros + por_pagina - 1) // por_pagina if total_registros else 0
+
+        return {
+            "datos": datos,
+            "total": total_registros,
+            "pagina": pagina,
+            "por_pagina": por_pagina,
+            "total_paginas": total_paginas,
+        }
+
+    def getIpsSospechosas(self, fecha_desde=None, fecha_hasta=None, minimo_cuentas=2):
+        """IPs cuyos intentos fallidos tocaron varias cuentas distintas en el
+        período — patrón de fuerza bruta/credential stuffing, no el simple
+        olvido de contraseña de un usuario."""
+        condiciones = ["a.resultado != 'EXITOSO'"]
+        params = []
+        if fecha_desde:
+            condiciones.append("a.fecha_intento >= %s")
+            params.append(fecha_desde)
+        if fecha_hasta:
+            condiciones.append("a.fecha_intento < (%s::date + INTERVAL '1 day')")
+            params.append(fecha_hasta)
+        where_sql = f"WHERE {' AND '.join(condiciones)}"
+
+        sql = f"""
+            SELECT a.ip_origen,
+                   COUNT(DISTINCT a.usuario_intentado) AS cuentas_distintas,
+                   COUNT(*) AS total_fallos,
+                   MIN(a.fecha_intento) AS primer_intento,
+                   MAX(a.fecha_intento) AS ultimo_intento
+            FROM accesos_sistema a
+            {where_sql}
+            GROUP BY a.ip_origen
+            HAVING COUNT(DISTINCT a.usuario_intentado) >= %s
+            ORDER BY cuentas_distintas DESC, total_fallos DESC
+        """
+        return self.execute_query(sql, tuple(params) + (minimo_cuentas,))
+
+    def getSolicitudesRecuperacionGlobal(self, fecha_desde=None, fecha_hasta=None, pagina=1, por_pagina=50):
+        """Solicitudes de recuperación de contraseña de todos los usuarios."""
+        pagina = max(1, int(pagina))
+        por_pagina = max(1, min(200, int(por_pagina)))
+        offset = (pagina - 1) * por_pagina
+
+        condiciones = []
+        params = []
+        if fecha_desde:
+            condiciones.append("t.fecha_creacion >= %s")
+            params.append(fecha_desde)
+        if fecha_hasta:
+            condiciones.append("t.fecha_creacion < (%s::date + INTERVAL '1 day')")
+            params.append(fecha_hasta)
+        where_sql = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
+
+        total_sql = f"SELECT COUNT(*) AS total FROM password_reset_tokens t {where_sql}"
+        total_registros = self.execute_query_one(total_sql, tuple(params))["total"]
+
+        datos_sql = f"""
+            SELECT t.id_token, t.id_usuario, u.usu_nick, t.email_destino,
+                   t.ip_solicitud, t.fecha_creacion, t.fecha_expiracion, t.usado, t.fecha_uso
+            FROM password_reset_tokens t
+            LEFT JOIN usuarios u ON u.id_usuario = t.id_usuario
+            {where_sql}
+            ORDER BY t.fecha_creacion DESC
+            LIMIT %s OFFSET %s
+        """
+        datos = self.execute_query(datos_sql, tuple(params) + (por_pagina, offset))
+
+        total_paginas = (total_registros + por_pagina - 1) // por_pagina if total_registros else 0
+
+        return {
+            "datos": datos,
+            "total": total_registros,
+            "pagina": pagina,
+            "por_pagina": por_pagina,
+            "total_paginas": total_paginas,
+        }

@@ -1,38 +1,31 @@
-"""Tarea programada que envía los recordatorios pendientes (regla WHATSAPP
+"""Tarea programada que envía los recordatorios pendientes (regla EMAIL
 1440min/120min creada al confirmar una cita, ver CitaDao.cambiarEstadoCita)
-vía UltraMsg. Reemplaza la versión legacy ligada al esquema viejo de
-recordatorios (columnas booleanas 24h/12h por cita)."""
+por correo. El envío por WhatsApp (UltraMsg) queda como canal manual/relegado,
+disponible vía el botón de reenvío en la cita."""
 from app import app
 from app.dao.agendamiento.recordatorio.RecordatorioDao import RecordatorioDao
-from app.services.UltraMsgService import UltraMsgService
+from app.services.EmailService import EmailService
 
 
 def procesar_recordatorios_pendientes():
     with app.app_context():
         recordatorio_dao = RecordatorioDao()
-        ultramsg_service = UltraMsgService()
-
-        if not ultramsg_service.client_available:
-            app.logger.warning(
-                "UltraMsg no está configurado (ULTRAMSG_INSTANCE_ID/ULTRAMSG_TOKEN). "
-                "Se omite el envío de recordatorios."
-            )
-            return {'total': 0, 'enviados': 0, 'fallidos': 0}
+        email_service = EmailService()
 
         pendientes = recordatorio_dao.getPendientesEnVentana(limite=100)
         estadisticas = {'total': len(pendientes), 'enviados': 0, 'fallidos': 0}
 
         for r in pendientes:
-            if not r['paciente_telefono']:
+            if not r['paciente_correo']:
                 estadisticas['fallidos'] += 1
                 app.logger.warning(
                     f"Recordatorio {r['id_recordatorio']} (cita {r['id_cita']}): "
-                    "paciente sin teléfono registrado."
+                    "paciente sin correo registrado."
                 )
                 continue
 
-            success, _message_id, error, _tipo_error = ultramsg_service.enviar_recordatorio_cita(
-                telefono=r['paciente_telefono'],
+            success, error, _tipo_error = email_service.enviar_recordatorio_cita(
+                correo_destino=r['paciente_correo'],
                 nombre_paciente=r['paciente_nombre'],
                 cita_fecha=r['cita_fecha'],
                 cita_hora=r['cita_hora'],

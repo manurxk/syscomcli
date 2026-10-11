@@ -64,14 +64,15 @@
         { data: row => row.profesional_nombre || '<span class="text-muted">-</span>' },
         { data: 'fecha_presupuesto' },
         { data: row => row.fecha_validez || '-' },
-        { data: row => parseFloat(row.presupuesto_total||0).toLocaleString('es-PY'), className: 'text-end' },
+        { data: row => formatMoney(row.presupuesto_total, row), className: 'text-end' },
         { data: row => badgeEstado(row.presupuesto_estado), className: 'text-center' },
         {
           data: row => {
             const puedeEstado = !['RECHAZADO','CONVERTIDO'].includes(row.presupuesto_estado);
             return `
               <button class="btn btn-datatable btn-icon btn-outline-success me-1" name="btn_aprobar" data-id="${row.id_presupuesto}" title="Aprobar" ${row.presupuesto_estado!=='PENDIENTE'?'disabled':''}><i class="fas fa-check"></i></button>
-              <button class="btn btn-datatable btn-icon btn-outline-danger" name="btn_rechazar" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Rechazar" ${!puedeEstado?'disabled':''}><i class="fas fa-times"></i></button>
+              <button class="btn btn-datatable btn-icon btn-outline-danger me-1" name="btn_rechazar" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Rechazar" ${!puedeEstado?'disabled':''}><i class="fas fa-times"></i></button>
+              <button class="btn btn-datatable btn-icon btn-outline-primary" name="btn_convertir" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Convertir en pedido" ${row.presupuesto_estado!=='APROBADO'?'disabled':''}><i class="fas fa-share"></i></button>
             `;
           },
           className: 'text-center', orderable: false
@@ -104,6 +105,33 @@
       const id = $(this).data('id');
       Swal.fire({title:'¿Rechazar presupuesto?',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, rechazar',confirmButtonColor:'#d33'})
         .then(r=>{ if(r.isConfirmed) cambiarEstado(id,'RECHAZADO'); });
+    });
+    $('#tbl tbody').on('click','button[name="btn_convertir"]', function(){
+      if (this.disabled) return;
+      const id = $(this).data('id');
+      const num = $(this).data('num');
+      Swal.fire({
+        title: '¿Convertir en pedido?',
+        html: `Se va a crear un pedido con los mismos ítems y precios del presupuesto <strong>${num}</strong>.`,
+        icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, convertir'
+      }).then(r => {
+        if (!r.isConfirmed) return;
+        fetch(`/api/v1/presupuestos/${id}/convertir-pedido`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }
+        }).then(r => r.json()).then(d => {
+          if (d.success) {
+            $('#tbl').DataTable().ajax.reload();
+            Swal.fire({
+              title: 'Pedido creado', icon: 'success',
+              html: `Se creó el pedido <strong>${d.data.pedido_numero}</strong>.`,
+              showCancelButton: true, confirmButtonText: 'Ir a Pedidos', cancelButtonText: 'Quedarme aquí'
+            }).then(x => { if (x.isConfirmed) window.location.href = "{{ url_for('pedido.pedidoIndex') }}"; });
+          } else {
+            Swal.fire('Error', d.error || 'No se pudo convertir el presupuesto.', 'error');
+          }
+        });
+      });
     });
   };
 

@@ -2,9 +2,11 @@
 API endpoints para autenticación mejorada
 FASE 2: MEJORAS DE SEGURIDAD
 """
-from flask import Blueprint, request, jsonify, session, current_app as app
+from flask import Blueprint, request, jsonify, session, url_for, current_app as app
 from werkzeug.security import check_password_hash
-from app.auth.services.auth_service import AuthService
+from app.auth.services.auth_service import (
+    AuthService, RECUPERACION_MAX_SOLICITUDES, RECUPERACION_VENTANA_MINUTOS
+)
 from app.dao.auth.auth_dao import AuthDao
 from app.auth.utils.password_validator import validar_politica_password
 from app.auth.utils.decorators import role_required
@@ -236,42 +238,46 @@ def cambiar_password():
 @authapi.route('/recuperar-password', methods=['POST'])
 def solicitar_recuperacion():
     """
-    Endpoint para solicitar recuperación de contraseña
-    
+    Endpoint para solicitar recuperación de contraseña. Exige usuario Y correo
+    juntos, y el correo debe coincidir exactamente con el que la cuenta tiene
+    vinculado: conocer solo el usuario no alcanza para disparar el envío.
+
     Body:
         {
-            "username": "usuario" o "email": "email@ejemplo.com"
+            "username": "usuario",
+            "email": "correo@vinculado.com"
         }
     """
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({
                 'success': False,
                 'error': 'Datos no proporcionados'
             }), 400
-        
+
         username = data.get('username')
         email = data.get('email')
-        
-        if not username and not email:
+
+        if not username or not email:
             return jsonify({
                 'success': False,
-                'error': 'Usuario o email es requerido'
+                'error': 'Usuario y correo son requeridos'
             }), 400
-        
-        # Buscar usuario
-        if username:
-            usuario = AuthService.buscar_usuario_seguridad(username)
-        else:
-            # Buscar por email (necesitarías agregar esta funcionalidad)
-            usuario = None
-        
-        # Por seguridad, siempre retornar el mismo mensaje
-        mensaje_generico = "Si el usuario existe, recibirá instrucciones por email"
-        
-        if not usuario or not usuario.get('est_usuario'):
+
+        usuario = AuthService.buscar_usuario_seguridad(username)
+
+        # Por seguridad, siempre retornar el mismo mensaje (no revela si el
+        # usuario existe ni si el correo coincide o no con el registrado)
+        mensaje_generico = "Si los datos coinciden con una cuenta registrada, recibirá instrucciones por email"
+
+        correo_coincide = (
+            usuario and usuario.get('correo')
+            and usuario['correo'].strip().lower() == email.strip().lower()
+        )
+
+        if not usuario or not usuario.get('usu_estado') or not correo_coincide:
             return jsonify({
                 'success': True,
                 'message': mensaje_generico
@@ -280,24 +286,44 @@ def solicitar_recuperacion():
         # Crear token de recuperación
         ip_solicitud = AuthService.obtener_ip_cliente()
 
+        # Límite de correos por cuenta: mismo mensaje genérico, sin enviar otro correo
+        if AuthService.recuperacion_excedida(usuario['id_usuario']):
+            app.logger.warning(f"RECUPERACION_BLOQUEADA user={usuario['usu_nick']} ip={ip_solicitud}")
+            AuthService.auditar_rate_limit(
+                ip_solicitud, RECUPERACION_VENTANA_MINUTOS,
+                f"Recuperación de contraseña frenada para \"{usuario['usu_nick']}\": "
+                f"{RECUPERACION_MAX_SOLICITUDES} solicitudes en {RECUPERACION_VENTANA_MINUTOS} min",
+                id_usuario=usuario['id_usuario']
+            )
+            return jsonify({
+                'success': True,
+                'message': mensaje_generico
+            }), 200
+
         token = AuthDao().crear_password_reset_token(
             id_usuario=usuario['id_usuario'],
             ip_solicitud=ip_solicitud,
-            email_destino=email
+            email_destino=usuario['correo']
         )
-        
+
         if token:
-            # Aquí enviarías el email con el link
-            # link = f"/reset-password?token={token}"
-            # enviar_email(email_destino, link)
-            
-            app.logger.info(f"Token de recuperación creado para usuario {usuario['usu_nick']}")
-            
+            from app.services.EmailService import EmailService
+            link = url_for('login.resetear_password', token=token, _external=True)
+            horas_validez = 24
+            exito_envio, error_envio, _tipo_error = EmailService().enviar_recuperacion_password(
+                correo_destino=usuario['correo'],
+                nombre_usuario=usuario['nombre_completo'] or usuario['usu_nick'],
+                link_reseteo=link,
+                horas_validez=horas_validez,
+            )
+            if not exito_envio:
+                app.logger.error(f"Token de recuperación creado pero no se pudo enviar el correo a {usuario['usu_nick']}: {error_envio}")
+            else:
+                app.logger.info(f"Correo de recuperación enviado para usuario {usuario['usu_nick']}")
+
             return jsonify({
                 'success': True,
-                'message': mensaje_generico,
-                # En producción, no retornar el token
-                # 'token': token  # Solo para desarrollo/testing
+                'message': mensaje_generico
             }), 200
         else:
             return jsonify({

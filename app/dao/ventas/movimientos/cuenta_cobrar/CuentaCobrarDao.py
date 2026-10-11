@@ -15,6 +15,7 @@ class CuentaCobrarDao(BaseDAO):
                 cc.monto_total,
                 cc.monto_pagado,
                 cc.monto_pendiente,
+                cc.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 cc.numero_cuotas,
                 cc.cuota_actual,
                 cc.est_cuenta_cobrar,
@@ -34,6 +35,7 @@ class CuentaCobrarDao(BaseDAO):
                 END AS dias_vencimiento
             FROM cuentas_cobrar cc
             JOIN facturas f    ON cc.id_factura  = f.id_factura
+            JOIN monedas m     ON cc.id_moneda   = m.id_moneda
             JOIN pacientes pac ON cc.id_paciente = pac.id_paciente
             JOIN personas pp   ON pac.id_persona = pp.id_persona
             ORDER BY cc.fecha_vencimiento ASC, cc.id_cuenta_cobrar DESC
@@ -50,6 +52,7 @@ class CuentaCobrarDao(BaseDAO):
                 cc.monto_total,
                 cc.monto_pagado,
                 cc.monto_pendiente,
+                cc.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 cc.numero_cuotas,
                 cc.cuota_actual,
                 cc.est_cuenta_cobrar,
@@ -65,11 +68,49 @@ class CuentaCobrarDao(BaseDAO):
                 TO_CHAR(cc.fecha_creacion,    'DD/MM/YYYY') AS fecha_registro
             FROM cuentas_cobrar cc
             JOIN facturas f    ON cc.id_factura  = f.id_factura
+            JOIN monedas m     ON cc.id_moneda   = m.id_moneda
             JOIN pacientes pac ON cc.id_paciente = pac.id_paciente
             JOIN personas pp   ON pac.id_persona = pp.id_persona
             WHERE cc.id_cuenta_cobrar = %s
         """
         return self.execute_query_one(sql, (id_cuenta_cobrar,))
+
+    def ajustarPorNotaEnTransaccion(self, cur, id_factura, delta, usuario=None, validar_pendiente=False):
+        """Ajusta la cuenta a cobrar de una factura por una nota de crédito (delta < 0)
+        o de débito (delta > 0), o por la anulación de una de ellas (delta invertido).
+        Se ejecuta dentro de la transacción de la nota. Si la factura no tiene cuenta
+        (facturas al contado anteriores al cobro automático) no hay nada que ajustar."""
+        cur.execute(
+            "SELECT id_cuenta_cobrar, monto_pendiente FROM cuentas_cobrar WHERE id_factura = %s FOR UPDATE",
+            (id_factura,)
+        )
+        cta = cur.fetchone()
+        if not cta:
+            return
+        id_cuenta_cobrar, monto_pendiente = cta
+
+        # Una nota de crédito mayor a lo que falta pagar sería una devolución de dinero,
+        # y el sistema no maneja saldos a favor del paciente.
+        if validar_pendiente and -delta > monto_pendiente:
+            raise ValueError(
+                f'La nota de crédito ({-delta:,.0f}) supera lo que falta pagar de la factura '
+                f'({monto_pendiente:,.0f}). No se puede registrar.'.replace(',', '.')
+            )
+
+        cur.execute("""
+            UPDATE cuentas_cobrar
+            SET monto_total     = GREATEST(0, monto_total + %s),
+                monto_pendiente = GREATEST(0, monto_pendiente + %s),
+                est_cuenta_cobrar = CASE
+                    WHEN GREATEST(0, monto_pendiente + %s) = 0  THEN 'COBRADA'
+                    WHEN monto_pagado > 0                       THEN 'PARCIAL'
+                    WHEN fecha_vencimiento < CURRENT_DATE       THEN 'VENCIDA'
+                    ELSE 'PENDIENTE'
+                END,
+                fecha_modificacion   = CURRENT_TIMESTAMP,
+                usuario_modificacion = %s
+            WHERE id_cuenta_cobrar = %s
+        """, (delta, delta, delta, usuario, id_cuenta_cobrar))
 
     def getCuentasCobrarPendientes(self):
         """Retorna solo las cuentas PENDIENTE o PARCIAL para el selector de cobranza."""
@@ -80,15 +121,18 @@ class CuentaCobrarDao(BaseDAO):
                 cc.id_factura,
                 cc.monto_total,
                 cc.monto_pendiente,
+                cc.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 cc.est_cuenta_cobrar,
                 f.factura_numero,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 TO_CHAR(cc.fecha_vencimiento, 'DD/MM/YYYY') AS fecha_vencimiento_fmt
             FROM cuentas_cobrar cc
             JOIN facturas f    ON cc.id_factura  = f.id_factura
+            JOIN monedas m     ON cc.id_moneda   = m.id_moneda
             JOIN pacientes pac ON cc.id_paciente = pac.id_paciente
             JOIN personas pp   ON pac.id_persona = pp.id_persona
             WHERE cc.est_cuenta_cobrar IN ('PENDIENTE', 'PARCIAL')
+              AND f.fecha_anulacion IS NULL
             ORDER BY cc.fecha_vencimiento ASC
         """
         return self.execute_query(sql)

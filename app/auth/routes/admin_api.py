@@ -29,7 +29,8 @@ def desbloquear_usuario(id_usuario):
             SET fecha_bloqueo = NULL,
                 motivo_bloqueo = NULL,
                 bloqueado_hasta = NULL,
-                usu_nro_intentos = 0
+                usu_nro_intentos = 0,
+                nivel_escalada_bloqueo = 0
             WHERE id_usuario = %s
             RETURNING usu_nick
         """
@@ -38,6 +39,12 @@ def desbloquear_usuario(id_usuario):
 
             if row:
                 app.logger.info(f"Usuario {row['usu_nick']} desbloqueado por admin {session.get('usu_nick')}")
+                AuditoriaDao().registrar_evento(
+                    id_usuario=session.get('id_usuario'),
+                    accion=AuditAccion.ACCOUNT_UNLOCKED,
+                    detalle=f"Cuenta \"{row['usu_nick']}\" (id_usuario={id_usuario}) desbloqueada por \"{session.get('usu_nick')}\"",
+                    ip_origen=request.remote_addr
+                )
                 return jsonify({
                     'success': True,
                     'message': f"Usuario {row['usu_nick']} desbloqueado exitosamente"

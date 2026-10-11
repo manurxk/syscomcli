@@ -101,7 +101,7 @@
 const API = '/api/v1/recaudaciones';
 let tbl, recActual;
 
-function gs(v) { return v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '— Gs.'; }
+function gs(v, moneda) { return v ? formatMoney(v, moneda || {decimales_moneda:0, simbolo_moneda:'Gs.'}) : '—'; }
 
 document.addEventListener('DOMContentLoaded', () => {
   tbl = $('#tbl').DataTable({
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { data: 'recaudacion_numero' },
       { data: 'des_caja' },
       { data: 'des_deposito' },
-      { data: 'monto_total',    className: 'text-end', render: gs },
+      { data: 'monto_total',    className: 'text-end', render: (v, t, row) => gs(v, row) },
       { data: 'monto_efectivo', className: 'text-end', render: gs },
       { data: 'monto_cheques',  className: 'text-end', render: gs },
       { data: 'monto_tarjetas', className: 'text-end', render: gs },
@@ -155,10 +155,10 @@ async function verDetalle(id) {
   document.getElementById('dlDeposito').textContent         = d.des_deposito        || '—';
   document.getElementById('dlFechaRec').textContent         = d.fecha_recaudacion_fmt || '—';
   document.getElementById('dlFechaDep').textContent         = d.fecha_deposito_fmt  || 'Sin depositar';
-  document.getElementById('dlTotal').textContent            = gs(d.monto_total);
-  document.getElementById('dlEfectivo').textContent         = gs(d.monto_efectivo);
-  document.getElementById('dlCheques').textContent          = gs(d.monto_cheques);
-  document.getElementById('dlTarjetas').textContent         = gs(d.monto_tarjetas);
+  document.getElementById('dlTotal').textContent            = gs(d.monto_total, d);
+  document.getElementById('dlEfectivo').textContent         = gs(d.monto_efectivo, d);
+  document.getElementById('dlCheques').textContent          = gs(d.monto_cheques, d);
+  document.getElementById('dlTarjetas').textContent         = gs(d.monto_tarjetas, d);
   document.getElementById('dlObs').textContent              = d.observaciones || '—';
 
   const est = d.est_recaudacion || '';

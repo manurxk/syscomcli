@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Guía de uso - {{ clinica.nombre if clinica else 'SYSCLIN' }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 2cm 1.8cm;
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 9px;
+                color: #777;
+            }
+        }
+        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 28px 40px; color: #222; font-size: 15px; line-height: 1.6; background: #fff; max-width: 820px; }
+        body.pdf { padding: 0; font-size: 12px; max-width: none; }
+        .portada { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 22px; }
+        .portada h1 { font-size: 24px; margin: 0; color: #222; }
+        .portada p { margin: 2px 0 0; color: #666; font-size: 13px; }
+        .indice { margin-bottom: 30px; }
+        .indice h2 { font-size: 15px; margin: 0 0 6px; }
+        .indice ol { margin: 0; padding-left: 20px; }
+        .indice a { color: #1a56a8; text-decoration: none; }
+        .indice a:hover { text-decoration: underline; }
+        section.seccion { margin-bottom: 34px; padding-top: 6px; }
+        section.seccion.activa { background: #fffbe6; padding: 6px 14px; border-radius: 4px; }
+        .aqui { display: inline-block; font-size: 12px; font-weight: bold; color: #8a6d00; margin-bottom: 4px; }
+        section.seccion h3 { font-size: 20px; color: #1a56a8; margin: 0 0 4px; border-bottom: 1px solid #e3e3e3; padding-bottom: 4px; }
+        section.seccion h4 { font-size: 15px; margin: 20px 0 4px; }
+        p { margin: 6px 0; }
+        ol, ul { padding-left: 22px; margin: 6px 0; }
+        li { margin-bottom: 3px; }
+        .btn-ref { font-weight: bold; }
+        .importante { margin: 10px 0; padding-left: 10px; border-left: 3px solid #d9a400; }
+        .pendientes { color: #777; font-size: 13px; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 30px; }
+        body.pdf h3, body.pdf h4 { page-break-after: avoid; }
+    </style>
+</head>
+<body class="{{ 'pdf' if es_pdf else '' }}">
+    <div class="portada">
+        <h1>Guía de uso del sistema</h1>
+        {% set nombres_perfil = {'SUPERADMIN': 'Superadministrador', 'ADMINISTRADOR': 'Administrador', 'RECEPCION': 'Recepción', 'CLINICO': 'Clínico', 'VENTAS': 'Ventas'} %}
+        <p>{{ clinica.nombre if clinica else 'SYSCLIN' }} · Perfil: {{ nombres_perfil.get(session.get('grupo'), session.get('grupo', 'Sin rol')) }} · {{ fecha }}</p>
+    </div>
+
+    <div class="indice">
+        <h2>Contenido</h2>
+        <ol>
+            <li><a href="#general">Primeros pasos</a></li>
+            {% for s in secciones %}
+            <li><a href="#{{ s.id }}">{{ s.titulo }}</a></li>
+            {% endfor %}
+        </ol>
+    </div>
+
+    {% include 'ayuda-secciones/general.html' %}
+
+    {% for s in secciones %}
+    <section class="seccion{{ ' activa' if s.id == seccion_activa else '' }}" id="{{ s.id }}">
+        {% if s.id == seccion_activa %}<div class="aqui">Usted está en esta pantalla</div>{% endif %}
+        {% include s.template %}
+    </section>
+    {% endfor %}
+
+    {% if sin_guia %}
+    <div class="pendientes">
+        Todavía sin guía: {{ sin_guia | join(', ') }}.
+    </div>
+    {% endif %}
+
+    {% if not es_pdf and seccion_activa %}
+    <script>
+        // Se desplaza solo dentro de la guía (scrollIntoView movería también la página de fondo).
+        window.addEventListener('load', function () {
+            const seccion = document.getElementById('{{ seccion_activa }}');
+            window.scrollTo(0, seccion.offsetTop - 8);
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

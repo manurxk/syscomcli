@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { data: 'factura_numero' },
       { data: 'paciente_nombre' },
       { data: 'des_caja', defaultContent: '—' },
-      { data: 'monto_cobrado', className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—' },
+      { data: 'monto_cobrado', className: 'text-end', render: (v, t, row) => v ? formatMoney(v, row) : '—' },
       { data: 'fecha_cobranza_fmt', defaultContent: '—' },
       { data: 'est_cobranza', render: v => {
           const cls = v === 'ANULADA' ? 'danger' : 'success';
@@ -141,7 +141,7 @@ async function verDetalle(id) {
   document.getElementById('dlFecha').textContent    = d.fecha_cobranza_fmt || '—';
   document.getElementById('dlCuenta').textContent   = d.cuenta_numero     || '—';
   document.getElementById('dlCaja').textContent     = d.des_caja          || '—';
-  document.getElementById('dlMonto').textContent    = d.monto_cobrado ? Number(d.monto_cobrado).toLocaleString('es-PY') + ' Gs.' : '—';
+  document.getElementById('dlMonto').textContent    = d.monto_cobrado ? formatMoney(d.monto_cobrado, d) : '—';
   document.getElementById('dlObs').textContent      = d.observaciones     || '—';
 
   const est = d.est_cobranza || '';
@@ -164,7 +164,7 @@ async function verDetalle(id) {
     tr.innerHTML = `
       <td>${det.des_forma_cobro}</td>
       <td class="small text-muted">${complemento}</td>
-      <td class="text-end">${det.monto_cobrado ? Number(det.monto_cobrado).toLocaleString('es-PY') + ' Gs.' : '—'}</td>`;
+      <td class="text-end">${det.monto_cobrado ? formatMoney(det.monto_cobrado, d) : '—'}</td>`;
     tbody.appendChild(tr);
   });
 

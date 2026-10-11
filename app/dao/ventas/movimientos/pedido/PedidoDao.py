@@ -1,4 +1,5 @@
 from app.core.base_dao import BaseDAO
+from app.core.moneda import get_moneda, redondear
 from datetime import date
 
 
@@ -10,13 +11,15 @@ class PedidoDao(BaseDAO):
         sql = """
             SELECT p.id_pedido, p.pedido_numero, p.id_paciente, p.id_profesional,
                    p.fecha_pedido, p.fecha_entrega, p.pedido_subtotal, p.pedido_descuento,
-                   p.pedido_total, p.observaciones, p.pedido_estado, p.est_pedido,
+                   p.pedido_total, p.id_moneda, p.observaciones, p.pedido_estado, p.est_pedido,
                    CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                    pp.per_cedula AS paciente_cedula,
-                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre
+                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre,
+                   m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
             FROM pedidos p
             JOIN pacientes pac ON p.id_paciente = pac.id_paciente
             JOIN personas pp ON pac.id_persona = pp.id_persona
+            JOIN monedas m ON p.id_moneda = m.id_moneda
             LEFT JOIN funcionarios f ON p.id_profesional = f.id_funcionario
             LEFT JOIN personas pe ON f.id_persona = pe.id_persona
             WHERE p.est_pedido = TRUE
@@ -32,13 +35,15 @@ class PedidoDao(BaseDAO):
         sql = """
             SELECT p.id_pedido, p.pedido_numero, p.id_paciente, p.id_profesional,
                    p.fecha_pedido, p.fecha_entrega, p.pedido_subtotal, p.pedido_descuento,
-                   p.pedido_total, p.observaciones, p.pedido_estado,
+                   p.pedido_total, p.id_moneda, p.observaciones, p.pedido_estado,
                    CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                    pp.per_cedula AS paciente_cedula,
-                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre
+                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre,
+                   m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
             FROM pedidos p
             JOIN pacientes pac ON p.id_paciente = pac.id_paciente
             JOIN personas pp ON pac.id_persona = pp.id_persona
+            JOIN monedas m ON p.id_moneda = m.id_moneda
             LEFT JOIN funcionarios f ON p.id_profesional = f.id_funcionario
             LEFT JOIN personas pe ON f.id_persona = pe.id_persona
             WHERE p.id_pedido = %s AND p.est_pedido = TRUE
@@ -78,47 +83,56 @@ class PedidoDao(BaseDAO):
         return f'PED-{anio}-{mes}-{siguiente:04d}'
 
     def guardar(self, datos, usuario_creacion=None):
+        return self.execute_transaction(lambda cur: self.crearEnTransaccion(cur, datos, usuario_creacion))
+
+    def crearEnTransaccion(self, cur, datos, usuario_creacion=None):
+        """Mismo alta que guardar(), dentro de una transacción ya abierta
+        (lo usa PresupuestoDao.convertirEnPedido)."""
         detalles = datos.get('detalles') or []
         if not detalles:
             raise ValueError('El pedido debe tener al menos un ítem.')
 
-        def _crear(cur):
-            numero = self._generarNumero(cur)
-            subtotal = sum(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0) for d in detalles)
-            descuento = float(datos.get('pedido_descuento') or 0)
+        moneda = get_moneda(datos.get('id_moneda'), cur)
+        id_moneda = moneda['id_moneda']
+        decimales = int(moneda['decimales_moneda'])
 
+        numero = self._generarNumero(cur)
+        subtotal = sum(
+            redondear(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0), decimales)
+            for d in detalles
+        )
+        descuento = redondear(datos.get('pedido_descuento') or 0, decimales)
+
+        cur.execute(
+            """
+            INSERT INTO pedidos(
+                pedido_numero, id_paciente, id_profesional, fecha_pedido, fecha_entrega,
+                pedido_subtotal, pedido_descuento, pedido_total, id_moneda, observaciones,
+                pedido_estado, usuario_creacion
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id_pedido
+            """,
+            (numero, datos['id_paciente'], datos.get('id_profesional'), datos['fecha_pedido'],
+             datos.get('fecha_entrega'), subtotal, descuento, subtotal - descuento, id_moneda,
+             datos.get('observaciones'), 'PENDIENTE', usuario_creacion)
+        )
+        id_pedido = cur.fetchone()[0]
+
+        for d in detalles:
+            item_subtotal = redondear(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0), decimales)
             cur.execute(
                 """
-                INSERT INTO pedidos(
-                    pedido_numero, id_paciente, id_profesional, fecha_pedido, fecha_entrega,
-                    pedido_subtotal, pedido_descuento, pedido_total, observaciones,
-                    pedido_estado, usuario_creacion
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id_pedido
+                INSERT INTO pedido_detalle(
+                    id_pedido, id_item_servicio, item_descripcion, item_cantidad,
+                    item_precio_unitario, item_descuento, item_subtotal, observaciones,
+                    usuario_creacion
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
-                (numero, datos['id_paciente'], datos.get('id_profesional'), datos['fecha_pedido'],
-                 datos.get('fecha_entrega'), subtotal, descuento, subtotal - descuento,
-                 datos.get('observaciones'), 'PENDIENTE', usuario_creacion)
+                (id_pedido, d.get('id_item_servicio'), d['item_descripcion'],
+                 d['item_cantidad'], d['item_precio_unitario'], d.get('item_descuento') or 0,
+                 item_subtotal, d.get('observaciones'), usuario_creacion)
             )
-            id_pedido = cur.fetchone()[0]
-
-            for d in detalles:
-                item_subtotal = float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0)
-                cur.execute(
-                    """
-                    INSERT INTO pedido_detalle(
-                        id_pedido, id_item_servicio, item_descripcion, item_cantidad,
-                        item_precio_unitario, item_descuento, item_subtotal, observaciones,
-                        usuario_creacion
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (id_pedido, d.get('id_item_servicio'), d['item_descripcion'],
-                     d['item_cantidad'], d['item_precio_unitario'], d.get('item_descuento') or 0,
-                     item_subtotal, d.get('observaciones'), usuario_creacion)
-                )
-            return id_pedido
-
-        return self.execute_transaction(_crear)
+        return id_pedido
 
     def actualizarEstado(self, id_pedido, nuevo_estado, usuario_modificacion=None):
         sql = "UPDATE pedidos SET pedido_estado = %s, usuario_modificacion = %s WHERE id_pedido = %s"

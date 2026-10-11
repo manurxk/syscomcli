@@ -120,9 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
       { data: 'cuenta_numero' },
       { data: 'factura_numero' },
       { data: 'paciente_nombre' },
-      { data: 'monto_total',     className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—' },
-      { data: 'monto_pagado',    className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '0 Gs.' },
-      { data: 'monto_pendiente', className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '0 Gs.' },
+      { data: 'monto_total',     className: 'text-end', render: (v, t, row) => v ? formatMoney(v, row) : '—' },
+      { data: 'monto_pagado',    className: 'text-end', render: (v, t, row) => formatMoney(v || 0, row) },
+      { data: 'monto_pendiente', className: 'text-end', render: (v, t, row) => formatMoney(v || 0, row) },
       { data: 'fecha_vencimiento_fmt', defaultContent: '—' },
       { data: 'est_cuenta_cobrar', render: v => {
           const cls = COLORES[v] || 'secondary';
@@ -163,9 +163,9 @@ async function verDetalle(id) {
   document.getElementById('dlFactura').textContent     = d.factura_numero    || '—';
   document.getElementById('dlEmision').textContent     = d.fecha_emision_fmt || '—';
   document.getElementById('dlVencimiento').textContent = d.fecha_vencimiento_fmt || '—';
-  document.getElementById('dlTotal').textContent    = d.monto_total    ? Number(d.monto_total).toLocaleString('es-PY') + ' Gs.'    : '—';
-  document.getElementById('dlPagado').textContent   = d.monto_pagado   ? Number(d.monto_pagado).toLocaleString('es-PY') + ' Gs.'   : '0 Gs.';
-  document.getElementById('dlPendiente').textContent = d.monto_pendiente ? Number(d.monto_pendiente).toLocaleString('es-PY') + ' Gs.' : '0 Gs.';
+  document.getElementById('dlTotal').textContent    = d.monto_total    ? formatMoney(d.monto_total, d) : '—';
+  document.getElementById('dlPagado').textContent   = formatMoney(d.monto_pagado || 0, d);
+  document.getElementById('dlPendiente').textContent = formatMoney(d.monto_pendiente || 0, d);
 
   const est = d.est_cuenta_cobrar || '';
   const cls = COLORES[est] || 'secondary';
@@ -183,7 +183,7 @@ async function verDetalle(id) {
       tr.innerHTML = `
         <td>${c.cobranza_numero}</td>
         <td>${c.fecha_cobranza_fmt || '—'}</td>
-        <td class="text-end">${c.monto_cobrado ? Number(c.monto_cobrado).toLocaleString('es-PY') + ' Gs.' : '—'}</td>
+        <td class="text-end">${c.monto_cobrado ? formatMoney(c.monto_cobrado, d) : '—'}</td>
         <td><span class="badge bg-${clsCob}">${c.est_cobranza}</span></td>`;
       tbody.appendChild(tr);
     });

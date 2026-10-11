@@ -25,7 +25,7 @@ def validar_politica_password(
     Valida una contraseña según las políticas de seguridad.
     
     Políticas:
-    - Mínimo 8 caracteres
+    - Entre 8 y 16 caracteres
     - Al menos 1 mayúscula
     - Al menos 1 minúscula
     - Al menos 1 número
@@ -45,9 +45,11 @@ def validar_politica_password(
     if not password:
         return False, "La contraseña no puede estar vacía"
     
-    # 1. Mínimo 8 caracteres
+    # 1. Entre 8 y 16 caracteres
     if len(password) < 8:
         return False, "La contraseña debe tener al menos 8 caracteres"
+    if len(password) > 16:
+        return False, "La contraseña no puede tener más de 16 caracteres"
     
     # 2. Al menos 1 mayúscula
     if not re.search(r'[A-Z]', password):

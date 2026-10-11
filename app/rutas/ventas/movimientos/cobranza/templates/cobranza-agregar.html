@@ -115,7 +115,7 @@
               <tr>
                 <th>Forma de Cobro</th>
                 <th>Complemento</th>
-                <th class="text-end" style="width:160px">Monto (Gs.)</th>
+                <th class="text-end" style="width:160px">Monto</th>
                 <th style="width:50px"></th>
               </tr>
             </thead>
@@ -125,7 +125,7 @@
             <tfoot>
               <tr class="table-warning d-none" id="filaTotales">
                 <td colspan="2" class="text-end fw-bold">Total a Cobrar:</td>
-                <td class="text-end fw-bold" id="lblTotal">0 Gs.</td>
+                <td class="text-end fw-bold" id="lblTotal">0</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -199,7 +199,7 @@
           </div>
           <!-- Monto (siempre visible) -->
           <div class="col-12">
-            <label class="fw-semibold">Monto (Gs.) <span class="text-danger">*</span></label>
+            <label class="fw-semibold">Monto (<span id="lblMonedaCod">—</span>) <span class="text-danger">*</span></label>
             <input type="number" class="form-control" id="txtMonto" value="0" min="1" step="1">
           </div>
           <div class="col-12">
@@ -217,6 +217,7 @@
 </div>
 
 <script>
+let MONEDA = { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
 const API_COB  = '/api/v1/cobranzas';
 const API_CTA  = '/api/v1/cuentas-cobrar/pendientes';
 const API_CAJA = '/api/v1/cajas';
@@ -242,12 +243,16 @@ async function inicializar() {
   (jCta.data || []).forEach(c => {
     const o = document.createElement('option');
     o.value = c.id_cuenta_cobrar;
-    o.textContent = `${c.cuenta_numero} — ${c.paciente_nombre} — Pendiente: ${Number(c.monto_pendiente).toLocaleString('es-PY')} Gs.`;
+    o.textContent = `${c.cuenta_numero} — ${c.paciente_nombre} — Pendiente: ${formatMoney(c.monto_pendiente, c)}`;
     o.dataset.nro       = c.cuenta_numero;
     o.dataset.paciente  = c.paciente_nombre;
     o.dataset.factura   = c.factura_numero;
     o.dataset.idfactura = c.id_factura;
     o.dataset.pendiente = c.monto_pendiente;
+    o.dataset.idmoneda  = c.id_moneda;
+    o.dataset.codmoneda = c.cod_moneda;
+    o.dataset.simbolo   = c.simbolo_moneda;
+    o.dataset.decimales = c.decimales_moneda;
     selCta.appendChild(o);
   });
 
@@ -256,7 +261,8 @@ async function inicializar() {
   (jCaja.data || []).forEach(c => {
     const o = document.createElement('option');
     o.value = c.id_caja;
-    o.textContent = c.des_caja;
+    o.textContent = `${c.des_caja} (${c.cod_moneda})`;
+    o.dataset.idmoneda = c.id_moneda;
     selCaja.appendChild(o);
   });
 
@@ -309,13 +315,22 @@ document.getElementById('selCuenta').addEventListener('change', function() {
 document.getElementById('btnSeleccionarCuenta').addEventListener('click', function() {
   const opt = document.getElementById('selCuenta').selectedOptions[0];
   if (!opt.value) return;
+  MONEDA = { id_moneda: opt.dataset.idmoneda, cod_moneda: opt.dataset.codmoneda,
+             simbolo_moneda: opt.dataset.simbolo, decimales_moneda: opt.dataset.decimales };
+  document.getElementById('lblMonedaCod').textContent = MONEDA.cod_moneda;
+  const dec = Number(MONEDA.decimales_moneda);
+  document.getElementById('txtMonto').step = dec ? Math.pow(10, -dec) : 1;
+  document.getElementById('txtMonto').min  = dec ? Math.pow(10, -dec) : 1;
+  const selCajaEl = document.getElementById('selCaja');
+  selCajaEl.value = '';
+  Array.from(selCajaEl.options).forEach(o => { if (o.value) { o.hidden = o.disabled = (o.dataset.idmoneda !== String(MONEDA.id_moneda)); } });
   document.getElementById('hidIdCuenta').value  = opt.value;
   document.getElementById('hidIdFactura').value = opt.dataset.idfactura;
   document.getElementById('lblCuentaNro').textContent      = opt.dataset.nro     || '—';
   document.getElementById('lblPacienteNombre').textContent = opt.dataset.paciente || '—';
   document.getElementById('lblFacturaNro').textContent     = opt.dataset.factura  || '—';
   document.getElementById('lblMontoPendiente').textContent =
-    opt.dataset.pendiente ? Number(opt.dataset.pendiente).toLocaleString('es-PY') + ' Gs.' : '—';
+    opt.dataset.pendiente ? formatMoney(opt.dataset.pendiente, MONEDA) : '—';
 
   document.getElementById('card-cuenta').style.display   = 'none';
   document.getElementById('contenedor-cob').style.display = '';
@@ -366,7 +381,7 @@ function renderTabla() {
     tr.innerHTML = `
       <td>${d._formaNombre}</td>
       <td class="small text-muted">${complemento}</td>
-      <td class="text-end">${Number(d.monto_cobrado).toLocaleString('es-PY')} Gs.</td>
+      <td class="text-end">${formatMoney(d.monto_cobrado, MONEDA)}</td>
       <td class="text-center">
         <button class="btn btn-xs btn-danger" onclick="quitarForma(${i})">
           <i data-feather="x" class="icon-xs"></i>
@@ -374,7 +389,7 @@ function renderTabla() {
       </td>`;
     tbody.appendChild(tr);
   });
-  document.getElementById('lblTotal').textContent = Number(totalGral).toLocaleString('es-PY') + ' Gs.';
+  document.getElementById('lblTotal').textContent = formatMoney(totalGral, MONEDA);
   feather.replace();
 }
 
@@ -404,7 +419,7 @@ document.getElementById('btnConfirmarForma').addEventListener('click', () => {
   const idFC  = parseInt(selFC.value);
   if (!idFC) { alert('Seleccioná una forma de cobro.'); return; }
 
-  const monto = parseInt(document.getElementById('txtMonto').value) || 0;
+  const monto = parseFloat(document.getElementById('txtMonto').value) || 0;
   if (monto <= 0) { alert('El monto debe ser mayor a 0.'); return; }
 
   const opt = selFC.selectedOptions[0];

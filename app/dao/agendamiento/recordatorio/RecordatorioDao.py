@@ -26,6 +26,7 @@ class RecordatorioDao(BaseDAO):
                    c.motivo AS cita_motivo,
                    pp.per_nombre || ' ' || pp.per_apellido AS paciente_nombre,
                    pp.per_telefono AS paciente_telefono,
+                   pp.per_correo AS paciente_correo,
                    pe.per_nombre || ' ' || pe.per_apellido AS especialista_nombre,
                    esp.des_especialidad
             FROM recordatorios r
@@ -56,6 +57,7 @@ class RecordatorioDao(BaseDAO):
                    c.motivo AS cita_motivo,
                    pp.per_nombre || ' ' || pp.per_apellido AS paciente_nombre,
                    pp.per_telefono AS paciente_telefono,
+                   pp.per_correo AS paciente_correo,
                    pe.per_nombre || ' ' || pe.per_apellido AS especialista_nombre,
                    esp.des_especialidad
             FROM recordatorios r

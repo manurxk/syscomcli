@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Inicio de sesión - Sistema Sysclin">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
-    <title>Login - Sysclin</title>
+    <meta name="description" content="Inicio de sesión - Sistema SYSCLIN">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/sys_logo.png') }}">
+    <title>Login - SYSCLIN</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -243,7 +243,7 @@
             }
         }
 
-        /* Título Sysclin — arriba dentro del card */
+        /* Título SYSCLIN — arriba dentro del card */
         .brand-title-block {
             position: absolute;
             top: 2.6rem;
@@ -644,6 +644,104 @@
             }
         }
 
+        /* ── Selector de idioma ── */
+        .lang-dropdown-wrap {
+            margin-top: 1.2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .lang-dropdown {
+            position: relative;
+        }
+
+        .lang-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 0.9rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--dark);
+            background: #f1f5ff;
+            border: 1.5px solid transparent;
+            border-radius: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+
+        .lang-dropdown-toggle:hover {
+            background: #e9eefe;
+        }
+
+        .lang-dropdown.open .lang-dropdown-toggle {
+            background: #fff;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.1);
+        }
+
+        .lang-dropdown-toggle svg {
+            width: 14px;
+            height: 14px;
+            color: #94a3b8;
+            transition: transform 0.2s ease;
+        }
+
+        .lang-dropdown.open .lang-dropdown-toggle svg {
+            transform: rotate(180deg);
+            color: var(--purple);
+        }
+
+        .lang-dropdown-menu {
+            position: absolute;
+            bottom: calc(100% + 0.5rem);
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 100%;
+            background: #fff;
+            border-radius: 0.85rem;
+            box-shadow: 0 12px 28px -6px rgba(30, 41, 59, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+            padding: 0.4rem;
+            display: none;
+            z-index: 30;
+        }
+
+        .lang-dropdown.open .lang-dropdown-menu {
+            display: block;
+            animation: flashIn 0.18s ease;
+        }
+
+        .lang-option {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--dark);
+            text-decoration: none;
+            text-align: left;
+            background: none;
+            border: none;
+            border-radius: 0.55rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .lang-option:hover {
+            background: #f1f5ff;
+            color: var(--purple);
+        }
+
+        .lang-option.active {
+            background: var(--gradient);
+            color: #fff;
+            font-weight: 700;
+        }
+
         /* ── Responsive ── */
         @media (max-width: 991px) {
             .brand-exterior {
@@ -711,9 +809,7 @@
 
     <!-- Footer exterior -->
     <div class="footer-exterior">
-        <span>Desarrollado por <strong>ÑANDESYS</strong></span>
-        <span class="footer-dot"></span>
-        <span>&copy; 2026 — Todos los derechos reservados</span>
+        <span>&copy; 2026 SYSCLIN — Todos los derechos reservados</span>
     </div>
 
     <!-- Card -->
@@ -722,23 +818,23 @@
         <!-- Lado izquierdo -->
         <div class="brand-side">
             <!-- Watermark elevada -->
-            <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="" class="brand-watermark"
+            <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="" class="brand-watermark"
                 aria-hidden="true">
 
             <div class="deco deco-1"></div>
             <div class="deco deco-2"></div>
             <div class="deco deco-3"></div>
 
-            <!-- Sysclin como título grande arriba -->
+            <!-- SYSCLIN como título grande arriba -->
             <div class="brand-title-block">
-                <div class="brand-title-pre">Sistema de Gestión Clínica</div>
-                <div class="brand-title-name">Sysclin</div>
+                <div class="brand-title-pre">{{ _('Sistema de Gestión Clínica') }}</div>
+                <div class="brand-title-name">SYSCLIN</div>
             </div>
 
             <!-- Texto inferior -->
             <div class="brand-text">
-                <h1>Clínica Integral<br>Neuropsicológica</h1>
-                <p>Gestionando la salud con tecnología y calidez humana.</p>
+                <h1>{{ _('Cuidado clínico') }}<br>{{ _('simple y seguro') }}</h1>
+                <p>{{ _('Gestionando la salud con tecnología y calidez humana.') }}</p>
                 <div class="version-badge">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -752,9 +848,9 @@
 
         <!-- Lado derecho: formulario -->
         <div class="form-side">
-            <div class="form-eyebrow">Acceso al sistema</div>
-            <h2 class="form-title">Bienvenido de vuelta</h2>
-            <p class="form-subtitle">Ingresá tus credenciales para continuar</p>
+            <div class="form-eyebrow">{{ _('Acceso al sistema') }}</div>
+            <h2 class="form-title">{{ _('Bienvenido de vuelta') }}</h2>
+            <p class="form-subtitle">{{ _('Ingresá tus credenciales para continuar') }}</p>
 
             <!-- Flash messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -784,7 +880,7 @@
 
                 <!-- Usuario -->
                 <div class="field">
-                    <label class="field-label" for="inputUsuario">Usuario</label>
+                    <label class="field-label" for="inputUsuario">{{ _('Usuario') }}</label>
                     <div class="input-wrap">
                         <div class="input-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -793,14 +889,14 @@
                                 <circle cx="12" cy="7" r="4" />
                             </svg>
                         </div>
-                        <input type="text" id="inputUsuario" name="usuario_nombre" placeholder="Nombre de usuario"
+                        <input type="text" id="inputUsuario" name="usuario_nombre" placeholder="{{ _('Nombre de usuario') }}"
                             required autocomplete="username" />
                     </div>
                 </div>
 
                 <!-- Contraseña -->
                 <div class="field">
-                    <label class="field-label" for="usuario_clave">Contraseña</label>
+                    <label class="field-label" for="usuario_clave">{{ _('Contraseña') }}</label>
                     <div class="input-wrap">
                         <div class="input-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -811,7 +907,7 @@
                         </div>
                         <input type="password" id="usuario_clave" name="usuario_clave" placeholder="••••••••" required
                             autocomplete="current-password" />
-                        <button type="button" class="toggle-pw" id="togglePassword" aria-label="Mostrar contraseña">
+                        <button type="button" class="toggle-pw" id="togglePassword" aria-label="{{ _('Mostrar contraseña') }}">
                             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -824,14 +920,14 @@
                 <!-- Extras -->
                 <div class="extras">
                     <label class="remember">
-                        <input type="checkbox"> Recordarme
+                        <input type="checkbox"> {{ _('Recordarme') }}
                     </label>
-                    <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
+                    <a href="{{ url_for('login.recuperar_password') }}" class="forgot-link">{{ _('¿Olvidó su contraseña?') }}</a>
                 </div>
 
                 <!-- Submit -->
                 <button type="submit" class="btn-login" id="btnLogin">
-                    <span class="btn-text">Ingresar</span>
+                    <span class="btn-text">{{ _('Ingresar') }}</span>
                     <div class="spinner"></div>
                     <svg class="btn-arr" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
@@ -840,6 +936,29 @@
                         <polyline points="12 5 19 12 12 19" />
                     </svg>
                 </button>
+
+                <!-- Selector de idioma -->
+                {% set idiomas = [('es', 'Español'), ('gn', 'Guaraní'), ('en', 'English')] %}
+                {% set idioma_actual = get_locale()|string %}
+                <div class="lang-dropdown-wrap">
+                    <div class="lang-dropdown" id="langDropdown">
+                        <button type="button" class="lang-dropdown-toggle" id="langDropdownToggle">
+                            <span id="langDropdownLabel">
+                                {% for codigo, nombre in idiomas %}{% if codigo == idioma_actual %}{{ nombre }}{% endif %}{% endfor %}
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="lang-dropdown-menu" id="langDropdownMenu">
+                            {% for codigo, nombre in idiomas %}
+                            <a class="lang-option{{ ' active' if codigo == idioma_actual }}"
+                                href="{{ url_for('login.cambiar_idioma', codigo=codigo) }}">{{ nombre }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -862,6 +981,19 @@
         // Loading al submit
         document.getElementById('loginForm').addEventListener('submit', () => {
             document.getElementById('btnLogin').classList.add('loading');
+        });
+
+        // Dropdown de idioma
+        const langDropdown = document.getElementById('langDropdown');
+        const langDropdownToggle = document.getElementById('langDropdownToggle');
+
+        langDropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            langDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', () => {
+            langDropdown.classList.remove('open');
         });
     </script>
 </body>

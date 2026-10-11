@@ -6,12 +6,10 @@ services:
     # ESTO ACELERA LA CARGA DE DUMPS:
     command: >
       postgres  -c synchronous_commit=off  -c full_page_writes=off -c max_wal_size=3GB -c checkpoint_timeout=20min
+    # POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB llegan por env_file (sin ${VAR}: compose no interpola el .env de la raiz).
+    # Solo se usan al crear un volumen nuevo; con el volumen existente la clave se cambia con ALTER ROLE.
     env_file:
       - ../.env
-    environment:
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
-      - POSTGRES_DB=${DB_NAME:-clinicain}
     ports:
       - "5434:5432" # Expuesto en el puerto 5434 (ya que 5432 y 5433 están en uso)
     volumes:
@@ -25,6 +23,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  backup:
+    image: postgres:17
+    container_name: syscomcli_backup # Backup automatico de la BD (pg_dump programado)
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - DB_HOST=db
+      - BACKUP_INTERVAL_SECONDS=86400 # cada 24h
+      - BACKUP_RETENTION_DAYS=14 # se conservan los ultimos 14 dias
+    entrypoint: [ "sh", "/scripts/entrypoint.sh" ]
+    volumes:
+      - ./backup:/scripts:ro
+      - ../backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - network-tesis
 
   app:
     build:
@@ -45,6 +63,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - network-tesis
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: syscomcli_nginx # Proxy HTTPS (termina TLS y reenvia a app:5000)
+    restart: always
+    # Sin env_file: nginx no necesita (ni debe ver) los secretos del .env
+    ports:
+      - "80:80" # HTTP: redirige a HTTPS (y valida Let's Encrypt en el servidor)
+      - "443:443" # HTTPS: entrada oficial al sistema
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/acme:/var/www/acme:ro
+    depends_on:
+      - app
     networks:
       - network-tesis
 

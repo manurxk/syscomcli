@@ -51,7 +51,7 @@ def _validarDatos(data):
 
 
 @agendahorariosapi.route('/especialistas', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEspecialistas():
     try:
         data = FuncionarioDao().getEspecialistasActivos()
@@ -62,7 +62,7 @@ def getEspecialistas():
 
 
 @agendahorariosapi.route('/dias-semana', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getDiasSemana():
     try:
         data = DiaSemanaDao().getDiasSemana()
@@ -73,7 +73,7 @@ def getDiasSemana():
 
 
 @agendahorariosapi.route('/agenda-horarios', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getAgendaHorarios():
     try:
         id_especialista = request.args.get('id_especialista', type=int)
@@ -85,7 +85,7 @@ def getAgendaHorarios():
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getAgendaHorario(id_agenda_horario):
     try:
         agendadao = AgendaHorariosDao()
@@ -99,7 +99,7 @@ def getAgendaHorario(id_agenda_horario):
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>/slots', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getSlotsAgendaHorario(id_agenda_horario):
     try:
         agendadao = AgendaHorariosDao()
@@ -113,7 +113,7 @@ def getSlotsAgendaHorario(id_agenda_horario):
 
 
 @agendahorariosapi.route('/agenda-horarios', methods=['POST'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def addAgendaHorario():
     data = request.get_json() or {}
 
@@ -150,7 +150,7 @@ def addAgendaHorario():
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def updateAgendaHorario(id_agenda_horario):
     data = request.get_json() or {}
     agendadao = AgendaHorariosDao()
@@ -190,7 +190,7 @@ def updateAgendaHorario(id_agenda_horario):
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>/estado', methods=['PATCH'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def cambiarEstadoAgendaHorario(id_agenda_horario):
     data = request.get_json() or {}
     agendadao = AgendaHorariosDao()

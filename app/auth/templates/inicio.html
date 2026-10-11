@@ -5,13 +5,490 @@ Dashboard - Inicio
 {% endblock %}
 
 {% block layout_content %}
-<div class="container-xl px-4 mt-4">
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-4">
-      <h2 class="fw-bold mb-1">¡Bienvenido, {{ session.get('nombre_persona', 'Usuario') }}!</h2>
-      <p class="text-gray-600 mb-0">Panel de {{ session.get('grupo', 'Usuario') }}</p>
-      <p class="small text-muted mt-2">Sistema en reconstrucción (Fase 1 - Autenticación y Personas).</p>
+
+{% set primer_rol = roles[0] if roles else {'label': 'Usuario', 'icon': 'fa-house', 'color': '#7c3aed'} %}
+
+<header class="page-header page-header-dark pb-10" id="dashHeader" style="background: {{ primer_rol.color }};">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between flex-wrap g-3">
+        <div class="col-auto mt-3">
+          <h1 class="page-header-title">
+            <i class="fas {{ primer_rol.icon }} me-2" id="dashIcon"></i>
+            <span id="dashTitle">Panel {{ primer_rol.label }}</span>
+          </h1>
+          <div class="page-header-subtitle">
+            ¡Bienvenido, {{ usuario or 'Usuario' }}!
+          </div>
+        </div>
+
+        {% if roles|length > 1 %}
+        <div class="col-auto mt-3">
+          <ul class="nav nav-pills" id="rolTabs" role="tablist">
+            {% for r in roles %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {% if loop.first %}active{% endif %} d-flex align-items-center gap-1"
+                      id="tab-{{ r.cod }}"
+                      data-bs-toggle="pill"
+                      data-bs-target="#panel-{{ r.cod }}"
+                      data-color="{{ r.color }}"
+                      data-icon="{{ r.icon }}"
+                      data-label="{{ r.label }}"
+                      type="button" role="tab"
+                      aria-controls="panel-{{ r.cod }}"
+                      aria-selected="{{ 'true' if loop.first else 'false' }}">
+                <i class="fas {{ r.icon }}"></i> {{ r.label }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
     </div>
   </div>
+</header>
+
+<div class="container-fluid px-4" style="margin-top:-4rem;">
+  <div class="tab-content" id="rolTabsContent">
+    {% for r in roles %}
+    {% set d = data_por_rol.get(r.cod, {}) %}
+    <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+         id="panel-{{ r.cod }}" role="tabpanel" aria-labelledby="tab-{{ r.cod }}">
+
+      {% if r.cod == 'ADMINISTRADOR' %}
+      <div class="row mb-3">
+        <div class="col-lg-3 col-sm-6 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Citas de Hoy</p>
+              <div class="h2 fw-bold mb-1">{{ d.citas_hoy }}</div>
+              <p class="text-muted small mb-0">Agendadas para hoy</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Recordatorios Pendientes</p>
+              <div class="h2 fw-bold mb-1">{{ d.recordatorios_pendientes }}</div>
+              <p class="text-muted small mb-0">Por enviar</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Cajas Abiertas</p>
+              <div class="h2 fw-bold mb-1">{{ d.cajas_abiertas }}</div>
+              <p class="text-muted small mb-0">Sobre el total</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Facturado Hoy</p>
+              <div class="h2 fw-bold mb-1">{{ d.facturado_hoy_count }}</div>
+              <p class="text-muted small mb-0">{{ d.facturado_hoy_monto }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-lg-8 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header d-flex align-items-center justify-content-between border-bottom py-3">
+              <span class="fw-semibold">Cuentas por Cobrar Pendientes</span>
+              <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver cobranzas</a>
+            </div>
+            <div class="card-body p-0">
+              {% if d.cxc %}
+              <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                  <thead class="table-light">
+                    <tr><th>Cuenta</th><th>Paciente</th><th>Vencimiento</th><th class="text-end">Pendiente</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for c in d.cxc %}
+                    <tr>
+                      <td class="fw-semibold">{{ c.cuenta_numero }}</td>
+                      <td>{{ c.paciente_nombre }}</td>
+                      <td><small class="text-muted">{{ c.fecha_vencimiento_fmt }}</small></td>
+                      <td class="text-end">{{ '{:,.0f}'.format(c.monto_pendiente).replace(',', '.') }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <div class="text-center text-muted py-4">
+                <i class="fas fa-file-invoice-dollar" style="font-size:2rem;opacity:0.3;"></i>
+                <p class="small mt-2 mb-0">Sin cuentas por cobrar pendientes</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3">
+              <span class="fw-semibold">Alertas de seguridad</span>
+            </div>
+            <div class="card-body p-3 d-flex flex-column gap-3">
+              {% set hay_intentos = d.intentos_fallidos and d.intentos_fallidos > 0 %}
+              <div class="d-flex align-items-center gap-3 p-3 rounded"
+                   style="background:{% if hay_intentos %}rgba(245,158,11,0.08){% else %}var(--bs-body-bg,#f8f9fa){% endif %};">
+                <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:2.2rem;height:2.2rem;background:{% if hay_intentos %}rgba(245,158,11,0.15){% else %}rgba(108,117,125,0.1){% endif %};">
+                  <i class="fas fa-shield-halved" style="font-size:1rem;color:{% if hay_intentos %}#f59e0b{% else %}#6c757d{% endif %};"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold" style="font-size:0.9rem;color:{% if hay_intentos %}#d97706{% else %}inherit{% endif %};">
+                    {{ d.intentos_fallidos }} intento{{ 's' if d.intentos_fallidos != 1 else '' }} fallido{{ 's' if d.intentos_fallidos != 1 else '' }}
+                  </div>
+                  <div class="text-muted" style="font-size:0.78rem;">Últimos 15 minutos · esta IP</div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-3 p-3 rounded" style="background:var(--bs-body-bg,#f8f9fa);">
+                <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:2.2rem;height:2.2rem;background:rgba(108,117,125,0.1);">
+                  <i class="fas fa-clipboard-list" style="font-size:1rem;color:#6c757d;"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold" style="font-size:0.9rem;">{{ d.eventos_auditoria }} eventos registrados</div>
+                  <div class="text-muted" style="font-size:0.78rem;">Total en auditoría del sistema</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('cita.citaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-calendar-days fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Programación</div><h6 class="mb-0">Agenda General</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('paciente.pacienteIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-users fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Listado</div><h6 class="mb-0">Pacientes</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('funcionario.funcionarioIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-user-tie fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Personal</div><h6 class="mb-0">Funcionarios</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('acceso.accesoIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-user-shield fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Seguridad</div><h6 class="mb-0">Accesos</h6></div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {% elif r.cod == 'CLINICO' %}
+      <div class="row mb-3">
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Mis Citas de Hoy</p>
+              <div class="h2 fw-bold mb-1">{{ d.citas|length }}</div>
+              <p class="text-muted small mb-0">Pacientes programados</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <span class="fw-bold">Agenda de hoy</span>
+          <a href="{{ url_for('mi_agenda.miAgendaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver Mi Agenda</a>
+        </div>
+        <div class="card-body p-0">
+          {% if d.sin_especialista %}
+          <div class="text-center text-muted py-4">
+            <i class="fas fa-user-doctor" style="font-size:2rem;opacity:0.3;"></i>
+            <p class="small mt-2 mb-0">Tu usuario no tiene un perfil de especialista vinculado.</p>
+          </div>
+          {% elif d.citas %}
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Hora</th><th>Paciente</th><th>Motivo</th><th>Estado</th></tr>
+              </thead>
+              <tbody>
+                {% for c in d.citas %}
+                <tr>
+                  <td class="fw-semibold">{{ c.cita_hora_inicio }}</td>
+                  <td>{{ c.paciente_nombre }} {{ c.paciente_apellido }}</td>
+                  <td><small class="text-muted">{{ c.cita_motivo or '—' }}</small></td>
+                  <td>
+                    {% if c.cod_estado_cita == 'CONFIRMADA' %}
+                      <span class="badge border border-success text-success">Confirmada</span>
+                    {% elif c.cod_estado_cita == 'EN_CONSULTA' %}
+                      <span class="badge border border-primary text-primary">En consulta</span>
+                    {% elif c.cod_estado_cita == 'COMPLETADA' %}
+                      <span class="badge border border-info text-info">Completada</span>
+                    {% else %}
+                      <span class="badge border border-secondary text-secondary">{{ c.des_estado_cita }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-4">
+            <i class="fas fa-calendar" style="font-size:2rem;opacity:0.3;"></i>
+            <p class="small mt-2 mb-0">Sin citas para hoy</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('mi_agenda.miAgendaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-calendar-days fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Hoy</div><h6 class="mb-0">Mi Agenda</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('consulta.consultaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-stethoscope fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Clínico</div><h6 class="mb-0">Consultas</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('ficha.fichaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-folder-open fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Historial</div><h6 class="mb-0">Fichas Médicas</h6></div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {% elif r.cod == 'RECEPCION' %}
+      <div class="row mb-3">
+        <div class="col-lg-3 col-sm-6 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Citas de Hoy</p>
+              <div class="h2 fw-bold mb-1">{{ d.citas|length }}</div>
+              <p class="text-muted small mb-0">Programadas</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Recordatorios Pendientes</p>
+              <div class="h2 fw-bold mb-1">{{ d.recordatorios_pendientes }}</div>
+              <p class="text-muted small mb-0">Por enviar</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <span class="fw-bold">Citas de hoy</span>
+          <a href="{{ url_for('cita.citaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver agenda</a>
+        </div>
+        <div class="card-body p-0">
+          {% if d.citas %}
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Hora</th><th>Paciente</th><th>Especialista</th><th>Estado</th></tr>
+              </thead>
+              <tbody>
+                {% for c in d.citas %}
+                <tr>
+                  <td class="fw-semibold">{{ c.cita_inicio.split(' ')[1] if c.cita_inicio else '—' }}</td>
+                  <td>{{ c.paciente_nombre }} {{ c.paciente_apellido }}</td>
+                  <td><small class="text-muted">{{ c.especialista_nombre }} {{ c.especialista_apellido }}</small></td>
+                  <td>
+                    {% if c.cod_estado_cita == 'CONFIRMADA' %}
+                      <span class="badge border border-success text-success">Confirmada</span>
+                    {% elif c.cod_estado_cita == 'EN_CONSULTA' %}
+                      <span class="badge border border-primary text-primary">En consulta</span>
+                    {% else %}
+                      <span class="badge border border-secondary text-secondary">{{ c.des_estado_cita }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-4">
+            <i class="fas fa-calendar" style="font-size:2rem;opacity:0.3;"></i>
+            <p class="small mt-2 mb-0">Sin citas para hoy</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('cita.citaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-calendar-days fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Programación</div><h6 class="mb-0">Agenda General</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('paciente.pacienteIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-users fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Listado</div><h6 class="mb-0">Pacientes</h6></div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {% elif r.cod == 'VENTAS' %}
+      <div class="row mb-3">
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Cajas Abiertas</p>
+              <div class="h2 fw-bold mb-1">{{ d.cajas_abiertas }}</div>
+              <p class="text-muted small mb-0">Sobre el total</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Facturado Hoy</p>
+              <div class="h2 fw-bold mb-1">{{ d.facturado_hoy_count }}</div>
+              <p class="text-muted small mb-0">{{ d.facturado_hoy_monto }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Cuentas por Cobrar</p>
+              <div class="h2 fw-bold mb-1">{{ d.cxc|length }}</div>
+              <p class="text-muted small mb-0">Pendientes de pago</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <span class="fw-bold">Cuentas por Cobrar Pendientes</span>
+          <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver cobranzas</a>
+        </div>
+        <div class="card-body p-0">
+          {% if d.cxc %}
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Cuenta</th><th>Paciente</th><th>Vencimiento</th><th class="text-end">Pendiente</th></tr>
+              </thead>
+              <tbody>
+                {% for c in d.cxc %}
+                <tr>
+                  <td class="fw-semibold">{{ c.cuenta_numero }}</td>
+                  <td>{{ c.paciente_nombre }}</td>
+                  <td><small class="text-muted">{{ c.fecha_vencimiento_fmt }}</small></td>
+                  <td class="text-end">{{ '{:,.0f}'.format(c.monto_pendiente).replace(',', '.') }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-4">
+            <i class="fas fa-file-invoice-dollar" style="font-size:2rem;opacity:0.3;"></i>
+            <p class="small mt-2 mb-0">Sin cuentas por cobrar pendientes</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('factura.facturaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-file-lines fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Emisión</div><h6 class="mb-0">Facturas</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('cobranza.cobranzaIndex') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-dollar-sign fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Pagos</div><h6 class="mb-0">Cobranzas</h6></div>
+            </div>
+          </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('apertura_cierre_caja.cajaEstado') }}">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-cash-register fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Operaciones</div><h6 class="mb-0">Estado de Caja</h6></div>
+            </div>
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
 </div>
+
+<style>
+  .lift { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; }
+  #rolTabs .nav-link { font-size: .82rem; padding: .3rem .85rem; color: rgba(255,255,255,.7); }
+  #rolTabs .nav-link:hover { color: #fff; background: rgba(255,255,255,.15); }
+  #rolTabs .nav-link.active { color: #fff; background: rgba(255,255,255,.25); }
+</style>
+
+<script>
+document.querySelectorAll('#rolTabs [data-bs-toggle="pill"]').forEach(btn => {
+  btn.addEventListener('shown.bs.tab', () => {
+    document.getElementById('dashHeader').style.background = btn.dataset.color;
+    document.getElementById('dashIcon').className = `fas ${btn.dataset.icon} me-2`;
+    document.getElementById('dashTitle').textContent = 'Panel ' + btn.dataset.label;
+  });
+});
+</script>
 {% endblock %}

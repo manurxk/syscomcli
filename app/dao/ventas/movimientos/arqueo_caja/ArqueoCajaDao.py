@@ -1,5 +1,6 @@
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
+from app.core.moneda import get_moneda, redondear
 
 
 class ArqueoCajaDao(BaseDAO):
@@ -35,10 +36,12 @@ class ArqueoCajaDao(BaseDAO):
                 a.observaciones,
                 a.est_arqueo,
                 c.des_caja AS caja,
+                ac.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 TO_CHAR(ac.fecha_operacion, 'DD/MM/YYYY HH24:MI') AS fecha_apertura
             FROM arqueos_caja a
             JOIN cajas c ON a.id_caja = c.id_caja
             JOIN aperturas_cierre_caja ac ON a.id_apertura_cierre = ac.id_apertura_cierre
+            JOIN monedas m ON ac.id_moneda = m.id_moneda
             ORDER BY a.fecha_arqueo DESC, a.id_arqueo DESC
         """
         return self.execute_query(sql)
@@ -57,10 +60,12 @@ class ArqueoCajaDao(BaseDAO):
                 a.observaciones,
                 a.est_arqueo,
                 c.des_caja AS caja,
+                ac.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 TO_CHAR(ac.fecha_operacion, 'DD/MM/YYYY HH24:MI') AS fecha_apertura
             FROM arqueos_caja a
             JOIN cajas c ON a.id_caja = c.id_caja
             JOIN aperturas_cierre_caja ac ON a.id_apertura_cierre = ac.id_apertura_cierre
+            JOIN monedas m ON ac.id_moneda = m.id_moneda
             WHERE a.id_arqueo = %s
         """
         return self.execute_query_one(sql, (id_arqueo,))
@@ -75,9 +80,11 @@ class ArqueoCajaDao(BaseDAO):
                 a.monto_real,
                 a.diferencia,
                 a.est_arqueo,
+                ac.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 TO_CHAR(ac.fecha_operacion, 'DD/MM/YYYY HH24:MI') AS fecha_apertura
             FROM arqueos_caja a
             JOIN aperturas_cierre_caja ac ON a.id_apertura_cierre = ac.id_apertura_cierre
+            JOIN monedas m ON ac.id_moneda = m.id_moneda
             WHERE a.id_caja = %s
             ORDER BY a.fecha_arqueo DESC
         """
@@ -85,7 +92,7 @@ class ArqueoCajaDao(BaseDAO):
 
     def calcularMontoEsperado(self, id_apertura_cierre, id_caja):
         apertura = self.execute_query_one("""
-            SELECT saldo_inicial, saldo_final,
+            SELECT saldo_inicial, saldo_final, id_moneda,
                    TO_CHAR(fecha_operacion, 'YYYY-MM-DD HH24:MI:SS') AS fecha_operacion
             FROM aperturas_cierre_caja
             WHERE id_apertura_cierre = %s
@@ -114,12 +121,25 @@ class ArqueoCajaDao(BaseDAO):
 
     def guardarArqueo(self, id_apertura_cierre, id_caja, monto_real,
                       observaciones=None, usuario_creacion=None):
+        apertura = self.execute_query_one(
+            "SELECT id_moneda FROM aperturas_cierre_caja WHERE id_apertura_cierre = %s",
+            (id_apertura_cierre,)
+        )
+        if not apertura:
+            raise ValueError("No se encontró la apertura de caja especificada.")
+        moneda = get_moneda(apertura['id_moneda'])
+        decimales = int(moneda['decimales_moneda'])
+
         monto_esperado = self.calcularMontoEsperado(id_apertura_cierre, id_caja)
         if monto_esperado is None:
             raise ValueError("No se encontró la apertura de caja especificada.")
+        monto_esperado = redondear(monto_esperado, decimales)
+        monto_real = redondear(monto_real, decimales)
 
-        diferencia = float(monto_real) - float(monto_esperado)
-        est_arqueo = 'CONCILIADO' if abs(diferencia) <= 1000 else 'CON_DIFERENCIA'
+        diferencia = monto_real - monto_esperado
+        # Tolerancia: 1000 Gs. para la moneda local (sin decimales), 1 unidad para el resto (ej. 1 USD)
+        tolerancia = 1000 if decimales == 0 else 1
+        est_arqueo = 'CONCILIADO' if abs(diferencia) <= tolerancia else 'CON_DIFERENCIA'
 
         def _fn(cur):
             numero = self._generarNumeroArqueo(cur)

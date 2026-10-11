@@ -93,6 +93,9 @@ Accesos
           const btnRevocar = u.mfa_habilitado
             ? `<button class="btn btn-sm btn-outline-warning btn-revocar-mfa" data-id-usuario="${u.id_usuario}"><i data-feather="shield-off" class="icon-xs"></i> Revocar MFA</button>`
             : '';
+          const btnDesbloquear = u.esta_bloqueado
+            ? `<button class="btn btn-sm btn-outline-success btn-desbloquear" data-id-usuario="${u.id_usuario}"><i data-feather="unlock" class="icon-xs"></i> Desbloquear</button>`
+            : '';
           $tbody.append(`<tr>
             <td>${u.usu_nick}</td>
             <td>${u.nombre_completo || ''}</td>
@@ -105,7 +108,7 @@ Accesos
               </button>
             </td>
             <td>${u.fecha_ultimo_login || '-'}</td>
-            <td class="text-end">${btnRevocar}</td>
+            <td class="text-end">${btnDesbloquear} ${btnRevocar}</td>
           </tr>`);
         });
         if (window.feather) feather.replace();
@@ -173,6 +176,33 @@ Accesos
               cargarAccesos();
             } else {
               Swal.fire('Error', data.error || 'No se pudo cerrar la sesión.', 'error');
+            }
+          });
+      });
+    });
+
+    $(document).on('click', '.btn-desbloquear', function () {
+      const idUsuario = $(this).data('id-usuario');
+
+      Swal.fire({
+        title: '¿Desbloquear este usuario?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, desbloquear'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+
+        fetch(`/api/v1/acceso/usuarios/${idUsuario}/desbloquear`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRFToken }
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Listo', data.mensaje, 'success');
+              cargarAccesos();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo desbloquear al usuario.', 'error');
             }
           });
       });

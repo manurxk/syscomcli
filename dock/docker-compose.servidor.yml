@@ -1,0 +1,21 @@
+# Ajustes SOLO para el servidor de despliegue (se suma a docker-compose.yml):
+#   docker compose -f dock/docker-compose.yml -f dock/docker-compose.servidor.yml up -d
+#
+# - Los puertos de desarrollo (app 5005, BD 5434, debugpy 5680) quedan atados a 127.0.0.1:
+#   desde internet solo se llega por nginx (80/443). No se depende de ufw: Docker lo saltea en Linux.
+# - HSTS activado (en local romperia http://localhost:5005).
+# - En el .env del servidor: SESSION_COOKIE_SECURE=1 y FLASK_DEBUG=0.
+
+services:
+  db:
+    ports: !override
+      - "127.0.0.1:5434:5432" # Administracion por tunel SSH
+
+  app:
+    ports: !override
+      - "127.0.0.1:5005:5000"
+      - "127.0.0.1:5680:5678"
+
+  nginx:
+    volumes:
+      - ./nginx/hsts.conf:/etc/nginx/snippets/hsts.conf:ro

@@ -1,5 +1,7 @@
-from flask import Flask
+from flask import Flask, request
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_babel import Babel, gettext, get_locale
 
 from app.config.settings import init_settings
 from app.middleware import init_middleware
@@ -127,18 +129,44 @@ from app.rutas.ventas.movimientos.recaudacion.recaudacion_routes import recaudac
 from app.rutas.ventas.movimientos.recaudacion.recaudacion_api import recaudacionapi
 from app.rutas.ventas.movimientos.libro_ventas.libro_ventas_routes import libroventasmod
 from app.rutas.ventas.movimientos.libro_ventas.libro_ventas_api import libroventasapi
+from app.rutas.reporte.reporte_routes import reportemod
+from app.rutas.reporte.reporte_api import reporteapi
+from app.rutas.ayuda.ayuda_routes import ayudamod
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
 # Initialize the Flask application
 app = Flask(__name__)
 
+# Detrás de nginx (1 salto): remote_addr = IP real del cliente y esquema https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
 # Initialize Extensions
 csrf = CSRFProtect()
 csrf.init_app(app)
 
+IDIOMAS_DISPONIBLES = ['es', 'gn', 'en']
+
+
+def seleccionar_idioma():
+    """Idioma activo: preferencia guardada en cookie (no en sesión — así
+    sobrevive al login/logout, que hacen session.clear()), si no la del
+    navegador (Accept-Language), si no español. Ver /idioma/<codigo> en
+    login.py para cómo se guarda la preferencia."""
+    idioma_cookie = request.cookies.get('idioma')
+    if idioma_cookie in IDIOMAS_DISPONIBLES:
+        return idioma_cookie
+    return request.accept_languages.best_match(IDIOMAS_DISPONIBLES, default='es')
+
 # Load Settings and Configuration
 init_settings(app)
+
+# Internacionalización (español/guaraní/inglés) — ver seleccionar_idioma() arriba
+app.config['BABEL_DEFAULT_LOCALE'] = 'es'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = 'translations'
+babel = Babel(app, locale_selector=seleccionar_idioma)
+app.jinja_env.globals['_'] = gettext
+app.jinja_env.globals['get_locale'] = get_locale
 
 # Initialize Middleware
 init_middleware(app)
@@ -270,6 +298,9 @@ app.register_blueprint(recaudacionmod, url_prefix='/ventas/movimientos/recaudaci
 app.register_blueprint(recaudacionapi, url_prefix='/api/v1')
 app.register_blueprint(libroventasmod, url_prefix='/ventas/movimientos/libro-ventas')
 app.register_blueprint(libroventasapi, url_prefix='/api/v1')
+app.register_blueprint(reportemod, url_prefix='/reporte')
+app.register_blueprint(reporteapi, url_prefix='/api/v1')
+app.register_blueprint(ayudamod, url_prefix='/ayuda')
 
 # Context processors y helpers de template
 init_context_processors(app)

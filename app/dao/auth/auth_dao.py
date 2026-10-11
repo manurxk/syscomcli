@@ -126,15 +126,20 @@ class AuthDao(BaseDAO):
 
             self.guardar_password_history(id_usuario=id_usuario, password_hash=password_actual_hash, motivo_cambio='RECUPERACION')
 
+            # mfa_habilitado se fuerza a TRUE: quien recuperó la contraseña ya demostró
+            # conocer el correo vinculado a la cuenta (se exige que coincida antes de
+            # generar el token), así que el próximo login exige además el código MFA.
             sql = """
                 UPDATE usuarios
                 SET usu_clave = %s,
                     fecha_cambio_clave = CURRENT_TIMESTAMP,
                     requiere_cambio_clave = FALSE,
                     usu_nro_intentos = 0,
+                    nivel_escalada_bloqueo = 0,
                     fecha_bloqueo = NULL,
                     motivo_bloqueo = NULL,
-                    bloqueado_hasta = NULL
+                    bloqueado_hasta = NULL,
+                    mfa_habilitado = TRUE
                 WHERE id_usuario = %s
             """
             self.execute_query(sql, (password_nueva_hash, id_usuario), commit=True)

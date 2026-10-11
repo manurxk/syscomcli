@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.movimientos.cobranza.CobranzaDao import CobranzaDao
@@ -48,7 +50,11 @@ def addCobranza():
     for d in detalles:
         if not d.get('id_forma_cobro'):
             return jsonify({'success': False, 'error': 'Cada línea de detalle requiere una forma de cobro.'}), 400
-        if not d.get('monto_cobrado') or int(d['monto_cobrado']) <= 0:
+        try:
+            monto_ok = Decimal(str(d.get('monto_cobrado'))) > 0
+        except (InvalidOperation, ValueError):
+            monto_ok = False
+        if not monto_ok:
             return jsonify({'success': False, 'error': 'El monto de cada forma de cobro debe ser mayor a 0.'}), 400
 
     try:

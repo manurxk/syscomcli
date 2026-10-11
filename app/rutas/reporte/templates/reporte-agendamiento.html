@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Auditoría de Agendamiento - Sysclin{% endblock %}
+{% block title %}Auditoría de Agendamiento - SYSCLIN{% endblock %}
 
 {% block contenido %}
 <style>
@@ -73,11 +73,11 @@
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
                     <li class="breadcrumb-item">
-                        <a href="{{ url_for('dashboard.index') }}"
+                        <a href="{{ url_for('login.inicio') }}"
                             class="text-white-50 text-decoration-none">Dashboard</a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ url_for('reporte.reportes_index') }}"
+                        <a href="{{ url_for('reporte.reporteIndex') }}"
                             class="text-white-50 text-decoration-none">Reportes</a>
                     </li>
                     <li class="breadcrumb-item active text-white-50" aria-current="page">Agendamiento</li>
@@ -101,7 +101,7 @@
                         <i data-feather="file-text" style="width:14px;height:14px;"></i>
                         Descargar PDF
                     </button>
-                    <a href="{{ url_for('reporte.reportes_index') }}"
+                    <a href="{{ url_for('reporte.reporteIndex') }}"
                         class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1">
                         <i data-feather="arrow-left" style="width:14px;height:14px;"></i>
                         Volver
@@ -290,7 +290,7 @@
     function descargarPDF() {
         const d = document.getElementById('fecha_desde').value;
         const h = document.getElementById('fecha_hasta').value;
-        const url = `{{ url_for('reporte_api.reporte_agendamiento_pdf') }}?fecha_desde=${d}&fecha_hasta=${h}`;
+        const url = `{{ url_for('reporteapi.reporte_agendamiento_pdf') }}?fecha_desde=${d}&fecha_hasta=${h}`;
         window.open(url, '_blank');
     }
 

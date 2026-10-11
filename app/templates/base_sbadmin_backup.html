@@ -7,11 +7,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description"
-        content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
-    <meta name="author" content="CIN">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
+        content="Sistema de gestión clínica - SYSCLIN">
+    <meta name="author" content="SYSCLIN">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/sys_logo.png') }}">
 
-    <title>{% block titulo %}Sistema CIN{% endblock %}</title>
+    <title>{% block titulo %}SYSCLIN{% endblock %}</title>
 
     <!-- CSS principal - SB Admin Pro (Bootstrap 5) -->
     <link href="{{ url_for('static', filename='vendor/sb-admin-pro/css/styles.css') }}" rel="stylesheet">
@@ -981,11 +981,11 @@
                                 <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
                                     style="width: 28px; height: 28px; margin-right: 10px; opacity: 0.9; object-fit: contain;">
                                 {% else %}
-                                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo AngaSys"
+                                <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="Logo SYSCLIN"
                                     style="width: 28px; height: 28px; margin-right: 10px; opacity: 0.9;">
                                 {% endif %}
                                 <span class="fs-4 fw-bold" style="letter-spacing: 0.05rem;">{{ clinica.nombre if clinica
-                                    else 'AngaSys' }}</span>
+                                    else 'SYSCLIN' }}</span>
                             </a>
                             <p class="small mb-4" style="line-height: 1.6; max-width: 320px;">
                                 Sistema de gestión integral para profesionales y consultorios de la salud mental.
@@ -1029,10 +1029,8 @@
                     <div class="row align-items-center small" style="font-size: 0.8rem;">
                         <div
                             class="col-md-6 mb-2 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
-                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'AngaSys' }} {{ current_year if
+                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'SYSCLIN' }} {{ current_year if
                                 current_year else '2026' }}</span>
-                            <span class="mx-2 d-none d-md-inline" style="opacity: 0.3;">|</span>
-                            <span>Desarrollado por <strong style="color: rgba(255, 255, 255, 0.6); letter-spacing: 0.5px;">ÑANDESYS</strong></span>
                         </div>
                         <div class="col-md-6 text-center text-md-end">
                             Versión {{ app_version if app_version else '2.1.0' }}

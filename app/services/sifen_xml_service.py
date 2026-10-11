@@ -92,15 +92,19 @@ class SifenXMLService:
         # gDatRec (Receptor)
         # ---------------------------------------------
         g_rec = SubElement(de, "gDatRec")
-        ruc_rec = str(factura_data.get("paciente_cedula", "0"))
-        tipo_cont_rec = "2" if "-" in ruc_rec else "1" # Simple heurisitica
-        
+        # Documento del receptor: tipo_documento explícito (CI/RUC) si viene informado,
+        # sino se infiere por presencia de guion (compatibilidad con datos antiguos).
+        tipo_doc_rec = factura_data.get("paciente_tipo_documento")
+        ruc_rec = str(factura_data.get("paciente_ruc") or factura_data.get("paciente_cedula", "0"))
+        es_ruc = (tipo_doc_rec == "RUC") if tipo_doc_rec else ("-" in ruc_rec)
+        tipo_cont_rec = "2" if es_ruc else "1"
+
         SubElement(g_rec, "iNatRec").text = tipo_cont_rec  # 1 Física, 2 Jurídica
         SubElement(g_rec, "iTiOpe").text = "1"             # 1 B2B / B2C
         SubElement(g_rec, "cPaisRec").text = "PRY"
         SubElement(g_rec, "dDesPaisRe").text = "Paraguay"
-        
-        if tipo_cont_rec == "2" and "-" in ruc_rec:
+
+        if es_ruc and "-" in ruc_rec:
             # Es un RUC con DV
             partes = ruc_rec.split("-")
             SubElement(g_rec, "dRUCRec").text = partes[0]

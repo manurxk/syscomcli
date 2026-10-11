@@ -72,8 +72,10 @@ class AperturaCierreCajaDao(BaseDAO):
                 ac.monto_efectivo,
                 ac.monto_cheques,
                 ac.monto_tarjetas,
-                ac.monto_transferencias
+                ac.monto_transferencias,
+                ac.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
             FROM aperturas_cierre_caja ac
+            JOIN monedas m ON ac.id_moneda = m.id_moneda
             WHERE ac.id_caja = %s
               AND ac.tipo_operacion = 'APERTURA'
               AND ac.est_apertura_cierre = 'A'
@@ -92,11 +94,12 @@ class AperturaCierreCajaDao(BaseDAO):
                 ac.id_apertura_cierre,
                 TO_CHAR(ac.fecha_operacion, 'DD/MM/YYYY HH24:MI') AS fecha_apertura,
                 ac.saldo_inicial,
+                ac.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 COALESCE(p.per_nombre || ' ' || p.per_apellido, u.usu_nick) AS usuario_apertura
             FROM cajas c
             LEFT JOIN LATERAL (
                 SELECT ac2.id_apertura_cierre, ac2.fecha_operacion, ac2.saldo_inicial,
-                       ac2.id_usuario
+                       ac2.id_usuario, ac2.id_moneda
                 FROM aperturas_cierre_caja ac2
                 WHERE ac2.id_caja = c.id_caja
                   AND ac2.tipo_operacion = 'APERTURA'
@@ -104,6 +107,7 @@ class AperturaCierreCajaDao(BaseDAO):
                 ORDER BY ac2.fecha_operacion DESC
                 LIMIT 1
             ) ac ON TRUE
+            LEFT JOIN monedas m ON ac.id_moneda = m.id_moneda
             LEFT JOIN usuarios u ON ac.id_usuario = u.id_usuario
             LEFT JOIN funcionarios f ON u.id_funcionario = f.id_funcionario
             LEFT JOIN personas p ON f.id_persona = p.id_persona
@@ -162,7 +166,7 @@ class AperturaCierreCajaDao(BaseDAO):
         }
 
     def guardarApertura(self, id_caja, id_usuario, saldo_inicial=0,
-                        observaciones=None, usuario_creacion=None):
+                        observaciones=None, usuario_creacion=None, id_moneda=1):
         apertura_activa = self.getAperturaActivaPorCaja(id_caja)
         if apertura_activa:
             raise ValueError(f"La caja ya tiene una apertura activa (ID {apertura_activa['id_apertura_cierre']}).")
@@ -172,12 +176,12 @@ class AperturaCierreCajaDao(BaseDAO):
                 INSERT INTO aperturas_cierre_caja(
                     id_caja, id_usuario, tipo_operacion, saldo_inicial,
                     monto_efectivo, monto_cheques, monto_tarjetas, monto_transferencias,
-                    observaciones, est_apertura_cierre, usuario_creacion
+                    observaciones, est_apertura_cierre, usuario_creacion, id_moneda
                 )
-                VALUES (%s, %s, 'APERTURA', %s, %s, 0, 0, 0, %s, 'A', %s)
+                VALUES (%s, %s, 'APERTURA', %s, %s, 0, 0, 0, %s, 'A', %s, %s)
                 RETURNING id_apertura_cierre
             """, (id_caja, id_usuario, saldo_inicial, saldo_inicial,
-                  observaciones, usuario_creacion))
+                  observaciones, usuario_creacion, id_moneda))
             apertura_id = cur.fetchone()[0]
             cur.execute("""
                 UPDATE cajas

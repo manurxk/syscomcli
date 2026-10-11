@@ -6,12 +6,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Sistema de gestión de consultorios psicológicos - Clínica Integral Neuropsicológica">
-    <meta name="author" content="CIN">
+    <meta name="description" content="Sistema de gestión clínica - SYSCLIN">
+    <meta name="author" content="SYSCLIN">
     <meta name="color-scheme" content="light dark">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/sys_logo.png') }}">
 
-    <title>{% block titulo %}Sistema CIN{% endblock %}</title>
+    <title>{% block titulo %}SYSCLIN{% endblock %}</title>
 
     <!-- Inicialización del tema (antes del CSS para evitar flash) -->
     <script>
@@ -53,6 +53,8 @@
 
     <style>
         :root {
+            --bs-primary: #7c3aed;
+            --bs-primary-rgb: 124, 58, 237;
             --primary-color: #0061f2;
             --primary-dark: #0056d6;
             --cobalt-blue: #0047AB;
@@ -122,8 +124,8 @@
         .app-footer-custom {
             background-color: #212832;
             color: #a7aeb8;
-            padding-top: 3rem;
-            padding-bottom: 2rem;
+            padding-top: 1.5rem;
+            padding-bottom: 1rem;
             width: 100%;
         }
         .app-footer-custom * { background-color: transparent !important; }
@@ -138,12 +140,9 @@
             font-size: 0.8rem;
         }
 
-        /* Sidebar en violeta — sigue el toggle claro/oscuro global */
         .brand-image-wrap {
             width: 32px;
             height: 32px;
-            border-radius: 0.5rem;
-            background: linear-gradient(135deg, #5b21b6 0%, #9333ea 100%);
         }
 
         html:not([data-bs-theme="dark"]) .app-sidebar {
@@ -164,6 +163,14 @@
 
         .app-sidebar .nav-header {
             font-weight: 700;
+        }
+
+        /* Tamaño uniforme para íconos feather del sidebar (encabezados de grupo e items) */
+        .app-sidebar .nav-icon svg,
+        .app-sidebar .nav-link p svg {
+            width: 1rem;
+            height: 1rem;
+            vertical-align: -0.15em;
         }
 
         html:not([data-bs-theme="dark"]) .app-sidebar .nav-icon,
@@ -199,7 +206,7 @@
         }
 
         @media (max-width: 768px) {
-            .app-footer-custom { padding-top: 2rem !important; padding-bottom: 1.5rem !important; }
+            .app-footer-custom { padding-top: 1rem !important; padding-bottom: 0.75rem !important; }
         }
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -252,6 +259,16 @@
                         </div>
                     </li>
 
+                    <!-- Ayuda: manual del usuario según su rol -->
+                    {% if session.get('roles') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:void(0);" id="btnAyuda" title="Ayuda" aria-label="Abrir manual de ayuda"
+                            data-bs-toggle="modal" data-bs-target="#modalAyuda">
+                            <i data-feather="help-circle"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <!-- Toggle de tema (claro/oscuro) -->
                     <li class="nav-item">
                         <a class="nav-link" href="javascript:void(0);" id="themeToggle" title="Cambiar tema" aria-label="Toggle color scheme">
@@ -295,23 +312,40 @@
             <!-- Brand -->
             <div class="sidebar-brand">
                 <a href="/" class="brand-link d-flex align-items-center">
-                    <span class="brand-image-wrap d-flex align-items-center justify-content-center shadow">
+                    <span class="brand-image-wrap d-flex align-items-center justify-content-center">
                         {% if clinica and clinica.logo_path %}
                         <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
-                            class="brand-image" style="width:22px;height:22px;object-fit:contain;">
+                            class="brand-image" style="width:32px;height:32px;object-fit:contain;">
                         {% else %}
-                        <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo Sysclin"
-                            class="brand-image" style="width:22px;height:22px;object-fit:contain;">
+                        <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="Logo SYSCLIN"
+                            class="brand-image" style="width:32px;height:32px;object-fit:contain;">
                         {% endif %}
                     </span>
-                    <span class="brand-text fw-bold ms-2">{{ clinica.nombre if clinica else 'Sysclin' }}</span>
+                    <span class="brand-text fw-bold ms-2">{{ clinica.nombre if clinica else 'SYSCLIN' }}</span>
                 </a>
             </div>
 
             <!-- Menú -->
             <div class="sidebar-wrapper">
+
+                {% if sidebar_items %}
+                <div class="px-3 pt-2 pb-1">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i data-feather="search" style="width:12px;height:12px;"></i></span>
+                        <input type="search" class="form-control" id="menuSearchInput"
+                            placeholder="Buscar en el menú..." aria-label="Buscar en el menú" autocomplete="off">
+                    </div>
+                </div>
+                {% endif %}
+
                 <nav class="mt-2" aria-label="Navegación principal">
                     <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+
+                        {% if sidebar_items %}
+                        <li id="menuSearchNoResults" class="nav-item px-3 py-2 text-muted small" style="display:none;">
+                            Sin resultados para el menú.
+                        </li>
+                        {% endif %}
 
                         {% for section in sidebar_items %}
                         {% if section.is_flat %}
@@ -319,7 +353,7 @@
                             <li class="nav-header">{{ group.heading }}</li>
                             {% for item in group['items'] %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for(item.endpoint) if item.endpoint else '#' }}">
+                                <a class="nav-link" href="{{ item.url if item.url else '#' }}">
                                     {% if item.html_icon %}
                                     <span class="nav-icon">{{ item.html_icon|safe }}</span>
                                     {% else %}
@@ -355,7 +389,7 @@
                                     <ul class="nav nav-treeview">
                                         {% for link in submenu.links %}
                                         <li class="nav-item">
-                                            <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
+                                            <a class="nav-link" href="{{ link.url if link.url else '#' }}">
                                                 <i class="nav-icon" data-feather="circle"></i>
                                                 <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
                                             </a>
@@ -368,9 +402,13 @@
                                 {% if menu.links %}
                                 {% for link in menu.links %}
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ url_for(link.endpoint) if link.endpoint else '#' }}">
+                                    <a class="nav-link" href="{{ link.url if link.url else '#' }}">
+                                        {% if link.html_icon %}
+                                        <span class="nav-icon">{{ link.html_icon|safe }}</span>
+                                        {% else %}
                                         <i class="nav-icon" data-feather="circle"></i>
-                                        <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
+                                        {% endif %}
+                                        <p>{{ link.title }}</p>
                                     </a>
                                 </li>
                                 {% endfor %}
@@ -380,6 +418,12 @@
                         {% endfor %}
                         {% endif %}
                         {% endfor %}
+
+                        {% if not sidebar_items %}
+                        <li class="nav-item px-3 py-2 text-muted small">
+                            No tenés módulos asignados. Contactá a un administrador.
+                        </li>
+                        {% endif %}
 
                     </ul>
                 </nav>
@@ -413,61 +457,77 @@
         </main>
         <!-- ======================== FIN CONTENIDO ======================== -->
 
+        <!-- Modal Ayuda: vista previa del manual (el iframe se carga recién al abrirlo) -->
+        {% if session.get('roles') %}
+        <div class="modal fade" id="modalAyuda" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold">Guía de uso</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <iframe id="iframeAyuda" title="Guía de uso" style="width:100%;height:70vh;border:0;"
+                            data-src="{{ url_for('ayuda.ayudaManual', desde=request.endpoint) }}"></iframe>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <a class="btn btn-danger btn-sm" href="{{ url_for('ayuda.ayudaManualPdf') }}">
+                            <i class="fas fa-file-pdf"></i> Descargar PDF
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- ======================== FOOTER ======================== -->
         <footer class="app-footer app-footer-custom">
                 <div class="container-fluid px-4 px-lg-5">
                     <div class="row gx-5 justify-content-between">
 
                         <!-- Columna 1: Brand & Descripción & Redes -->
-                        <div class="col-lg-5 col-md-6 mb-4 mb-lg-0">
-                            <a href="/" class="d-flex align-items-center mb-3 text-white text-decoration-none">
+                        <div class="col-lg-5 col-md-6 mb-2 mb-lg-0">
+                            <a href="/" class="d-flex align-items-center mb-1 text-white text-decoration-none">
                                 {% if clinica and clinica.logo_path %}
                                 <img src="{{ url_for('static', filename=clinica.logo_path) }}" alt="Logo"
-                                    style="width:28px;height:28px;margin-right:10px;opacity:0.9;object-fit:contain;">
+                                    style="width:20px;height:20px;margin-right:8px;opacity:0.9;object-fit:contain;">
                                 {% else %}
-                                <img src="{{ url_for('static', filename='img/iconoa.png') }}" alt="Logo Sysclin"
-                                    style="width:28px;height:28px;margin-right:10px;opacity:0.9;">
+                                <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="Logo SYSCLIN"
+                                    style="width:20px;height:20px;margin-right:8px;opacity:0.9;">
                                 {% endif %}
-                                <span class="fs-4 fw-bold" style="letter-spacing:0.05rem;">{{ clinica.nombre if clinica else 'Sysclin' }}</span>
+                                <span class="fs-6 fw-bold" style="letter-spacing:0.05rem;">{{ clinica.nombre if clinica else 'SYSCLIN' }}</span>
                             </a>
-                            <p class="small mb-4" style="line-height:1.6;max-width:320px;">
-                                Sistema de gestión integral para profesionales y consultorios de la salud mental.
-                            </p>
-                            <div class="d-flex gap-3">
+                            <div class="d-flex gap-2">
                                 <a href="javascript:void(0);" class="text-decoration-none" style="color:#a7aeb8;" aria-label="LinkedIn">
-                                    <i class="fab fa-linkedin fs-5" aria-hidden="true"></i></a>
+                                    <i class="fab fa-linkedin" aria-hidden="true"></i></a>
                                 <a href="javascript:void(0);" class="text-decoration-none" style="color:#a7aeb8;" aria-label="Twitter">
-                                    <i class="fab fa-twitter fs-5" aria-hidden="true"></i></a>
+                                    <i class="fab fa-twitter" aria-hidden="true"></i></a>
                                 <a href="javascript:void(0);" class="text-decoration-none" style="color:#a7aeb8;" aria-label="Instagram">
-                                    <i class="fab fa-instagram fs-5" aria-hidden="true"></i></a>
+                                    <i class="fab fa-instagram" aria-hidden="true"></i></a>
                             </div>
                         </div>
 
                         <!-- Columna 2: Soporte & Legal -->
-                        <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                            <h6 class="text-white fw-bold mb-3 text-uppercase" style="font-size:0.85rem;letter-spacing:0.1rem;">Soporte y Legal</h6>
-                            <ul class="list-unstyled mb-0 small" style="line-height:2;">
-                                {# TODO: modulo informacion pendiente de reconstruir (ver app/rutas/legacy/seguridad/informacion) #}
-                                <li><a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none" style="color:#a7aeb8;">armanuramirez16@gmail.com</a></li>
-                            </ul>
+                        <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
+                            {# TODO: modulo informacion pendiente de reconstruir (ver app/rutas/legacy/seguridad/informacion) #}
+                            <a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none small" style="color:#a7aeb8;">armanuramirez16@gmail.com</a>
                         </div>
 
                     </div>
 
-                    <hr class="mt-5 mb-4" style="border-color:rgba(255,255,255,0.1);" />
+                    <hr class="mt-2 mb-2" style="border-color:rgba(255,255,255,0.1);" />
 
-                    <div class="row align-items-center small" style="font-size:0.8rem;">
-                        <div class="col-md-6 mb-2 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
-                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'Sysclin' }} {{ current_year if current_year else '2026' }}</span>
-                            <span class="mx-2 d-none d-md-inline" style="opacity:0.3;">|</span>
-                            <span>Desarrollado por <strong style="color:rgba(255,255,255,0.6);letter-spacing:0.5px;">ÑANDESYS</strong></span>
+                    <div class="row align-items-center small" style="font-size:0.75rem;">
+                        <div class="col-md-6 mb-1 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
+                            <span class="me-2">Copyright &copy; {{ clinica.nombre if clinica else 'SYSCLIN' }} {{ current_year if current_year else '2026' }}</span>
                         </div>
                         <div class="col-md-6 text-center text-md-end">
                             Versión {{ app_version if app_version else '2.1.0' }}
                         </div>
                     </div>
-                    <div class="row mt-2">
-                        <div class="col-12 text-center small" style="font-size:0.75rem;opacity:0.6;">
+                    <div class="row mt-1">
+                        <div class="col-12 text-center small" style="font-size:0.7rem;opacity:0.6;">
                             Proyecto educativo (trabajo de tesis de grado) — no apto para producción. Datos de prueba ficticios.
                         </div>
                     </div>
@@ -498,8 +558,23 @@
     <!-- SweetAlert2 -->
     <script src="{{ url_for('static', filename='vendor/sweetalert/sweetalert2@11.js') }}"></script>
 
+    <script src="{{ url_for('static', filename='js/moneda.js') }}"></script>
+
     <!-- Feather Icons -->
     <script>feather.replace();</script>
+
+    <!-- Ayuda: carga la guía en el iframe la primera vez que el modal ya está visible
+         (si carga con el modal oculto, el salto a la sección de la pantalla actual no ocurre) -->
+    <script>
+        (function () {
+            const modalAyuda = document.getElementById('modalAyuda');
+            if (!modalAyuda) return;
+            modalAyuda.addEventListener('shown.bs.modal', function () {
+                const iframe = document.getElementById('iframeAyuda');
+                if (!iframe.getAttribute('src')) iframe.setAttribute('src', iframe.dataset.src);
+            });
+        })();
+    </script>
 
     {% block js %}{% endblock %}
 
@@ -512,6 +587,47 @@
                     scrollbars: { theme: 'os-theme-light', autoHide: 'leave', clickScroll: true }
                 });
             }
+        });
+    </script>
+
+    <!-- Buscador del menú (filtro simple sobre las etiquetas ya cargadas del sidebar) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var input = document.getElementById('menuSearchInput');
+            if (!input) return;
+
+            var noResults = document.getElementById('menuSearchNoResults');
+            var groups = document.querySelectorAll('.sidebar-menu > li.nav-item');
+
+            input.addEventListener('input', function () {
+                var q = input.value.trim().toLowerCase();
+                var anyMatch = false;
+
+                groups.forEach(function (groupLi) {
+                    var treeview = groupLi.querySelector(':scope > ul.nav-treeview');
+                    if (!treeview) return;
+
+                    var groupHasMatch = false;
+                    treeview.querySelectorAll(':scope > li.nav-item').forEach(function (itemLi) {
+                        var label = itemLi.querySelector('p');
+                        var text = label ? label.textContent.trim().toLowerCase() : '';
+                        var matches = q === '' || text.indexOf(q) !== -1;
+                        itemLi.style.display = matches ? '' : 'none';
+                        if (matches && q !== '') groupHasMatch = true;
+                    });
+
+                    if (q === '') {
+                        groupLi.style.display = '';
+                        groupLi.classList.remove('menu-open');
+                    } else {
+                        groupLi.style.display = groupHasMatch ? '' : 'none';
+                        groupLi.classList.toggle('menu-open', groupHasMatch);
+                        if (groupHasMatch) anyMatch = true;
+                    }
+                });
+
+                if (noResults) noResults.style.display = (q !== '' && !anyMatch) ? '' : 'none';
+            });
         });
     </script>
 

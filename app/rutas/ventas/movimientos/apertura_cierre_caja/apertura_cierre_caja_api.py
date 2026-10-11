@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 
+from app.core.moneda import get_moneda, redondear
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
 from app.auth.utils.decorators import role_required
 
@@ -90,8 +91,13 @@ def abrirCaja():
     if not id_usuario:
         return jsonify({'success': False, 'error': 'El usuario es obligatorio.'}), 400
 
-    saldo_inicial = data.get('saldo_inicial', 0)
     observaciones = data.get('observaciones')
+
+    try:
+        moneda = get_moneda(data.get('id_moneda'))
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    saldo_inicial = redondear(data.get('saldo_inicial', 0), moneda['decimales_moneda'])
 
     try:
         nuevo_id = AperturaCierreCajaDao().guardarApertura(
@@ -100,6 +106,7 @@ def abrirCaja():
             saldo_inicial=saldo_inicial,
             observaciones=observaciones,
             usuario_creacion=session.get('id_usuario'),
+            id_moneda=moneda['id_moneda'],
         )
         if nuevo_id is None:
             return jsonify({'success': False, 'error': 'No se pudo registrar la apertura.'}), 500

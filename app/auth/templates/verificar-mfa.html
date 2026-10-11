@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Verificación en dos pasos - Sistema Sysclin">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/iconoa.png') }}">
-    <title>Verificación MFA - Sysclin</title>
+    <meta name="description" content="Verificación en dos pasos - Sistema SYSCLIN">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/sys_logo.png') }}">
+    <title>Verificación MFA - SYSCLIN</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,10 +37,18 @@
 
         .card {
             width: 400px;
+            max-width: 92vw;
             background: white;
             border-radius: 1.4rem;
             padding: 2.6rem 2.4rem;
             box-shadow: 0 60px 90px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 1.8rem 1.4rem;
+                border-radius: 1rem;
+            }
         }
 
         .eyebrow {

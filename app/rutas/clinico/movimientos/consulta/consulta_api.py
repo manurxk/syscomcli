@@ -122,7 +122,8 @@ def updateConsulta(id_consulta):
     data = request.get_json() or {}
     dao = ConsultaDao()
 
-    if not dao.getConsultaById(id_consulta):
+    consulta = dao.getConsultaById(id_consulta)
+    if not consulta:
         return jsonify({'success': False, 'error': 'No se encontró la consulta con el ID proporcionado.'}), 404
 
     campos_requeridos = ['consulta_fecha', 'consulta_motivo', 'consulta_estado']
@@ -131,7 +132,17 @@ def updateConsulta(id_consulta):
             return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
 
     try:
-        dao.updateConsulta(id_consulta, data, usuario_modificacion=session.get('id_usuario'))
+        usuario = session.get('id_usuario')
+        dao.updateConsulta(id_consulta, data, usuario_modificacion=usuario)
+
+        # Finalizar la consulta completa la cita de origen (el inverso ya existe en
+        # CitaDao.cambiarEstadoCita: completar la cita finaliza la consulta).
+        if data['consulta_estado'] == 'FINALIZADA':
+            cita = CitaDao().getCitaById(consulta['id_cita'])
+            if cita and cita['cod_estado_cita'] not in ('COMPLETADA', 'CANCELADA', 'AUSENTE'):
+                CitaDao().cambiarEstadoCita(consulta['id_cita'], 'COMPLETADA', usuario_modificacion=usuario,
+                                            motivo='Consulta finalizada')
+
         return jsonify({'success': True, 'data': {'id_consulta': id_consulta}, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al actualizar consulta: {str(e)}", exc_info=True)

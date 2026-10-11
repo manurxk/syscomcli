@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Auditoría de Ventas - Sysclin{% endblock %}
+{% block title %}Auditoría de Ventas - SYSCLIN{% endblock %}
 
 {% block contenido %}
 <style>
@@ -73,11 +73,11 @@
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb mb-0" style="background:transparent; padding:0;">
                     <li class="breadcrumb-item">
-                        <a href="{{ url_for('dashboard.index') }}"
+                        <a href="{{ url_for('login.inicio') }}"
                             class="text-white-50 text-decoration-none">Dashboard</a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ url_for('reporte.reportes_index') }}"
+                        <a href="{{ url_for('reporte.reporteIndex') }}"
                             class="text-white-50 text-decoration-none">Reportes</a>
                     </li>
                     <li class="breadcrumb-item active text-white-50" aria-current="page">Auditoría de Ventas</li>
@@ -101,7 +101,7 @@
                         <i data-feather="file-text" style="width:14px;height:14px;"></i>
                         Descargar PDF
                     </button>
-                    <a href="{{ url_for('reporte.reportes_index') }}"
+                    <a href="{{ url_for('reporte.reporteIndex') }}"
                         class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1">
                         <i data-feather="arrow-left" style="width:14px;height:14px;"></i>
                         Volver
@@ -266,13 +266,16 @@
         const d = document.getElementById('fecha_desde').value;
         const h = document.getElementById('fecha_hasta').value;
         const mp = document.getElementById('metodo_pago').value;
-        const url = `{{ url_for('reporte_api.reporte_ventas_pdf') }}?fecha_desde=${d}&fecha_hasta=${h}&metodo_pago=${mp}`;
+        const url = `{{ url_for('reporteapi.reporte_ventas_pdf') }}?fecha_desde=${d}&fecha_hasta=${h}&metodo_pago=${mp}`;
         window.open(url, '_blank');
     }
 
-    function actualizarKPIs(totales) {
+    function actualizarKPIs(totalesPorMoneda) {
+        // totalesPorMoneda es una lista: un grupo de 4 tarjetas por cada moneda
+        // presente en el periodo (nunca se suman montos de monedas distintas).
         const container = document.getElementById('kpiContainer');
-        container.innerHTML = `
+        container.innerHTML = (totalesPorMoneda || []).map(totales => `
+            <div class="col-12"><small class="text-muted fw-bold">${totales.cod_moneda}</small></div>
             <div class="col-xl-3 col-md-6">
                 <div class="card kpi-card border-0 shadow-sm h-100 report-card">
                     <div class="kpi-accent bg-danger"></div>
@@ -293,7 +296,7 @@
                     <div class="card-body d-flex align-items-center gap-3 ps-4">
                         <div class="flex-grow-1">
                             <p class="text-uppercase text-danger fw-semibold mb-1" style="font-size:.7rem; letter-spacing:.08em;">Monto Gravado</p>
-                            <p class="mb-0 fw-bold" style="font-size:1.25rem;">₲ ${totales.total_gravado_formateado || 0}</p>
+                            <p class="mb-0 fw-bold" style="font-size:1.25rem;">${totales.simbolo_moneda} ${totales.total_gravado_formateado || 0}</p>
                         </div>
                         <div class="kpi-icon-wrap bg-danger bg-opacity-10 text-danger">
                             <i data-feather="tag" style="width:18px;height:18px;"></i>
@@ -307,7 +310,7 @@
                     <div class="card-body d-flex align-items-center gap-3 ps-4">
                         <div class="flex-grow-1">
                             <p class="text-uppercase text-warning fw-semibold mb-1" style="font-size:.7rem; letter-spacing:.08em;">IVA Recaudado</p>
-                            <p class="mb-0 fw-bold" style="font-size:1.25rem;">₲ ${totales.total_iva_formateado || 0}</p>
+                            <p class="mb-0 fw-bold" style="font-size:1.25rem;">${totales.simbolo_moneda} ${totales.total_iva_formateado || 0}</p>
                         </div>
                         <div class="kpi-icon-wrap bg-warning bg-opacity-10 text-warning">
                             <i data-feather="percent" style="width:18px;height:18px;"></i>
@@ -321,7 +324,7 @@
                     <div class="card-body d-flex align-items-center gap-3 ps-4">
                         <div class="flex-grow-1">
                             <p class="text-uppercase text-danger fw-semibold mb-1" style="font-size:.7rem; letter-spacing:.08em;">Venta General Total</p>
-                            <p class="mb-0 fw-bold text-danger" style="font-size:1.25rem;">₲ ${totales.total_general_formateado || 0}</p>
+                            <p class="mb-0 fw-bold text-danger" style="font-size:1.25rem;">${totales.simbolo_moneda} ${totales.total_general_formateado || 0}</p>
                         </div>
                         <div class="kpi-icon-wrap bg-danger bg-opacity-10 text-danger">
                             <i data-feather="dollar-sign" style="width:18px;height:18px;"></i>
@@ -329,7 +332,7 @@
                     </div>
                 </div>
             </div>
-        `;
+        `).join('');
     }
 
     function actualizarTabla(datos) {
@@ -365,11 +368,15 @@
         const ctx = document.getElementById('ventasChart');
         if(chartInstance) chartInstance.destroy();
         
-        // Sobrescribir colores para el tema rojo
-        if (chartData.datasets && chartData.datasets.length > 0) {
+        // Con una sola moneda en el periodo se usa el tema rojo institucional;
+        // con mas de una, cada moneda conserva su propio color (asignado en el backend)
+        // para poder distinguirlas -- pintarlas todas de rojo las confundiria.
+        if (chartData.datasets && chartData.datasets.length === 1) {
             chartData.datasets[0].backgroundColor = '#dc3545';
             chartData.datasets[0].borderColor = '#dc3545';
             chartData.datasets[0].borderRadius = 4;
+        } else {
+            (chartData.datasets || []).forEach(ds => { ds.borderRadius = 4; });
         }
 
         chartInstance = new Chart(ctx, {
@@ -404,7 +411,10 @@
         const ctx = document.getElementById('metodoPagoChart');
         if(pieChartInstance) pieChartInstance.destroy();
         
-        const labels = datos.map(d => d.metodo_pago);
+        // Si hay mas de una moneda en el periodo, se aclara junto al metodo de pago
+        // (ej. "CONTADO (USD)") para no confundir sectores con el mismo nombre.
+        const hayMultiplesMonedas = new Set(datos.map(d => d.cod_moneda)).size > 1;
+        const labels = datos.map(d => hayMultiplesMonedas ? `${d.metodo_pago} (${d.cod_moneda})` : d.metodo_pago);
         const totales = datos.map(d => d.total);
         
         pieChartInstance = new Chart(ctx, {

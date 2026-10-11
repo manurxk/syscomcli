@@ -52,6 +52,19 @@ Registrar Paciente
             <input class="form-control" id="txtCedula" type="text" placeholder="Ingrese el número de cédula" required>
           </div>
         </div>
+        <div class="row gx-3 mb-3">
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1" for="id_tipo_documento">Documento para Facturación</label>
+            <select class="form-select" id="id_tipo_documento">
+              <option value="CI">Cédula de Identidad</option>
+              <option value="RUC">RUC</option>
+            </select>
+          </div>
+          <div class="col-md-4" id="grupoRuc" style="display:none;">
+            <label class="small mb-1" for="txtRuc">RUC (con dígito verificador)</label>
+            <input class="form-control" id="txtRuc" type="text" placeholder="Ej: 1234567-8">
+          </div>
+        </div>
         <div class="row gx-3">
           <div class="col-md-4 mb-3 mb-md-0">
             <label class="small mb-1" for="txtFecha_nacimiento">Fecha de Nacimiento <span class="text-danger">*</span></label>
@@ -255,6 +268,8 @@ Registrar Paciente
             $('#txtNombre').val(data.nombre);
             $('#txtApellido').val(data.apellido);
             $('#txtCedula').val(data.cedula);
+            $('#id_tipo_documento').val(data.tipo_documento || 'CI').trigger('change');
+            $('#txtRuc').val(data.ruc);
             $('#txtFecha_nacimiento').val(data.fecha_nacimiento).trigger('change');
             $('#txtTelefono').val(data.telefono);
             $('#txtCorreo').val(data.correo);
@@ -334,6 +349,19 @@ Registrar Paciente
           });
         });
       });
+    };
+
+    // ==========================================
+    // TIPO DE DOCUMENTO (CI / RUC)
+    // ==========================================
+    const initTipoDocumento = () => {
+      $('#id_tipo_documento').on('change', function () {
+        const esRuc = $(this).val() === 'RUC';
+        $('#grupoRuc').toggle(esRuc);
+        $('#txtRuc').prop('required', esRuc);
+        if (!esRuc) $('#txtRuc').val('');
+      });
+      $('#id_tipo_documento').trigger('change');
     };
 
     // ==========================================
@@ -459,6 +487,8 @@ Registrar Paciente
           nombre: $('#txtNombre').val(),
           apellido: $('#txtApellido').val(),
           cedula: $('#txtCedula').val(),
+          tipo_documento: $('#id_tipo_documento').val(),
+          ruc: $('#id_tipo_documento').val() === 'RUC' ? $('#txtRuc').val() : null,
           fecha_nacimiento: $('#txtFecha_nacimiento').val(),
           telefono: $('#txtTelefono').val(),
           correo: $('#txtCorreo').val() || null,
@@ -518,6 +548,7 @@ Registrar Paciente
 
     $(document).ready(function () {
       initUI();
+      initTipoDocumento();
       initCityAutocomplete();
       initAgeLogic();
       initHistoryPreview();

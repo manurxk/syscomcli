@@ -1,6 +1,10 @@
 from datetime import datetime
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
+from decimal import Decimal
+
+from app.core.moneda import redondear
+from app.dao.ventas.movimientos.cuenta_cobrar.CuentaCobrarDao import CuentaCobrarDao
 
 
 class NotaDebitoDao(BaseDAO):
@@ -21,6 +25,7 @@ class NotaDebitoDao(BaseDAO):
                 nd.observaciones,
                 nd.est_nota_debito,
                 f.factura_numero,
+                f.id_moneda, mo.cod_moneda, mo.simbolo_moneda, mo.decimales_moneda,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 pp.per_cedula AS paciente_cedula,
                 pac.pac_historia_clinica,
@@ -31,6 +36,7 @@ class NotaDebitoDao(BaseDAO):
             JOIN facturas f           ON nd.id_factura          = f.id_factura
             JOIN pacientes pac        ON f.id_paciente           = pac.id_paciente
             JOIN personas pp          ON pac.id_persona          = pp.id_persona
+            JOIN monedas mo           ON f.id_moneda           = mo.id_moneda
             LEFT JOIN tipos_comprobantes tc ON nd.id_tipo_comprobante = tc.id_tipo_comprobante
             ORDER BY nd.fecha_nota_debito DESC, nd.id_nota_debito DESC
         """
@@ -52,6 +58,7 @@ class NotaDebitoDao(BaseDAO):
                 nd.usuario_creacion,
                 f.factura_numero,
                 f.factura_total,
+                f.id_moneda, mo.cod_moneda, mo.simbolo_moneda, mo.decimales_moneda,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 pp.per_cedula AS paciente_cedula,
                 pac.pac_historia_clinica,
@@ -62,6 +69,7 @@ class NotaDebitoDao(BaseDAO):
             JOIN facturas f           ON nd.id_factura          = f.id_factura
             JOIN pacientes pac        ON f.id_paciente           = pac.id_paciente
             JOIN personas pp          ON pac.id_persona          = pp.id_persona
+            JOIN monedas mo           ON f.id_moneda           = mo.id_moneda
             LEFT JOIN tipos_comprobantes tc ON nd.id_tipo_comprobante = tc.id_tipo_comprobante
             WHERE nd.id_nota_debito = %s
         """
@@ -111,11 +119,20 @@ class NotaDebitoDao(BaseDAO):
         def _op(cur):
             numero = self._generarNumero(cur)
 
+            cur.execute("SELECT id_moneda, decimales_moneda FROM facturas f JOIN monedas m USING(id_moneda) WHERE f.id_factura = %s", (data['id_factura'],))
+            fila_moneda = cur.fetchone()
+            if not fila_moneda:
+                raise ValueError('La factura indicada no existe.')
+            id_moneda, decimales = fila_moneda
+
             monto_total = sum(
-                int(d.get('monto_total') or 0) or
-                int(d.get('item_cantidad', 1)) * int(d.get('item_precio_unitario', 0))
+                redondear(d.get('monto_total') or 0, decimales) or
+                redondear(Decimal(str(d.get('item_cantidad', 1))) * Decimal(str(d.get('item_precio_unitario', 0))), decimales)
                 for d in detalles
             )
+
+            # Suma el cargo a la deuda de la factura
+            CuentaCobrarDao().ajustarPorNotaEnTransaccion(cur, data['id_factura'], monto_total, usuario_creacion)
 
             cur.execute("""
                 INSERT INTO notas_debito(
@@ -140,8 +157,8 @@ class NotaDebitoDao(BaseDAO):
             id_nd = cur.fetchone()[0]
 
             for d in detalles:
-                mt = int(d.get('monto_total') or 0) or (
-                    int(d.get('item_cantidad', 1)) * int(d.get('item_precio_unitario', 0))
+                mt = redondear(d.get('monto_total') or 0, decimales) or (
+                    redondear(Decimal(str(d.get('item_cantidad', 1))) * Decimal(str(d.get('item_precio_unitario', 0))), decimales)
                 )
                 cur.execute("""
                     INSERT INTO nota_debito_detalle(
@@ -171,9 +188,9 @@ class NotaDebitoDao(BaseDAO):
                     libro_fecha, tipo_comprobante, numero_comprobante,
                     id_paciente, id_factura, id_nota_debito,
                     monto_gravado, monto_exento, monto_iva, monto_total,
-                    numero_timbrado, usuario_creacion
+                    numero_timbrado, usuario_creacion, id_moneda
                 )
-                VALUES (%s, 'NOTA_DEBITO', %s, %s, %s, %s, %s, 0, 0, %s, %s, %s)
+                VALUES (%s, 'NOTA_DEBITO', %s, %s, %s, %s, %s, 0, 0, %s, %s, %s, %s)
             """, (
                 data.get('fecha_nota_debito') or datetime.now().date(),
                 numero,
@@ -184,6 +201,7 @@ class NotaDebitoDao(BaseDAO):
                 monto_total,
                 num_tim,
                 usuario_creacion,
+                id_moneda,
             ))
 
             app.logger.info(f"Nota de débito creada: {numero} (ID={id_nd})")
@@ -192,15 +210,20 @@ class NotaDebitoDao(BaseDAO):
         return self.execute_transaction(_op)
 
     def anular(self, id_nota_debito, usuario=None):
-        filas = self.execute_query(
-            """
-            UPDATE notas_debito
-            SET est_nota_debito = 'ANULADA',
-                fecha_modificacion = CURRENT_TIMESTAMP,
-                usuario_modificacion = %s
-            WHERE id_nota_debito = %s AND est_nota_debito != 'ANULADA'
-            """,
-            (usuario, id_nota_debito),
-            commit=True
-        )
-        return filas > 0
+        """Anula la nota y quita de la cuenta a cobrar el cargo que había sumado."""
+        def _op(cur):
+            cur.execute("""
+                UPDATE notas_debito
+                SET est_nota_debito = 'ANULADA',
+                    fecha_modificacion = CURRENT_TIMESTAMP,
+                    usuario_modificacion = %s
+                WHERE id_nota_debito = %s AND est_nota_debito != 'ANULADA'
+                RETURNING id_factura, monto_total
+            """, (usuario, id_nota_debito))
+            fila = cur.fetchone()
+            if not fila:
+                return False
+            CuentaCobrarDao().ajustarPorNotaEnTransaccion(cur, fila[0], -fila[1], usuario)
+            return True
+
+        return self.execute_transaction(_op)

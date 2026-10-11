@@ -98,27 +98,31 @@
         <p><strong>Periodo:</strong> {{ fecha_desde }} al {{ fecha_hasta }} &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; <strong>Condición de Venta:</strong> {{ metodo_pago }}</p>
     </div>
 
-    <!-- KPIs Rápidos -->
+    <!-- KPIs Rápidos: un grupo de 4 por cada moneda presente en el periodo
+         (nunca se suman montos de monedas distintas) -->
+    {% for t in totales %}
+    <p style="font-size: 9px; font-weight: bold; margin: 4px 0 2px;">{{ t.cod_moneda }}</p>
     <table class="kpi-section">
         <tr>
             <td class="kpi-box" style="border-color: #0d6efd;">
                 <p class="kpi-title">Total Comprobantes</p>
-                <p class="kpi-value">{{ totales.cantidad_comprobantes }}</p>
+                <p class="kpi-value">{{ t.cantidad_comprobantes }}</p>
             </td>
             <td class="kpi-box" style="border-color: #0dcaf0;">
-                <p class="kpi-title">Monto Gravado (₲)</p>
-                <p class="kpi-value">{{ totales.total_gravado_formateado }}</p>
+                <p class="kpi-title">Monto Gravado ({{ t.simbolo_moneda }})</p>
+                <p class="kpi-value">{{ t.total_gravado_formateado }}</p>
             </td>
             <td class="kpi-box" style="border-color: #ffc107;">
-                <p class="kpi-title">Total IVA (₲)</p>
-                <p class="kpi-value">{{ totales.total_iva_formateado }}</p>
+                <p class="kpi-title">Total IVA ({{ t.simbolo_moneda }})</p>
+                <p class="kpi-value">{{ t.total_iva_formateado }}</p>
             </td>
             <td class="kpi-box" style="border-color: #198754;">
-                <p class="kpi-title">Venta Total (₲)</p>
-                <p class="kpi-value">{{ totales.total_general_formateado }}</p>
+                <p class="kpi-title">Venta Total ({{ t.simbolo_moneda }})</p>
+                <p class="kpi-value">{{ t.total_general_formateado }}</p>
             </td>
         </tr>
     </table>
+    {% endfor %}
 
     <!-- Tabla Detalle -->
     <table class="data-table">
@@ -129,9 +133,9 @@
                 <th style="width: 25%;">Cliente</th>
                 <th class="align-center" style="width: 10%;">RUC/CI</th>
                 <th class="align-center" style="width: 10%;">Condición</th>
-                <th class="align-right" style="width: 11%;">Gravado (₲)</th>
-                <th class="align-right" style="width: 11%;">IVA (₲)</th>
-                <th class="align-right" style="width: 11%;">Total (₲)</th>
+                <th class="align-right" style="width: 11%;">Gravado</th>
+                <th class="align-right" style="width: 11%;">IVA</th>
+                <th class="align-right" style="width: 11%;">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -142,9 +146,9 @@
                 <td>{{ fila.nombre_cliente }}</td>
                 <td class="align-center">{{ fila.ruc_cliente }}</td>
                 <td class="align-center">{{ fila.metodo_pago }}</td>
-                <td class="align-right">{{ fila.gravado_formateado }}</td>
-                <td class="align-right">{{ fila.iva_formateado }}</td>
-                <td class="align-right" style="font-weight: bold;">{{ fila.total_formateado }}</td>
+                <td class="align-right">{{ fila.simbolo_moneda }} {{ fila.gravado_formateado }}</td>
+                <td class="align-right">{{ fila.simbolo_moneda }} {{ fila.iva_formateado }}</td>
+                <td class="align-right" style="font-weight: bold;">{{ fila.simbolo_moneda }} {{ fila.total_formateado }}</td>
             </tr>
             {% else %}
             <tr>
@@ -153,12 +157,14 @@
             {% endfor %}
         </tbody>
         <tfoot>
+            {% for t in totales %}
             <tr class="row-total">
-                <td colspan="5" class="align-right">TOTALES ACUMULADOS</td>
-                <td class="align-right">{{ totales.total_gravado_formateado }}</td>
-                <td class="align-right">{{ totales.total_iva_formateado }}</td>
-                <td class="align-right">{{ totales.total_general_formateado }}</td>
+                <td colspan="5" class="align-right">TOTALES ACUMULADOS ({{ t.cod_moneda }})</td>
+                <td class="align-right">{{ t.simbolo_moneda }} {{ t.total_gravado_formateado }}</td>
+                <td class="align-right">{{ t.simbolo_moneda }} {{ t.total_iva_formateado }}</td>
+                <td class="align-right">{{ t.simbolo_moneda }} {{ t.total_general_formateado }}</td>
             </tr>
+            {% endfor %}
         </tfoot>
     </table>
 

@@ -37,41 +37,9 @@
     </div>
   </div>
 
-  <!-- Tarjetas de totales -->
-  <div class="row gx-3 mb-4" id="bloqueResumen" style="display:none !important;">
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card border-start-primary shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Total Registros</div>
-          <div class="fw-bold fs-5" id="resTotalReg">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card border-start-success shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Total Gravado</div>
-          <div class="fw-bold fs-5 text-success" id="resTotalGrav">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card border-start-info shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Total IVA</div>
-          <div class="fw-bold fs-5 text-info" id="resTotalIva">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card border-start-warning shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Total General</div>
-          <div class="fw-bold fs-5 text-warning" id="resTotalTotal">—</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Tarjetas de totales: un bloque de 4 tarjetas por cada moneda presente en el periodo filtrado
+       (nunca se suman montos de monedas distintas entre si) -->
+  <div id="bloqueResumen" class="d-none"></div>
 
   <!-- Resumen por tipo -->
   <div class="card shadow-sm mb-4 d-none" id="cardResumenTipo">
@@ -134,7 +102,7 @@
 const API = '/api/v1/libro-ventas';
 let tbl;
 
-function gs(v) { return v !== null && v !== undefined ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—'; }
+function gs(v, moneda) { return v !== null && v !== undefined ? formatMoney(v, moneda || {decimales_moneda:0, simbolo_moneda:'Gs.'}) : '—'; }
 
 document.addEventListener('DOMContentLoaded', () => {
   tbl = $('#tbl').DataTable({
@@ -151,10 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
       { data: 'numero_comprobante',  defaultContent: '—' },
       { data: 'paciente_nombre',     defaultContent: '—' },
       { data: 'paciente_cedula',     defaultContent: '—' },
-      { data: 'monto_gravado',  className: 'text-end', render: gs },
-      { data: 'monto_exento',   className: 'text-end', render: gs },
-      { data: 'monto_iva',      className: 'text-end', render: gs },
-      { data: 'monto_total',    className: 'text-end fw-bold', render: gs },
+      { data: 'monto_gravado',  className: 'text-end', render: (v,t,row) => gs(v, row) },
+      { data: 'monto_exento',   className: 'text-end', render: (v,t,row) => gs(v, row) },
+      { data: 'monto_iva',      className: 'text-end', render: (v,t,row) => gs(v, row) },
+      { data: 'monto_total',    className: 'text-end fw-bold', render: (v,t,row) => gs(v, row) },
       { data: 'numero_timbrado', defaultContent: '—' },
       { data: 'codigo_sifen',    defaultContent: '—', render: v => v ? `<span class="small text-muted">${v.substring(0, 12)}…</span>` : '—' },
     ]
@@ -180,14 +148,37 @@ async function cargar() {
 
   tbl.clear().rows.add(j.data || []).draw();
 
-  const totales = j.totales || {};
-  document.getElementById('resTotalReg').textContent   = totales.total_registros   || 0;
-  document.getElementById('resTotalGrav').textContent  = gs(totales.total_gravado);
-  document.getElementById('resTotalIva').textContent   = gs(totales.total_iva);
-  document.getElementById('resTotalTotal').textContent = gs(totales.total_total);
-  document.getElementById('bloqueResumen').style.removeProperty('display');
-  document.getElementById('bloqueResumen').style.display = '';
-  document.getElementById('bloqueResumen').classList.remove('d-none');
+  const totalesPorMoneda = j.totales || [];
+  const bloque = document.getElementById('bloqueResumen');
+  bloque.innerHTML = totalesPorMoneda.map(t => `
+    <div class="row gx-3 mb-2">
+      <div class="col-12"><small class="text-muted fw-bold">${t.cod_moneda}</small></div>
+      <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-start-primary shadow-sm h-100"><div class="card-body">
+          <div class="small text-muted mb-1">Total Registros</div>
+          <div class="fw-bold fs-5">${t.total_registros}</div>
+        </div></div>
+      </div>
+      <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-start-success shadow-sm h-100"><div class="card-body">
+          <div class="small text-muted mb-1">Total Gravado</div>
+          <div class="fw-bold fs-5 text-success">${gs(t.total_gravado, t)}</div>
+        </div></div>
+      </div>
+      <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-start-info shadow-sm h-100"><div class="card-body">
+          <div class="small text-muted mb-1">Total IVA</div>
+          <div class="fw-bold fs-5 text-info">${gs(t.total_iva, t)}</div>
+        </div></div>
+      </div>
+      <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-start-warning shadow-sm h-100"><div class="card-body">
+          <div class="small text-muted mb-1">Total General</div>
+          <div class="fw-bold fs-5 text-warning">${gs(t.total_total, t)}</div>
+        </div></div>
+      </div>
+    </div>`).join('');
+  bloque.classList.toggle('d-none', !totalesPorMoneda.length);
 
   const tbody = document.querySelector('#tblResumen tbody');
   tbody.innerHTML = '';
@@ -195,12 +186,12 @@ async function cargar() {
     const cls = res.tipo_comprobante === 'FACTURA' ? 'primary' : res.tipo_comprobante === 'NOTA_CREDITO' ? 'success' : 'warning';
     tbody.innerHTML += `
       <tr>
-        <td><span class="badge bg-${cls}">${res.tipo_comprobante}</span></td>
+        <td><span class="badge bg-${cls}">${res.tipo_comprobante}</span> <span class="small text-muted">${res.cod_moneda}</span></td>
         <td class="text-center">${res.cantidad}</td>
-        <td class="text-end">${gs(res.total_gravado)}</td>
-        <td class="text-end">${gs(res.total_exento)}</td>
-        <td class="text-end">${gs(res.total_iva)}</td>
-        <td class="text-end fw-bold">${gs(res.total_total)}</td>
+        <td class="text-end">${gs(res.total_gravado, res)}</td>
+        <td class="text-end">${gs(res.total_exento, res)}</td>
+        <td class="text-end">${gs(res.total_iva, res)}</td>
+        <td class="text-end fw-bold">${gs(res.total_total, res)}</td>
       </tr>`;
   });
   document.getElementById('cardResumenTipo').classList.toggle('d-none', !(j.resumen || []).length);

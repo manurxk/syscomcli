@@ -2,16 +2,18 @@ from flask import Blueprint, request, jsonify, send_file
 from datetime import datetime, date
 import io
 from app.auth.utils.decorators import role_required
-from app.dao.modulos.reporte.ReporteDao import ReporteDao
-from app.services.ReporteService import ReporteService
+from app.dao.reporte.ReporteDao import ReporteDao
+from app.services.reporte_service import ReporteService
 
-reporte_api = Blueprint('reporte_api', __name__)
+reporteapi = Blueprint('reporteapi', __name__)
 
-# Lista de roles autorizados
-ROLES_REPORTES = ['SUPERADMINISTRADOR', 'ADMINISTRADOR', 'ADMIN', 'VENTAS', 'RECEPCIONISTA', 'ESPECIALISTA', 'CAJA']
+# Roles autorizados por reporte (ver docs_reestructuracion/sql_nueva_bd/seeds/04_seed_roles.sql)
+ROLES_VENTAS = ('ADMINISTRADOR', 'SUPERADMIN', 'VENTAS')
+ROLES_AGENDAMIENTO = ('ADMINISTRADOR', 'SUPERADMIN', 'RECEPCION')
+ROLES_CONSULTORIO = ('ADMINISTRADOR', 'SUPERADMIN', 'CLINICO')
 
-@reporte_api.route('/reporte/ventas-data', methods=['GET'])
-@role_required(*ROLES_REPORTES)
+@reporteapi.route('/reporte/ventas-data', methods=['GET'])
+@role_required(*ROLES_VENTAS)
 def api_ventas_data():
     """API para obtener datos del reporte de ventas para UI en formato JSON."""
     fecha_desde = request.args.get('fecha_desde')
@@ -30,15 +32,18 @@ def api_ventas_data():
     
     reporte_service = ReporteService()
     chart_data = reporte_service.procesar_ventas_para_grafico(data)
-    totales = reporte_service.calcular_totales_ventas(data)
-    
+    totales = reporte_service.calcular_totales_ventas(data)  # lista: un total por moneda
+
     for d in datos_detalle:
-        d['gravado_formateado'] = reporte_service._formatear_moneda(d.get('gravado', 0))
-        d['iva_formateado'] = reporte_service._formatear_moneda(d.get('iva', 0))
-        d['total_formateado'] = reporte_service._formatear_moneda(d.get('total', 0))
-        
-    for kpi in list(totales.keys()):
-        totales[f'{kpi}_formateado'] = reporte_service._formatear_moneda(totales[kpi])
+        dec = d.get('decimales_moneda', 0)
+        d['gravado_formateado'] = reporte_service._formatear_moneda(d.get('gravado', 0), dec)
+        d['iva_formateado'] = reporte_service._formatear_moneda(d.get('iva', 0), dec)
+        d['total_formateado'] = reporte_service._formatear_moneda(d.get('total', 0), dec)
+
+    for t in totales:
+        dec = t.get('decimales_moneda', 0)
+        for kpi in ('cantidad_comprobantes', 'total_gravado', 'total_iva', 'total_general'):
+            t[f'{kpi}_formateado'] = reporte_service._formatear_moneda(t[kpi], dec)
     
     return jsonify({
         "success": True,
@@ -49,8 +54,8 @@ def api_ventas_data():
         "datos_metodo_pago": datos_metodo_pago
     })
 
-@reporte_api.route('/reporte/ventas/pdf', methods=['GET'])
-@role_required(*ROLES_REPORTES)
+@reporteapi.route('/reporte/ventas/pdf', methods=['GET'])
+@role_required(*ROLES_VENTAS)
 def reporte_ventas_pdf():
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')
@@ -76,8 +81,8 @@ def reporte_ventas_pdf():
         download_name=f'Reporte_Ventas_{fecha_desde}_al_{fecha_hasta}.pdf'
     )
 
-@reporte_api.route('/reporte/agendamiento-data', methods=['GET'])
-@role_required(*ROLES_REPORTES)
+@reporteapi.route('/reporte/agendamiento-data', methods=['GET'])
+@role_required(*ROLES_AGENDAMIENTO)
 def api_agendamiento_data():
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')
@@ -111,8 +116,8 @@ def api_agendamiento_data():
         "datos_diarios": datos_diarios
     })
 
-@reporte_api.route('/reporte/agendamiento/pdf', methods=['GET'])
-@role_required(*ROLES_REPORTES)
+@reporteapi.route('/reporte/agendamiento/pdf', methods=['GET'])
+@role_required(*ROLES_AGENDAMIENTO)
 def reporte_agendamiento_pdf():
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')
@@ -146,8 +151,8 @@ def reporte_agendamiento_pdf():
         download_name=f'Reporte_Agendamiento_{fecha_desde}_al_{fecha_hasta}.pdf'
     )
 
-@reporte_api.route('/reporte/consultorio-data', methods=['GET'])
-@role_required(*ROLES_REPORTES)
+@reporteapi.route('/reporte/consultorio-data', methods=['GET'])
+@role_required(*ROLES_CONSULTORIO)
 def api_consultorio_data():
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')
@@ -184,8 +189,8 @@ def api_consultorio_data():
         "top_diagnosticos": top_diagnosticos
     })
 
-@reporte_api.route('/reporte/consultorio/pdf', methods=['GET'])
-@role_required(*ROLES_REPORTES)
+@reporteapi.route('/reporte/consultorio/pdf', methods=['GET'])
+@role_required(*ROLES_CONSULTORIO)
 def reporte_consultorio_pdf():
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')

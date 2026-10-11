@@ -1,7 +1,9 @@
 from datetime import datetime
+from decimal import Decimal
 
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
+from app.core.moneda import get_moneda, redondear
 
 
 class CobranzaDao(BaseDAO):
@@ -19,6 +21,7 @@ class CobranzaDao(BaseDAO):
                 c.id_factura,
                 c.id_caja,
                 c.monto_cobrado,
+                c.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 c.observaciones,
                 c.est_cobranza,
                 cc.cuenta_numero,
@@ -34,6 +37,7 @@ class CobranzaDao(BaseDAO):
             JOIN pacientes pac     ON cc.id_paciente       = pac.id_paciente
             JOIN personas pp       ON pac.id_persona       = pp.id_persona
             JOIN cajas caja        ON c.id_caja            = caja.id_caja
+            JOIN monedas m         ON c.id_moneda          = m.id_moneda
             ORDER BY c.fecha_cobranza DESC, c.id_cobranza DESC
         """
         return self.execute_query(sql)
@@ -47,6 +51,7 @@ class CobranzaDao(BaseDAO):
                 c.id_factura,
                 c.id_caja,
                 c.monto_cobrado,
+                c.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 c.observaciones,
                 c.est_cobranza,
                 c.usuario_creacion,
@@ -68,6 +73,7 @@ class CobranzaDao(BaseDAO):
             JOIN pacientes pac     ON cc.id_paciente       = pac.id_paciente
             JOIN personas pp       ON pac.id_persona       = pp.id_persona
             JOIN cajas caja        ON c.id_caja            = caja.id_caja
+            JOIN monedas m         ON c.id_moneda          = m.id_moneda
             WHERE c.id_cobranza = %s
         """
         return self.execute_query_one(sql, (id_cobranza,))
@@ -137,17 +143,23 @@ class CobranzaDao(BaseDAO):
         return f'COB-{año}-{mes}-{siguiente:04d}'
 
     def _verificarCajaAbierta(self, cur, id_caja):
-        """Lanza ValueError si no hay apertura activa para la caja indicada."""
+        """Devuelve el id_moneda de la apertura activa; ValueError si no hay ninguna.
+
+        La moneda del turno la fija la apertura (no la caja: la misma caja
+        fisica puede abrirse en Guaranies un dia y en Dolares otro).
+        """
         cur.execute("""
-            SELECT id_apertura_cierre
+            SELECT id_apertura_cierre, id_moneda
             FROM aperturas_cierre_caja
             WHERE id_caja = %s
               AND tipo_operacion = 'APERTURA'
               AND est_apertura_cierre = 'A'
             LIMIT 1
         """, (id_caja,))
-        if not cur.fetchone():
+        row = cur.fetchone()
+        if not row:
             raise ValueError("No hay caja abierta. Debe abrir la caja antes de registrar una cobranza.")
+        return row[1]
 
     # ── Escritura ─────────────────────────────────────────────────────────
 
@@ -157,6 +169,11 @@ class CobranzaDao(BaseDAO):
         Pasos: verificar caja abierta → generar número → INSERT cobranzas →
                INSERT cobranza_detalle (×N) → UPDATE cuentas_cobrar (montos + estado)
         """
+        return self.execute_transaction(lambda cur: self.registrarEnTransaccion(cur, data, usuario_creacion))
+
+    def registrarEnTransaccion(self, cur, data: dict, usuario_creacion=None):
+        """Mismo registro que guardar(), pero dentro de una transacción ya abierta
+        (lo usa FacturaDao.guardar para cobrar una factura al contado en el mismo paso)."""
         detalles = data.get('detalles') or []
         if not detalles:
             raise ValueError('La cobranza debe tener al menos una forma de cobro.')
@@ -168,98 +185,104 @@ class CobranzaDao(BaseDAO):
         if not all([id_cuenta_cobrar, id_factura, id_caja]):
             raise ValueError('id_cuenta_cobrar, id_factura e id_caja son obligatorios.')
 
-        monto_total = sum(int(d.get('monto_cobrado', 0)) for d in detalles)
+        monto_total_raw = sum(Decimal(str(d.get('monto_cobrado', 0))) for d in detalles)
+        if monto_total_raw <= 0:
+            raise ValueError('El monto total cobrado debe ser mayor a cero.')
+
+        # 1. Verificar caja abierta -> moneda del turno actual
+        moneda_caja = self._verificarCajaAbierta(cur, id_caja)
+
+        # 2. Verificar que la cuenta existe y no está ya cobrada
+        cur.execute(
+            "SELECT monto_pendiente, est_cuenta_cobrar, id_moneda FROM cuentas_cobrar WHERE id_cuenta_cobrar = %s",
+            (id_cuenta_cobrar,)
+        )
+        cta = cur.fetchone()
+        if not cta:
+            raise ValueError('La cuenta a cobrar no existe.')
+        monto_pendiente_actual, estado_actual, id_moneda = cta
+        if estado_actual == 'COBRADA':
+            raise ValueError('Esta cuenta ya está completamente cobrada.')
+
+        # 2b. La apertura de caja activa debe operar en la misma moneda que la cuenta a cobrar
+        if moneda_caja != id_moneda:
+            raise ValueError('La moneda de la caja no coincide con la de la cuenta a cobrar.')
+        decimales = int(get_moneda(id_moneda, cur)['decimales_moneda'])
+        monto_total = redondear(monto_total_raw, decimales)
         if monto_total <= 0:
             raise ValueError('El monto total cobrado debe ser mayor a cero.')
 
-        def _fn(cur):
-            # 1. Verificar caja abierta
-            self._verificarCajaAbierta(cur, id_caja)
+        # 3. Generar número de cobranza
+        numero = self._generarNumero(cur)
 
-            # 2. Verificar que la cuenta existe y no está ya cobrada
-            cur.execute(
-                "SELECT monto_pendiente, est_cuenta_cobrar FROM cuentas_cobrar WHERE id_cuenta_cobrar = %s",
-                (id_cuenta_cobrar,)
+        # 4. INSERT cobranza cabecera
+        cur.execute("""
+            INSERT INTO cobranzas(
+                cobranza_numero, id_cuenta_cobrar, id_factura, id_caja,
+                monto_cobrado, observaciones, est_cobranza, usuario_creacion, id_moneda
             )
-            cta = cur.fetchone()
-            if not cta:
-                raise ValueError('La cuenta a cobrar no existe.')
-            monto_pendiente_actual, estado_actual = cta
-            if estado_actual == 'COBRADA':
-                raise ValueError('Esta cuenta ya está completamente cobrada.')
+            VALUES (%s, %s, %s, %s, %s, %s, 'REGISTRADA', %s, %s)
+            RETURNING id_cobranza
+        """, (
+            numero,
+            id_cuenta_cobrar,
+            id_factura,
+            id_caja,
+            monto_total,
+            data.get('observaciones') or None,
+            usuario_creacion,
+            id_moneda,
+        ))
+        id_cobranza = cur.fetchone()[0]
 
-            # 3. Generar número de cobranza
-            numero = self._generarNumero(cur)
-
-            # 4. INSERT cobranza cabecera
+        # 5. INSERT cobranza_detalle (una fila por forma de cobro)
+        for d in detalles:
             cur.execute("""
-                INSERT INTO cobranzas(
-                    cobranza_numero, id_cuenta_cobrar, id_factura, id_caja,
-                    monto_cobrado, observaciones, est_cobranza, usuario_creacion
+                INSERT INTO cobranza_detalle(
+                    id_cobranza, id_forma_cobro, id_marca_tarjeta,
+                    id_entidad_adherida, id_entidad_emisora,
+                    numero_cheque, numero_tarjeta, numero_cuotas,
+                    monto_cobrado, observaciones
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, 'REGISTRADA', %s)
-                RETURNING id_cobranza
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                numero,
-                id_cuenta_cobrar,
-                id_factura,
-                id_caja,
-                monto_total,
-                data.get('observaciones') or None,
-                usuario_creacion,
-            ))
-            id_cobranza = cur.fetchone()[0]
-
-            # 5. INSERT cobranza_detalle (una fila por forma de cobro)
-            for d in detalles:
-                cur.execute("""
-                    INSERT INTO cobranza_detalle(
-                        id_cobranza, id_forma_cobro, id_marca_tarjeta,
-                        id_entidad_adherida, id_entidad_emisora,
-                        numero_cheque, numero_tarjeta, numero_cuotas,
-                        monto_cobrado, observaciones
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (
-                    id_cobranza,
-                    d['id_forma_cobro'],
-                    d.get('id_marca_tarjeta') or None,
-                    d.get('id_entidad_adherida') or None,
-                    d.get('id_entidad_emisora') or None,
-                    d.get('numero_cheque') or None,
-                    d.get('numero_tarjeta') or None,
-                    d.get('numero_cuotas') or 1,
-                    int(d['monto_cobrado']),
-                    d.get('observaciones') or None,
-                ))
-
-            # 6. Actualizar montos en cuentas_cobrar y recalcular estado
-            cur.execute("""
-                UPDATE cuentas_cobrar
-                SET monto_pagado    = monto_pagado + %s,
-                    monto_pendiente = GREATEST(0, monto_total - (monto_pagado + %s)),
-                    est_cuenta_cobrar = CASE
-                        WHEN (monto_pagado + %s) >= monto_total                             THEN 'COBRADA'
-                        WHEN (monto_pagado + %s) > 0
-                             AND fecha_vencimiento < CURRENT_DATE                           THEN 'PARCIAL'
-                        WHEN (monto_pagado + %s) > 0                                        THEN 'PARCIAL'
-                        WHEN fecha_vencimiento < CURRENT_DATE                               THEN 'VENCIDA'
-                        ELSE 'PENDIENTE'
-                    END,
-                    fecha_modificacion   = CURRENT_TIMESTAMP,
-                    usuario_modificacion = %s
-                WHERE id_cuenta_cobrar = %s
-            """, (
-                monto_total, monto_total,
-                monto_total, monto_total, monto_total,
-                usuario_creacion,
-                id_cuenta_cobrar,
+                id_cobranza,
+                d['id_forma_cobro'],
+                d.get('id_marca_tarjeta') or None,
+                d.get('id_entidad_adherida') or None,
+                d.get('id_entidad_emisora') or None,
+                d.get('numero_cheque') or None,
+                d.get('numero_tarjeta') or None,
+                d.get('numero_cuotas') or 1,
+                redondear(d['monto_cobrado'], decimales),
+                d.get('observaciones') or None,
             ))
 
-            app.logger.info(f"Cobranza creada: {numero} (ID={id_cobranza})")
-            return id_cobranza
+        # 6. Actualizar montos en cuentas_cobrar y recalcular estado
+        cur.execute("""
+            UPDATE cuentas_cobrar
+            SET monto_pagado    = monto_pagado + %s,
+                monto_pendiente = GREATEST(0, monto_total - (monto_pagado + %s)),
+                est_cuenta_cobrar = CASE
+                    WHEN (monto_pagado + %s) >= monto_total                             THEN 'COBRADA'
+                    WHEN (monto_pagado + %s) > 0
+                         AND fecha_vencimiento < CURRENT_DATE                           THEN 'PARCIAL'
+                    WHEN (monto_pagado + %s) > 0                                        THEN 'PARCIAL'
+                    WHEN fecha_vencimiento < CURRENT_DATE                               THEN 'VENCIDA'
+                    ELSE 'PENDIENTE'
+                END,
+                fecha_modificacion   = CURRENT_TIMESTAMP,
+                usuario_modificacion = %s
+            WHERE id_cuenta_cobrar = %s
+        """, (
+            monto_total, monto_total,
+            monto_total, monto_total, monto_total,
+            usuario_creacion,
+            id_cuenta_cobrar,
+        ))
 
-        return self.execute_transaction(_fn)
+        app.logger.info(f"Cobranza creada: {numero} (ID={id_cobranza})")
+        return id_cobranza
 
     def anular(self, id_cobranza, usuario=None):
         """

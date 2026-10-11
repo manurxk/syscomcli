@@ -1,0 +1,78 @@
+# Guaraní translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+# ADVERTENCIA: borrador generado por IA, NO validado por un hablante nativo
+# de guaraní. Revisar cada msgstr antes de considerarlo definitivo.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-06 21:32+0000\n"
+"PO-Revision-Date: 2026-09-06 21:32+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: gn\n"
+"Language-Team: gn <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/auth/templates/login.html:732
+msgid "Sistema de Gestión Clínica"
+msgstr "Clínica Ñangarekoha Sistema"
+
+#: app/auth/templates/login.html:738
+msgid "Cuidado clínico"
+msgstr "Ñeñangareko katupyry"
+
+#: app/auth/templates/login.html:738
+msgid "simple y seguro"
+msgstr "ha'eño ha segura"
+
+#: app/auth/templates/login.html:739
+msgid "Gestionando la salud con tecnología y calidez humana."
+msgstr "Ñañangareko nde rekovére tecnología ha mborayhu reheve."
+
+#: app/auth/templates/login.html:758
+msgid "Acceso al sistema"
+msgstr "Sistema-pe jeike"
+
+#: app/auth/templates/login.html:759
+msgid "Bienvenido de vuelta"
+msgstr "Eguahẽ porãite jey"
+
+#: app/auth/templates/login.html:760
+msgid "Ingresá tus credenciales para continuar"
+msgstr "Emoinge nde rembiapoukapy eku'ejey hağua"
+
+#: app/auth/templates/login.html:790
+msgid "Usuario"
+msgstr "Puruhára"
+
+#: app/auth/templates/login.html:799
+msgid "Nombre de usuario"
+msgstr "Puruhára réra"
+
+#: app/auth/templates/login.html:806
+msgid "Contraseña"
+msgstr "Ñe'ẽñemi"
+
+#: app/auth/templates/login.html:817
+msgid "Mostrar contraseña"
+msgstr "Ehechauka ñe'ẽñemi"
+
+#: app/auth/templates/login.html:830
+msgid "Recordarme"
+msgstr "Che mandu'a"
+
+#: app/auth/templates/login.html:832
+msgid "¿Olvidó su contraseña?"
+msgstr "¿Nde resarái ne ñe'ẽñemígui?"
+
+#: app/auth/templates/login.html:837
+msgid "Ingresar"
+msgstr "Eike"

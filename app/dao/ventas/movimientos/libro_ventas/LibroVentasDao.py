@@ -33,11 +33,13 @@ class LibroVentasDao(BaseDAO):
                 lv.monto_total,
                 lv.codigo_sifen,
                 lv.numero_timbrado,
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 pp.per_cedula AS paciente_cedula
             FROM libro_ventas lv
             LEFT JOIN pacientes pac ON lv.id_paciente = pac.id_paciente
             LEFT JOIN personas  pp  ON pac.id_persona = pp.id_persona
+            JOIN monedas m ON lv.id_moneda = m.id_moneda
             {where}
             ORDER BY lv.libro_fecha DESC, lv.id_libro_ventas DESC
         """
@@ -58,16 +60,18 @@ class LibroVentasDao(BaseDAO):
 
         sql = f"""
             SELECT
-                tipo_comprobante,
-                COUNT(*)           AS cantidad,
-                SUM(monto_gravado) AS total_gravado,
-                SUM(monto_exento)  AS total_exento,
-                SUM(monto_iva)     AS total_iva,
-                SUM(monto_total)   AS total_total
-            FROM libro_ventas
+                lv.tipo_comprobante,
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
+                COUNT(*)              AS cantidad,
+                SUM(lv.monto_gravado) AS total_gravado,
+                SUM(lv.monto_exento)  AS total_exento,
+                SUM(lv.monto_iva)     AS total_iva,
+                SUM(lv.monto_total)   AS total_total
+            FROM libro_ventas lv
+            JOIN monedas m ON lv.id_moneda = m.id_moneda
             {where}
-            GROUP BY tipo_comprobante
-            ORDER BY tipo_comprobante
+            GROUP BY lv.tipo_comprobante, lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
+            ORDER BY lv.tipo_comprobante
         """
         return self.execute_query(sql, tuple(valores) if valores else None)
 
@@ -84,18 +88,21 @@ class LibroVentasDao(BaseDAO):
 
         where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
 
+        # Totales agrupados por moneda: sumar montos de monedas distintas sin
+        # agrupar daria un numero sin sentido (ej. Gs. + USD mezclados).
         sql = f"""
             SELECT
-                COUNT(*)           AS total_registros,
-                SUM(monto_gravado) AS total_gravado,
-                SUM(monto_exento)  AS total_exento,
-                SUM(monto_iva)     AS total_iva,
-                SUM(monto_total)   AS total_total
-            FROM libro_ventas
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
+                COUNT(*)              AS total_registros,
+                SUM(lv.monto_gravado) AS total_gravado,
+                SUM(lv.monto_exento)  AS total_exento,
+                SUM(lv.monto_iva)     AS total_iva,
+                SUM(lv.monto_total)   AS total_total
+            FROM libro_ventas lv
+            JOIN monedas m ON lv.id_moneda = m.id_moneda
             {where}
+            GROUP BY lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
+            ORDER BY m.cod_moneda
         """
-        row = self.execute_query_one(sql, tuple(valores) if valores else None)
-        if row:
-            return {k: (v or 0) for k, v in row.items()}
-        return {'total_registros': 0, 'total_gravado': 0,
-                'total_exento': 0, 'total_iva': 0, 'total_total': 0}
+        filas = self.execute_query(sql, tuple(valores) if valores else None)
+        return [{k: (v if v is not None else 0) for k, v in f.items()} for f in filas]

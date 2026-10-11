@@ -261,10 +261,23 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask
 
-# Documentación interna de la reestructuración (tesis) - no se sube al repo
-docs_reestructuracion/
+# Documentación del proyecto (tesis, base de datos, avances) - no se sube al repo
+documentacion/
+_por_eliminar/
+
+# Backups automáticos de la BD (pg_dump) - no se suben al repo
+/backups/
+
+# Claves GPG del backup: solo la PUBLICA se versiona; la privada nunca entra al repo
+dock/backup/keys/*
+!dock/backup/keys/backup_pub.asc
+
+# Certificados TLS de nginx (privados) y webroot de Let's Encrypt
+dock/nginx/certs/*
+!dock/nginx/certs/.gitkeep
+dock/nginx/acme/*
+!dock/nginx/acme/.gitkeep
 
 # Documentación / notas en Markdown - no se sube al repo (excepto README.md)
-docs/
 *.md
 !README.md

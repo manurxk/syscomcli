@@ -52,7 +52,7 @@
         </h6>
       </div>
       <div class="card-body">
-        <div class="row">
+        <div class="row mb-3">
           <div class="col-md-6">
             <label class="small text-muted">Nombre completo</label>
             <p class="fw-bold mb-0" id="lblPacienteNombre">—</p>
@@ -64,6 +64,24 @@
           <div class="col-md-3">
             <label class="small text-muted">Historia clínica</label>
             <p class="mb-0" id="lblHistoriaClinica">—</p>
+          </div>
+        </div>
+        <div class="row align-items-end">
+          <div class="col-md-3">
+            <label class="small mb-1" for="selTipoDocumentoFactura">Documento para Facturación</label>
+            <select class="form-select form-select-sm" id="selTipoDocumentoFactura">
+              <option value="CI">Cédula de Identidad</option>
+              <option value="RUC">RUC</option>
+            </select>
+          </div>
+          <div class="col-md-4" id="grupoRucFactura" style="display:none;">
+            <label class="small mb-1" for="txtRucFactura">RUC (con dígito verificador)</label>
+            <input class="form-control form-control-sm" id="txtRucFactura" type="text" placeholder="Ej: 1234567-8">
+          </div>
+          <div class="col-md-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnGuardarDocumentoFiscal">
+              Guardar documento
+            </button>
           </div>
         </div>
       </div>
@@ -125,6 +143,65 @@
           <div class="col-md-4 mb-3">
             <label class="fw-semibold">Observaciones</label>
             <input type="text" class="form-control" id="txtObservaciones">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cobro (solo factura al contado: se cobra en el acto en una caja abierta) -->
+    <div class="card shadow-sm mb-4 border-start-danger" id="card-cobro" style="display:none;">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-danger d-flex align-items-center gap-2">
+          <i data-feather="dollar-sign" class="icon-sm"></i> Cobro (venta al contado)
+        </h6>
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">El total de la factura se registra como cobrado en la caja elegida. La caja tiene que estar abierta.</p>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="fw-semibold">Caja <span class="text-danger">*</span></label>
+            <select class="form-select" id="selCajaCobro">
+              <option value="">— Seleccionar caja abierta —</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Forma de Cobro <span class="text-danger">*</span></label>
+            <select class="form-select" id="selFormaCobro">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <!-- Cheque -->
+          <div class="col-md-4 campo-cheque d-none">
+            <label class="fw-semibold">N° de Cheque</label>
+            <input type="text" class="form-control" id="txtNroCheque" placeholder="Número de cheque">
+          </div>
+          <!-- Tarjeta -->
+          <div class="col-md-3 campo-tarjeta d-none">
+            <label class="fw-semibold">Marca de Tarjeta</label>
+            <select class="form-select" id="selMarcaTarjeta">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="col-md-3 campo-tarjeta d-none">
+            <label class="fw-semibold">Entidad Adherida</label>
+            <select class="form-select" id="selEntidadAdherida">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="col-md-3 campo-tarjeta d-none">
+            <label class="fw-semibold">N° de Tarjeta</label>
+            <input type="text" class="form-control" id="txtNroTarjeta" placeholder="Últimos 4 dígitos">
+          </div>
+          <div class="col-md-3 campo-tarjeta d-none">
+            <label class="fw-semibold">N° de Cuotas</label>
+            <input type="number" class="form-control" id="txtNroCuotas" value="1" min="1" max="48">
+          </div>
+          <!-- Transferencia -->
+          <div class="col-md-4 campo-transferencia d-none">
+            <label class="fw-semibold">Entidad Emisora</label>
+            <select class="form-select" id="selEntidadEmisora">
+              <option value="">— Seleccionar —</option>
+            </select>
           </div>
         </div>
       </div>
@@ -337,6 +414,8 @@ document.getElementById('txtBuscarPaciente').addEventListener('input', function(
         document.getElementById('btnSeleccionarPaciente').dataset.nombre = `${p.per_nombre} ${p.per_apellido}`;
         document.getElementById('btnSeleccionarPaciente').dataset.cedula = p.per_cedula;
         document.getElementById('btnSeleccionarPaciente').dataset.hc = p.pac_historia_clinica;
+        document.getElementById('btnSeleccionarPaciente').dataset.tipoDocumento = p.per_tipo_documento || 'CI';
+        document.getElementById('btnSeleccionarPaciente').dataset.ruc = p.per_ruc || '';
         lista.style.display = 'none';
       });
       lista.appendChild(a);
@@ -349,9 +428,52 @@ document.getElementById('btnSeleccionarPaciente').addEventListener('click', func
   document.getElementById('lblPacienteNombre').textContent = this.dataset.nombre;
   document.getElementById('lblPacienteCedula').textContent = this.dataset.cedula;
   document.getElementById('lblHistoriaClinica').textContent = this.dataset.hc;
+  document.getElementById('selTipoDocumentoFactura').value = this.dataset.tipoDocumento || 'CI';
+  document.getElementById('selTipoDocumentoFactura').dispatchEvent(new Event('change'));
+  document.getElementById('txtRucFactura').value = this.dataset.ruc || '';
   document.getElementById('card-busqueda').style.display = 'none';
   document.getElementById('contenedor-factura').style.display = '';
   feather.replace();
+});
+
+// Tipo de documento (CI/RUC) del paciente, editable desde la propia pantalla de factura
+document.getElementById('selTipoDocumentoFactura').addEventListener('change', function() {
+  const esRuc = this.value === 'RUC';
+  document.getElementById('grupoRucFactura').style.display = esRuc ? '' : 'none';
+  if (!esRuc) document.getElementById('txtRucFactura').value = '';
+});
+
+document.getElementById('btnGuardarDocumentoFiscal').addEventListener('click', async function() {
+  const idPaciente = document.getElementById('hidIdPaciente').value;
+  if (!idPaciente) return;
+  const tipoDocumento = document.getElementById('selTipoDocumentoFactura').value;
+  const ruc = document.getElementById('txtRucFactura').value.trim();
+
+  if (tipoDocumento === 'RUC' && !ruc) {
+    Swal.fire('Atención', 'Debe indicar el número de RUC.', 'warning');
+    return;
+  }
+
+  const btn = this;
+  btn.disabled = true;
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const r = await fetch(`${API_PAC}/${idPaciente}/documento-fiscal`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+      body: JSON.stringify({ tipo_documento: tipoDocumento, ruc: tipoDocumento === 'RUC' ? ruc : null })
+    });
+    const j = await r.json();
+    if (j.success) {
+      Swal.fire({ icon: 'success', title: 'Documento actualizado', timer: 1200, showConfirmButton: false });
+    } else {
+      Swal.fire('Error', j.error || 'No se pudo actualizar el documento.', 'error');
+    }
+  } catch (err) {
+    Swal.fire('Error', 'Error de conexión.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 // Cargar filtro de puntos al cambiar timbrado
@@ -429,6 +551,68 @@ document.getElementById('btnConfirmarItem').addEventListener('click', () => {
   recalcular();
 });
 
+// ── Cobro de la factura al contado ─────────────────────────────────────────
+// Mismos catálogos y campos extra por forma de cobro que cobranza-agregar.html.
+let cajasAbiertas = [];
+
+const esContado = () => {
+  const opt = document.getElementById('selCondicionVenta').selectedOptions[0];
+  return !!opt && Number(opt.dataset.dias || 0) === 0;
+};
+
+async function cargarCombosCobro() {
+  const [jCaja, jFC, jMT, jEA, jEE] = await Promise.all([
+    fetch('/api/v1/cajas-estado'), fetch('/api/v1/formas-cobro'), fetch('/api/v1/marcas-tarjeta'),
+    fetch('/api/v1/entidades-adheridas'), fetch('/api/v1/entidades-emisoras')
+  ].map(p => p.then(r => r.json())));
+
+  cajasAbiertas = (jCaja.data || []).filter(c => c.caja_estado === 'ABIERTA');
+  const llenar = (id, lista, valor, texto, extra) => {
+    const sel = document.getElementById(id);
+    lista.forEach(x => {
+      const o = document.createElement('option');
+      o.value = x[valor];
+      o.textContent = x[texto];
+      if (extra) extra(o, x);
+      sel.appendChild(o);
+    });
+  };
+  llenar('selFormaCobro', jFC.data || [], 'id_forma_cobro', 'des_forma_cobro',
+         (o, x) => { o.dataset.cod = (x.cod_forma_cobro || '').toUpperCase(); });
+  llenar('selMarcaTarjeta', jMT.data || [], 'id_marca_tarjeta', 'des_marca_tarjeta');
+  llenar('selEntidadAdherida', jEA.data || [], 'id_entidad_adherida', 'des_entidad_adherida');
+  llenar('selEntidadEmisora', jEE.data || [], 'id_entidad_emisora', 'des_entidad_emisora');
+  filtrarCajasPorMoneda();
+}
+
+// Solo cajas abiertas en la misma moneda de la factura (la cobranza lo exige).
+function filtrarCajasPorMoneda() {
+  const idMoneda = document.getElementById('selMoneda').value;
+  const sel = document.getElementById('selCajaCobro');
+  sel.innerHTML = '<option value="">— Seleccionar caja abierta —</option>';
+  const cajas = cajasAbiertas.filter(c => String(c.id_moneda) === String(idMoneda));
+  cajas.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id_caja;
+    o.textContent = `${c.des_caja} (${c.cod_moneda})`;
+    sel.appendChild(o);
+  });
+  if (cajas.length === 1) sel.value = cajas[0].id_caja;
+}
+
+function actualizarCardCobro() {
+  document.getElementById('card-cobro').style.display = esContado() ? '' : 'none';
+}
+
+document.getElementById('selCondicionVenta').addEventListener('change', actualizarCardCobro);
+document.getElementById('selMoneda').addEventListener('change', filtrarCajasPorMoneda);
+document.getElementById('selFormaCobro').addEventListener('change', function() {
+  const cod = this.selectedOptions[0] ? (this.selectedOptions[0].dataset.cod || '') : '';
+  document.querySelectorAll('.campo-cheque').forEach(el => el.classList.toggle('d-none', !cod.includes('CHEQUE')));
+  document.querySelectorAll('.campo-tarjeta').forEach(el => el.classList.toggle('d-none', !cod.includes('TARJETA')));
+  document.querySelectorAll('.campo-transferencia').forEach(el => el.classList.toggle('d-none', !cod.includes('TRANSFERENCIA')));
+});
+
 // Emitir factura
 document.getElementById('btnEmitir').addEventListener('click', async () => {
   if (!detalles.length) { alert('Debe agregar al menos un ítem.'); return; }
@@ -470,6 +654,27 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
       id_item_servicio: d.id_item_servicio,
     }))
   };
+
+  if (esContado()) {
+    const idCaja = document.getElementById('selCajaCobro').value;
+    const idForma = document.getElementById('selFormaCobro').value;
+    if (!idCaja) { alert('Elegí la caja donde entra el cobro. Si no aparece ninguna, abrí la caja en Estado de Caja.'); return; }
+    if (!idForma) { alert('Elegí la forma de cobro.'); return; }
+    // El monto lo fija el servidor: el total de la factura.
+    body.cobro = {
+      id_caja: parseInt(idCaja),
+      detalles: [{
+        id_forma_cobro: parseInt(idForma),
+        id_marca_tarjeta: document.getElementById('selMarcaTarjeta').value || null,
+        id_entidad_adherida: document.getElementById('selEntidadAdherida').value || null,
+        id_entidad_emisora: document.getElementById('selEntidadEmisora').value || null,
+        numero_cheque: document.getElementById('txtNroCheque').value.trim() || null,
+        numero_tarjeta: document.getElementById('txtNroTarjeta').value.trim() || null,
+        numero_cuotas: parseInt(document.getElementById('txtNroCuotas').value) || 1,
+        monto_cobrado: 0,
+      }]
+    };
+  }
 
   const csrf = document.querySelector('meta[name="csrf-token"]').content;
   try {
@@ -538,8 +743,11 @@ async function inicializar() {
     const o = document.createElement('option');
     o.value = t.id_condicion_venta;
     o.textContent = t.des_condicion_venta;
+    o.dataset.dias = t.dias_credito || 0;
     selCV.appendChild(o);
   });
+  await cargarCombosCobro();
+  actualizarCardCobro();
 
   // Monedas
   const selMon = document.getElementById('selMoneda');

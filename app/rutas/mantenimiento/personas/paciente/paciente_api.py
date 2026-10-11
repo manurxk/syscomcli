@@ -276,7 +276,7 @@ def generarExcel(pac_id):
 # OBTENER TODOS LOS PACIENTES
 # ============================================
 @pacienteapi.route('/pacientes', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION", "CLINICO", "VENTAS")
 def getPacientes():
     """
     Obtiene la lista de pacientes con paginación opcional.
@@ -367,7 +367,7 @@ def buscarPacientes():
 # OBTENER PACIENTE POR ID
 # ============================================
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION", "CLINICO")
 def getPaciente(pac_id):
     """Obtiene un paciente específico por su ID"""
     pacientedao = PacienteDao()
@@ -476,6 +476,8 @@ def addPaciente():
             educacion=data.get('educacion'),
             colegio=data.get('colegio'),
             tel_colegio=data.get('tel_colegio'),
+            tipo_documento=data.get('tipo_documento', 'CI'),
+            ruc=data.get('ruc'),
             usuario_creacion=session.get('id_usuario')
         )
 
@@ -570,6 +572,8 @@ def updatePaciente(pac_id):
             educacion=data.get('educacion'),
             colegio=data.get('colegio'),
             tel_colegio=data.get('tel_colegio'),
+            tipo_documento=data.get('tipo_documento', 'CI'),
+            ruc=data.get('ruc'),
             usuario_modificacion=session.get('id_usuario')
         )
 
@@ -596,6 +600,33 @@ def updatePaciente(pac_id):
             'success': False,
             'error': 'Ocurrió un error interno.'
         }), 500
+
+
+# ============================================
+# ACTUALIZAR DOCUMENTO FISCAL (CI/RUC) - usado también desde Facturación
+# ============================================
+@pacienteapi.route('/pacientes/<int:pac_id>/documento-fiscal', methods=['PATCH'])
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION", "VENTAS")
+def actualizarDocumentoFiscal(pac_id):
+    data = request.get_json() or {}
+    pacientedao = PacienteDao()
+
+    if not pacientedao.getPacienteById(pac_id):
+        return jsonify({'success': False, 'error': 'No se encontró el paciente con el ID proporcionado.'}), 404
+
+    try:
+        pacientedao.actualizarDocumentoFiscal(
+            pac_id=pac_id,
+            tipo_documento=data.get('tipo_documento', 'CI'),
+            ruc=data.get('ruc'),
+            usuario_modificacion=session.get('id_usuario')
+        )
+        return jsonify({'success': True, 'mensaje': 'Documento fiscal actualizado.', 'error': None}), 200
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error al actualizar documento fiscal del paciente {pac_id}: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 
 # ============================================

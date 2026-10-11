@@ -8,7 +8,7 @@ sedeapi = Blueprint('sedeapi', __name__)
 
 
 @sedeapi.route('/sedes', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getSedes():
     try:
         data = SedeDao().getSedes()

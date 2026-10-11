@@ -8,6 +8,13 @@ usuariomod = Blueprint('usuario', __name__, template_folder='templates')
 def usuarioIndex():
     return render_template('usuario-index.html')
 
+@usuariomod.route('/usuario-detalle/<int:id_usuario>')
+@role_required("ADMINISTRADOR", "SUPERADMIN")
+def usuarioDetalle(id_usuario):
+    """Ventana de detalle: datos de identidad/bloqueo + historial de
+    accesos, MFA, dispositivos confiables y recuperaciones de contraseña."""
+    return render_template('usuario-detalle.html', id_usuario=id_usuario)
+
 @usuariomod.route('/usuario-agregar')
 @usuariomod.route('/usuario-editar/<int:id_usuario>')
 @role_required("ADMINISTRADOR", "SUPERADMIN")

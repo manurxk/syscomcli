@@ -1,0 +1,61 @@
+<h3>Citas</h3>
+<p>En esta pantalla se agendan las citas y se sigue cada una hasta que el paciente es atendido. La tabla muestra fecha, hora, paciente, especialista, estado y recordatorios de cada cita.</p>
+
+<h4>¿Cómo registro una cita?</h4>
+<ol>
+    <li>Presione <span class="btn-ref">Nueva Cita</span>.</li>
+    <li>En <strong>Paciente</strong>, presione <span class="btn-ref">Buscar</span>, busque al paciente por nombre o cédula y presione <span class="btn-ref">Seleccionar</span>.</li>
+    <li>Elija el <strong>Especialista</strong>. La <strong>Especialidad</strong> es opcional: sirve para ver solo los horarios de esa especialidad.</li>
+    <li>Elija la <strong>Fecha</strong>. Aparecen los horarios libres del especialista; haga clic en uno para marcarlo.</li>
+    <li>Marque el tipo: <span class="btn-ref">Primera Vez</span> o <span class="btn-ref">Seguimiento</span>. En seguimiento puede indicar el número de sesión.</li>
+    <li>Elija la <strong>Modalidad</strong> (Presencial, Telemedicina o Domicilio) y escriba el <strong>Motivo de Consulta</strong>.</li>
+    <li>Presione <span class="btn-ref">Guardar Cita</span>. La cita queda en estado <strong>Agendada</strong>.</li>
+</ol>
+<p>Son obligatorios el paciente, el horario y el motivo. Si falta alguno, el sistema le indica cuál.</p>
+<p>Si el paciente todavía no está cargado, en el paso 2 presione <span class="btn-ref">Registrar Nuevo</span>, complete nombre, apellido, cédula y fecha de nacimiento, y presione <span class="btn-ref">Registrar y Continuar</span>. Después puede completar el resto de sus datos en Pacientes.</p>
+<p class="importante">Si no aparecen horarios, el especialista no atiende ese día o ya no tiene lugar. Pruebe otra fecha o anote al paciente en la Lista de Espera.</p>
+
+<h4>¿Qué pasa con la cita después?</h4>
+<p>Cada cita pasa por estos estados. En la columna <strong>Acciones</strong> solo aparecen los botones que se pueden usar en el estado actual.</p>
+<ul>
+    <li><strong>Agendada:</strong> el turno está reservado. Puede <span class="btn-ref">Confirmar</span>, <span class="btn-ref">Editar</span> o <span class="btn-ref">Cancelar</span>.</li>
+    <li><strong>Confirmada:</strong> el paciente avisó que viene. Puede <span class="btn-ref">Iniciar consulta</span>, <span class="btn-ref">Marcar ausente</span>, <span class="btn-ref">Editar</span> o <span class="btn-ref">Cancelar</span>.</li>
+    <li><strong>En consulta:</strong> el paciente está siendo atendido. Cuando el profesional finaliza la consulta, la cita pasa sola a Completada. Si hace falta, también puede cerrarla usted con <span class="btn-ref">Completar</span>.</li>
+    <li><strong>Completada, Ausente o Cancelada:</strong> la cita terminó y ya no se puede modificar. Solo se puede ver su historial.</li>
+</ul>
+
+<h4>¿Cómo confirmo una cita?</h4>
+<p>Cuando el paciente confirme que asiste, presione <span class="btn-ref">Confirmar</span> en la fila de su cita y acepte. Al confirmarla, el sistema programa los recordatorios que se le envían por correo antes del turno.</p>
+
+<h4>¿Qué hago cuando llega el paciente?</h4>
+<p>Presione <span class="btn-ref">Iniciar consulta</span>. La cita pasa a <strong>En consulta</strong> y el profesional la ve en su pantalla Mi Agenda para atenderla.</p>
+<p>Si el paciente no se presentó, presione <span class="btn-ref">Marcar ausente</span>.</p>
+
+<h4>¿Cómo cancelo una cita?</h4>
+<ol>
+    <li>Presione el botón rojo <span class="btn-ref">Cancelar</span> en la fila de la cita.</li>
+    <li>Escriba el motivo de la cancelación y confirme.</li>
+</ol>
+<p>El horario queda libre para otro paciente. Revise si hay alguien esperando ese turno en la Lista de Espera.</p>
+
+<h4>¿Cómo cambio la fecha u hora de una cita?</h4>
+<ol>
+    <li>Presione <span class="btn-ref">Editar</span> en la fila de la cita.</li>
+    <li>Elija la nueva fecha y el nuevo horario. El horario actual aparece marcado como <em>(actual)</em>.</li>
+    <li>Si hace falta, cambie también la modalidad, el tipo o el motivo.</li>
+    <li>Presione <span class="btn-ref">Guardar Cambios</span>.</li>
+</ol>
+<p>El paciente y el especialista no se pueden cambiar. Si hace falta, cancele la cita y registre una nueva.</p>
+
+<h4>¿Cómo sé si se enviaron los recordatorios?</h4>
+<p>Mire la columna <strong>Recordatorios</strong>:</p>
+<ul>
+    <li><strong>Sin reglas:</strong> la cita todavía no se confirmó.</li>
+    <li><strong>Pendientes:</strong> todavía no se envió ninguno.</li>
+    <li><strong>Parcial:</strong> se envió una parte.</li>
+    <li><strong>Enviados:</strong> ya se enviaron todos.</li>
+</ul>
+<p>Si hace clic en esa etiqueta, ve el detalle. Con <span class="btn-ref">Enviar por WhatsApp</span> puede mandarle el recordatorio también por WhatsApp.</p>
+
+<h4>¿Cómo veo quién modificó una cita?</h4>
+<p>Presione <span class="btn-ref">Historial</span>. Se muestran todos los cambios de estado, con la fecha, el motivo y el usuario que los hizo.</p>

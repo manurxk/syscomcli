@@ -1,0 +1,75 @@
+# English translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-06 21:32+0000\n"
+"PO-Revision-Date: 2026-09-06 21:32+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/auth/templates/login.html:732
+msgid "Sistema de Gestión Clínica"
+msgstr "Clinical Management System"
+
+#: app/auth/templates/login.html:738
+msgid "Cuidado clínico"
+msgstr "Clinical care"
+
+#: app/auth/templates/login.html:738
+msgid "simple y seguro"
+msgstr "simple and secure"
+
+#: app/auth/templates/login.html:739
+msgid "Gestionando la salud con tecnología y calidez humana."
+msgstr "Managing health with technology and human warmth."
+
+#: app/auth/templates/login.html:758
+msgid "Acceso al sistema"
+msgstr "System access"
+
+#: app/auth/templates/login.html:759
+msgid "Bienvenido de vuelta"
+msgstr "Welcome back"
+
+#: app/auth/templates/login.html:760
+msgid "Ingresá tus credenciales para continuar"
+msgstr "Enter your credentials to continue"
+
+#: app/auth/templates/login.html:790
+msgid "Usuario"
+msgstr "Username"
+
+#: app/auth/templates/login.html:799
+msgid "Nombre de usuario"
+msgstr "Username"
+
+#: app/auth/templates/login.html:806
+msgid "Contraseña"
+msgstr "Password"
+
+#: app/auth/templates/login.html:817
+msgid "Mostrar contraseña"
+msgstr "Show password"
+
+#: app/auth/templates/login.html:830
+msgid "Recordarme"
+msgstr "Remember me"
+
+#: app/auth/templates/login.html:832
+msgid "¿Olvidó su contraseña?"
+msgstr "Forgot your password?"
+
+#: app/auth/templates/login.html:837
+msgid "Ingresar"
+msgstr "Sign in"

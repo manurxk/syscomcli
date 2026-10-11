@@ -199,7 +199,7 @@ class AgendaHorariosDao(BaseDAO):
         )
         fila = cur.fetchone()
         if fila is None:
-            return
+            return 0
 
         (id_sede, id_consultorio, id_especialista,
          id_dia_semana, hora_inicio, hora_fin, duracion_turno_min,
@@ -223,6 +223,7 @@ class AgendaHorariosDao(BaseDAO):
                     cursor_hora += paso
             dia += timedelta(days=1)
 
+        insertados = 0
         for slot_inicio, slot_fin in slots:
             cur.execute(
                 """
@@ -235,3 +236,20 @@ class AgendaHorariosDao(BaseDAO):
                 (id_agenda_horario, id_sede, id_consultorio, id_especialista,
                  slot_inicio, slot_fin),
             )
+            insertados += cur.rowcount
+        return insertados
+
+    def getAgendasVigentesActivas(self):
+        """Horarios activos cuya vigencia no terminó: los únicos que siguen generando slots."""
+        sql = """
+            SELECT id_agenda_horario
+            FROM agenda_horarios
+            WHERE est_agenda_horario = TRUE
+              AND (fec_hasta IS NULL OR fec_hasta >= CURRENT_DATE)
+            ORDER BY id_agenda_horario
+        """
+        return self.execute_query(sql)
+
+    def extenderSlotsAgenda(self, id_agenda_horario):
+        """Completa el horizonte rodante de un horario (tarea diaria). Devuelve slots nuevos."""
+        return self.execute_transaction(lambda cur: self._generarSlots(cur, id_agenda_horario))

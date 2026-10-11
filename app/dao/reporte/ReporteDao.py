@@ -44,10 +44,10 @@ class ReporteDao:
         
         # 2. Citas del mes
         sql_citas = """
-            SELECT COUNT(*) 
-            FROM citas 
-            WHERE DATE_TRUNC('month', cita_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-              AND cita_activo = TRUE
+            SELECT COUNT(*)
+            FROM citas
+            WHERE DATE_TRUNC('month', cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
+              AND est_cita = TRUE
         """
         
         # 3. Pacientes activos
@@ -88,22 +88,22 @@ class ReporteDao:
         sql_agenda_mes = """
             SELECT
                 COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE ec.est_cita_nombre IN ('COMPLETADA', 'ATENDIDA')) AS atendidas,
-                COUNT(*) FILTER (WHERE ec.est_cita_nombre = 'CANCELADA') AS canceladas
+                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'COMPLETADA') AS atendidas,
+                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'CANCELADA') AS canceladas
             FROM citas c
             JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE DATE_TRUNC('month', c.cita_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-              AND c.cita_activo = TRUE
+            WHERE DATE_TRUNC('month', c.cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
+              AND c.est_cita = TRUE
         """
-        
+
         # 8. Diagnósticos únicos usados este mes
         sql_diagnosticos = """
             SELECT COUNT(DISTINCT rd.id_diagnostico)
             FROM registro_diagnosticos rd
             JOIN consultas c ON rd.id_consulta = c.id_consulta
             WHERE DATE_TRUNC('month', c.consulta_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-              AND c.est_consulta = 'A'
-              AND rd.est_registro_diagnostico = 'A'
+              AND c.est_consulta = TRUE
+              AND rd.est_registro_diagnostico = TRUE
         """
         
         conexion = Conexion()
@@ -118,10 +118,13 @@ class ReporteDao:
         try:
             # 1. Ventas del Mes
             try:
+                # Limitado a la moneda local: el dashboard muestra una sola cifra por KPI,
+                # sumar monedas distintas (Gs. + USD) daria un numero sin sentido.
                 cur.execute("""
-                    SELECT COALESCE(SUM(monto_total), 0) 
-                    FROM libro_ventas 
-                    WHERE DATE_TRUNC('month', libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
+                    SELECT COALESCE(SUM(lv.monto_total), 0)
+                    FROM libro_ventas lv
+                    JOIN monedas m ON lv.id_moneda = m.id_moneda AND m.es_moneda_local
+                    WHERE DATE_TRUNC('month', lv.libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
                 """)
                 metricas['ventas_mes'] = int(cur.fetchone()[0] or 0)
             except Exception as e:
@@ -130,10 +133,10 @@ class ReporteDao:
             # 2. Citas del Mes
             try:
                 cur.execute("""
-                    SELECT COUNT(*) 
-                    FROM citas 
-                    WHERE DATE_TRUNC('month', cita_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-                      AND cita_activo = TRUE
+                    SELECT COUNT(*)
+                    FROM citas
+                    WHERE DATE_TRUNC('month', cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
+                      AND est_cita = TRUE
                 """)
                 metricas['citas_mes'] = int(cur.fetchone()[0] or 0)
             except Exception as e:
@@ -148,10 +151,14 @@ class ReporteDao:
 
             # 4. Recaudado Hoy
             try:
+                # Limitado a la moneda local, mismo motivo que ventas_mes. De paso se excluyen
+                # las cobranzas ANULADAS, que antes se sumaban igual (bug preexistente).
                 cur.execute("""
-                    SELECT COALESCE(SUM(monto_cobrado), 0) 
-                    FROM cobranzas 
-                    WHERE DATE_TRUNC('day', fecha_cobranza) = DATE_TRUNC('day', CURRENT_DATE)
+                    SELECT COALESCE(SUM(co.monto_cobrado), 0)
+                    FROM cobranzas co
+                    JOIN monedas m ON co.id_moneda = m.id_moneda AND m.es_moneda_local
+                    WHERE DATE_TRUNC('day', co.fecha_cobranza) = DATE_TRUNC('day', CURRENT_DATE)
+                      AND co.est_cobranza != 'ANULADA'
                 """)
                 metricas['recaudado_hoy'] = int(cur.fetchone()[0] or 0)
             except Exception as e:
@@ -159,6 +166,7 @@ class ReporteDao:
 
             # 5. Porcentaje Cobrado
             try:
+                # Limitado a la moneda local, mismo motivo que ventas_mes.
                 cur.execute("""
                     SELECT
                         CASE WHEN COALESCE(SUM(monto_total), 0) = 0 THEN 0
@@ -166,10 +174,13 @@ class ReporteDao:
                         END
                     FROM (
                         SELECT COALESCE(SUM(lv.monto_total), 0) as monto_total,
-                               (SELECT COALESCE(SUM(co.monto_cobrado), 0) 
-                                FROM cobranzas co 
-                                WHERE DATE_TRUNC('month', co.fecha_cobranza) = DATE_TRUNC('month', CURRENT_DATE)) as monto_cobrado
+                               (SELECT COALESCE(SUM(co.monto_cobrado), 0)
+                                FROM cobranzas co
+                                JOIN monedas mc ON co.id_moneda = mc.id_moneda AND mc.es_moneda_local
+                                WHERE DATE_TRUNC('month', co.fecha_cobranza) = DATE_TRUNC('month', CURRENT_DATE)
+                                  AND co.est_cobranza != 'ANULADA') as monto_cobrado
                         FROM libro_ventas lv
+                        JOIN monedas ml ON lv.id_moneda = ml.id_moneda AND ml.es_moneda_local
                         WHERE DATE_TRUNC('month', lv.libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
                     ) sub
                 """)
@@ -187,14 +198,14 @@ class ReporteDao:
             # 7. Agenda
             try:
                 cur.execute("""
-                    SELECT 
+                    SELECT
                         COUNT(*) as total,
-                        COUNT(*) FILTER (WHERE ec.est_cita_nombre IN ('COMPLETADA', 'ATENDIDA')) as atendidas,
-                        COUNT(*) FILTER (WHERE ec.est_cita_nombre = 'CANCELADA') as canceladas
+                        COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'COMPLETADA') as atendidas,
+                        COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'CANCELADA') as canceladas
                     FROM citas c
                     JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-                    WHERE DATE_TRUNC('month', c.cita_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-                      AND c.cita_activo = TRUE
+                    WHERE DATE_TRUNC('month', c.cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
+                      AND c.est_cita = TRUE
                 """)
                 fila = cur.fetchone()
                 if fila:
@@ -214,8 +225,8 @@ class ReporteDao:
                     FROM registro_diagnosticos rd
                     JOIN consultas c ON rd.id_consulta = c.id_consulta
                     WHERE DATE_TRUNC('month', c.consulta_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-                      AND c.est_consulta = 'A'
-                      AND rd.est_registro_diagnostico = 'A'
+                      AND c.est_consulta = TRUE
+                      AND rd.est_registro_diagnostico = TRUE
                 """)
                 metricas['diagnosticos_frecuentes'] = int(cur.fetchone()[0] or 0)
             except Exception as e:
@@ -234,48 +245,54 @@ class ReporteDao:
         Obtiene ventas agrupadas por día para el gráfico, consumiendo libro_ventas.
         Soporta filtro opcional por método de pago (condicion_venta de factura).
         """
+        # Se agrupa tambien por moneda: sumar Gs. + USD en la misma fila daria un total sin sentido.
         sql = """
-            SELECT 
+            SELECT
                 lv.libro_fecha AS fecha,
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 COUNT(*) AS cantidad_comprobantes,
                 SUM(lv.monto_gravado) AS total_gravado,
                 SUM(lv.monto_iva) AS total_iva,
                 SUM(lv.monto_total) AS total_general
             FROM libro_ventas lv
+            JOIN monedas m ON lv.id_moneda = m.id_moneda
             LEFT JOIN facturas f ON lv.id_factura = f.id_factura
             LEFT JOIN condiciones_venta cv ON f.id_condicion_venta = cv.id_condicion_venta
             WHERE lv.libro_fecha >= %s AND lv.libro_fecha <= %s
         """
-        
+
         parametros = [fecha_desde, fecha_hasta]
-        
+
         if metodo_pago and metodo_pago.lower() != 'todos':
             # Se asume que metodo_pago es 'Contado' o 'Credito'
             sql += " AND LOWER(cv.des_condicion_venta) LIKE LOWER(%s)"
             parametros.append(f"%{metodo_pago}%")
-            
-        sql += " GROUP BY lv.libro_fecha ORDER BY lv.libro_fecha ASC"
-        
+
+        sql += """ GROUP BY lv.libro_fecha, lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
+                   ORDER BY lv.libro_fecha ASC"""
+
         conexion = Conexion()
         con = conexion.getConexion()
-        
+
         if not con:
             return []
-            
+
         cur = con.cursor()
         resultados = []
-        
+
         try:
             cur.execute(sql, tuple(parametros))
             filas = cur.fetchall()
-            
+
             for f in filas:
+                dec = int(f[4] or 0)
                 resultados.append({
                     'fecha': f[0].strftime('%Y-%m-%d') if f[0] else '',
-                    'cantidad_comprobantes': int(f[1] or 0),
-                    'total_gravado': int(f[2] or 0),
-                    'total_iva': int(f[3] or 0),
-                    'total_general': int(f[4] or 0)
+                    'id_moneda': f[1], 'cod_moneda': f[2], 'simbolo_moneda': f[3], 'decimales_moneda': dec,
+                    'cantidad_comprobantes': int(f[5] or 0),
+                    'total_gravado': round(float(f[6] or 0), dec),
+                    'total_iva': round(float(f[7] or 0), dec),
+                    'total_general': round(float(f[8] or 0), dec)
                 })
         except Exception as e:
             app.logger.error(f"Error al ejecutar getVentasReport: {str(e)}")
@@ -292,7 +309,7 @@ class ReporteDao:
         Fase 2.
         """
         sql = """
-            SELECT 
+            SELECT
                 lv.libro_fecha AS fecha,
                 lv.numero_comprobante,
                 CONCAT(p.per_nombre, ' ', p.per_apellido) AS nombre_cliente,
@@ -300,8 +317,10 @@ class ReporteDao:
                 COALESCE(cv.des_condicion_venta, 'Contado') AS metodo_pago,
                 lv.monto_gravado AS gravado, -- simplificado para ReporteDao
                 lv.monto_iva AS iva,
-                lv.monto_total AS total
+                lv.monto_total AS total,
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
             FROM libro_ventas lv
+            JOIN monedas m ON lv.id_moneda = m.id_moneda
             LEFT JOIN pacientes pac ON lv.id_paciente = pac.id_paciente
             LEFT JOIN personas p ON pac.id_persona = p.id_persona
             LEFT JOIN facturas f ON lv.id_factura = f.id_factura
@@ -309,31 +328,33 @@ class ReporteDao:
             WHERE lv.libro_fecha >= %s AND lv.libro_fecha <= %s
         """
         parametros = [fecha_desde, fecha_hasta]
-        
+
         if metodo_pago and metodo_pago.lower() != 'todos':
             sql += " AND LOWER(cv.des_condicion_venta) LIKE LOWER(%s)"
             parametros.append(f"%{metodo_pago}%")
-            
-        sql += " ORDER BY lv.libro_fecha ASC, lv.id_libro_venta ASC"
-        
+
+        sql += " ORDER BY lv.libro_fecha ASC, lv.id_libro_ventas ASC"
+
         conexion = Conexion()
         con = conexion.getConexion()
         if not con: return []
         cur = con.cursor()
         resultados = []
-        
+
         try:
             cur.execute(sql, tuple(parametros))
             for f in cur.fetchall():
+                dec = int(f[11] or 0)
                 resultados.append({
                     'fecha': f[0].strftime('%Y-%m-%d') if f[0] else '',
                     'numero_comprobante': f[1],
                     'nombre_cliente': f[2],
                     'ruc_cliente': f[3],
                     'metodo_pago': f[4],
-                    'gravado': int(f[5] or 0),
-                    'iva': int(f[6] or 0),
-                    'total': int(f[7] or 0)
+                    'gravado': round(float(f[5] or 0), dec),
+                    'iva': round(float(f[6] or 0), dec),
+                    'total': round(float(f[7] or 0), dec),
+                    'id_moneda': f[8], 'cod_moneda': f[9], 'simbolo_moneda': f[10], 'decimales_moneda': dec
                 })
         except Exception as e:
             app.logger.error(f"Error en getVentasDetalle: {str(e)}")
@@ -348,30 +369,34 @@ class ReporteDao:
         Fase 2.
         """
         sql = """
-            SELECT 
+            SELECT
                 COALESCE(cv.des_condicion_venta, 'Contado') AS metodo_pago,
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 COUNT(*) AS cantidad,
                 SUM(lv.monto_total) AS total
             FROM libro_ventas lv
+            JOIN monedas m ON lv.id_moneda = m.id_moneda
             LEFT JOIN facturas f ON lv.id_factura = f.id_factura
             LEFT JOIN condiciones_venta cv ON f.id_condicion_venta = cv.id_condicion_venta
             WHERE lv.libro_fecha >= %s AND lv.libro_fecha <= %s
-            GROUP BY COALESCE(cv.des_condicion_venta, 'Contado')
+            GROUP BY COALESCE(cv.des_condicion_venta, 'Contado'), lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
         """
-        
+
         conexion = Conexion()
         con = conexion.getConexion()
         if not con: return []
         cur = con.cursor()
         resultados = []
-        
+
         try:
             cur.execute(sql, (fecha_desde, fecha_hasta))
             for f in cur.fetchall():
+                dec = int(f[4] or 0)
                 resultados.append({
                     'metodo_pago': f[0],
-                    'cantidad': int(f[1] or 0),
-                    'total': int(f[2] or 0)
+                    'id_moneda': f[1], 'cod_moneda': f[2], 'simbolo_moneda': f[3], 'decimales_moneda': dec,
+                    'cantidad': int(f[5] or 0),
+                    'total': round(float(f[6] or 0), dec)
                 })
         except Exception as e:
             app.logger.error(f"Error en getVentasPorMetodoPago: {str(e)}")
@@ -383,20 +408,20 @@ class ReporteDao:
     def getAgendamientoReport(self, fecha_desde, fecha_hasta, id_especialista=None):
         """Métricas agrupadas por estado de cita para Agendamiento"""
         sql = """
-            SELECT 
-                ec.est_cita_nombre AS estado,
+            SELECT
+                ec.cod_estado_cita AS estado,
                 COUNT(*) AS cantidad
             FROM citas c
             JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE c.cita_fecha >= %s AND c.cita_fecha <= %s AND c.cita_activo = TRUE
+            WHERE c.cita_inicio::DATE >= %s AND c.cita_inicio::DATE <= %s AND c.est_cita = TRUE
         """
         parametros = [fecha_desde, fecha_hasta]
-        
+
         if id_especialista and str(id_especialista) != '0':
             sql += " AND c.id_especialista = %s"
             parametros.append(id_especialista)
-            
-        sql += " GROUP BY ec.est_cita_nombre"
+
+        sql += " GROUP BY ec.cod_estado_cita"
         
         conexion = Conexion()
         con = conexion.getConexion()
@@ -417,22 +442,22 @@ class ReporteDao:
     def getAgendamientoPorDia(self, fecha_desde, fecha_hasta, id_especialista=None):
         """Evolución diaria de citas por estado clave (Atendidas, Canceladas, Ausentes)"""
         sql = """
-            SELECT 
-                c.cita_fecha::DATE AS fecha,
-                COUNT(*) FILTER (WHERE ec.est_cita_nombre IN ('COMPLETADA', 'ATENDIDA')) AS cant_atendidas,
-                COUNT(*) FILTER (WHERE ec.est_cita_nombre = 'CANCELADA') AS cant_canceladas,
-                COUNT(*) FILTER (WHERE ec.est_cita_nombre IN ('INASISTENCIA', 'AUSENTE')) AS cant_ausencias
+            SELECT
+                c.cita_inicio::DATE AS fecha,
+                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'COMPLETADA') AS cant_atendidas,
+                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'CANCELADA') AS cant_canceladas,
+                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'AUSENTE') AS cant_ausencias
             FROM citas c
             JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE c.cita_fecha >= %s AND c.cita_fecha <= %s AND c.cita_activo = TRUE
+            WHERE c.cita_inicio::DATE >= %s AND c.cita_inicio::DATE <= %s AND c.est_cita = TRUE
         """
         parametros = [fecha_desde, fecha_hasta]
-        
+
         if id_especialista and str(id_especialista) != '0':
             sql += " AND c.id_especialista = %s"
             parametros.append(id_especialista)
-            
-        sql += " GROUP BY c.cita_fecha::DATE ORDER BY c.cita_fecha::DATE ASC"
+
+        sql += " GROUP BY c.cita_inicio::DATE ORDER BY c.cita_inicio::DATE ASC"
         
         conexion = Conexion()
         con = conexion.getConexion()
@@ -459,28 +484,28 @@ class ReporteDao:
         """Cantidad de consultas agrupadas por especialidad médica"""
         sql = """
             WITH consultas_reales AS (
-                SELECT 
+                SELECT
                     COALESCE(e1.des_especialidad, e2.des_especialidad, 'Sin Especialidad') AS especialidad
                 FROM consultas c
-                INNER JOIN especialistas ee ON c.id_profesional = ee.id_especialista
+                INNER JOIN especialistas ee ON c.id_especialista = ee.id_especialista
                 LEFT JOIN citas cit ON c.id_cita = cit.id_cita
                 LEFT JOIN especialidades e1 ON cit.id_especialidad = e1.id_especialidad
                 LEFT JOIN (
-                    SELECT DISTINCT ON (id_especialista) id_especialista, id_especialidad 
+                    SELECT DISTINCT ON (id_especialista) id_especialista, id_especialidad
                     FROM especialista_especialidades
                 ) ese ON ee.id_especialista = ese.id_especialista
                 LEFT JOIN especialidades e2 ON ese.id_especialidad = e2.id_especialidad
-                WHERE c.consulta_fecha::DATE >= %s AND c.consulta_fecha::DATE <= %s AND c.est_consulta = 'A'
+                WHERE c.consulta_fecha::DATE >= %s AND c.consulta_fecha::DATE <= %s AND c.est_consulta = TRUE
             ),
             citas_atendidas AS (
-                SELECT 
+                SELECT
                     esp.des_especialidad AS especialidad
                 FROM citas cit
                 INNER JOIN estados_citas ec ON cit.id_estado_cita = ec.id_estado_cita
                 INNER JOIN especialidades esp ON cit.id_especialidad = esp.id_especialidad
-                WHERE cit.cita_fecha::DATE >= %s AND cit.cita_fecha::DATE <= %s
-                  AND ec.est_cita_nombre IN ('ATENDIDA', 'COMPLETADA', 'CONFIRMADA')
-                  AND cit.cita_activo = TRUE
+                WHERE cit.cita_inicio::DATE >= %s AND cit.cita_inicio::DATE <= %s
+                  AND ec.cod_estado_cita IN ('COMPLETADA', 'CONFIRMADA')
+                  AND cit.est_cita = TRUE
                   AND NOT EXISTS (SELECT 1 FROM consultas c2 WHERE c2.id_cita = cit.id_cita)
             )
             SELECT especialidad, COUNT(*) AS cantidad
@@ -516,8 +541,8 @@ class ReporteDao:
             FROM registro_diagnosticos rd
             JOIN diagnosticos d ON rd.id_diagnostico = d.id_diagnostico
             JOIN consultas c ON rd.id_consulta = c.id_consulta
-            WHERE c.consulta_fecha::DATE >= %s AND c.consulta_fecha::DATE <= %s 
-              AND c.est_consulta = 'A' AND rd.est_registro_diagnostico = 'A'
+            WHERE c.consulta_fecha::DATE >= %s AND c.consulta_fecha::DATE <= %s
+              AND c.est_consulta = TRUE AND rd.est_registro_diagnostico = TRUE
             GROUP BY d.des_diagnostico
             ORDER BY cantidad DESC
             LIMIT 5

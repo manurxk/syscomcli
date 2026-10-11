@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
-from app.dao.auth.user_dao import UsuarioDao
+from app.dao.auth.user_dao import UsuarioDao, MAX_USUARIOS_CON_FUNCIONARIO
+from app.dao.mantenimiento.seguridad.acceso.AccesoDao import AccesoDao
 from app.auth.utils.decorators import role_required
 from app.auth.utils.password_validator import validar_politica_password
 from app.core.base_dao import BaseDAO
@@ -10,6 +11,15 @@ from app.utils.auditoria_constantes import AuditAccion
 usuarioapi = Blueprint('usuarioapi', __name__)
 
 _dao_roles = BaseDAO(db_name_env="DB_NAME_NUEVA")
+
+
+def _es_superadmin():
+    return 'SUPERADMIN' in {(r or "").strip().upper() for r in session.get("roles", [])}
+
+
+def _mensaje_tope_usuarios():
+    return (f'Se alcanzó el máximo de {MAX_USUARIOS_CON_FUNCIONARIO} usuarios activos con funcionario. '
+            'Desactive un usuario existente antes de crear o reactivar otro.')
 
 
 # ============================================
@@ -71,6 +81,33 @@ def getUsuario(id_usuario):
 
 
 # ============================================
+# DETALLE DE SEGURIDAD/AUDITORÍA DE UN USUARIO
+# ============================================
+@usuarioapi.route('/usuarios/<int:id_usuario>/detalle', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
+def getDetalleUsuario(id_usuario):
+    """Todo lo que se muestra en la ventana de detalle de un usuario: datos
+    de identidad/bloqueo, historial de logins, resumen de MFA, dispositivos
+    confiables, solicitudes de recuperación y sesiones activas."""
+    try:
+        acceso_dao = AccesoDao()
+        detalle = acceso_dao.getDetalleUsuario(id_usuario)
+        if not detalle:
+            return jsonify({'success': False, 'error': 'No se encontró el usuario.'}), 404
+
+        detalle['historial_accesos'] = acceso_dao.getHistorialAccesos(id_usuario)
+        detalle['mfa_resumen'] = acceso_dao.getResumenMfa(id_usuario)
+        detalle['dispositivos_confiables'] = acceso_dao.getDispositivosConfiables(id_usuario)
+        detalle['solicitudes_recuperacion'] = acceso_dao.getSolicitudesRecuperacion(id_usuario)
+        detalle['sesiones_activas'] = acceso_dao.getSesionesPorUsuario(id_usuario)
+
+        return jsonify({'success': True, 'data': detalle, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener detalle de usuario: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+# ============================================
 # OBTENER FUNCIONARIOS SIN USUARIO
 # ============================================
 @usuarioapi.route('/funcionarios/sin-usuario', methods=['GET'])
@@ -102,11 +139,14 @@ def getFuncionariosSinUsuario():
 @usuarioapi.route('/roles', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getRoles():
-    """Lista los roles activos disponibles para asignar a un usuario"""
+    """Lista los roles activos disponibles para asignar a un usuario.
+    SUPERADMIN solo lo puede asignar otro Superadministrador."""
     try:
         roles = _dao_roles.execute_query(
             "SELECT id_rol, cod_rol, des_rol FROM roles WHERE est_rol = TRUE ORDER BY id_rol"
         )
+        if not _es_superadmin():
+            roles = [r for r in roles if r['cod_rol'] != 'SUPERADMIN']
         return jsonify({
             'success': True,
             'data': roles,
@@ -161,9 +201,9 @@ def validarUsername():
 # CREAR NUEVO USUARIO
 # ============================================
 @usuarioapi.route('/usuarios', methods=['POST'])
-@role_required("SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def addUsuario():
-    """Crea un nuevo usuario - solo Superadministrador"""
+    """Crea un nuevo usuario - Administrador o Superadministrador, con tope de usuarios"""
     data = request.get_json()
     usuariodao = UsuarioDao()
 
@@ -174,6 +214,20 @@ def addUsuario():
                 'success': False,
                 'error': f'El campo {campo} es obligatorio.'
             }), 400
+
+    if not _es_superadmin():
+        rol = _dao_roles.execute_query_one("SELECT cod_rol FROM roles WHERE id_rol = %s", (data['id_rol'],))
+        if rol and rol['cod_rol'] == 'SUPERADMIN':
+            return jsonify({
+                'success': False,
+                'error': 'Solo un Superadministrador puede asignar el rol Superadministrador.'
+            }), 403
+
+    if data.get('est_usuario', True) and usuariodao.contar_usuarios_activos_con_funcionario() >= MAX_USUARIOS_CON_FUNCIONARIO:
+        return jsonify({
+            'success': False,
+            'error': _mensaje_tope_usuarios()
+        }), 400
 
     password_valida, mensaje_password = validar_politica_password(
         data['password'], username=data.get('username')
@@ -250,6 +304,14 @@ def updateUsuario(id_usuario):
         return jsonify({
             'success': False,
             'error': 'El username es obligatorio.'
+        }), 400
+
+    reactivando = not usuario_existente['est_usuario'] and data.get('est_usuario', True)
+    if (reactivando and usuario_existente['id_funcionario']
+            and usuariodao.contar_usuarios_activos_con_funcionario() >= MAX_USUARIOS_CON_FUNCIONARIO):
+        return jsonify({
+            'success': False,
+            'error': _mensaje_tope_usuarios()
         }), 400
 
     password = data.get('password')
@@ -368,6 +430,12 @@ def resetearIntentos(id_usuario):
 
     try:
         if usuariodao.resetearIntentos(id_usuario, session.get('id_usuario')):
+            AuditoriaDao().registrar_evento(
+                id_usuario=session.get('id_usuario'),
+                accion=AuditAccion.ACCOUNT_UNLOCKED,
+                detalle=f"Cuenta id_usuario={id_usuario} desbloqueada (intentos reseteados) desde Usuarios por \"{session.get('usu_nick')}\"",
+                ip_origen=request.remote_addr
+            )
             return jsonify({
                 'success': True,
                 'mensaje': f'Intentos reseteados para usuario {id_usuario}.',

@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
+from app.core.moneda import get_moneda, redondear
+from app.dao.ventas.movimientos.cobranza.CobranzaDao import CobranzaDao
 
 
 # ── numero_a_letras ────────────────────────────────────────────────────────
 # Reutilizado tal cual del legacy (app/dao/legacy/modulos/ventas/factura/FacturaDao.py)
-def numero_a_letras(monto) -> str:
-    """Convierte un monto (int o Decimal) a texto en guaraníes. Rango 0-999 999 999."""
+def numero_a_letras(monto, moneda=None) -> str:
+    """Convierte un monto a texto. Sin `moneda` (o PYG) usa guaraníes; con otra moneda usa su nombre y los centavos como NN/100. Rango 0-999 999 999."""
     UNIDADES = [
         '', 'un', 'dos', 'tres', 'cuatro', 'cinco',
         'seis', 'siete', 'ocho', 'nueve', 'diez',
@@ -53,9 +55,17 @@ def numero_a_letras(monto) -> str:
         partes = [p for p in [texto_c, texto_r] if p]
         return ' '.join(partes)
 
-    monto_int = int(Decimal(str(monto)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
-    if monto_int == 0:
-        return 'Cero Guaraníes'
+    decimales = int(moneda['decimales_moneda']) if moneda else 0
+    monto_dec = redondear(monto, decimales)
+    monto_int = int(monto_dec)
+    centavos = int((monto_dec - monto_int) * 100)
+    if moneda and not moneda.get('es_moneda_local'):
+        nombre_moneda = moneda['des_moneda'].title()
+        nombre_uno = nombre_moneda
+    else:
+        nombre_moneda, nombre_uno = 'Guaraníes', 'Guaraní'
+    if monto_int == 0 and centavos == 0:
+        return f'Cero {nombre_moneda}'
     if monto_int < 0 or monto_int > 999_999_999:
         raise ValueError(f'Monto fuera de rango para numero_a_letras: {monto_int}')
 
@@ -73,8 +83,10 @@ def numero_a_letras(monto) -> str:
 
     texto = ' '.join(partes)
     texto = texto[0].upper() + texto[1:] if texto else ''
-    moneda = 'Guaraní' if monto_int == 1 else 'Guaraníes'
-    return f'{texto} {moneda}'
+    nombre = nombre_uno if monto_int == 1 else nombre_moneda
+    if centavos:
+        return f'{texto} {nombre} con {centavos:02d}/100'
+    return f'{texto} {nombre}'
 
 
 # ── FacturaDao ─────────────────────────────────────────────────────────────
@@ -101,7 +113,7 @@ class FacturaDao(BaseDAO):
                 tc.des_tipo_comprobante,
                 cv.des_condicion_venta,
                 ef.des_estado_factura,
-                m.cod_moneda, m.simbolo_moneda,
+                m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 TO_CHAR(f.fecha_factura, 'DD/MM/YYYY') AS fecha_factura_fmt,
                 TO_CHAR(f.fecha_creacion, 'DD/MM/YYYY') AS fecha_registro
             FROM facturas f
@@ -112,6 +124,14 @@ class FacturaDao(BaseDAO):
             JOIN estados_factura ef ON f.id_estado_factura = ef.id_estado_factura
             JOIN monedas m ON f.id_moneda = m.id_moneda
             ORDER BY f.fecha_factura DESC, f.id_factura DESC
+        """
+        return self.execute_query(sql)
+
+    def getFacturasHoy(self):
+        sql = """
+            SELECT f.id_factura, f.factura_numero, f.factura_total
+            FROM facturas f
+            WHERE f.fecha_factura = CURRENT_DATE
         """
         return self.execute_query(sql)
 
@@ -126,11 +146,13 @@ class FacturaDao(BaseDAO):
                 f.fecha_anulacion,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 pp.per_cedula AS paciente_cedula, pp.per_telefono AS paciente_telefono,
+                pp.per_correo AS paciente_correo,
+                pp.per_tipo_documento AS paciente_tipo_documento, pp.per_ruc AS paciente_ruc,
                 pac.pac_historia_clinica,
                 tc.des_tipo_comprobante,
                 cv.des_condicion_venta, cv.dias_credito,
                 ef.des_estado_factura,
-                m.cod_moneda, m.simbolo_moneda,
+                m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 t.numero_timbrado AS timbrado_numero, t.codigo_establecimiento,
                 pe.codigo_punto_expedicion, pe.nombre_punto_expedicion
             FROM facturas f
@@ -167,7 +189,7 @@ class FacturaDao(BaseDAO):
 
     # ── Helpers internos ─────────────────────────────────────────────────
     @staticmethod
-    def _calcularItem(d: dict) -> dict:
+    def _calcularItem(d: dict, decimales: int = 0) -> dict:
         """Descompone IVA en un ítem. El precio ingresado ya incluye IVA."""
         p_con_iva = Decimal(str(d.get('item_precio_con_iva', 0)))
         cantidad = Decimal(str(d.get('item_cantidad', 1)))
@@ -176,20 +198,20 @@ class FacturaDao(BaseDAO):
 
         total = (p_con_iva * cantidad) - descuento
         divisor = Decimal('1') + (tasa / Decimal('100'))
-        subtotal = (total / divisor).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+        subtotal = redondear(total / divisor, decimales)
         iva_monto = total - subtotal
-        precio_base = (subtotal / cantidad).quantize(Decimal('1'), rounding=ROUND_HALF_UP) if cantidad > 0 else Decimal('0')
+        precio_base = redondear(subtotal / cantidad, decimales) if cantidad > 0 else Decimal('0')
 
         return {
             'item_descripcion': d.get('item_descripcion', ''),
             'item_cantidad': int(cantidad),
-            'item_precio_con_iva': int(p_con_iva),
-            'item_precio_unitario': int(precio_base),
-            'item_descuento': int(descuento),
-            'item_subtotal': int(subtotal),
+            'item_precio_con_iva': redondear(p_con_iva, decimales),
+            'item_precio_unitario': precio_base,
+            'item_descuento': redondear(descuento, decimales),
+            'item_subtotal': subtotal,
             'impuesto_porcentaje': float(tasa),
-            'impuesto_monto': int(iva_monto),
-            'item_total': int(total),
+            'impuesto_monto': redondear(iva_monto, decimales),
+            'item_total': redondear(total, decimales),
             'id_item_servicio': d.get('id_item_servicio'),
             'id_tipo_item': d.get('id_tipo_item'),
             'id_consulta': d.get('id_consulta'),
@@ -225,7 +247,10 @@ class FacturaDao(BaseDAO):
                 item['impuesto_porcentaje'] = porc_map.get(item['id_tipo_impuesto'], 0)
             detalles_enriquecidos.append(item)
 
-        detalles_calc = [self._calcularItem(d) for d in detalles_enriquecidos]
+        moneda = get_moneda(data.get('id_moneda'))
+        id_moneda = moneda['id_moneda']
+        decimales = int(moneda['decimales_moneda'])
+        detalles_calc = [self._calcularItem(d, decimales) for d in detalles_enriquecidos]
 
         def _fn(cur):
             id_timbrado = data['id_timbrado']
@@ -259,10 +284,10 @@ class FacturaDao(BaseDAO):
             # 3. Totales
             subtotal = sum(d['item_subtotal'] for d in detalles_calc)
             impuestos = sum(d['impuesto_monto'] for d in detalles_calc)
-            descuento = int(data.get('factura_descuento', 0))
+            descuento = redondear(data.get('factura_descuento', 0), decimales)
             total = subtotal + impuestos - descuento
             try:
-                total_letras = numero_a_letras(total)
+                total_letras = numero_a_letras(total, moneda)
             except Exception:
                 total_letras = None
 
@@ -303,7 +328,7 @@ class FacturaDao(BaseDAO):
                 id_punto_expedicion,
                 data['id_tipo_comprobante'],
                 data['id_condicion_venta'],
-                data.get('id_moneda', 1),
+                id_moneda,
                 data['id_estado_factura'],
                 data['fecha_factura'],
                 fecha_vencimiento,
@@ -346,9 +371,9 @@ class FacturaDao(BaseDAO):
                     libro_fecha, tipo_comprobante, numero_comprobante,
                     id_paciente, id_factura,
                     monto_gravado, monto_exento, monto_iva, monto_total,
-                    numero_timbrado, usuario_creacion
+                    numero_timbrado, usuario_creacion, id_moneda
                 )
-                VALUES (%s,'FACTURA',%s,%s,%s,%s,0,%s,%s,%s,%s)
+                VALUES (%s,'FACTURA',%s,%s,%s,%s,0,%s,%s,%s,%s,%s)
             """, (
                 data['fecha_factura'],
                 factura_numero,
@@ -359,38 +384,65 @@ class FacturaDao(BaseDAO):
                 total,
                 numero_timbrado,
                 usuario_creacion,
+                id_moneda,
             ))
 
-            # 8. Si condición es crédito (dias_credito > 0): INSERT cuentas_cobrar
+            # 8. INSERT cuentas_cobrar. Crédito (dias_credito > 0): queda pendiente hasta
+            #    su vencimiento. Contado: vence el mismo día y se cobra acá mismo en la
+            #    caja abierta, para que la venta entre al cierre/arqueo de caja.
             cur.execute(
                 "SELECT dias_credito FROM condiciones_venta WHERE id_condicion_venta=%s",
                 (data['id_condicion_venta'],)
             )
             cond = cur.fetchone()
-            if cond and cond[0] and cond[0] > 0:
-                año = datetime.now().year
-                cur.execute(
-                    "SELECT cuenta_numero FROM cuentas_cobrar WHERE cuenta_numero LIKE %s "
-                    "ORDER BY cuenta_numero DESC LIMIT 1",
-                    (f'CTA-{año}-%',)
+            es_credito = bool(cond and cond[0] and cond[0] > 0)
+            cobro = data.get('cobro') or {}
+            if not es_credito and not cobro.get('id_caja'):
+                raise ValueError('Para facturar al contado elija la caja donde entra el cobro.')
+
+            año = datetime.now().year
+            cur.execute(
+                "SELECT cuenta_numero FROM cuentas_cobrar WHERE cuenta_numero LIKE %s "
+                "ORDER BY cuenta_numero DESC LIMIT 1",
+                (f'CTA-{año}-%',)
+            )
+            ult = cur.fetchone()
+            num_cta = int(ult[0].split('-')[2]) + 1 if ult else 1
+            cur.execute("""
+                INSERT INTO cuentas_cobrar(
+                    cuenta_numero, id_factura, id_paciente,
+                    fecha_vencimiento, monto_total, monto_pendiente, usuario_creacion, id_moneda
                 )
-                ult = cur.fetchone()
-                num_cta = int(ult[0].split('-')[2]) + 1 if ult else 1
-                cur.execute("""
-                    INSERT INTO cuentas_cobrar(
-                        cuenta_numero, id_factura, id_paciente,
-                        fecha_vencimiento, monto_total, monto_pendiente, usuario_creacion
-                    )
-                    VALUES (%s,%s,%s,%s,%s,%s,%s)
-                """, (
-                    f'CTA-{año}-{num_cta:04d}',
-                    id_factura,
-                    data['id_paciente'],
-                    fecha_vencimiento,
-                    total,
-                    total,
-                    usuario_creacion,
-                ))
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING id_cuenta_cobrar
+            """, (
+                f'CTA-{año}-{num_cta:04d}',
+                id_factura,
+                data['id_paciente'],
+                fecha_vencimiento if es_credito else data['fecha_factura'],
+                total,
+                total,
+                usuario_creacion,
+                id_moneda,
+            ))
+            id_cuenta_cobrar = cur.fetchone()[0]
+
+            if not es_credito:
+                detalles_cobro = cobro.get('detalles') or []
+                if not detalles_cobro:
+                    raise ValueError('Elija la forma de cobro de la factura al contado.')
+                # Con una sola forma de cobro, cobra el total; con varias, deben sumar el total.
+                if len(detalles_cobro) == 1:
+                    detalles_cobro[0]['monto_cobrado'] = total
+                elif redondear(sum(Decimal(str(d.get('monto_cobrado', 0))) for d in detalles_cobro), decimales) != total:
+                    raise ValueError('Las formas de cobro deben sumar el total de la factura.')
+                CobranzaDao().registrarEnTransaccion(cur, {
+                    'id_cuenta_cobrar': id_cuenta_cobrar,
+                    'id_factura': id_factura,
+                    'id_caja': cobro['id_caja'],
+                    'detalles': detalles_cobro,
+                    'observaciones': f'Cobro de factura al contado {factura_numero}',
+                }, usuario_creacion)
 
             # 9. Si tiene pedido: marcar como FACTURADO
             if data.get('id_pedido'):
@@ -407,7 +459,8 @@ class FacturaDao(BaseDAO):
 
     # ── Cambio de estado ─────────────────────────────────────────────────
     def anular(self, id_factura, usuario_anulacion=None):
-        """Anula una factura (soft delete: fecha_anulacion + estado ANULADA)."""
+        """Anula una factura (soft delete: fecha_anulacion + estado ANULADA) y, en la
+        misma transacción, sus cobranzas registradas: así el cobro sale de la caja."""
         sql_estado = """
             SELECT id_estado_factura FROM estados_factura
             WHERE UPPER(des_estado_factura) = 'ANULADA' LIMIT 1
@@ -415,16 +468,26 @@ class FacturaDao(BaseDAO):
         est = self.execute_query_one(sql_estado)
         if not est:
             raise ValueError("No existe el estado ANULADA en estados_factura.")
-        sql = """
-            UPDATE facturas
-            SET id_estado_factura=%s,
-                fecha_anulacion=now(),
-                usuario_anulacion=%s,
-                usuario_modificacion=%s
-            WHERE id_factura=%s AND fecha_anulacion IS NULL
-        """
-        return self.execute_query(
-            sql,
-            (est['id_estado_factura'], usuario_anulacion, usuario_anulacion, id_factura),
-            commit=True
-        ) > 0
+
+        def _fn(cur):
+            cur.execute("""
+                UPDATE facturas
+                SET id_estado_factura=%s,
+                    fecha_anulacion=now(),
+                    usuario_anulacion=%s,
+                    usuario_modificacion=%s
+                WHERE id_factura=%s AND fecha_anulacion IS NULL
+            """, (est['id_estado_factura'], usuario_anulacion, usuario_anulacion, id_factura))
+            if cur.rowcount == 0:
+                return False
+
+            cur.execute("""
+                UPDATE cobranzas
+                SET est_cobranza = 'ANULADA',
+                    fecha_modificacion = CURRENT_TIMESTAMP,
+                    usuario_modificacion = %s
+                WHERE id_factura = %s AND est_cobranza = 'REGISTRADA'
+            """, (usuario_anulacion, id_factura))
+            return True
+
+        return self.execute_transaction(_fn)

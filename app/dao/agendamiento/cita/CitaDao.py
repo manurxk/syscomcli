@@ -416,8 +416,8 @@ class CitaDao(BaseDAO):
                 cur.execute(
                     """
                     INSERT INTO recordatorios (id_cita, canal, minutos_antes, usuario_creacion)
-                    VALUES (%(id_cita)s, 'WHATSAPP', 1440, %(usuario)s),
-                           (%(id_cita)s, 'WHATSAPP', 120, %(usuario)s)
+                    VALUES (%(id_cita)s, 'EMAIL', 1440, %(usuario)s),
+                           (%(id_cita)s, 'EMAIL', 120, %(usuario)s)
                     ON CONFLICT (id_cita, canal, minutos_antes) DO NOTHING
                     """,
                     {"id_cita": id_cita, "usuario": usuario_modificacion},

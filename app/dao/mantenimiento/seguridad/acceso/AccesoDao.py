@@ -32,6 +32,66 @@ class AccesoDao(BaseDAO):
         """
         return self.execute_query(sql, (id_usuario,))
 
+    def getDetalleUsuario(self, id_usuario):
+        """Datos de identidad/seguridad de un usuario para la ventana de detalle
+        (ver usuario-detalle.html): estado de bloqueo, MFA, último login."""
+        sql = """
+            SELECT
+                u.id_usuario, u.usu_nick, u.est_usuario, u.usu_nro_intentos,
+                u.nivel_escalada_bloqueo, u.fecha_bloqueo, u.bloqueado_hasta, u.motivo_bloqueo,
+                u.fecha_ultimo_login, u.ip_ultimo_login, u.fecha_creacion,
+                v.nombre_completo, v.grupo_nombre, v.cargo_nombre,
+                v.mfa_habilitado, v.correo, v.esta_bloqueado
+            FROM usuarios u
+            LEFT JOIN v_usuarios_seguridad v ON v.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+        """
+        return self.execute_query_one(sql, (id_usuario,))
+
+    def getHistorialAccesos(self, id_usuario, limite=50):
+        """Últimos intentos de login (exitosos y fallidos) del usuario."""
+        sql = """
+            SELECT id_acceso, resultado, ip_origen, user_agent, fecha_intento
+            FROM accesos_sistema
+            WHERE id_usuario = %s
+            ORDER BY fecha_intento DESC
+            LIMIT %s
+        """
+        return self.execute_query(sql, (id_usuario, limite))
+
+    def getResumenMfa(self, id_usuario):
+        """Cuántos códigos MFA se enviaron, cuántos se llegaron a usar y cuándo
+        fue el último envío."""
+        sql = """
+            SELECT COUNT(*) AS total_enviados,
+                   COUNT(*) FILTER (WHERE usado = TRUE) AS total_usados,
+                   MAX(fecha_generacion) AS ultimo_enviado
+            FROM mfa_codigos
+            WHERE id_usuario = %s
+        """
+        return self.execute_query_one(sql, (id_usuario,))
+
+    def getDispositivosConfiables(self, id_usuario):
+        """Dispositivos que se saltan el código MFA por 60 días (ver
+        AuthService.crear_dispositivo_confiable)."""
+        sql = """
+            SELECT id_dispositivo, fecha_creacion, fecha_expiracion, ip_creacion, user_agent, revocado
+            FROM mfa_dispositivos_confiables
+            WHERE id_usuario = %s
+            ORDER BY fecha_creacion DESC
+        """
+        return self.execute_query(sql, (id_usuario,))
+
+    def getSolicitudesRecuperacion(self, id_usuario):
+        """Solicitudes de recuperación de contraseña del usuario."""
+        sql = """
+            SELECT id_token, fecha_creacion, fecha_expiracion, usado, fecha_uso, ip_solicitud, email_destino
+            FROM password_reset_tokens
+            WHERE id_usuario = %s
+            ORDER BY fecha_creacion DESC
+        """
+        return self.execute_query(sql, (id_usuario,))
+
     def revocarMfa(self, id_usuario, usuario_modificacion=None):
         """Desactiva el MFA del usuario, invalida códigos pendientes y cierra
         sus sesiones activas (tipo_cierre='MFA_REVOKE'). El usuario deberá

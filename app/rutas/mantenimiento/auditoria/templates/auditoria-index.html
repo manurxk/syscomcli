@@ -73,6 +73,86 @@ Auditoría del Sistema
       </div>
     </div>
   </div>
+
+  <!-- Intentos masivos / fuerza bruta -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">IPs con intentos fallidos en varias cuentas (posible fuerza bruta)</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered" id="tblSospechosas">
+          <thead class="table-light">
+            <tr>
+              <th>IP</th>
+              <th>Cuentas distintas afectadas</th>
+              <th>Total de fallos</th>
+              <th>Primer intento</th>
+              <th>Último intento</th>
+            </tr>
+          </thead>
+          <tbody id="tbodySospechosas"><tr><td colspan="5" class="text-center text-muted py-3">Sin patrones sospechosos en el rango filtrado.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intentos de acceso -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+      <h6 class="m-0 fw-bold">Intentos de acceso (login)</h6>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="fltSoloFallidos">
+        <label class="form-check-label small" for="fltSoloFallidos">Solo fallidos</label>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold small">IP</label>
+          <input type="text" class="form-control form-control-sm" id="fltIp" placeholder="Ej. 192.168.1.10">
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblIntentos">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha/Hora</th>
+              <th>Usuario intentado</th>
+              <th>Resultado</th>
+              <th>IP</th>
+              <th>User Agent</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solicitudes de recuperación de contraseña -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold">Solicitudes de recuperación de contraseña</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblRecuperaciones">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Correo destino</th>
+              <th>IP</th>
+              <th>Vence</th>
+              <th>Usado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -132,20 +212,140 @@ Auditoría del Sistema
     });
   }
 
+  // ==========================================
+  // INTENTOS DE ACCESO
+  // ==========================================
+  let tablaIntentos;
+
+  const construirUrlIntentos = () => {
+    const params = new URLSearchParams();
+    const fechaDesde = $('#fltFechaDesde').val();
+    const fechaHasta = $('#fltFechaHasta').val();
+    const ip = $('#fltIp').val();
+    const soloFallidos = $('#fltSoloFallidos').is(':checked');
+
+    if (fechaDesde) params.append('fecha_desde', fechaDesde);
+    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+    if (ip) params.append('ip', ip);
+    if (soloFallidos) params.append('solo_fallidos', 'true');
+    params.append('pagina', 1);
+    params.append('por_pagina', 200);
+
+    return `/api/v1/auditoria/intentos?${params.toString()}`;
+  }
+
+  const initTablaIntentos = () => {
+    tablaIntentos = $('#tblIntentos').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: { url: construirUrlIntentos(), dataSrc: 'data.datos' },
+      columns: [
+        { data: 'fecha_intento' },
+        { data: 'usuario_intentado', defaultContent: '-' },
+        {
+          data: function (row) {
+            const cls = row.resultado === 'EXITOSO' ? 'text-success' : 'text-danger';
+            return `<span class="${cls}">${row.resultado}</span>`;
+          }
+        },
+        { data: 'ip_origen', defaultContent: '-' },
+        { data: 'user_agent', defaultContent: '-' }
+      ],
+      order: [[0, 'desc']]
+    });
+  }
+
+  // ==========================================
+  // IPs SOSPECHOSAS
+  // ==========================================
+  const cargarSospechosas = () => {
+    const params = new URLSearchParams();
+    const fechaDesde = $('#fltFechaDesde').val();
+    const fechaHasta = $('#fltFechaHasta').val();
+    if (fechaDesde) params.append('fecha_desde', fechaDesde);
+    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+
+    fetch(`/api/v1/auditoria/intentos/sospechosos?${params.toString()}`)
+      .then(resp => resp.json())
+      .then(res => {
+        const $tbody = $('#tbodySospechosas').empty();
+        if (!res.success || !res.data.length) {
+          $tbody.append('<tr><td colspan="5" class="text-center text-muted py-3">Sin patrones sospechosos en el rango filtrado.</td></tr>');
+          return;
+        }
+        res.data.forEach(row => {
+          $tbody.append(`<tr>
+            <td>${row.ip_origen}</td>
+            <td><span class="badge bg-danger">${row.cuentas_distintas}</span></td>
+            <td>${row.total_fallos}</td>
+            <td>${row.primer_intento}</td>
+            <td>${row.ultimo_intento}</td>
+          </tr>`);
+        });
+      });
+  }
+
+  // ==========================================
+  // SOLICITUDES DE RECUPERACIÓN
+  // ==========================================
+  let tablaRecuperaciones;
+
+  const construirUrlRecuperaciones = () => {
+    const params = new URLSearchParams();
+    const fechaDesde = $('#fltFechaDesde').val();
+    const fechaHasta = $('#fltFechaHasta').val();
+    if (fechaDesde) params.append('fecha_desde', fechaDesde);
+    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+    params.append('pagina', 1);
+    params.append('por_pagina', 200);
+    return `/api/v1/auditoria/recuperaciones?${params.toString()}`;
+  }
+
+  const initTablaRecuperaciones = () => {
+    tablaRecuperaciones = $('#tblRecuperaciones').DataTable({
+      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
+      ajax: { url: construirUrlRecuperaciones(), dataSrc: 'data.datos' },
+      columns: [
+        { data: 'fecha_creacion' },
+        { data: 'usu_nick', defaultContent: '-' },
+        { data: 'email_destino', defaultContent: '-' },
+        { data: 'ip_solicitud', defaultContent: '-' },
+        { data: 'fecha_expiracion' },
+        {
+          data: function (row) {
+            return row.usado
+              ? '<span class="badge bg-success">Sí</span>'
+              : '<span class="badge bg-secondary">No</span>';
+          }
+        }
+      ],
+      order: [[0, 'desc']]
+    });
+  }
+
+  const recargarTodo = () => {
+    tabla.ajax.url(construirUrl()).load();
+    tablaIntentos.ajax.url(construirUrlIntentos()).load();
+    tablaRecuperaciones.ajax.url(construirUrlRecuperaciones()).load();
+    cargarSospechosas();
+  }
+
   const filtrar = () => {
-    $('#btnFiltrar').on('click', function () {
-      tabla.ajax.url(construirUrl()).load();
-    });
+    $('#btnFiltrar').on('click', recargarTodo);
     $('#btnLimpiar').on('click', function () {
-      $('#fltFechaDesde, #fltFechaHasta, #fltIdUsuario').val('');
+      $('#fltFechaDesde, #fltFechaHasta, #fltIdUsuario, #fltIp').val('');
       $('#fltAccion').val('');
-      tabla.ajax.url(construirUrl()).load();
+      $('#fltSoloFallidos').prop('checked', false);
+      recargarTodo();
     });
+    $('#fltSoloFallidos').on('change', () => tablaIntentos.ajax.url(construirUrlIntentos()).load());
   }
 
   $(function () {
     cargarAcciones();
     initDatatable();
+    initTablaIntentos();
+    initTablaRecuperaciones();
+    cargarSospechosas();
     filtrar();
   });
 </script>

@@ -88,13 +88,13 @@ $('#tblArqueos').DataTable({
     { data: 'arqueo_numero' },
     { data: 'caja' },
     { data: 'fecha_arqueo' },
-    { data: row => 'Gs. ' + fmt(row.monto_esperado), className: 'text-end' },
-    { data: row => 'Gs. ' + fmt(row.monto_real), className: 'text-end' },
+    { data: row => formatMoney(row.monto_esperado, row), className: 'text-end' },
+    { data: row => formatMoney(row.monto_real, row), className: 'text-end' },
     {
       data: row => {
         const dif = parseFloat(row.diferencia || 0);
         const cls = dif < 0 ? 'text-danger' : dif > 0 ? 'text-warning' : 'text-success';
-        return `<span class="${cls} fw-bold">Gs. ${fmt(dif)}</span>`;
+        return `<span class="${cls} fw-bold">${formatMoney(dif, row)}</span>`;
       },
       className: 'text-end'
     },
@@ -141,15 +141,15 @@ async function verDetalle(idArqueo) {
         </div>
         <div class="col-md-4">
           <label class="small text-muted">Monto esperado</label>
-          <p class="fw-bold">Gs. ${fmt(d.monto_esperado)}</p>
+          <p class="fw-bold">${formatMoney(d.monto_esperado, d)}</p>
         </div>
         <div class="col-md-4">
           <label class="small text-muted">Monto real</label>
-          <p class="fw-bold">Gs. ${fmt(d.monto_real)}</p>
+          <p class="fw-bold">${formatMoney(d.monto_real, d)}</p>
         </div>
         <div class="col-md-4">
           <label class="small text-muted">Diferencia</label>
-          <p class="fw-bold ${difCls}">Gs. ${fmt(d.diferencia)}</p>
+          <p class="fw-bold ${difCls}">${formatMoney(d.diferencia, d)}</p>
         </div>
         <div class="col-12">
           <label class="small text-muted">Estado</label><br>

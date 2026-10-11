@@ -1,4 +1,6 @@
 from app.core.base_dao import BaseDAO
+from app.core.moneda import get_moneda, redondear
+from app.dao.ventas.movimientos.pedido.PedidoDao import PedidoDao
 from datetime import date
 
 
@@ -10,14 +12,16 @@ class PresupuestoDao(BaseDAO):
         sql = """
             SELECT p.id_presupuesto, p.presupuesto_numero, p.id_paciente, p.id_profesional,
                    p.fecha_presupuesto, p.fecha_validez, p.presupuesto_subtotal,
-                   p.presupuesto_descuento, p.presupuesto_total, p.observaciones,
+                   p.presupuesto_descuento, p.presupuesto_total, p.id_moneda, p.observaciones,
                    p.presupuesto_estado, p.est_presupuesto,
                    CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                    pp.per_cedula AS paciente_cedula,
-                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre
+                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre,
+                   m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
             FROM presupuestos p
             JOIN pacientes pac ON p.id_paciente = pac.id_paciente
             JOIN personas pp ON pac.id_persona = pp.id_persona
+            JOIN monedas m ON p.id_moneda = m.id_moneda
             LEFT JOIN funcionarios f ON p.id_profesional = f.id_funcionario
             LEFT JOIN personas pe ON f.id_persona = pe.id_persona
             WHERE p.est_presupuesto = TRUE
@@ -33,14 +37,16 @@ class PresupuestoDao(BaseDAO):
         sql = """
             SELECT p.id_presupuesto, p.presupuesto_numero, p.id_paciente, p.id_profesional,
                    p.fecha_presupuesto, p.fecha_validez, p.presupuesto_subtotal,
-                   p.presupuesto_descuento, p.presupuesto_total, p.observaciones,
+                   p.presupuesto_descuento, p.presupuesto_total, p.id_moneda, p.observaciones,
                    p.presupuesto_estado,
                    CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                    pp.per_cedula AS paciente_cedula,
-                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre
+                   CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre,
+                   m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
             FROM presupuestos p
             JOIN pacientes pac ON p.id_paciente = pac.id_paciente
             JOIN personas pp ON pac.id_persona = pp.id_persona
+            JOIN monedas m ON p.id_moneda = m.id_moneda
             LEFT JOIN funcionarios f ON p.id_profesional = f.id_funcionario
             LEFT JOIN personas pe ON f.id_persona = pe.id_persona
             WHERE p.id_presupuesto = %s AND p.est_presupuesto = TRUE
@@ -85,27 +91,34 @@ class PresupuestoDao(BaseDAO):
             raise ValueError('El presupuesto debe tener al menos un ítem.')
 
         def _crear(cur):
+            moneda = get_moneda(datos.get('id_moneda'), cur)
+            id_moneda = moneda['id_moneda']
+            decimales = int(moneda['decimales_moneda'])
+
             numero = self._generarNumero(cur)
-            subtotal = sum(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0) for d in detalles)
-            descuento = float(datos.get('presupuesto_descuento') or 0)
+            subtotal = sum(
+                redondear(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0), decimales)
+                for d in detalles
+            )
+            descuento = redondear(datos.get('presupuesto_descuento') or 0, decimales)
 
             cur.execute(
                 """
                 INSERT INTO presupuestos(
                     presupuesto_numero, id_paciente, id_profesional, fecha_presupuesto, fecha_validez,
-                    presupuesto_subtotal, presupuesto_descuento, presupuesto_total, observaciones,
+                    presupuesto_subtotal, presupuesto_descuento, presupuesto_total, id_moneda, observaciones,
                     presupuesto_estado, usuario_creacion
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id_presupuesto
                 """,
                 (numero, datos['id_paciente'], datos.get('id_profesional'), datos['fecha_presupuesto'],
-                 datos.get('fecha_validez'), subtotal, descuento, subtotal - descuento,
+                 datos.get('fecha_validez'), subtotal, descuento, subtotal - descuento, id_moneda,
                  datos.get('observaciones'), 'PENDIENTE', usuario_creacion)
             )
             id_presupuesto = cur.fetchone()[0]
 
             for d in detalles:
-                item_subtotal = float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0)
+                item_subtotal = redondear(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0), decimales)
                 cur.execute(
                     """
                     INSERT INTO presupuesto_detalle(
@@ -125,6 +138,49 @@ class PresupuestoDao(BaseDAO):
     def actualizarEstado(self, id_presupuesto, nuevo_estado, usuario_modificacion=None):
         sql = "UPDATE presupuestos SET presupuesto_estado = %s, usuario_modificacion = %s WHERE id_presupuesto = %s"
         return self.execute_query(sql, (nuevo_estado, usuario_modificacion, id_presupuesto), commit=True) > 0
+
+    def convertirEnPedido(self, id_presupuesto, usuario=None):
+        """Crea un pedido con el paciente, profesional, moneda, descuento e ítems del
+        presupuesto aprobado y lo marca CONVERTIDO, en una sola transacción.
+        Devuelve el número del pedido creado."""
+        presupuesto = self.getPresupuestoById(id_presupuesto)
+        if not presupuesto:
+            raise ValueError('No se encontró el presupuesto.')
+
+        def _convertir(cur):
+            # Bloqueo + revalidación del estado: evita convertir dos veces el mismo presupuesto
+            cur.execute(
+                "SELECT presupuesto_estado FROM presupuestos WHERE id_presupuesto = %s FOR UPDATE",
+                (id_presupuesto,)
+            )
+            if cur.fetchone()[0] != 'APROBADO':
+                raise ValueError('Solo se puede convertir en pedido un presupuesto aprobado.')
+
+            id_pedido = PedidoDao().crearEnTransaccion(cur, {
+                'id_paciente': presupuesto['id_paciente'],
+                'id_profesional': presupuesto['id_profesional'],
+                'id_moneda': presupuesto['id_moneda'],
+                'fecha_pedido': date.today(),
+                'pedido_descuento': presupuesto['presupuesto_descuento'],
+                'observaciones': f"Generado desde el presupuesto {presupuesto['presupuesto_numero']}.",
+                'detalles': [{
+                    'id_item_servicio': d['id_item_servicio'],
+                    'item_descripcion': d['item_descripcion'],
+                    'item_cantidad': d['item_cantidad'],
+                    'item_precio_unitario': d['item_precio_unitario'],
+                    'item_descuento': d['item_descuento'],
+                    'observaciones': d['observaciones'],
+                } for d in presupuesto['detalles']],
+            }, usuario)
+
+            cur.execute(
+                "UPDATE presupuestos SET presupuesto_estado = 'CONVERTIDO', usuario_modificacion = %s WHERE id_presupuesto = %s",
+                (usuario, id_presupuesto)
+            )
+            cur.execute("SELECT pedido_numero FROM pedidos WHERE id_pedido = %s", (id_pedido,))
+            return cur.fetchone()[0]
+
+        return self.execute_transaction(_convertir)
 
     def desactivar(self, id_presupuesto, usuario_modificacion=None):
         sql = "UPDATE presupuestos SET est_presupuesto = FALSE, usuario_modificacion = %s WHERE id_presupuesto = %s"

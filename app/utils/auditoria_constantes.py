@@ -1,7 +1,7 @@
 """
 auditoria_constantes.py
 =======================
-Módulo de constantes para el sistema de auditoría del sistema Sysclin.
+Módulo de constantes para el sistema de auditoría del sistema SYSCLIN.
 
 Centraliza las acciones auditables, sus íconos de Font Awesome 6 y sus
 etiquetas en español.  No tiene dependencias externas (solo stdlib).
@@ -44,6 +44,10 @@ class AuditAccion:
     RECORD_UPDATE:   str = "RECORD_UPDATE"
     RECORD_DELETE:   str = "RECORD_DELETE"
     PASSWORD_CHANGE: str = "PASSWORD_CHANGE"
+    REPORT_VIEW:     str = "REPORT_VIEW"
+    RATE_LIMIT:       str = "RATE_LIMIT"        # IP o recuperación frenada por exceso de intentos
+    ACCOUNT_LOCKED:   str = "ACCOUNT_LOCKED"    # cuenta bloqueada por la escalada de intentos fallidos
+    ACCOUNT_UNLOCKED: str = "ACCOUNT_UNLOCKED"  # cuenta desbloqueada por un administrador
 
     # Conjunto para validación rápida
     _ALL: frozenset[str] = frozenset({
@@ -55,6 +59,10 @@ class AuditAccion:
         RECORD_UPDATE,
         RECORD_DELETE,
         PASSWORD_CHANGE,
+        REPORT_VIEW,
+        RATE_LIMIT,
+        ACCOUNT_LOCKED,
+        ACCOUNT_UNLOCKED,
     })
 
     @classmethod
@@ -76,6 +84,10 @@ ICON_MAP: dict[str, str] = {
     AuditAccion.RECORD_UPDATE:   "fa-solid fa-pen-to-square",
     AuditAccion.RECORD_DELETE:   "fa-solid fa-trash",
     AuditAccion.PASSWORD_CHANGE: "fa-solid fa-key",
+    AuditAccion.REPORT_VIEW:     "fa-solid fa-chart-bar",
+    AuditAccion.RATE_LIMIT:       "fa-solid fa-gauge-high",
+    AuditAccion.ACCOUNT_LOCKED:   "fa-solid fa-lock",
+    AuditAccion.ACCOUNT_UNLOCKED: "fa-solid fa-lock-open",
 }
 """Diccionario que mapea cada acción a su clase CSS de Font Awesome 6.
 
@@ -96,6 +108,10 @@ LABEL_MAP: dict[str, str] = {
     AuditAccion.RECORD_UPDATE:   "Modificación de registro",
     AuditAccion.RECORD_DELETE:   "Eliminación de registro",
     AuditAccion.PASSWORD_CHANGE: "Cambio de contraseña",
+    AuditAccion.REPORT_VIEW:     "Visualización de reporte",
+    AuditAccion.RATE_LIMIT:       "Límite de intentos superado",
+    AuditAccion.ACCOUNT_LOCKED:   "Cuenta bloqueada",
+    AuditAccion.ACCOUNT_UNLOCKED: "Cuenta desbloqueada",
 }
 """Diccionario que mapea cada acción a su etiqueta descriptiva en español."""
 

@@ -82,21 +82,21 @@
           <div class="col-md-4">
             <label class="form-label small fw-bold">Monto esperado (sistema)</label>
             <div class="input-group">
-              <span class="input-group-text">Gs.</span>
+              <span class="input-group-text" id="lblSimboloEsperado">Gs.</span>
               <input type="text" class="form-control bg-light fw-bold" id="lblMontoEsperado" readonly value="...">
             </div>
           </div>
           <div class="col-md-4">
             <label class="form-label small fw-bold">Monto real (recuento físico) <span class="text-danger">*</span></label>
             <div class="input-group">
-              <span class="input-group-text">Gs.</span>
+              <span class="input-group-text" id="lblSimboloReal">Gs.</span>
               <input type="number" class="form-control" id="txtMontoReal" min="0" step="1000" placeholder="0">
             </div>
           </div>
           <div class="col-md-4">
             <label class="form-label small fw-bold">Diferencia</label>
             <div class="input-group">
-              <span class="input-group-text">Gs.</span>
+              <span class="input-group-text" id="lblSimboloDif">Gs.</span>
               <input type="text" class="form-control bg-light fw-bold" id="lblDiferencia" readonly value="—">
             </div>
           </div>
@@ -131,9 +131,10 @@
 <script>
 const CSRFToken = "{{ csrf_token() }}";
 
-const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
+const fmt = (n, dec) => parseFloat(n || 0).toLocaleString('es-PY', {minimumFractionDigits: dec||0, maximumFractionDigits: dec||0});
 
 let montoEsperado = 0;
+let monedaArqueo = { decimales_moneda: 0, simbolo_moneda: 'Gs.', cod_moneda: 'PYG' };
 
 async function cargarCajas() {
   const res = await fetch('/api/v1/cajas-estado');
@@ -172,7 +173,13 @@ document.getElementById('btnCargarApertura').addEventListener('click', async () 
     document.getElementById('hidIdCaja').value = idCaja;
     document.getElementById('lblAperturaId').textContent = apertura.id_apertura_cierre;
     document.getElementById('lblFechaApertura').textContent = apertura.fecha_operacion || '—';
-    document.getElementById('lblSaldoInicialArqueo').textContent = 'Gs. ' + fmt(apertura.saldo_inicial);
+    monedaArqueo = { id_moneda: apertura.id_moneda, cod_moneda: apertura.cod_moneda, simbolo_moneda: apertura.simbolo_moneda, decimales_moneda: apertura.decimales_moneda };
+    document.getElementById('lblSimboloEsperado').textContent = monedaArqueo.simbolo_moneda;
+    document.getElementById('lblSimboloReal').textContent = monedaArqueo.simbolo_moneda;
+    document.getElementById('lblSimboloDif').textContent = monedaArqueo.simbolo_moneda;
+    const decArqueo = Number(monedaArqueo.decimales_moneda);
+    document.getElementById('txtMontoReal').step = decArqueo ? Math.pow(10, -decArqueo) : 1000;
+    document.getElementById('lblSaldoInicialArqueo').textContent = formatMoney(apertura.saldo_inicial, monedaArqueo);
     document.getElementById('sinAperturaActiva').style.display = 'none';
     document.getElementById('contenedorArqueo').style.display = '';
 
@@ -181,10 +188,10 @@ document.getElementById('btnCargarApertura').addEventListener('click', async () 
     const jsonSaldo = await resSaldo.json();
     if (jsonSaldo.success) {
       montoEsperado = parseFloat(jsonSaldo.data.monto_esperado || 0);
-      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado);
+      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado, decArqueo);
     } else {
       montoEsperado = parseFloat(apertura.saldo_inicial || 0);
-      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado) + ' (estimado)';
+      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado, decArqueo) + ' (estimado)';
     }
   } catch(e) {
     Swal.fire({icon:'error', title:'Error', text:'No se pudo cargar la apertura activa.'});
@@ -195,7 +202,7 @@ document.getElementById('btnCalcularDiferencia').addEventListener('click', () =>
   const real = parseFloat(document.getElementById('txtMontoReal').value) || 0;
   const dif = real - montoEsperado;
   const span = document.getElementById('lblDiferencia');
-  span.value = fmt(dif);
+  span.value = fmt(dif, Number(monedaArqueo.decimales_moneda));
   span.className = 'form-control bg-light fw-bold ' + (dif < 0 ? 'text-danger' : dif > 0 ? 'text-warning' : 'text-success');
   document.getElementById('btnGuardarArqueo').disabled = false;
 });

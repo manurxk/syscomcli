@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { data: 'factura_numero' },
       { data: 'paciente_nombre' },
       { data: 'motivo_nota_credito', render: v => v ? (v.length > 40 ? v.substring(0, 40) + '…' : v) : '—' },
-      { data: 'monto_total', className: 'text-end', render: v => v ? Number(v).toLocaleString('es-PY') + ' Gs.' : '—' },
+      { data: 'monto_total', className: 'text-end', render: (v, t, row) => v ? formatMoney(v, row) : '—' },
       { data: 'fecha_nota_credito_fmt', defaultContent: '—' },
       { data: 'est_nota_credito', render: v => {
           const cls = v === 'ANULADA' ? 'danger' : 'success';
@@ -137,7 +137,7 @@ async function verDetalle(id) {
   document.getElementById('dlFactura').textContent   = d.factura_numero  || '—';
   document.getElementById('dlFecha').textContent     = d.fecha_nota_credito_fmt || '—';
   document.getElementById('dlMotivo').textContent    = d.motivo_nota_credito || '—';
-  document.getElementById('dlMonto').textContent     = d.monto_total ? Number(d.monto_total).toLocaleString('es-PY') + ' Gs.' : '—';
+  document.getElementById('dlMonto').textContent     = d.monto_total ? formatMoney(d.monto_total, d) : '—';
   document.getElementById('dlObs').textContent       = d.observaciones || '—';
 
   const est = d.est_nota_credito || '';
@@ -152,7 +152,7 @@ async function verDetalle(id) {
       <td>${item.item_descripcion}</td>
       <td class="text-center">${item.item_cantidad}</td>
       <td class="text-end">${item.item_precio_unitario ? Number(item.item_precio_unitario).toLocaleString('es-PY') : '—'}</td>
-      <td class="text-end">${item.monto_total ? Number(item.monto_total).toLocaleString('es-PY') + ' Gs.' : '—'}</td>`;
+      <td class="text-end">${item.monto_total ? formatMoney(item.monto_total, d) : '—'}</td>`;
     tbody.appendChild(tr);
   });
 

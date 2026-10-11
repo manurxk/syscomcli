@@ -5,6 +5,8 @@ from app import app
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.auth.tasks.auth_tasks import configurar_tareas_programadas
 from app.tasks.recordatorio_tasks import configurar_tarea_recordatorios
+from app.tasks.agenda_tasks import configurar_tarea_agenda
+import os
 import socket
 
 # Configurar scheduler para tareas programadas
@@ -21,6 +23,12 @@ try:
     configurar_tarea_recordatorios(scheduler)
 except Exception as e:
     app.logger.warning(f"No se pudo configurar la tarea de recordatorios: {str(e)}")
+
+# Configurar tarea diaria que extiende los turnos de la Agenda Médica
+try:
+    configurar_tarea_agenda(scheduler)
+except Exception as e:
+    app.logger.warning(f"No se pudo configurar la tarea de turnos de agenda: {str(e)}")
 
 # Iniciar scheduler
 try:
@@ -54,7 +62,7 @@ if __name__ == "__main__":
         
         HOST = "0.0.0.0"  # ← CAMBIO PRINCIPAL: Acepta conexiones externas
         PORT = 5000
-        DEBUG = True
+        DEBUG = os.getenv('FLASK_DEBUG', '0') == '1'  # 1 en local, 0 en el servidor (sin depurador de Werkzeug)
         
         # Obtener y mostrar la IP local
         ip_local = obtener_ip_local()

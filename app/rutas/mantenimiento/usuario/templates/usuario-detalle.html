@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Detalle de Usuario
+{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title" id="hdrUsuNick">Cargando...</h1>
+          <div class="page-header-subtitle">Identidad, bloqueo, MFA e historial de accesos</div>
+        </div>
+        <div class="col-auto mt-4">
+          <a href="{{ url_for('usuario.usuarioIndex') }}" class="btn btn-light btn-sm">Volver al listado</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+
+  <!-- Datos + acciones -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-8">
+          <table class="table table-borderless table-sm mb-0">
+            <tbody>
+              <tr><td class="text-muted" style="width:180px">Funcionario</td><td id="dtFuncionario">-</td></tr>
+              <tr><td class="text-muted">Cargo</td><td id="dtCargo">-</td></tr>
+              <tr><td class="text-muted">Rol principal</td><td id="dtRol">-</td></tr>
+              <tr><td class="text-muted">Estado</td><td id="dtEstado">-</td></tr>
+              <tr><td class="text-muted">Correo</td><td id="dtCorreo">-</td></tr>
+              <tr><td class="text-muted">MFA</td><td id="dtMfa">-</td></tr>
+              <tr><td class="text-muted">Bloqueo</td><td id="dtBloqueo">-</td></tr>
+              <tr><td class="text-muted">Intentos fallidos</td><td id="dtIntentos">-</td></tr>
+              <tr><td class="text-muted">Último login</td><td id="dtUltimoLogin">-</td></tr>
+              <tr><td class="text-muted">Fecha de creación</td><td id="dtFechaCreacion">-</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="d-flex flex-md-column gap-2 justify-content-md-end">
+            {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+            {% if 'SUPERADMIN' in roles_usuario %}
+            <a href="{{ url_for('usuario.usuarioAgregar', id_usuario=id_usuario) }}" class="btn btn-outline-secondary btn-sm">Editar</a>
+            {% endif %}
+            <button type="button" id="btnResetear" class="btn btn-outline-success btn-sm">Resetear intentos y desbloquear</button>
+            <button type="button" id="btnRevocarMfa" class="btn btn-outline-warning btn-sm d-none">Revocar MFA</button>
+            {% if 'SUPERADMIN' in roles_usuario %}
+            <button type="button" id="btnDesactivar" class="btn btn-outline-danger btn-sm">Desactivar</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MFA -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header fw-bold">Verificación en dos pasos (MFA)</div>
+    <div class="card-body">
+      <div class="row text-center mb-3">
+        <div class="col"><div class="fs-4 fw-bold" id="mfaTotalEnviados">0</div><div class="text-muted small">Códigos enviados</div></div>
+        <div class="col"><div class="fs-4 fw-bold" id="mfaTotalUsados">0</div><div class="text-muted small">Códigos usados</div></div>
+        <div class="col"><div class="fs-6 fw-bold" id="mfaUltimoEnvio">-</div><div class="text-muted small">Último envío</div></div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm" id="tblDispositivos">
+          <thead class="table-light"><tr><th>Dispositivo confiable desde</th><th>Vence</th><th>IP</th><th>User Agent</th><th>Estado</th></tr></thead>
+          <tbody id="tbodyDispositivos"><tr><td colspan="5" class="text-center text-muted py-3">Sin dispositivos confiables.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sesiones activas -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header fw-bold">Sesiones activas</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm" id="tblSesiones">
+          <thead class="table-light"><tr><th>IP</th><th>User Agent</th><th>Última actividad</th><th class="text-end">Acción</th></tr></thead>
+          <tbody id="tbodySesiones"><tr><td colspan="4" class="text-center text-muted py-3">Sin sesiones activas.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial de accesos -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header fw-bold">Historial de accesos (últimos 50)</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm" id="tblAccesos">
+          <thead class="table-light"><tr><th>Fecha</th><th>Resultado</th><th>IP</th><th>User Agent</th></tr></thead>
+          <tbody id="tbodyAccesos"><tr><td colspan="4" class="text-center text-muted py-3">Sin registros.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solicitudes de recuperación -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header fw-bold">Solicitudes de recuperación de contraseña</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm" id="tblRecuperaciones">
+          <thead class="table-light"><tr><th>Fecha</th><th>Correo destino</th><th>IP</th><th>Vence</th><th>Usado</th></tr></thead>
+          <tbody id="tbodyRecuperaciones"><tr><td colspan="5" class="text-center text-muted py-3">Sin solicitudes.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}";
+  const idUsuario = {{ id_usuario }};
+
+  const cargarDetalle = () => {
+    fetch(`/api/v1/usuarios/${idUsuario}/detalle`)
+      .then(resp => resp.json())
+      .then(res => {
+        if (!res.success) {
+          Swal.fire('Error', res.error || 'No se pudo cargar el detalle.', 'error');
+          return;
+        }
+        const d = res.data;
+
+        document.getElementById('hdrUsuNick').textContent = d.usu_nick;
+        document.getElementById('dtFuncionario').textContent = d.nombre_completo || 'Sin funcionario';
+        document.getElementById('dtCargo').textContent = d.cargo_nombre || '-';
+        document.getElementById('dtRol').textContent = d.grupo_nombre || '-';
+        document.getElementById('dtEstado').innerHTML = d.est_usuario
+          ? '<span class="badge bg-success">Activo</span>'
+          : '<span class="badge bg-secondary">Inactivo</span>';
+        document.getElementById('dtCorreo').textContent = d.correo || 'Sin correo vinculado';
+        document.getElementById('dtMfa').innerHTML = d.mfa_habilitado
+          ? '<span class="badge bg-success">Activo</span>'
+          : '<span class="badge bg-secondary">Inactivo</span>';
+        document.getElementById('dtBloqueo').innerHTML = d.esta_bloqueado
+          ? `<span class="badge bg-danger">${d.bloqueado_hasta ? 'Hasta ' + d.bloqueado_hasta : 'Indefinido'}</span> <span class="text-muted small">${d.motivo_bloqueo || ''}</span>`
+          : '<span class="text-muted">Sin bloqueo</span>';
+        document.getElementById('dtIntentos').textContent = d.usu_nro_intentos;
+        document.getElementById('dtUltimoLogin').textContent = d.fecha_ultimo_login ? `${d.fecha_ultimo_login} (${d.ip_ultimo_login || '-'})` : '-';
+        document.getElementById('dtFechaCreacion').textContent = d.fecha_creacion || '-';
+
+        document.getElementById('btnRevocarMfa').classList.toggle('d-none', !d.mfa_habilitado);
+
+        // MFA resumen
+        const mfa = d.mfa_resumen || {};
+        document.getElementById('mfaTotalEnviados').textContent = mfa.total_enviados || 0;
+        document.getElementById('mfaTotalUsados').textContent = mfa.total_usados || 0;
+        document.getElementById('mfaUltimoEnvio').textContent = mfa.ultimo_enviado || '-';
+
+        // Dispositivos confiables
+        const $tbodyDisp = $('#tbodyDispositivos').empty();
+        if (!d.dispositivos_confiables || d.dispositivos_confiables.length === 0) {
+          $tbodyDisp.append('<tr><td colspan="5" class="text-center text-muted py-3">Sin dispositivos confiables.</td></tr>');
+        } else {
+          d.dispositivos_confiables.forEach(dev => {
+            const estado = dev.revocado
+              ? '<span class="badge bg-secondary">Revocado</span>'
+              : '<span class="badge bg-success">Vigente</span>';
+            $tbodyDisp.append(`<tr>
+              <td>${dev.fecha_creacion || '-'}</td>
+              <td>${dev.fecha_expiracion || '-'}</td>
+              <td>${dev.ip_creacion || '-'}</td>
+              <td class="text-truncate" style="max-width:220px" title="${dev.user_agent || ''}">${dev.user_agent || '-'}</td>
+              <td>${estado}</td>
+            </tr>`);
+          });
+        }
+
+        // Sesiones activas
+        const $tbodySes = $('#tbodySesiones').empty();
+        if (!d.sesiones_activas || d.sesiones_activas.length === 0) {
+          $tbodySes.append('<tr><td colspan="4" class="text-center text-muted py-3">Sin sesiones activas.</td></tr>');
+        } else {
+          d.sesiones_activas.forEach(s => {
+            $tbodySes.append(`<tr>
+              <td>${s.ip_address || '-'}</td>
+              <td class="text-truncate" style="max-width:220px" title="${s.user_agent || ''}">${s.user_agent || '-'}</td>
+              <td>${s.fecha_ultimo_ping || '-'}</td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-danger btn-cerrar-sesion" data-id-sesion="${s.id_sesion}">Cerrar</button>
+              </td>
+            </tr>`);
+          });
+        }
+
+        // Historial de accesos
+        const $tbodyAcc = $('#tbodyAccesos').empty();
+        if (!d.historial_accesos || d.historial_accesos.length === 0) {
+          $tbodyAcc.append('<tr><td colspan="4" class="text-center text-muted py-3">Sin registros.</td></tr>');
+        } else {
+          d.historial_accesos.forEach(a => {
+            const cls = a.resultado === 'EXITOSO' ? 'text-success' : 'text-danger';
+            $tbodyAcc.append(`<tr>
+              <td>${a.fecha_intento || '-'}</td>
+              <td class="${cls}">${a.resultado}</td>
+              <td>${a.ip_origen || '-'}</td>
+              <td class="text-truncate" style="max-width:260px" title="${a.user_agent || ''}">${a.user_agent || '-'}</td>
+            </tr>`);
+          });
+        }
+
+        // Solicitudes de recuperación
+        const $tbodyRec = $('#tbodyRecuperaciones').empty();
+        if (!d.solicitudes_recuperacion || d.solicitudes_recuperacion.length === 0) {
+          $tbodyRec.append('<tr><td colspan="5" class="text-center text-muted py-3">Sin solicitudes.</td></tr>');
+        } else {
+          d.solicitudes_recuperacion.forEach(r => {
+            $tbodyRec.append(`<tr>
+              <td>${r.fecha_creacion || '-'}</td>
+              <td>${r.email_destino || '-'}</td>
+              <td>${r.ip_solicitud || '-'}</td>
+              <td>${r.fecha_expiracion || '-'}</td>
+              <td>${r.usado ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+            </tr>`);
+          });
+        }
+      })
+      .catch(() => Swal.fire('Error', 'Error al cargar el detalle del usuario.', 'error'));
+  };
+
+  document.getElementById('btnResetear').addEventListener('click', () => {
+    Swal.fire({
+      title: '¿Resetear intentos y desbloquear?',
+      text: 'Esto pone en 0 el contador de intentos fallidos y levanta cualquier bloqueo activo (incluido el indefinido).',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, continuar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      fetch(`/api/v1/usuarios/${idUsuario}/resetear-intentos`, {
+        method: 'PATCH',
+        headers: { 'X-CSRFToken': CSRFToken }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Éxito', 'El usuario quedó desbloqueado y sin intentos fallidos.', 'success');
+            cargarDetalle();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo resetear.', 'error');
+          }
+        });
+    });
+  });
+
+  document.getElementById('btnRevocarMfa').addEventListener('click', () => {
+    Swal.fire({
+      title: '¿Revocar MFA de este usuario?',
+      text: 'Deberá vincularlo nuevamente para volver a usarlo.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, revocar'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      fetch(`/api/v1/acceso/usuarios/${idUsuario}/mfa/revocar`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRFToken }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Listo', data.mensaje, 'success');
+            cargarDetalle();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo revocar el MFA.', 'error');
+          }
+        });
+    });
+  });
+
+  const btnDesactivar = document.getElementById('btnDesactivar');
+  if (btnDesactivar) {
+    btnDesactivar.addEventListener('click', () => {
+      Swal.fire({
+        title: '¿Está seguro?',
+        text: '¿Desea desactivar este usuario?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Sí, desactivar'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/usuarios/${idUsuario}`, {
+          method: 'DELETE',
+          headers: { 'X-CSRFToken': CSRFToken }
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Desactivado', 'El usuario ha sido desactivado.', 'success');
+              cargarDetalle();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo desactivar.', 'error');
+            }
+          });
+      });
+    });
+  }
+
+  $(document).on('click', '.btn-cerrar-sesion', function () {
+    const idSesion = $(this).data('id-sesion');
+    Swal.fire({
+      title: '¿Cerrar esta sesión?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cerrar'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      fetch(`/api/v1/acceso/sesiones/${idSesion}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': CSRFToken }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Listo', 'Sesión cerrada.', 'success');
+            cargarDetalle();
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo cerrar la sesión.', 'error');
+          }
+        });
+    });
+  });
+
+  cargarDetalle();
+</script>
+{% endblock %}

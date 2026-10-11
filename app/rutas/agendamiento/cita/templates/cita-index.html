@@ -297,9 +297,10 @@ Citas
             <strong>${CANAL_LABEL[r.canal] || r.canal}</strong> — ${horas} antes
             <div>${estadoBadge}</div>
           </div>
-          <button class="btn btn-sm btn-outline-primary" type="button" name="btn_reenviar"
-                  data-id-cita="${idCita}" data-id-recordatorio="${r.id_recordatorio}">
-            Reenviar
+          <button class="btn btn-sm btn-outline-success" type="button" name="btn_reenviar"
+                  data-id-cita="${idCita}" data-id-recordatorio="${r.id_recordatorio}"
+                  title="El recordatorio automático se envía por correo; este botón lo manda por WhatsApp.">
+            <i class="bi bi-whatsapp"></i> Enviar por WhatsApp
           </button>
         </li>
       `;
@@ -348,13 +349,13 @@ Citas
               .then(d => pintarRecordatorios(idCita, d.success ? d.data : []));
             $('#tbl').DataTable().ajax.reload(null, false);
           } else {
-            Swal.fire('Error', data.error || 'No se pudo reenviar el recordatorio.', 'error');
-            $btn.prop('disabled', false).text('Reenviar');
+            Swal.fire('Error', data.error || 'No se pudo enviar el recordatorio por WhatsApp.', 'error');
+            $btn.prop('disabled', false).html('<i class="bi bi-whatsapp"></i> Enviar por WhatsApp');
           }
         })
         .catch(() => {
-          Swal.fire('Error', 'Ocurrió un error al reenviar el recordatorio.', 'error');
-          $btn.prop('disabled', false).text('Reenviar');
+          Swal.fire('Error', 'Ocurrió un error al enviar el recordatorio por WhatsApp.', 'error');
+          $btn.prop('disabled', false).html('<i class="bi bi-whatsapp"></i> Enviar por WhatsApp');
         });
     });
   };

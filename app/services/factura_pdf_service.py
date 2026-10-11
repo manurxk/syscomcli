@@ -159,8 +159,8 @@ class FacturaPDFService:
         # --------------------------------------------
         # 1) Cargar plantilla FE.html
         # --------------------------------------------
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        template_path = os.path.join(base_path, 'FE.html')
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        template_path = os.path.join(base_path, 'rutas', 'ventas', 'movimientos', 'factura', 'templates', 'FE.html')
 
         with open(template_path, 'r', encoding='utf-8') as f:
             html = f.read()

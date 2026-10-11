@@ -12,7 +12,7 @@ funcionarioapi = Blueprint('funcionarioapi', __name__)
 # OBTENER TODOS LOS FUNCIONARIOS
 # ============================================
 @funcionarioapi.route('/funcionarios', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getFuncionarios():
     """Obtiene la lista completa de funcionarios"""
     funcionariodao = FuncionarioDao()

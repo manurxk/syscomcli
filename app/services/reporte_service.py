@@ -1,4 +1,14 @@
+from io import BytesIO
+
 from flask import current_app as app
+
+try:
+    from weasyprint import HTML
+    WEASYPRINT_AVAILABLE = True
+except (ImportError, OSError) as e:
+    WEASYPRINT_AVAILABLE = False
+    print(f"WeasyPrint no disponible ({type(e).__name__}: {e}). Usando xhtml2pdf como alternativa.")
+    from xhtml2pdf import pisa
 
 class ReporteService:
     """
@@ -8,60 +18,74 @@ class ReporteService:
 
     def procesar_ventas_para_grafico(self, data):
         """
-        Transforma la lista de diccionarios del DAO en el formato JSON 
-        que Chart.js espera.
+        Transforma la lista de diccionarios del DAO en el formato JSON
+        que Chart.js espera. `data` ya viene agrupado por fecha+moneda desde
+        el DAO, asi que cada moneda presente en el rango se grafica como una
+        serie (dataset) propia en el mismo eje de fechas — nunca se suman
+        montos de monedas distintas en la misma linea.
         """
-        labels = []
-        totales = []
-        
         try:
+            fechas_ordenadas = []
             for fila in data:
-                # Se asume que date_str viene en formato 'YYYY-MM-DD' desde el DAO
-                # Se podría formatear aquí a 'DD/MM/YYYY' para Chart.js
                 fecha_parts = fila['fecha'].split('-')
-                if len(fecha_parts) == 3:
-                    fecha_esf = f"{fecha_parts[2]}/{fecha_parts[1]}/{fecha_parts[0]}"
-                else:
-                    fecha_esf = fila['fecha']
-                    
-                labels.append(fecha_esf)
-                totales.append(fila['total_general'])
-                
-            return {
-                "labels": labels,
-                "datasets": [{
-                    "label": "Total Ventas (₲)",
-                    "data": totales,
-                    "backgroundColor": "rgba(13, 110, 253, 0.5)",
-                    "borderColor": "rgba(13, 110, 253, 1)",
+                fecha_esf = f"{fecha_parts[2]}/{fecha_parts[1]}/{fecha_parts[0]}" if len(fecha_parts) == 3 else fila['fecha']
+                if fecha_esf not in fechas_ordenadas:
+                    fechas_ordenadas.append(fecha_esf)
+
+            colores = ["rgba(13, 110, 253, 1)", "rgba(220, 53, 69, 1)", "rgba(25, 135, 84, 1)", "rgba(255, 193, 7, 1)"]
+            por_moneda = {}
+            for fila in data:
+                fecha_parts = fila['fecha'].split('-')
+                fecha_esf = f"{fecha_parts[2]}/{fecha_parts[1]}/{fecha_parts[0]}" if len(fecha_parts) == 3 else fila['fecha']
+                cod = fila.get('cod_moneda', 'PYG')
+                por_moneda.setdefault(cod, {}).setdefault(fecha_esf, 0)
+                por_moneda[cod][fecha_esf] += fila['total_general']
+
+            datasets = []
+            for i, (cod, valores_por_fecha) in enumerate(por_moneda.items()):
+                color = colores[i % len(colores)]
+                datasets.append({
+                    "label": f"Total Ventas ({cod})",
+                    "data": [valores_por_fecha.get(f, 0) for f in fechas_ordenadas],
+                    "backgroundColor": color.replace(", 1)", ", 0.5)"),
+                    "borderColor": color,
                     "borderWidth": 1
-                }]
-            }
+                })
+
+            return {"labels": fechas_ordenadas, "datasets": datasets}
         except Exception as e:
             app.logger.error(f"Error procesando ventas para gráfico: {str(e)}")
             return {"labels": [], "datasets": []}
 
     def calcular_totales_ventas(self, data):
         """
-        Calcula la sumatoria general para las KPIs de la UI del reporte.
+        Calcula la sumatoria para las KPIs de la UI del reporte, agrupada por
+        moneda: sumar Gs. + USD en el mismo total daria un numero sin sentido.
+        Devuelve una LISTA (un total por moneda presente en el periodo), no un dict unico.
         """
-        totales = {
-            'cantidad_comprobantes': 0,
-            'total_gravado': 0,
-            'total_iva': 0,
-            'total_general': 0
-        }
-        
+        por_moneda = {}
         try:
             for fila in data:
-                totales['cantidad_comprobantes'] += fila.get('cantidad_comprobantes', 0)
-                totales['total_gravado'] += fila.get('total_gravado', 0)
-                totales['total_iva'] += fila.get('total_iva', 0)
-                totales['total_general'] += fila.get('total_general', 0)
+                cod = fila.get('cod_moneda', 'PYG')
+                if cod not in por_moneda:
+                    por_moneda[cod] = {
+                        'id_moneda': fila.get('id_moneda'),
+                        'cod_moneda': cod,
+                        'simbolo_moneda': fila.get('simbolo_moneda', 'Gs.'),
+                        'decimales_moneda': fila.get('decimales_moneda', 0),
+                        'cantidad_comprobantes': 0,
+                        'total_gravado': 0,
+                        'total_iva': 0,
+                        'total_general': 0,
+                    }
+                por_moneda[cod]['cantidad_comprobantes'] += fila.get('cantidad_comprobantes', 0)
+                por_moneda[cod]['total_gravado'] += fila.get('total_gravado', 0)
+                por_moneda[cod]['total_iva'] += fila.get('total_iva', 0)
+                por_moneda[cod]['total_general'] += fila.get('total_general', 0)
         except Exception as e:
             app.logger.error(f"Error calculando subtotales de ventas: {str(e)}")
-            
-        return totales
+
+        return list(por_moneda.values())
 
     def procesar_agendamiento_para_grafico(self, data_diaria):
         labels = []
@@ -136,21 +160,44 @@ class ReporteService:
             app.logger.error(f"Error procesando consultorio: {str(e)}")
             return {"labels": [], "datasets": []}
 
+    def _render_pdf(self, html_renderizado):
+        """
+        Convierte HTML a PDF usando WeasyPrint (preferido) o xhtml2pdf (fallback),
+        mismo patrón que FacturaPDFService / FichaHtmlPdfService.
+        """
+        buffer = BytesIO()
+
+        if WEASYPRINT_AVAILABLE:
+            HTML(string=html_renderizado, base_url=app.config.get('SERVER_NAME', '')).write_pdf(buffer)
+        else:
+            pisa_status = pisa.CreatePDF(html_renderizado, dest=buffer, encoding='utf-8')
+            if pisa_status.err:
+                raise Exception(f"Error al generar PDF con xhtml2pdf: {pisa_status.err}")
+
+        return buffer.getvalue()
+
     def generar_pdf_ventas(self, fecha_desde, fecha_hasta, metodo_pago, datos, totales):
         """
-        Genera el PDF del reporte de ventas usando WeasyPrint.
+        Genera el PDF del reporte de ventas.
         """
         from flask import render_template
-        from weasyprint import HTML
-        
-        # Format the numbers for the template
-        totales_formateados = {k: self._formatear_moneda(v) for k, v in totales.items()}
-        
+
+        # `totales` es una lista (un total por moneda presente en el periodo)
+        totales_formateados = []
+        for t in totales:
+            dec = t.get('decimales_moneda', 0)
+            tf = dict(t)
+            tf['total_gravado_formateado'] = self._formatear_moneda(t.get('total_gravado', 0), dec)
+            tf['total_iva_formateado'] = self._formatear_moneda(t.get('total_iva', 0), dec)
+            tf['total_general_formateado'] = self._formatear_moneda(t.get('total_general', 0), dec)
+            totales_formateados.append(tf)
+
         for d in datos:
-            d['gravado_formateado'] = self._formatear_moneda(d.get('gravado', 0))
-            d['iva_formateado'] = self._formatear_moneda(d.get('iva', 0))
-            d['total_formateado'] = self._formatear_moneda(d.get('total', 0))
-        
+            dec = d.get('decimales_moneda', 0)
+            d['gravado_formateado'] = self._formatear_moneda(d.get('gravado', 0), dec)
+            d['iva_formateado'] = self._formatear_moneda(d.get('iva', 0), dec)
+            d['total_formateado'] = self._formatear_moneda(d.get('total', 0), dec)
+
         html_renderizado = render_template(
             'pdf/reporte-ventas-pdf.html',
             fecha_desde=fecha_desde,
@@ -159,18 +206,15 @@ class ReporteService:
             datos=datos,
             totales=totales_formateados
         )
-        
-        # Generar PDF en memoria
-        pdf_bytes = HTML(string=html_renderizado, base_url=app.config.get('SERVER_NAME', '')).write_pdf()
-        return pdf_bytes
+
+        return self._render_pdf(html_renderizado)
 
     def generar_pdf_agendamiento(self, fecha_desde, fecha_hasta, datos_diarios, totales):
         """
         Genera el PDF del reporte de agendamiento.
         """
         from flask import render_template
-        from weasyprint import HTML
-        
+
         html_renderizado = render_template(
             'pdf/reporte-agendamiento-pdf.html',
             fecha_desde=fecha_desde,
@@ -178,17 +222,15 @@ class ReporteService:
             datos=datos_diarios,
             totales=totales
         )
-        
-        pdf_bytes = HTML(string=html_renderizado).write_pdf()
-        return pdf_bytes
+
+        return self._render_pdf(html_renderizado)
 
     def generar_pdf_consultorio(self, fecha_desde, fecha_hasta, especialidades, totales):
         """
         Genera el PDF del reporte de consultorio.
         """
         from flask import render_template
-        from weasyprint import HTML
-        
+
         html_renderizado = render_template(
             'pdf/reporte-consultorio-pdf.html',
             fecha_desde=fecha_desde,
@@ -196,13 +238,12 @@ class ReporteService:
             especialidades=especialidades,
             totales=totales
         )
-        
-        pdf_bytes = HTML(string=html_renderizado).write_pdf()
-        return pdf_bytes
-    
-    def _formatear_moneda(self, valor):
+
+        return self._render_pdf(html_renderizado)
+
+    def _formatear_moneda(self, valor, decimales=0):
         try:
-            val = int(valor or 0)
-            return "{:,.0f}".format(val).replace(',', '.')
+            val = round(float(valor or 0), decimales)
+            return "{:,.{}f}".format(val, decimales).replace(',', '#').replace('.', ',').replace('#', '.')
         except:
             return "0"

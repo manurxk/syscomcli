@@ -7,7 +7,7 @@ consultorioapi = Blueprint('consultorioapi', __name__)
 
 
 @consultorioapi.route('/consultorios', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getConsultorios():
     try:
         data = ConsultorioDao().getConsultorios()

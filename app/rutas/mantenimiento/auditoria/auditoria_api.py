@@ -38,6 +38,55 @@ def getEventosAuditoria():
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 
+@auditoriaapi.route('/auditoria/intentos', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
+def getIntentosAcceso():
+    try:
+        resultado = AuditoriaDao().getIntentosAcceso(
+            fecha_desde=request.args.get('fecha_desde'),
+            fecha_hasta=request.args.get('fecha_hasta'),
+            ip=request.args.get('ip'),
+            solo_fallidos=request.args.get('solo_fallidos') == 'true',
+            pagina=request.args.get('pagina', 1, type=int),
+            por_pagina=request.args.get('por_pagina', 50, type=int),
+        )
+        return jsonify({'success': True, 'data': resultado, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener intentos de acceso: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@auditoriaapi.route('/auditoria/intentos/sospechosos', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
+def getIpsSospechosas():
+    try:
+        data = AuditoriaDao().getIpsSospechosas(
+            fecha_desde=request.args.get('fecha_desde'),
+            fecha_hasta=request.args.get('fecha_hasta'),
+            minimo_cuentas=request.args.get('minimo_cuentas', 2, type=int),
+        )
+        return jsonify({'success': True, 'data': data, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener IPs sospechosas: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@auditoriaapi.route('/auditoria/recuperaciones', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
+def getSolicitudesRecuperacionGlobal():
+    try:
+        resultado = AuditoriaDao().getSolicitudesRecuperacionGlobal(
+            fecha_desde=request.args.get('fecha_desde'),
+            fecha_hasta=request.args.get('fecha_hasta'),
+            pagina=request.args.get('pagina', 1, type=int),
+            por_pagina=request.args.get('por_pagina', 50, type=int),
+        )
+        return jsonify({'success': True, 'data': resultado, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener solicitudes de recuperación: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
 @auditoriaapi.route('/auditoria/acciones', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getAccionesAuditoria():

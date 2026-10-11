@@ -1,0 +1,43 @@
+<h3>Facturas</h3>
+<p>Aquí se emiten las facturas a los pacientes y se consultan las ya emitidas. Cada factura se anota sola en el Libro de Ventas.</p>
+
+<h4>¿Cómo emito una factura?</h4>
+<ol>
+    <li>Presione <span class="btn-ref">Nueva Factura</span>.</li>
+    <li>Escriba parte del nombre o de la historia clínica del paciente, elíjalo de la lista y presione <span class="btn-ref">Seleccionar y continuar</span>.</li>
+    <li>Revise el <strong>Documento para Facturación</strong>. Si el paciente pide factura con RUC, elija <strong>RUC</strong>, escríbalo con su dígito verificador y presione <span class="btn-ref">Guardar documento</span>. Queda guardado en el paciente para las próximas veces.</li>
+    <li>En <strong>Datos de la Factura</strong>, elija el <strong>Timbrado</strong>, el <strong>Punto de Expedición</strong>, el <strong>Tipo de Comprobante</strong>, la <strong>Condición de Venta</strong> (Contado o Crédito), la <strong>Moneda</strong> y la <strong>Fecha</strong>.</li>
+    <li>Presione <span class="btn-ref">Agregar ítem</span> por cada servicio o producto. Puede elegir un ítem del catálogo o escribir la descripción; ponga la cantidad, el precio con IVA incluido y el tipo de IVA. Presione <span class="btn-ref">Agregar</span>.</li>
+    <li>Si corresponde, ponga un <strong>Descuento general</strong>.</li>
+    <li>Revise el <strong>TOTAL A PAGAR</strong> y presione <span class="btn-ref">Emitir Factura</span>.</li>
+</ol>
+<p>El número de factura lo asigna el sistema según el punto de expedición. El IVA se calcula solo a partir del precio con IVA incluido.</p>
+<p>Si la factura sale de un pedido, escriba el número en <strong>Pedido de origen</strong>: el pedido queda como <strong>Facturado</strong>.</p>
+
+<h4>¿Cómo cobro una venta al contado?</h4>
+<p>Si elige la condición <strong>Contado</strong>, aparece el bloque <strong>Cobro</strong>:</p>
+<ol>
+    <li>Elija la <strong>Caja</strong> donde entra el dinero. Solo aparecen las cajas abiertas en la misma moneda de la factura.</li>
+    <li>Elija la <strong>Forma de Cobro</strong> y complete los datos que pida (número de cheque, datos de la tarjeta o banco de la transferencia).</li>
+</ol>
+<p>Al emitir, el sistema registra el cobro del total en esa caja. No hace falta hacer una cobranza aparte.</p>
+<p class="importante">Para facturar al contado tiene que haber una caja abierta. Si no aparece ninguna caja, ábrala primero en Estado de Caja.</p>
+
+<h4>¿Qué pasa si la venta es a crédito?</h4>
+<p>Si elige la condición <strong>Crédito</strong>, el sistema crea sola una <strong>Cuenta a Cobrar</strong> por el total, con vencimiento a los días de crédito de esa condición (por ejemplo, 30 días). El pago después se registra en <strong>Cobranzas</strong>.</p>
+
+<h4>¿Cómo veo, imprimo o reenvío una factura?</h4>
+<ol>
+    <li>En la lista, presione el botón de detalle en la fila de la factura.</li>
+    <li>Se abre el detalle con los ítems y el total. Desde ahí puede:
+        <ul>
+            <li><span class="btn-ref">Ver PDF</span>: abre la factura para imprimirla.</li>
+            <li><span class="btn-ref">Reenviar por correo</span>: se la manda al correo del paciente.</li>
+        </ul>
+    </li>
+</ol>
+
+<h4>¿Cómo anulo una factura?</h4>
+<p>Solo un <strong>administrador</strong> puede anular facturas. Se abre el detalle de la factura, se presiona <span class="btn-ref">Anular</span> y se confirma. La factura queda como <strong>Anulada</strong> y no se puede volver atrás.</p>
+<p>Al anularla, también se anulan sus cobros: el dinero sale de la caja y la deuda deja de figurar para cobrar.</p>
+<p class="importante">Si la factura ya fue entregada al paciente y solo hay que corregir un monto, no la anule: haga una <strong>Nota de Crédito</strong> (para bajar el monto) o una <strong>Nota de Débito</strong> (para subirlo).</p>

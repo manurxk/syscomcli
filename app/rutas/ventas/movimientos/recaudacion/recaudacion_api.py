@@ -51,9 +51,9 @@ def addRecaudacion():
         if not data.get(campo):
             return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
 
-    monto_total = (int(data.get('monto_efectivo') or 0) +
-                   int(data.get('monto_cheques')  or 0) +
-                   int(data.get('monto_tarjetas') or 0))
+    monto_total = (float(data.get('monto_efectivo') or 0) +
+                   float(data.get('monto_cheques')  or 0) +
+                   float(data.get('monto_tarjetas') or 0))
     if monto_total <= 0:
         return jsonify({'success': False, 'error': 'El monto total debe ser mayor a cero.'}), 400
 

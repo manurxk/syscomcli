@@ -53,23 +53,23 @@
         <div class="row gx-3">
 
           <div class="col-md-3 mb-3">
-            <label class="small mb-1">Efectivo (Gs.)</label>
+            <label class="small mb-1">Efectivo</label>
             <input type="number" class="form-control monto-desglose" id="inEfectivo" min="0" value="0">
           </div>
 
           <div class="col-md-3 mb-3">
-            <label class="small mb-1">Cheques (Gs.)</label>
+            <label class="small mb-1">Cheques</label>
             <input type="number" class="form-control monto-desglose" id="inCheques" min="0" value="0">
           </div>
 
           <div class="col-md-3 mb-3">
-            <label class="small mb-1">Tarjetas (Gs.)</label>
+            <label class="small mb-1">Tarjetas</label>
             <input type="number" class="form-control monto-desglose" id="inTarjetas" min="0" value="0">
           </div>
 
           <div class="col-md-3 mb-3">
             <label class="small mb-1">Total calculado</label>
-            <div class="form-control bg-light fw-bold text-primary" id="lblTotal">0 Gs.</div>
+            <div class="form-control bg-light fw-bold text-primary" id="lblTotal">0</div>
           </div>
 
         </div>
@@ -94,7 +94,8 @@
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-function gs(v) { return Number(v || 0).toLocaleString('es-PY') + ' Gs.'; }
+let MONEDA = { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
+function gs(v) { return formatMoney(v, MONEDA); }
 
 async function cargarCatalogo(url, sel, campo_id, campo_des) {
   const r = await fetch(url);
@@ -107,14 +108,38 @@ async function cargarCatalogo(url, sel, campo_id, campo_des) {
   });
 }
 
+async function cargarCajasAbiertas() {
+  const sel = document.getElementById('selCaja');
+  const r = await fetch('/api/v1/cajas-estado');
+  const j = await r.json();
+  (j.data || []).filter(c => c.caja_estado === 'ABIERTA').forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id_caja;
+    opt.textContent = `${c.des_caja} (${c.cod_moneda})`;
+    opt.dataset.idmoneda = c.id_moneda; opt.dataset.codmoneda = c.cod_moneda;
+    opt.dataset.simbolo = c.simbolo_moneda; opt.dataset.decimales = c.decimales_moneda;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById('selCaja').addEventListener('change', function() {
+  const opt = this.selectedOptions[0];
+  MONEDA = opt && opt.dataset.idmoneda
+    ? { id_moneda: opt.dataset.idmoneda, cod_moneda: opt.dataset.codmoneda, simbolo_moneda: opt.dataset.simbolo, decimales_moneda: opt.dataset.decimales }
+    : { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
+  const dec = Number(MONEDA.decimales_moneda);
+  document.querySelectorAll('.monto-desglose').forEach(el => el.step = dec ? Math.pow(10, -dec) : 1);
+  recalcularTotal();
+});
+
 function recalcularTotal() {
   const t = ['inEfectivo', 'inCheques', 'inTarjetas']
-    .reduce((s, id) => s + (parseInt(document.getElementById(id).value) || 0), 0);
+    .reduce((s, id) => s + (parseFloat(document.getElementById(id).value) || 0), 0);
   document.getElementById('lblTotal').textContent = gs(t);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  cargarCatalogo('/api/v1/cajas',     document.getElementById('selCaja'),     'id_caja',     'des_caja');
+  cargarCajasAbiertas();
   cargarCatalogo('/api/v1/depositos', document.getElementById('selDeposito'), 'id_deposito', 'des_deposito');
 
   document.querySelectorAll('.monto-desglose').forEach(el =>
@@ -130,9 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
       id_caja:        document.getElementById('selCaja').value,
       id_deposito:    document.getElementById('selDeposito').value,
       fecha_deposito: document.getElementById('inputFechaDeposito').value || null,
-      monto_efectivo: parseInt(document.getElementById('inEfectivo').value) || 0,
-      monto_cheques:  parseInt(document.getElementById('inCheques').value)  || 0,
-      monto_tarjetas: parseInt(document.getElementById('inTarjetas').value) || 0,
+      monto_efectivo: parseFloat(document.getElementById('inEfectivo').value) || 0,
+      monto_cheques:  parseFloat(document.getElementById('inCheques').value)  || 0,
+      monto_tarjetas: parseFloat(document.getElementById('inTarjetas').value) || 0,
       observaciones:  document.getElementById('inObs').value.trim() || null,
     };
 

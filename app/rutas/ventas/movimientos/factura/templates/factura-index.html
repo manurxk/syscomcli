@@ -77,6 +77,9 @@
         <button type="button" class="btn btn-info btn-sm" id="btnVerPDF" onclick="verPDF()">
           <i data-feather="printer" class="icon-xs"></i> Ver PDF
         </button>
+        <button type="button" class="btn btn-outline-primary btn-sm" id="btnEnviarCorreo" onclick="enviarCorreo()">
+          <i data-feather="mail" class="icon-xs"></i> Reenviar por correo
+        </button>
         <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
       </div>
     </div>
@@ -162,6 +165,23 @@ async function verDetalle(id) {
 function verPDF() {
   if (!facturaActual) return;
   window.open(`/api/v1/facturas/${facturaActual.id_factura}/pdf`, '_blank');
+}
+
+async function enviarCorreo() {
+  if (!facturaActual) return;
+  const btn = document.getElementById('btnEnviarCorreo');
+  btn.disabled = true;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  try {
+    const r = await fetch(`${API}/${facturaActual.id_factura}/enviar-correo`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf }
+    });
+    const j = await r.json();
+    alert(j.success ? 'Factura enviada por correo.' : (j.error || 'No se pudo enviar el correo.'));
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function anular() {

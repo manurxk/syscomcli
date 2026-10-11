@@ -236,6 +236,8 @@ class PacienteDao(BaseDAO):
                 p.per_nombre,
                 p.per_apellido,
                 p.per_cedula,
+                p.per_tipo_documento,
+                p.per_ruc,
                 p.per_fecha_nacimiento,
                 DATE_PART('year', AGE(p.per_fecha_nacimiento)) AS edad,
                 p.per_telefono,
@@ -279,6 +281,8 @@ class PacienteDao(BaseDAO):
             'nombre': p['per_nombre'] if p['per_nombre'] else None,
             'apellido': p['per_apellido'] if p['per_apellido'] else None,
             'cedula': p['per_cedula'] if p['per_cedula'] else None,
+            'tipo_documento': p['per_tipo_documento'] if p['per_tipo_documento'] else 'CI',
+            'ruc': p['per_ruc'] if p['per_ruc'] else None,
             'fecha_nacimiento': p['per_fecha_nacimiento'].strftime('%d/%m/%Y') if p['per_fecha_nacimiento'] else None,
             'edad': int(p['edad']) if p['edad'] is not None else None,
             'telefono': p['per_telefono'] if p['per_telefono'] else None,
@@ -311,6 +315,8 @@ class PacienteDao(BaseDAO):
                 p.per_nombre,
                 p.per_apellido,
                 p.per_cedula,
+                p.per_tipo_documento,
+                p.per_ruc,
                 p.per_fecha_nacimiento,
                 p.per_telefono,
                 p.per_correo,
@@ -360,6 +366,8 @@ class PacienteDao(BaseDAO):
             'nombre': p['per_nombre'],
             'apellido': p['per_apellido'],
             'cedula': p['per_cedula'],
+            'tipo_documento': p['per_tipo_documento'] if p['per_tipo_documento'] else 'CI',
+            'ruc': p['per_ruc'],
             'fecha_nacimiento': p['per_fecha_nacimiento'].strftime('%Y-%m-%d') if p['per_fecha_nacimiento'] else None,
             'telefono': p['per_telefono'],
             'correo': p['per_correo'],
@@ -390,7 +398,8 @@ class PacienteDao(BaseDAO):
                         id_ciudad=None, id_ciudad_nacimiento=None, id_nivel_instruccion=None,
                         id_profesion=None, historia_clinica=None, observaciones=None,
                         nom_madre=None, tel_madre=None, nom_padre=None, tel_padre=None,
-                        educacion=None, colegio=None, tel_colegio=None, usuario_creacion=None):
+                        educacion=None, colegio=None, tel_colegio=None,
+                        tipo_documento='CI', ruc=None, usuario_creacion=None):
         """
         Guarda un nuevo paciente completo.
         Campos obligatorios: nombre, apellido, cedula, fecha_nacimiento
@@ -417,10 +426,11 @@ class PacienteDao(BaseDAO):
             raise ValueError(mensaje)
 
         insertPersonaSQL = """
-            INSERT INTO personas(per_nombre, per_apellido, per_cedula, per_fecha_nacimiento,
+            INSERT INTO personas(per_nombre, per_apellido, per_cedula, per_tipo_documento, per_ruc,
+                            per_fecha_nacimiento,
                             id_genero, id_estado_civil, per_telefono, per_correo, per_domicilio,
                             id_ciudad, id_ciudad_nacimiento, id_nivel_instruccion, id_profesion, usuario_creacion)
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_persona
         """
 
@@ -438,7 +448,7 @@ class PacienteDao(BaseDAO):
 
         def _guardar(cur):
             # 1. Insertar persona
-            cur.execute(insertPersonaSQL, (nombre, apellido, cedula, fecha_nacimiento, id_genero,
+            cur.execute(insertPersonaSQL, (nombre, apellido, cedula, tipo_documento, ruc, fecha_nacimiento, id_genero,
                                         id_estado_civil, telefono, correo, domicilio, id_ciudad,
                                         id_ciudad_nacimiento, id_nivel_instruccion, id_profesion, usuario_creacion))
             persona_id = cur.fetchone()[0]
@@ -460,7 +470,8 @@ class PacienteDao(BaseDAO):
                     id_estado_civil, telefono, correo, domicilio, id_ciudad, id_ciudad_nacimiento,
                     id_nivel_instruccion, id_profesion, historia_clinica, observaciones=None,
                     nom_madre=None, tel_madre=None, nom_padre=None, tel_padre=None,
-                    educacion=None, colegio=None, tel_colegio=None, usuario_modificacion=None):
+                    educacion=None, colegio=None, tel_colegio=None,
+                    tipo_documento='CI', ruc=None, usuario_modificacion=None):
         """
         Actualiza un paciente completo (persona + paciente + datos_menor)
         El campo es_menor se calcula automáticamente basado en la fecha de nacimiento
@@ -484,7 +495,8 @@ class PacienteDao(BaseDAO):
 
         updatePersonaSQL = """
             UPDATE personas
-            SET per_nombre = %s, per_apellido = %s, per_cedula = %s, per_fecha_nacimiento = %s,
+            SET per_nombre = %s, per_apellido = %s, per_cedula = %s, per_tipo_documento = %s, per_ruc = %s,
+                per_fecha_nacimiento = %s,
                 id_genero = %s, id_estado_civil = %s, per_telefono = %s, per_correo = %s,
                 per_domicilio = %s, id_ciudad = %s, id_ciudad_nacimiento = %s,
                 id_nivel_instruccion = %s, id_profesion = %s, usuario_modificacion = %s
@@ -516,7 +528,7 @@ class PacienteDao(BaseDAO):
 
         def _actualizar(cur):
             # 1. Actualizar persona
-            cur.execute(updatePersonaSQL, (nombre, apellido, cedula, fecha_nacimiento, id_genero,
+            cur.execute(updatePersonaSQL, (nombre, apellido, cedula, tipo_documento, ruc, fecha_nacimiento, id_genero,
                                         id_estado_civil, telefono, correo, domicilio, id_ciudad,
                                         id_ciudad_nacimiento, id_nivel_instruccion,
                                         id_profesion, usuario_modificacion, pac_id))
@@ -541,6 +553,21 @@ class PacienteDao(BaseDAO):
             return True
 
         return self.execute_transaction(_actualizar)
+
+    def actualizarDocumentoFiscal(self, pac_id, tipo_documento, ruc, usuario_modificacion=None):
+        """Actualiza solo tipo de documento (CI/RUC) y RUC de la persona. Usado desde la pantalla de factura."""
+        if tipo_documento not in ('CI', 'RUC'):
+            raise ValueError('Tipo de documento inválido. Debe ser CI o RUC.')
+        if tipo_documento == 'RUC' and not ruc:
+            raise ValueError('Debe indicar el número de RUC.')
+
+        sql = """
+            UPDATE personas
+            SET per_tipo_documento = %s, per_ruc = %s, usuario_modificacion = %s
+            WHERE id_persona = (SELECT id_persona FROM pacientes WHERE id_paciente = %s)
+        """
+        ruc_final = ruc if tipo_documento == 'RUC' else None
+        return self.execute_query(sql, (tipo_documento, ruc_final, usuario_modificacion, pac_id), commit=True) > 0
 
     def desactivarPaciente(self, pac_id, usuario_modificacion=None):
         """Desactiva un paciente (soft-delete, est_paciente = FALSE)."""
@@ -591,7 +618,9 @@ class PacienteDao(BaseDAO):
                 pac.pac_historia_clinica,
                 p.per_nombre,
                 p.per_apellido,
-                p.per_cedula
+                p.per_cedula,
+                p.per_tipo_documento,
+                p.per_ruc
             FROM pacientes pac
             JOIN personas p ON pac.id_persona = p.id_persona
             WHERE
@@ -610,4 +639,6 @@ class PacienteDao(BaseDAO):
             'per_nombre': r['per_nombre'],
             'per_apellido': r['per_apellido'],
             'per_cedula': r['per_cedula'],
+            'per_tipo_documento': r['per_tipo_documento'] if r['per_tipo_documento'] else 'CI',
+            'per_ruc': r['per_ruc'],
         } for r in rows]

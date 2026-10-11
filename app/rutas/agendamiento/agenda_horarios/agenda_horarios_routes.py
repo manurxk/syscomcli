@@ -5,6 +5,6 @@ agendahorariosmod = Blueprint('agenda_horarios', __name__, template_folder='temp
 
 
 @agendahorariosmod.route('/agenda-horarios-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def agendaHorariosIndex():
     return render_template('agenda_horarios-index.html')

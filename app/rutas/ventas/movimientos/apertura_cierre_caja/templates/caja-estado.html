@@ -47,7 +47,12 @@
         <input type="hidden" id="abrirIdCaja">
         <p class="fw-bold mb-3" id="abrirNombreCaja">—</p>
         <div class="mb-3">
-          <label class="form-label small fw-bold">Saldo Inicial (Gs.)</label>
+          <label class="form-label small fw-bold">Moneda de esta apertura <span class="text-danger">*</span></label>
+          <select class="form-select" id="abrirMoneda"></select>
+          <div class="form-text">Define en qué moneda se van a registrar las cobranzas de este turno.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Saldo Inicial (<span id="abrirMonedaCod">Gs.</span>)</label>
           <input type="number" class="form-control" id="abrirSaldoInicial" value="0" min="0" step="1000">
         </div>
         <div class="mb-3">
@@ -101,23 +106,23 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label small fw-bold">Saldo Final (Gs.) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-bold">Saldo Final <span class="text-danger">*</span></label>
             <input type="number" class="form-control" id="cerrarSaldoFinal" min="0" step="1000" placeholder="Total en caja">
           </div>
           <div class="col-md-6">
-            <label class="form-label small fw-bold">Efectivo (Gs.)</label>
+            <label class="form-label small fw-bold">Efectivo</label>
             <input type="number" class="form-control" id="cerrarMontoEfectivo" value="0" min="0" step="1000">
           </div>
           <div class="col-md-4">
-            <label class="form-label small fw-bold">Cheques (Gs.)</label>
+            <label class="form-label small fw-bold">Cheques</label>
             <input type="number" class="form-control" id="cerrarMontoCheques" value="0" min="0">
           </div>
           <div class="col-md-4">
-            <label class="form-label small fw-bold">Tarjetas (Gs.)</label>
+            <label class="form-label small fw-bold">Tarjetas</label>
             <input type="number" class="form-control" id="cerrarMontoTarjetas" value="0" min="0">
           </div>
           <div class="col-md-4">
-            <label class="form-label small fw-bold">Transferencias (Gs.)</label>
+            <label class="form-label small fw-bold">Transferencias</label>
             <input type="number" class="form-control" id="cerrarMontoTransferencias" value="0" min="0">
           </div>
           <div class="col-12">
@@ -142,6 +147,18 @@
 const CSRFToken = "{{ csrf_token() }}";
 
 const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
+let cajasMoneda = {}; // id_caja -> {id_moneda, cod_moneda, simbolo_moneda, decimales_moneda} de la apertura activa
+let monedas = [];
+
+async function cargarMonedas() {
+  const res = await fetch('/api/v1/monedas');
+  const json = await res.json();
+  monedas = (json.data || []).filter(m => m.est_moneda);
+  const selMoneda = document.getElementById('abrirMoneda');
+  selMoneda.innerHTML = monedas.map(m =>
+    `<option value="${m.id_moneda}" data-cod="${m.cod_moneda}" data-simbolo="${m.simbolo_moneda}" data-dec="${m.decimales_moneda}" ${m.es_moneda_local ? 'selected' : ''}>${m.cod_moneda} - ${m.des_moneda}</option>`
+  ).join('');
+}
 
 async function cargarCajas() {
   const res = await fetch('/api/v1/cajas-estado');
@@ -157,6 +174,7 @@ async function cargarCajas() {
   cont.style.display = '';
   cont.innerHTML = json.data.map(c => {
     const abierta = c.caja_estado === 'ABIERTA';
+    if (abierta) cajasMoneda[c.id_caja] = { id_moneda: c.id_moneda, cod_moneda: c.cod_moneda, simbolo_moneda: c.simbolo_moneda, decimales_moneda: c.decimales_moneda };
     const badgeClass = abierta ? 'bg-success' : 'bg-secondary';
     const badgeText = abierta ? 'ABIERTA' : 'CERRADA';
     const borderClass = abierta ? 'border-start-success' : 'border-start-secondary';
@@ -168,7 +186,7 @@ async function cargarCajas() {
            <i class="fas fa-lock-open me-1"></i>Abrir Caja
          </button>`;
     const infoApertura = abierta && c.fecha_apertura
-      ? `<div class="small text-muted mt-2">Abierta: ${c.fecha_apertura} — ${c.usuario_apertura || ''}</div>`
+      ? `<div class="small text-muted mt-2">Abierta: ${c.fecha_apertura} — ${c.usuario_apertura || ''} (${c.cod_moneda})</div>`
       : '';
     return `
       <div class="col-md-6 col-lg-4">
@@ -178,7 +196,7 @@ async function cargarCajas() {
               <h6 class="fw-bold mb-0">${c.des_caja}</h6>
               <span class="badge ${badgeClass}">${badgeText}</span>
             </div>
-            ${abierta ? `<div class="small mb-1"><span class="text-muted">Saldo inicial:</span> <span class="fw-bold">Gs. ${fmt(c.saldo_inicial)}</span></div>` : ''}
+            ${abierta ? `<div class="small mb-1"><span class="text-muted">Saldo inicial:</span> <span class="fw-bold">${formatMoney(c.saldo_inicial, c)}</span></div>` : ''}
             ${infoApertura}
             <div class="mt-3">${btnAccion}</div>
           </div>
@@ -192,12 +210,25 @@ function prepararApertura(idCaja, nomCaja) {
   document.getElementById('abrirNombreCaja').textContent = nomCaja;
   document.getElementById('abrirSaldoInicial').value = 0;
   document.getElementById('abrirObservaciones').value = '';
+  const selMoneda = document.getElementById('abrirMoneda');
+  const local = monedas.find(m => m.es_moneda_local);
+  if (local) selMoneda.value = local.id_moneda;
+  actualizarMonedaAbrir();
   new bootstrap.Modal(document.getElementById('modalAbrirCaja')).show();
 }
 
+function actualizarMonedaAbrir() {
+  const opt = document.getElementById('abrirMoneda').selectedOptions[0];
+  document.getElementById('abrirMonedaCod').textContent = opt ? opt.dataset.simbolo : 'Gs.';
+  const dec = opt ? Number(opt.dataset.dec) : 0;
+  document.getElementById('abrirSaldoInicial').step = dec ? Math.pow(10, -dec) : 1000;
+}
+document.getElementById('abrirMoneda').addEventListener('change', actualizarMonedaAbrir);
+
 async function prepararCierre(idCaja, nomCaja) {
+  const moneda = cajasMoneda[idCaja] || { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
   document.getElementById('cerrarIdCaja').value = idCaja;
-  document.getElementById('cerrarNombreCaja').textContent = nomCaja;
+  document.getElementById('cerrarNombreCaja').textContent = `${nomCaja} (${moneda.cod_moneda || 'PYG'})`;
   document.getElementById('cerrarSaldoFinal').value = '';
   document.getElementById('cerrarMontoEfectivo').value = 0;
   document.getElementById('cerrarMontoCheques').value = 0;
@@ -217,10 +248,10 @@ async function prepararCierre(idCaja, nomCaja) {
     const json = await res.json();
     if (json.success) {
       const d = json.data;
-      document.getElementById('lblSaldoInicial').textContent = 'Gs. ' + fmt(d.saldo_inicial);
-      document.getElementById('lblEfectivoCobrado').textContent = 'Gs. ' + fmt(d.total_efectivo);
-      document.getElementById('lblOtrosCobrados').textContent = 'Gs. ' + fmt((d.total_cheques||0)+(d.total_tarjetas||0)+(d.total_transferencias||0));
-      document.getElementById('lblSaldoEsperado').textContent = 'Gs. ' + fmt(d.saldo_esperado);
+      document.getElementById('lblSaldoInicial').textContent = formatMoney(d.saldo_inicial, moneda);
+      document.getElementById('lblEfectivoCobrado').textContent = formatMoney(d.total_efectivo, moneda);
+      document.getElementById('lblOtrosCobrados').textContent = formatMoney((d.total_cheques||0)+(d.total_tarjetas||0)+(d.total_transferencias||0), moneda);
+      document.getElementById('lblSaldoEsperado').textContent = formatMoney(d.saldo_esperado, moneda);
       document.getElementById('cerrarMontoEfectivo').value = d.total_efectivo || 0;
       document.getElementById('cerrarMontoCheques').value = d.total_cheques || 0;
       document.getElementById('cerrarMontoTarjetas').value = d.total_tarjetas || 0;
@@ -242,6 +273,7 @@ document.getElementById('btnConfirmarApertura').addEventListener('click', async 
       headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken},
       body: JSON.stringify({
         id_caja: parseInt(idCaja),
+        id_moneda: parseInt(document.getElementById('abrirMoneda').value),
         saldo_inicial: parseFloat(document.getElementById('abrirSaldoInicial').value) || 0,
         observaciones: document.getElementById('abrirObservaciones').value,
       })
@@ -299,6 +331,6 @@ document.getElementById('btnConfirmarCierre').addEventListener('click', async ()
   }
 });
 
-cargarCajas();
+cargarMonedas().then(cargarCajas);
 </script>
 {% endblock %}

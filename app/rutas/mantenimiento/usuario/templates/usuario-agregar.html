@@ -95,12 +95,23 @@
         <div class="row gx-3">
           <div class="col-md-4 mb-3 mb-md-0">
             <label class="small mb-1" for="txtPassword">Contraseña <span class="text-danger" id="lblPasswordRequerida">*</span></label>
-            <input class="form-control" id="txtPassword" type="password" placeholder="Ingrese la contraseña" minlength="8">
-            <small id="passwordHelp" class="text-muted">Mínimo 8 caracteres</small>
+            <input class="form-control" id="txtPassword" type="password" placeholder="Ingrese la contraseña" minlength="8" maxlength="16">
+            <small id="passwordHelp" class="text-muted"></small>
           </div>
           <div class="col-md-4">
             <label class="small mb-1" for="txtPasswordConfirmacion">Confirmar Contraseña <span class="text-danger" id="lblPasswordConfirmacionRequerida">*</span></label>
-            <input class="form-control" id="txtPasswordConfirmacion" type="password" placeholder="Confirme la contraseña">
+            <input class="form-control" id="txtPasswordConfirmacion" type="password" placeholder="Confirme la contraseña" maxlength="16">
+          </div>
+          <div class="col-md-4 mt-3 mt-md-0">
+            <label class="small mb-1">La contraseña debe tener:</label>
+            <ul class="list-unstyled small mb-0" id="listaReglasPassword">
+              <li data-regla="largo" class="text-muted"><span class="icono-regla">&#9679;</span> Entre 8 y 16 caracteres</li>
+              <li data-regla="mayuscula" class="text-muted"><span class="icono-regla">&#9679;</span> Una letra mayúscula</li>
+              <li data-regla="minuscula" class="text-muted"><span class="icono-regla">&#9679;</span> Una letra minúscula</li>
+              <li data-regla="numero" class="text-muted"><span class="icono-regla">&#9679;</span> Un número</li>
+              <li data-regla="especial" class="text-muted"><span class="icono-regla">&#9679;</span> Un carácter especial (! @ # $ % ^ &amp; *)</li>
+              <li data-regla="coinciden" class="text-muted"><span class="icono-regla">&#9679;</span> Confirmación igual a la contraseña</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -213,6 +224,33 @@
   };
 
   // ==========================================
+  // REGLAS DE CONTRASEÑA (mismas que password_validator.py)
+  // ==========================================
+  const REGLAS_PASSWORD = {
+    largo: (p) => p.length >= 8 && p.length <= 16,
+    mayuscula: (p) => /[A-Z]/.test(p),
+    minuscula: (p) => /[a-z]/.test(p),
+    numero: (p) => /\d/.test(p),
+    especial: (p) => /[!@#$%^&*]/.test(p),
+    coinciden: (p, conf) => p.length > 0 && p === conf
+  };
+
+  const evaluarReglasPassword = () => {
+    const password = $('#txtPassword').val();
+    const confirmacion = $('#txtPasswordConfirmacion').val();
+    let todasOk = true;
+    Object.entries(REGLAS_PASSWORD).forEach(([regla, cumple]) => {
+      const ok = cumple(password, confirmacion);
+      if (!ok) todasOk = false;
+      $(`#listaReglasPassword li[data-regla="${regla}"]`)
+        .toggleClass('text-success fw-semibold', ok)
+        .toggleClass('text-muted', !ok)
+        .find('.icono-regla').html(ok ? '&#10004;' : '&#9679;');
+    });
+    return todasOk;
+  };
+
+  // ==========================================
   // VALIDACIÓN Y GUARDADO
   // ==========================================
   const validarFormulario = () => {
@@ -225,12 +263,9 @@
     const password = $('#txtPassword').val();
     const passwordConf = $('#txtPasswordConfirmacion').val();
 
-    if (!idUsuario && (!password || password.length < 8)) {
-      Swal.fire('Atención', 'La contraseña debe tener al menos 8 caracteres', 'warning');
-      return false;
-    }
-    if (password && password !== passwordConf) {
-      Swal.fire('Atención', 'Las contraseñas no coinciden', 'warning');
+    // En edición, dejar la contraseña en blanco la mantiene; si se escribe, debe cumplir todas las reglas.
+    if ((!idUsuario || password || passwordConf) && !evaluarReglasPassword()) {
+      Swal.fire('Atención', 'La contraseña no cumple todos los requisitos. Revise la lista marcada en verde.', 'warning');
       return false;
     }
     return true;
@@ -289,6 +324,8 @@
 
   $(document).ready(function () {
     initSaveAction();
+
+    $('#txtPassword, #txtPasswordConfirmacion').on('input', evaluarReglasPassword);
 
     $('#id_funcionario').on('change', function () {
       const opt = $(this).find('option:selected');

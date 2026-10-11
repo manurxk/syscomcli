@@ -95,8 +95,12 @@
         </div>
         <div class="row gx-3">
           <div class="col-md-4">
-            <label class="fw-semibold">Descuento general (Gs.)</label>
-            <input type="number" class="form-control" id="txtDescuento" value="0" min="0">
+            <label class="fw-semibold">Descuento general</label>
+            <input type="number" class="form-control" id="txtDescuento" value="0" min="0" step="1000">
+          </div>
+          <div class="col-md-4">
+            <label class="fw-semibold">Moneda <span class="text-danger">*</span></label>
+            <select class="form-select" id="selMoneda"></select>
           </div>
           <div class="col-md-8">
             <label class="fw-semibold">Observaciones</label>
@@ -261,6 +265,15 @@
         $('#selProfesional').append(`<option value="${f.id_funcionario}">${f.nombre} ${f.apellido}</option>`)
       );
     });
+    fetch('/api/v1/monedas').then(r=>r.json()).then(d=>{
+      const $sel = $('#selMoneda');
+      (d.data||[]).filter(m=>m.est_moneda).forEach(m=>{
+        const $opt = $(`<option value="${m.id_moneda}">${m.cod_moneda} - ${m.des_moneda}</option>`);
+        $opt.data('cod', m.cod_moneda); $opt.data('simbolo', m.simbolo_moneda); $opt.data('dec', m.decimales_moneda);
+        if (m.es_moneda_local) { $opt.prop('selected', true); MONEDA = { id_moneda: m.id_moneda, cod_moneda: m.cod_moneda, simbolo_moneda: m.simbolo_moneda, decimales_moneda: m.decimales_moneda }; }
+        $sel.append($opt);
+      });
+    });
     fetch('/api/v1/items-servicios').then(r=>r.json()).then(d=>{
       if (d.success) d.data.filter(it=>it.est_item_servicio).forEach(it=>
         $('#selItemServicio').append(`<option value="${it.id_item_servicio}" data-desc="${it.des_item_servicio}" data-precio="${it.item_precio_unitario}">${it.des_item_servicio}</option>`)
@@ -284,7 +297,8 @@
   // ──────────────────────────────────────────────────
   // LÍNEAS DINÁMICAS
   // ──────────────────────────────────────────────────
-  const fmt = n => parseFloat(n||0).toLocaleString('es-PY', {minimumFractionDigits:0, maximumFractionDigits:2});
+  let MONEDA = { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
+  const fmt = n => formatMoney(n, MONEDA);
 
   const recalcularTotales = () => {
     const subtotal = lineasPedido.reduce((s,l)=>s+l.item_subtotal, 0);
@@ -340,6 +354,14 @@
     });
 
     $('#txtDescuento').on('input', recalcularTotales);
+
+    $('#selMoneda').on('change', function() {
+      const opt = $(this).find(':selected');
+      MONEDA = { id_moneda: $(this).val(), cod_moneda: opt.data('cod'), simbolo_moneda: opt.data('simbolo'), decimales_moneda: opt.data('dec') };
+      const dec = Number(MONEDA.decimales_moneda);
+      $('#txtDescuento').attr('step', dec ? Math.pow(10, -dec) : 1000);
+      recalcularTotales();
+    });
   };
 
   // ──────────────────────────────────────────────────
@@ -358,6 +380,7 @@
         fecha_pedido: $('#txtFechaPedido').val(),
         fecha_entrega: $('#txtFechaEntrega').val() || null,
         pedido_descuento: parseFloat($('#txtDescuento').val()||0),
+        id_moneda: parseInt($('#selMoneda').val()),
         observaciones: $('#txtObservaciones').val()||null,
         detalles: lineasPedido.map(l=>({
           id_item_servicio: l.id_item_servicio,

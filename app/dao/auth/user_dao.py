@@ -2,6 +2,8 @@ from app.core.base_dao import BaseDAO
 from werkzeug.security import generate_password_hash
 
 MAX_ROLES_POR_USUARIO = 3
+# Tope de usuarios activos vinculados a funcionarios (el superadmin técnico sin funcionario no cuenta).
+MAX_USUARIOS_CON_FUNCIONARIO = 10
 
 
 class UsuarioDao(BaseDAO):
@@ -20,7 +22,10 @@ class UsuarioDao(BaseDAO):
                 COALESCE(c.des_cargo, 'Sin cargo') AS cargo,
                 COALESCE(rp.cod_rol, 'Sin rol') AS rol_principal,
                 u.fecha_creacion,
-                f.id_funcionario
+                f.id_funcionario,
+                esta_usuario_bloqueado(u.id_usuario) AS esta_bloqueado,
+                u.bloqueado_hasta,
+                u.motivo_bloqueo
             FROM usuarios u
             LEFT JOIN funcionarios f ON f.id_funcionario = u.id_funcionario
             LEFT JOIN personas p ON p.id_persona = f.id_persona
@@ -154,9 +159,18 @@ class UsuarioDao(BaseDAO):
         return self.execute_query(sql, (usuario_modificacion, id_usuario), commit=True) > 0
 
     def resetearIntentos(self, id_usuario, usuario_modificacion=None):
+        """Desbloqueo manual: limpia el contador de intentos fallidos y el
+        bloqueo activo (incluido el indefinido del nivel 3, que no se autolevanta
+        con el tiempo) y reinicia la escalada: el próximo bloqueo vuelve a ser
+        el de 5 intentos / 30 min (ver migrations/104)."""
         sql = """
             UPDATE usuarios
-            SET usu_nro_intentos = 0, usuario_modificacion = %s
+            SET usu_nro_intentos = 0,
+                nivel_escalada_bloqueo = 0,
+                fecha_bloqueo = NULL,
+                bloqueado_hasta = NULL,
+                motivo_bloqueo = NULL,
+                usuario_modificacion = %s
             WHERE id_usuario = %s
         """
         return self.execute_query(sql, (usuario_modificacion, id_usuario), commit=True) > 0
@@ -191,6 +205,11 @@ class UsuarioDao(BaseDAO):
             LIMIT 1
         """
         return self.execute_query_one(sql, (id_usuario,))
+
+    def contar_usuarios_activos_con_funcionario(self):
+        sql = "SELECT COUNT(*) AS total FROM usuarios WHERE est_usuario = TRUE AND id_funcionario IS NOT NULL"
+        fila = self.execute_query_one(sql)
+        return fila["total"] if fila else 0
 
     def contar_roles_activos(self, id_usuario):
         sql = "SELECT COUNT(*) AS total FROM usuarios_roles WHERE id_usuario = %s AND est_usuario_rol = TRUE"

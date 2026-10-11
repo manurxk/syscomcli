@@ -1,3 +1,6 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "plantuml.java": "C:\\Program Files\\Eclipse Adoptium\\jre-21.0.12.101-hotspot\\bin\\java.exe",
+    "plantuml.render": "Local",
+    "plantuml.commandArgs": ["-DPLANTUML_LIMIT_SIZE=16000"]
 }

@@ -66,7 +66,7 @@
         { data: row => row.profesional_nombre || '<span class="text-muted">-</span>' },
         { data: 'fecha_pedido' },
         { data: row => row.fecha_entrega || '-' },
-        { data: row => parseFloat(row.pedido_total||0).toLocaleString('es-PY'), className: 'text-end' },
+        { data: row => formatMoney(row.pedido_total, row), className: 'text-end' },
         { data: row => badgeEstado(row.pedido_estado), className: 'text-center' },
         {
           data: row => `

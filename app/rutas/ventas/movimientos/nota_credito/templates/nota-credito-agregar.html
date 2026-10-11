@@ -128,8 +128,8 @@
               <tr>
                 <th>Descripción</th>
                 <th class="text-center" style="width:100px">Cantidad</th>
-                <th class="text-end" style="width:140px">Precio Unit. (Gs.)</th>
-                <th class="text-end" style="width:140px">Monto (Gs.)</th>
+                <th class="text-end" style="width:140px">Precio Unit.</th>
+                <th class="text-end" style="width:140px">Monto</th>
                 <th style="width:50px"></th>
               </tr>
             </thead>
@@ -139,7 +139,7 @@
             <tfoot>
               <tr class="table-warning d-none" id="filaTotales">
                 <td colspan="3" class="text-end fw-bold">Total a Acreditar:</td>
-                <td class="text-end fw-bold" id="lblTotal">0 Gs.</td>
+                <td class="text-end fw-bold" id="lblTotal">0</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -181,11 +181,11 @@
             <input type="number" class="form-control" id="itemCant" value="1" min="1" step="1">
           </div>
           <div class="col-md-4">
-            <label class="fw-semibold">Precio Unit. (Gs.) <span class="text-danger">*</span></label>
+            <label class="fw-semibold">Precio Unit. <span class="text-danger">*</span></label>
             <input type="number" class="form-control" id="itemPrecio" value="0" min="0" step="1">
           </div>
           <div class="col-md-4">
-            <label class="fw-semibold">Monto (Gs.)</label>
+            <label class="fw-semibold">Monto</label>
             <input type="number" class="form-control bg-light" id="itemMonto" value="0" readonly>
           </div>
         </div>
@@ -204,6 +204,7 @@ const API_FAC = '/api/v1/facturas';
 const API_TC  = '/api/v1/tipos-comprobantes';
 
 let detalles = [];
+let MONEDA = { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
 
 // ── Inicialización ─────────────────────────────────────────────────────────
 async function inicializar() {
@@ -219,6 +220,8 @@ async function inicializar() {
     o.dataset.nombre  = f.paciente_nombre;
     o.dataset.cedula  = f.paciente_cedula;
     o.dataset.total   = f.factura_total;
+    o.dataset.idmoneda = f.id_moneda; o.dataset.codmoneda = f.cod_moneda;
+    o.dataset.simbolo = f.simbolo_moneda; o.dataset.decimales = f.decimales_moneda;
     sel.appendChild(o);
   });
 
@@ -242,12 +245,13 @@ document.getElementById('selFactura').addEventListener('change', function() {
 document.getElementById('btnSeleccionarFactura').addEventListener('click', function() {
   const opt = document.getElementById('selFactura').selectedOptions[0];
   if (!opt.value) return;
+  MONEDA = { id_moneda: opt.dataset.idmoneda, cod_moneda: opt.dataset.codmoneda, simbolo_moneda: opt.dataset.simbolo, decimales_moneda: opt.dataset.decimales };
   document.getElementById('hidIdFactura').value = opt.value;
   document.getElementById('lblFacturaNro').textContent    = opt.dataset.numero || '—';
   document.getElementById('lblPacienteNombre').textContent = opt.dataset.nombre || '—';
   document.getElementById('lblPacienteCedula').textContent = opt.dataset.cedula || '—';
   document.getElementById('lblFacturaTotal').textContent  =
-    opt.dataset.total ? Number(opt.dataset.total).toLocaleString('es-PY') + ' Gs.' : '—';
+    opt.dataset.total ? formatMoney(opt.dataset.total, MONEDA) : '—';
 
   document.getElementById('card-factura').style.display = 'none';
   document.getElementById('contenedor-nc').style.display = '';
@@ -286,7 +290,7 @@ function renderTabla() {
       <td>${d.item_descripcion}</td>
       <td class="text-center">${d.item_cantidad}</td>
       <td class="text-end">${Number(d.item_precio_unitario).toLocaleString('es-PY')}</td>
-      <td class="text-end">${Number(d.monto_total).toLocaleString('es-PY')} Gs.</td>
+      <td class="text-end">${formatMoney(d.monto_total, MONEDA)}</td>
       <td class="text-center">
         <button class="btn btn-xs btn-danger" onclick="quitarItem(${i})">
           <i data-feather="x" class="icon-xs"></i>
@@ -294,7 +298,7 @@ function renderTabla() {
       </td>`;
     tbody.appendChild(tr);
   });
-  document.getElementById('lblTotal').textContent = Number(totalGral).toLocaleString('es-PY') + ' Gs.';
+  document.getElementById('lblTotal').textContent = formatMoney(totalGral, MONEDA);
   feather.replace();
 }
 

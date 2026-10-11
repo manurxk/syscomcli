@@ -2,6 +2,7 @@
 Servicio de autenticación mejorado
 FASE 2: MEJORAS DE SEGURIDAD
 """
+import re
 import secrets
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
@@ -9,10 +10,20 @@ from flask import current_app as app, request
 from werkzeug.security import check_password_hash
 from app.core.base_dao import BaseDAO
 from app.services.EmailService import EmailService
+from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
+from app.utils.auditoria_constantes import AuditAccion
 
 _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
 
 MFA_MAX_INTENTOS_VALIDACION = 5
+
+# Bloqueo escalonado de cuenta: deben coincidir con registrar_intento_login (migrations/104)
+BLOQUEO_UMBRAL_PRIMER_NIVEL = 5   # 5 fallos -> 30 min
+BLOQUEO_UMBRAL_REINCIDENCIA = 3   # 3 fallos -> 1 h; 3 mas -> indefinido (desbloquea un administrador)
+
+# Recuperacion de contrasena: maximo de correos por cuenta en la ventana
+RECUPERACION_MAX_SOLICITUDES = 3
+RECUPERACION_VENTANA_MINUTOS = 60
 
 
 class AuthService:
@@ -20,15 +31,47 @@ class AuthService:
 
     @staticmethod
     def obtener_ip_cliente() -> str:
-        """Obtiene la IP del cliente desde el request"""
-        if request.headers.get('X-Forwarded-For'):
-            return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+        """Obtiene la IP del cliente desde el request.
+
+        No se lee X-Forwarded-For a mano (el cliente lo puede falsificar):
+        detrás de nginx, ProxyFix (app/__init__.py) ya deja la IP real en remote_addr.
+        """
         return request.remote_addr or '0.0.0.0'
 
     @staticmethod
     def obtener_user_agent() -> str:
         """Obtiene el User-Agent del cliente"""
         return request.headers.get('User-Agent', 'Unknown')
+
+    @staticmethod
+    def _mapear_usuario_seguridad(fila: Dict) -> Dict:
+        return {
+            'id_usuario': fila['id_usuario'],
+            'usu_nick': fila['usu_nick'],
+            'usu_clave': fila['usu_clave'],
+            'usu_estado': fila['est_usuario'],
+            'id_funcionario': fila['id_funcionario'],
+            'id_grupo': fila['id_rol'],
+            'nombre_completo': fila['nombre_completo'],
+            'grupo_nombre': fila['grupo_nombre'],
+            'cargo_nombre': fila['cargo_nombre'],
+            'fecha_ultimo_login': fila['fecha_ultimo_login'],
+            'ip_ultimo_login': fila['ip_ultimo_login'],
+            'fecha_bloqueo': fila['fecha_bloqueo'],
+            'bloqueado_hasta': fila['bloqueado_hasta'],
+            'motivo_bloqueo': fila['motivo_bloqueo'],
+            'requiere_cambio_password': fila['requiere_cambio_clave'],
+            'fecha_cambio_password': fila['fecha_cambio_clave'],
+            'password_nunca_expira': fila['clave_nunca_expira'],
+            'dias_validez_password': fila['dias_validez_clave'],
+            'max_sesiones_simultaneas': fila['max_sesiones_simultaneas'],
+            'sesiones_activas': fila['sesiones_activas'],
+            'password_expirada': fila['password_expirada'],
+            'dias_hasta_expiracion': fila['dias_hasta_expiracion'],
+            'esta_bloqueado': fila['esta_bloqueado'],
+            'mfa_habilitado': fila['mfa_habilitado'],
+            'correo': fila['correo']
+        }
 
     @staticmethod
     def buscar_usuario_seguridad(usu_nick: str) -> Optional[Dict]:
@@ -50,35 +93,7 @@ class AuthService:
         """
         try:
             fila = _dao.execute_query_one(sql, (usu_nick,))
-            if not fila:
-                return None
-            return {
-                'id_usuario': fila['id_usuario'],
-                'usu_nick': fila['usu_nick'],
-                'usu_clave': fila['usu_clave'],
-                'usu_estado': fila['est_usuario'],
-                'id_funcionario': fila['id_funcionario'],
-                'id_grupo': fila['id_rol'],
-                'nombre_completo': fila['nombre_completo'],
-                'grupo_nombre': fila['grupo_nombre'],
-                'cargo_nombre': fila['cargo_nombre'],
-                'fecha_ultimo_login': fila['fecha_ultimo_login'],
-                'ip_ultimo_login': fila['ip_ultimo_login'],
-                'fecha_bloqueo': fila['fecha_bloqueo'],
-                'bloqueado_hasta': fila['bloqueado_hasta'],
-                'motivo_bloqueo': fila['motivo_bloqueo'],
-                'requiere_cambio_password': fila['requiere_cambio_clave'],
-                'fecha_cambio_password': fila['fecha_cambio_clave'],
-                'password_nunca_expira': fila['clave_nunca_expira'],
-                'dias_validez_password': fila['dias_validez_clave'],
-                'max_sesiones_simultaneas': fila['max_sesiones_simultaneas'],
-                'sesiones_activas': fila['sesiones_activas'],
-                'password_expirada': fila['password_expirada'],
-                'dias_hasta_expiracion': fila['dias_hasta_expiracion'],
-                'esta_bloqueado': fila['esta_bloqueado'],
-                'mfa_habilitado': fila['mfa_habilitado'],
-                'correo': fila['correo']
-            }
+            return AuthService._mapear_usuario_seguridad(fila) if fila else None
         except Exception as e:
             app.logger.error(f"Error al buscar usuario seguridad: {str(e)}")
             return None
@@ -176,6 +191,92 @@ class AuthService:
             return False
 
     @staticmethod
+    def _alertar_bloqueo_por_correo(id_usuario, correo, ip_address):
+        """Avisa por correo al dueño de la cuenta que se bloqueó por intentos
+        fallidos (ver login(), paso 4). No bloquea el flujo de login si el
+        envío falla — es una alerta best-effort."""
+        if not correo:
+            return
+        try:
+            fila = _dao.execute_query_one(
+                "SELECT bloqueado_hasta FROM usuarios WHERE id_usuario = %s", (id_usuario,)
+            )
+            bloqueado_hasta = fila.get('bloqueado_hasta') if fila else None
+            detalle = (
+                f"hasta el {bloqueado_hasta.strftime('%Y-%m-%d %H:%M')}"
+                if bloqueado_hasta
+                else "de forma indefinida (requiere que un administrador la desbloquee)"
+            )
+            asunto = f"{app.config.get('NOMBRE_CLINICA', 'SYSCLIN')} - Su cuenta fue bloqueada"
+            cuerpo = (
+                f"Detectamos múltiples intentos fallidos de inicio de sesión en su cuenta, "
+                f"desde la IP {ip_address}.\n\n"
+                f"Su cuenta quedó bloqueada {detalle}.\n\n"
+                f"Si no fue usted, le recomendamos cambiar su contraseña apenas pueda ingresar de nuevo."
+            )
+            EmailService().enviar_correo(correo, asunto, cuerpo)
+        except Exception as e:
+            app.logger.error(f"Error al enviar alerta de bloqueo para usuario {id_usuario}: {str(e)}")
+
+    @staticmethod
+    def auditar_rate_limit(ip_address, ventana_minutos, detalle, id_usuario=None):
+        """Registra RATE_LIMIT en auditoría una sola vez por IP y ventana: un ataque
+        insistente no debe generar un evento por cada petición frenada."""
+        try:
+            ya_registrado = _dao.execute_query_one(
+                """
+                SELECT 1 AS hay FROM auditoria_sistema
+                WHERE accion = %s AND ip_origen = %s::inet
+                  AND fecha_evento > CURRENT_TIMESTAMP - (%s || ' minutes')::interval
+                LIMIT 1
+                """,
+                (AuditAccion.RATE_LIMIT, ip_address, ventana_minutos)
+            )
+            if not ya_registrado:
+                AuditoriaDao().registrar_evento(
+                    id_usuario=id_usuario, accion=AuditAccion.RATE_LIMIT,
+                    detalle=detalle, ip_origen=ip_address
+                )
+        except Exception as e:
+            app.logger.error(f"Error al auditar RATE_LIMIT para ip {ip_address}: {str(e)}")
+
+    @staticmethod
+    def _auditar_bloqueo_cuenta(id_usuario, usuario_nombre, ip_address):
+        """Registra ACCOUNT_LOCKED con el nivel de escalada alcanzado (ver login(), paso 4)."""
+        try:
+            fila = _dao.execute_query_one(
+                "SELECT nivel_escalada_bloqueo, motivo_bloqueo FROM usuarios WHERE id_usuario = %s",
+                (id_usuario,)
+            )
+            nivel = fila['nivel_escalada_bloqueo'] if fila else None
+            motivo = fila['motivo_bloqueo'] if fila else ''
+            AuditoriaDao().registrar_evento(
+                id_usuario=id_usuario, accion=AuditAccion.ACCOUNT_LOCKED,
+                detalle=f"Cuenta \"{usuario_nombre}\" bloqueada (nivel {nivel}): {motivo}",
+                ip_origen=ip_address
+            )
+        except Exception as e:
+            app.logger.error(f"Error al auditar bloqueo de usuario {id_usuario}: {str(e)}")
+
+    @staticmethod
+    def recuperacion_excedida(id_usuario: int) -> bool:
+        """True si la cuenta ya recibió RECUPERACION_MAX_SOLICITUDES correos de recuperación
+        en la ventana: evita usar la recuperación para inundar el correo del usuario."""
+        try:
+            fila = _dao.execute_query_one(
+                """
+                SELECT COUNT(*) AS total FROM password_reset_tokens
+                WHERE id_usuario = %s
+                  AND fecha_creacion > CURRENT_TIMESTAMP - (%s || ' minutes')::interval
+                """,
+                (id_usuario, RECUPERACION_VENTANA_MINUTOS)
+            )
+            return bool(fila) and fila['total'] >= RECUPERACION_MAX_SOLICITUDES
+        except Exception as e:
+            app.logger.error(f"Error al contar solicitudes de recuperación de {id_usuario}: {str(e)}")
+            return False
+
+    @staticmethod
     def contar_intentos_fallidos_ip(ip_address: str, minutos: int = 15) -> int:
         """Cuenta intentos de login fallidos desde una IP en una ventana de tiempo"""
         sql = """
@@ -192,11 +293,57 @@ class AuthService:
             app.logger.error(f"Error al contar intentos fallidos por IP: {str(e)}")
             return 0
 
+    DISPOSITIVO_CONFIABLE_DIAS = 60
+
+    @staticmethod
+    def crear_dispositivo_confiable(id_usuario: int, ip_address: str, user_agent: str) -> str:
+        """Emite un token de 'dispositivo confiable': mientras sea válido (60 días),
+        el login de un usuario con MFA se salta el paso del código. Se emite tras
+        validar el código MFA con éxito (ver login.py, verificar_mfa)."""
+        token = secrets.token_urlsafe(32)
+        fecha_expiracion = datetime.utcnow() + timedelta(days=AuthService.DISPOSITIVO_CONFIABLE_DIAS)
+        _dao.execute_query(
+            """
+            INSERT INTO mfa_dispositivos_confiables (id_usuario, token, fecha_expiracion, ip_creacion, user_agent)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (id_usuario, token, fecha_expiracion, ip_address, user_agent), commit=True
+        )
+        return token
+
+    @staticmethod
+    def revocar_dispositivo_confiable_por_token(token: Optional[str]) -> None:
+        """Marca revocado el token de dispositivo confiable que se está por
+        reemplazar (ver login.py, _emitir_dispositivo_confiable) — la rotación
+        en cada login no debe dejar el token anterior 'Vigente' indefinidamente."""
+        if not token:
+            return
+        _dao.execute_query(
+            "UPDATE mfa_dispositivos_confiables SET revocado = TRUE WHERE token = %s",
+            (token,), commit=True
+        )
+
+    @staticmethod
+    def validar_dispositivo_confiable(id_usuario: int, token: Optional[str]) -> bool:
+        """True si el token de dispositivo confiable es válido para este usuario
+        (no vencido, no revocado)."""
+        if not token:
+            return False
+        fila = _dao.execute_query_one(
+            """
+            SELECT id_dispositivo FROM mfa_dispositivos_confiables
+            WHERE id_usuario = %s AND token = %s AND revocado = FALSE AND fecha_expiracion > CURRENT_TIMESTAMP
+            """,
+            (id_usuario, token)
+        )
+        return bool(fila)
+
     @staticmethod
     def login(
         usuario_nombre: str,
         password: str,
-        csrf_token: Optional[str] = None
+        csrf_token: Optional[str] = None,
+        token_dispositivo: Optional[str] = None
     ) -> Tuple[bool, Dict, str]:
         """
         Proceso de login mejorado con todas las validaciones
@@ -212,6 +359,11 @@ class AuthService:
         VENTANA_MINUTOS_IP = 15
         if AuthService.contar_intentos_fallidos_ip(ip_address, VENTANA_MINUTOS_IP) >= MAX_INTENTOS_FALLIDOS_IP:
             app.logger.warning(f"LOGIN_BLOCKED_IP ip={ip_address} reason=demasiados_intentos")
+            AuthService.auditar_rate_limit(
+                ip_address, VENTANA_MINUTOS_IP,
+                f"Login frenado: {MAX_INTENTOS_FALLIDOS_IP} o más intentos fallidos desde esta IP en "
+                f"{VENTANA_MINUTOS_IP} min (usuario intentado: '{usuario_nombre}')"
+            )
             return False, {}, "Demasiados intentos fallidos desde esta IP. Intente nuevamente más tarde."
 
         # 1. Buscar usuario en vista de seguridad
@@ -279,20 +431,30 @@ class AuthService:
                 user_agent=user_agent
             )
 
-            # Obtener intentos restantes
+            app.logger.warning(f"LOGIN_FAIL user={usuario_nombre} reason=password_invalido ip={ip_address}")
+
+            # Si este intento acaba de disparar el bloqueo (5 fallos el primero,
+            # 3 las reincidencias, ver registrar_intento_login/escalada), auditar y
+            # avisar por correo al dueño de la cuenta — no llegamos acá si ya
+            # estaba bloqueada antes (ver paso 3), así que es un bloqueo recién ocurrido.
+            if AuthService.esta_usuario_bloqueado(id_usuario):
+                AuthService._auditar_bloqueo_cuenta(id_usuario, usuario_nombre, ip_address)
+                AuthService._alertar_bloqueo_por_correo(id_usuario, usuario.get('correo'), ip_address)
+                return False, {}, "Contraseña incorrecta. Cuenta bloqueada por múltiples intentos fallidos"
+
             try:
-                fila = _dao.execute_query_one("SELECT usu_nro_intentos FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+                fila = _dao.execute_query_one(
+                    "SELECT usu_nro_intentos, nivel_escalada_bloqueo FROM usuarios WHERE id_usuario = %s",
+                    (id_usuario,)
+                )
                 intentos = (fila['usu_nro_intentos'] if fila else 0) or 0
-                intentos_restantes = max(0, 5 - intentos - 1)
+                nivel = (fila['nivel_escalada_bloqueo'] if fila else 0) or 0
+                umbral = BLOQUEO_UMBRAL_PRIMER_NIVEL if nivel == 0 else BLOQUEO_UMBRAL_REINCIDENCIA
+                intentos_restantes = max(0, umbral - intentos)
             except Exception:
                 intentos_restantes = 0
 
-            app.logger.warning(f"LOGIN_FAIL user={usuario_nombre} reason=password_invalido ip={ip_address}")
-
-            if intentos_restantes > 0:
-                return False, {}, f"Contraseña incorrecta. Intentos restantes: {intentos_restantes}"
-            else:
-                return False, {}, "Contraseña incorrecta. Cuenta bloqueada por múltiples intentos fallidos"
+            return False, {}, f"Contraseña incorrecta. Intentos restantes: {intentos_restantes}"
 
         # 5. Verificar si requiere cambio de contraseña (solo si no tiene password_nunca_expira)
         if not usuario.get('password_nunca_expira') and usuario.get('requiere_cambio_password'):
@@ -318,10 +480,35 @@ class AuthService:
             )
             return False, usuario, "Su contraseña ha expirado. Debe cambiarla"
 
+        # 6.5 Si tiene MFA habilitado pero todavía no tiene un correo vinculado
+        # (ej. recién se le activó MFA), no hay a dónde mandar el código: se le
+        # pide vincular uno antes de continuar (ver vincular_correo_y_enviar_mfa).
+        if usuario.get('mfa_habilitado') and not usuario.get('correo'):
+            AuthService.registrar_intento_login(
+                usuario_intentado=usuario_nombre,
+                id_usuario=id_usuario,
+                exitoso=True,
+                motivo_fallo=None,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            app.logger.info(f"LOGIN_REQUIERE_VINCULAR_CORREO user={usuario_nombre} ip={ip_address}")
+            return False, {'id_usuario': id_usuario, 'usu_nick': usuario['usu_nick'], 'requiere_vincular_correo': True}, \
+                "Debe vincular un correo para poder continuar (autenticación en dos pasos)"
+
         # 7. Si el usuario tiene MFA habilitado, no crear sesión todavía:
         # se envía un código por correo y el login se completa en un segundo paso
         # (ver completar_login_mfa).
         if usuario.get('mfa_habilitado'):
+            # 7.1 Si el login viene de un dispositivo ya confiable (MFA validado hace
+            # menos de 60 días en ese mismo navegador), se salta el código.
+            if AuthService.validar_dispositivo_confiable(id_usuario, token_dispositivo):
+                app.logger.info(f"LOGIN_MFA_DISPOSITIVO_CONFIABLE user={usuario_nombre} ip={ip_address}")
+                datos_usuario = AuthService._finalizar_sesion(usuario, usuario_nombre, ip_address, user_agent, csrf_token)
+                if not datos_usuario:
+                    return False, {}, "Error al crear sesión. Intente nuevamente"
+                return True, datos_usuario, "Login exitoso"
+
             enviado, error_mfa = AuthService.generar_y_enviar_codigo_mfa(
                 id_usuario=id_usuario,
                 ip_address=ip_address,
@@ -424,7 +611,8 @@ class AuthService:
             'session_token': session_token,
             'csrf_token': csrf_token,
             'refresh_token': refresh_token,
-            'sesion_id': sesion_id
+            'sesion_id': sesion_id,
+            'mfa_habilitado': bool(usuario.get('mfa_habilitado'))
         }
 
         # Advertencias
@@ -502,6 +690,57 @@ class AuthService:
             (fila['id_mfa_codigo'],), commit=True
         )
         return True, None
+
+    @staticmethod
+    def vincular_correo_y_enviar_mfa(id_usuario, correo):
+        """
+        Paso previo al MFA cuando el usuario lo tiene habilitado pero todavía
+        no tiene un correo vinculado (ver login(), rama requiere_vincular_correo).
+        Vincula el correo y envía de inmediato el primer código de verificación.
+
+        Si el usuario tiene un funcionario/persona asociado, el correo se guarda
+        en personas.per_correo (mismo dato que usan facturas/recordatorios). Si
+        no (ej. cuentas semilla como "manu", sin ficha de personal), se guarda
+        en usuarios.correo — la vista v_usuarios_seguridad usa COALESCE entre
+        ambas columnas.
+
+        id_usuario viene de la sesión de Flask (mfa_pendiente_id_usuario), fijado
+        únicamente tras validar la contraseña en login() — no se re-pide la
+        contraseña acá, igual que en completar_login_mfa().
+
+        Returns:
+            Tuple[bool, str]: (exitoso, mensaje)
+        """
+        correo = (correo or '').strip()
+        if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', correo):
+            return False, "El correo no tiene un formato válido"
+
+        filas_afectadas = _dao.execute_query(
+            """
+            UPDATE personas SET per_correo = %s
+            WHERE id_persona = (
+                SELECT f.id_persona FROM usuarios u
+                JOIN funcionarios f ON f.id_funcionario = u.id_funcionario
+                WHERE u.id_usuario = %s
+            )
+            """,
+            (correo, id_usuario), commit=True
+        )
+        if not filas_afectadas:
+            filas_afectadas = _dao.execute_query(
+                "UPDATE usuarios SET correo = %s WHERE id_usuario = %s",
+                (correo, id_usuario), commit=True
+            )
+        if not filas_afectadas:
+            return False, "No se pudo vincular el correo: usuario no encontrado."
+
+        ip_address = AuthService.obtener_ip_cliente()
+        user_agent = AuthService.obtener_user_agent()
+        enviado, error_mfa = AuthService.generar_y_enviar_codigo_mfa(id_usuario, ip_address, user_agent)
+        if not enviado:
+            return False, f"Correo vinculado, pero no se pudo enviar el código: {error_mfa}"
+
+        return True, "Correo vinculado. Se envió un código de verificación a su correo."
 
     @staticmethod
     def completar_login_mfa(id_usuario, codigo, csrf_token=None):
