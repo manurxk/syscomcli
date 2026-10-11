@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!-- Plantilla del PDF de la ficha médica (ver app/services/ficha_html_pdf_service.py).
+     Mismo patrón que FE.html (KuDE de factura): los marcadores #!#...#!# se reemplazan
+     por los datos del paciente y el HTML se convierte a PDF con WeasyPrint. -->
+<html>
+
+<head>
+  <title>Ficha médica</title>
+  <meta charset="UTF-8" />
+  <style type="text/css">
+    @page {
+      size: A4;
+      margin: 10mm 9mm 14mm 9mm;
+
+      @bottom-center {
+        content: "Ficha médica · Historia clínica #!#HISTORIA_CLINICA#!# · Página " counter(page) " de " counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 6.5pt;
+        color: #555555;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+      color: #000000;
+      margin: 0;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    /* Encabezado (igual que FE.html: título gris + dos columnas) */
+    .encabezado td {
+      vertical-align: top;
+    }
+
+    .encabezado img {
+      width: 80px;
+      height: auto;
+      margin-bottom: 6px;
+    }
+
+    .titulo-doc {
+      font-size: 13pt;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* Títulos de sección */
+    .seccion {
+      background-color: #c9c9c9;
+      border: 1px solid #040303;
+      font-size: 8pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 3px 6px;
+      margin-top: 8px;
+    }
+
+    /* Tabla de datos: cada celda lleva una etiqueta chica arriba (.lbl) y el valor abajo */
+    .tabla-datos td {
+      border: 1px solid #040303;
+      padding: 3px 6px;
+      vertical-align: top;
+      line-height: 1.4;
+    }
+
+    .lbl {
+      display: block;
+      font-size: 6.5pt;
+      color: #555555;
+      text-transform: uppercase;
+    }
+
+    /* Indicadores del resumen */
+    .resumen td {
+      border: 1px solid #040303;
+      text-align: center;
+      padding: 4px;
+      width: 25%;
+    }
+
+    .resumen .numero {
+      display: block;
+      font-size: 13pt;
+      font-weight: bold;
+    }
+
+    /* Textos largos de la anamnesis: respetan los saltos de línea cargados */
+    .texto-largo {
+      white-space: pre-line;
+    }
+
+    /* Tablas de detalle (diagnósticos, tratamientos), como el detalle de FE.html */
+    .detalle th {
+      background: #dcdcdc;
+      border: 1px solid #040303;
+      padding: 3px;
+      font-weight: normal;
+      text-align: center;
+    }
+
+    .detalle td {
+      border: 1px solid #040303;
+      padding: 3px 5px;
+      vertical-align: top;
+    }
+
+    .celda-contenido {
+      text-align: center;
+      font-style: italic;
+      color: #555555;
+    }
+
+    /* Pie: firma del especialista y aviso de confidencialidad */
+    .firma {
+      margin-top: 30px;
+      width: 45%;
+      margin-left: auto;
+      text-align: center;
+    }
+
+    .firma .linea {
+      border-top: 1px solid #000000;
+      padding-top: 3px;
+    }
+
+    .confidencial {
+      margin-top: 14px;
+      border: 1px solid #040303;
+      padding: 5px 7px;
+      font-size: 6.5pt;
+      color: #333333;
+      line-height: 1.4;
+    }
+
+    .no-cortar {
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ENCABEZADO: empresa | datos del documento -->
+  <table class="encabezado" style="border: 1px solid #040303;">
+    <tr style="background-color: #dcdcdc;">
+      <td colspan="2" style="text-align: center; font-size: 7pt; padding: 3px; border-bottom: 1px solid #040303;">
+        Ficha médica del paciente · Documento confidencial
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 60%; padding: 10px 12px; line-height: 1.5;">
+        #!#pathLogo#!#
+        <div style="font-size: 10pt; font-weight: bold;">#!#EMPRESA_NOMBRE#!#</div>
+        <div>#!#EMPRESA_DIRECCION#!#</div>
+        <div>Teléfono: #!#EMPRESA_TELEFONO#!#</div>
+        <div>RUC: #!#EMPRESA_RUC#!#</div>
+        <div>#!#EMPRESA_WEB#!#</div>
+      </td>
+      <td style="width: 40%; padding: 10px 12px; border-left: 1px solid #040303; line-height: 1.6;">
+        <div class="titulo-doc">FICHA MÉDICA</div>
+        <div style="text-align: center; font-size: 10pt; margin-top: 6px;">
+          Historia clínica Nº <b>#!#HISTORIA_CLINICA#!#</b>
+        </div>
+        <div style="text-align: center; margin-top: 10px;">Generada: #!#FECHA_GENERACION#!#</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- DATOS DEL PACIENTE -->
+  <div class="seccion">Datos del paciente</div>
+  <table class="tabla-datos">
+    <tr>
+      <td colspan="2" style="width: 50%;"><span class="lbl">Nombre completo</span><b>#!#PAC_NOMBRE#!#</b></td>
+      <td style="width: 25%;"><span class="lbl">Cédula</span>#!#PAC_CEDULA#!#</td>
+      <td style="width: 25%;"><span class="lbl">Fecha de nacimiento · edad</span>#!#PAC_FECHA_NAC_EDAD#!#</td>
+    </tr>
+    <tr>
+      <td style="width: 25%;"><span class="lbl">Género</span>#!#PAC_GENERO#!#</td>
+      <td style="width: 25%;"><span class="lbl">Estado civil</span>#!#PAC_ESTADO_CIVIL#!#</td>
+      <td style="width: 25%;"><span class="lbl">Teléfono</span>#!#PAC_TELEFONO#!#</td>
+      <td style="width: 25%;"><span class="lbl">Correo</span>#!#PAC_CORREO#!#</td>
+    </tr>
+    <tr>
+      <td colspan="3"><span class="lbl">Domicilio</span>#!#PAC_DOMICILIO#!#</td>
+      <td><span class="lbl">Ciudad</span>#!#PAC_CIUDAD#!#</td>
+    </tr>
+  </table>
+  #!#BLOQUE_TUTOR#!#
+
+  <!-- RESUMEN -->
+  <div class="seccion">Resumen</div>
+  <table class="resumen">
+    <tr>
+      <td><span class="numero">#!#TOTAL_CONSULTAS#!#</span><span class="lbl">Consultas recientes</span></td>
+      <td><span class="numero">#!#TOTAL_DIAGNOSTICOS#!#</span><span class="lbl">Diagnósticos</span></td>
+      <td><span class="numero">#!#TOTAL_TRATAMIENTOS#!#</span><span class="lbl">Tratamientos activos</span></td>
+      <td><span class="lbl">Próxima cita</span><b>#!#PROXIMA_CITA#!#</b></td>
+    </tr>
+  </table>
+
+  <!-- ANAMNESIS -->
+  <div class="seccion">Anamnesis</div>
+  <table class="tabla-datos">
+    <tr>
+      <td colspan="2"><span class="lbl">Motivo de consulta</span><div class="texto-largo">#!#MOTIVO_CONSULTA#!#</div></td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"><span class="lbl">Antecedentes patológicos personales</span><div class="texto-largo">#!#ANTEC_PERSONALES#!#</div></td>
+      <td style="width: 50%;"><span class="lbl">Antecedentes patológicos familiares</span><div class="texto-largo">#!#ANTEC_FAMILIARES#!#</div></td>
+    </tr>
+    <tr>
+      <td><span class="lbl">Medicación actual</span><div class="texto-largo">#!#MEDICACION_ACTUAL#!#</div></td>
+      <td><span class="lbl">Medicación psiquiátrica previa</span><div class="texto-largo">#!#MEDICACION_PSIQUIATRICA#!#</div></td>
+    </tr>
+  </table>
+
+  <!-- DIAGNÓSTICOS -->
+  <div class="seccion">Diagnósticos</div>
+  <table class="detalle">
+    <thead>
+      <tr>
+        <th style="width: 15%;">CIE-10</th>
+        <th style="width: 85%;">Diagnóstico</th>
+      </tr>
+    </thead>
+    <tbody>
+      #!#DIAGNOSTICOS_HTML#!#
+    </tbody>
+  </table>
+
+  <!-- TRATAMIENTOS ACTIVOS -->
+  <div class="seccion">Tratamientos activos</div>
+  <table class="detalle">
+    <thead>
+      <tr>
+        <th style="width: 22%;">Tipo</th>
+        <th style="width: 43%;">Descripción</th>
+        <th style="width: 13%;">Inicio</th>
+        <th style="width: 22%;">Profesional</th>
+      </tr>
+    </thead>
+    <tbody>
+      #!#TRATAMIENTOS_HTML#!#
+    </tbody>
+  </table>
+
+  <!-- FIRMA Y CONFIDENCIALIDAD -->
+  <div class="no-cortar">
+    <div class="firma">
+      <div class="linea">
+        <b>#!#GENERADOR_NOMBRE#!#</b><br />
+        Matrícula profesional: #!#GENERADOR_MATRICULA#!#
+      </div>
+    </div>
+
+    <div class="confidencial">
+      <b>Documento confidencial.</b> Esta ficha contiene datos de salud del paciente, que son información
+      sensible. Su uso está reservado al personal autorizado de #!#EMPRESA_NOMBRE#!# para fines de
+      atención médica. Queda prohibida su divulgación o copia sin autorización del paciente o de la
+      institución. Generado por el sistema Sysclin el #!#FECHA_GENERACION#!# · © #!#ANIO_ACTUAL#!#
+    </div>
+  </div>
+
+</body>
+
+</html>

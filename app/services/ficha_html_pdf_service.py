@@ -2,6 +2,7 @@
 
 import os
 import base64
+from html import escape
 from io import BytesIO
 from datetime import datetime
 
@@ -18,6 +19,8 @@ class FichaHtmlPdfService:
     """
     Genera el PDF de la ficha médica usando la plantilla HTML `FICHA.html`
     (mismo patrón que FacturaPDFService/FE.html para el KuDE de facturas).
+    La plantilla vive en la carpeta de templates del módulo ficha, como FE.html
+    en la de factura. Todo dato del paciente se escapa antes de insertarse en el HTML.
     """
 
     def _get_image_base64(self, image_path):
@@ -43,7 +46,9 @@ class FichaHtmlPdfService:
         return None
 
     def _fv(self, valor, defecto='—'):
-        return str(valor) if valor not in (None, '') else defecto
+        """Valor listo para insertar en el HTML: escapado (un '<' en un nombre o una nota
+        no rompe el PDF ni inyecta marcado) o el texto por defecto si está vacío."""
+        return escape(str(valor)) if valor not in (None, '') else defecto
 
     def _bloque_tutor(self, paciente):
         if not paciente.get('es_menor'):
@@ -101,7 +106,7 @@ class FichaHtmlPdfService:
         anamnesis = ficha_data.get('anamnesis') or {}
 
         base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        template_path = os.path.join(base_path, 'FICHA.html')
+        template_path = os.path.join(base_path, 'app', 'rutas', 'clinico', 'movimientos', 'ficha', 'templates', 'FICHA.html')
         with open(template_path, 'r', encoding='utf-8') as f:
             html = f.read()
 
@@ -139,7 +144,7 @@ class FichaHtmlPdfService:
             '#!#TOTAL_CONSULTAS#!#': str(len(ficha_data.get('consultas_recientes') or [])),
             '#!#TOTAL_DIAGNOSTICOS#!#': str(len(ficha_data.get('diagnosticos') or [])),
             '#!#TOTAL_TRATAMIENTOS#!#': str(len(ficha_data.get('tratamientos_activos') or [])),
-            '#!#PROXIMA_CITA#!#': proximas_citas[0]['fecha'] if proximas_citas else 'Sin citas próximas',
+            '#!#PROXIMA_CITA#!#': self._fv(proximas_citas[0].get('fecha')) if proximas_citas else 'Sin citas próximas',
 
             '#!#MOTIVO_CONSULTA#!#': self._fv(anamnesis.get('motivo_consulta'), 'Sin anamnesis registrada.'),
             '#!#ANTEC_PERSONALES#!#': self._fv(anamnesis.get('antecedentes_patologicos_personales')),

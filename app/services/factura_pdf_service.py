@@ -16,6 +16,10 @@ except (ImportError, OSError) as e:
     print(f"WeasyPrint no disponible ({type(e).__name__}: {e}). Usando xhtml2pdf como alternativa.")
     from xhtml2pdf import pisa
 
+# Celdas del detalle del KuDE: solo bordes verticales (sin líneas horizontales entre conceptos)
+BORDE_DETALLE = 'border-left: 1px solid #040303; border-right: 1px solid #040303; border-top: none; border-bottom: none;'
+
+
 class FacturaPDFService:
     """
     Servicio para generar PDFs de facturas con código QR.
@@ -175,14 +179,15 @@ class FacturaPDFService:
         actividad_economica = empresa.get('actividad_economica', '')
         ruc_emisor = empresa.get('ruc', factura_data.get('ruc_emisor', '0000000-0'))
 
-        # Logo - usar primero el logo guardado en BD, luego fallback a estáticos
+        # Logo - usar primero el logo guardado en BD, luego fallback a estáticos.
+        # base_path es la carpeta app/ (ver arriba): las rutas van a base_path/static/...
         path_logo = ''
         logo_base64 = ''
 
         # 1) Logo desde config_empresa (subido por el Superadmin)
         if empresa.get('logo_path'):
             logo_rel = empresa['logo_path']  # Ej: "uploads/logos/logo_1_abc.png"
-            logo_abs = os.path.join(base_path, 'app', 'static', logo_rel)
+            logo_abs = os.path.join(base_path, 'static', logo_rel)
             if os.path.exists(logo_abs):
                 path_logo = logo_abs
                 logo_base64 = self._get_image_base64(logo_abs)
@@ -190,10 +195,9 @@ class FacturaPDFService:
         # 2) Fallback a logos estáticos del proyecto
         if not logo_base64:
             posibles_logos = [
-                os.path.join(base_path, 'app', 'static', 'img', 'logo_clinica.png'),
-                os.path.join(base_path, 'app', 'static', 'img', 'iconoazul.png'),
-                os.path.join(base_path, 'app', 'static', 'img', 'logo.png'),
                 os.path.join(base_path, 'static', 'img', 'logo_clinica.png'),
+                os.path.join(base_path, 'static', 'img', 'iconoazul.png'),
+                os.path.join(base_path, 'static', 'img', 'logo.png'),
             ]
             for p in posibles_logos:
                 if os.path.exists(p):
@@ -310,18 +314,19 @@ class FacturaPDFService:
                 descripcion_final = descripcion if descripcion else ' '
                 unidad_final = unidad if unidad else 'UNI'
                 
-                # IMPORTANTE: Usar estilos inline mínimos y asegurar padding
+                # IMPORTANTE: Usar estilos inline mínimos y asegurar padding.
+                # Solo bordes verticales: las columnas se separan, sin líneas horizontales entre conceptos.
                 filas_html.append(
                     f'<tr style="font-size: 7pt;">'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: center;">{codigo_final}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px;">{descripcion_final}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: center;">{unidad_final}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: right;">{cantidad_str}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: right;">{precio_unit}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: right;">{descuento}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: right;">{valor_exentas if valor_exentas else " "}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: right;">{valor_5 if valor_5 else " "}</td>'
-                    f'<td style="border: 1px solid #040303; padding: 4px; text-align: right;">{valor_10 if valor_10 else " "}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: center;">{codigo_final}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;">{descripcion_final}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: center;">{unidad_final}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: right;">{cantidad_str}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: right;">{precio_unit}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: right;">{descuento}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: right;">{valor_exentas if valor_exentas else " "}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: right;">{valor_5 if valor_5 else " "}</td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px; text-align: right;">{valor_10 if valor_10 else " "}</td>'
                     f'</tr>'
                 )
 
@@ -332,17 +337,17 @@ class FacturaPDFService:
         if filas_actuales < filas_minimas:
             for _ in range(filas_minimas - filas_actuales):
                 filas_html.append(
-                    '<tr style="font-size: 7pt;">'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '<td style="border: 1px solid #040303; padding: 4px;"> </td>'
-                    '</tr>'
+                    f'<tr style="font-size: 7pt;">'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'<td style="{BORDE_DETALLE} padding: 4px;"> </td>'
+                    f'</tr>'
                 )
 
         # Si no hay items, mostrar mensaje

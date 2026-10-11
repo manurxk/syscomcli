@@ -81,45 +81,6 @@
         .card { transition: box-shadow 0.3s ease; }
         .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-        /* Búsqueda dropdown */
-        .search-results-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bs-body-bg);
-            border: 1px solid var(--bs-border-color);
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            max-height: 500px;
-            overflow-y: auto;
-            z-index: 1060;
-            margin-top: 4px;
-        }
-        .search-results-section { padding: 0.5rem 0; }
-        .search-results-section-title {
-            padding: 0.5rem 1rem;
-            background-color: var(--bs-tertiary-bg);
-            font-weight: 600;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--primary-color);
-            border-bottom: 1px solid var(--bs-border-color);
-        }
-        .search-result-item {
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            border-bottom: 1px solid var(--bs-border-color);
-            transition: background-color 0.2s;
-        }
-        .search-result-item:hover { background-color: var(--bs-tertiary-bg); }
-        .search-result-item:last-child { border-bottom: none; }
-        .search-result-item-title { font-weight: 600; color: var(--bs-body-color); margin-bottom: 0.25rem; }
-        .search-result-item-subtitle { font-size: 0.85rem; color: var(--bs-secondary-color); }
-        .search-result-item-icon { margin-right: 0.5rem; color: var(--primary-color); }
-        .search-no-results { padding: 1.5rem; text-align: center; color: var(--bs-secondary-color); }
-        .search-loading { padding: 1rem; text-align: center; color: var(--bs-secondary-color); }
-
         /* Footer */
         .app-footer-custom {
             background-color: #212832;
@@ -133,13 +94,6 @@
         .app-footer-custom a:hover { opacity: 1; transform: translateX(3px); text-decoration: none; }
         .app-footer-custom ul li { margin-bottom: 0.25rem; }
 
-        /* Sidebar footer */
-        .sidebar-user-footer {
-            padding: 0.75rem 1rem;
-            border-top: 1px solid rgba(0,0,0,0.1);
-            font-size: 0.8rem;
-        }
-
         .brand-image-wrap {
             width: 32px;
             height: 32px;
@@ -147,14 +101,14 @@
 
         html:not([data-bs-theme="dark"]) .app-sidebar {
             background-color: #ffffff;
-            --lte-sidebar-color: #6b21a8;
+            --lte-sidebar-color: #212529;
             --lte-sidebar-header-color: #7c3aed;
             --lte-sidebar-hover-color: #5b21b6;
             --lte-sidebar-hover-bg: rgba(147, 51, 234, 0.08);
             --lte-sidebar-active-color: #5b21b6;
             --lte-sidebar-menu-active-color: #ffffff;
             --lte-sidebar-menu-active-bg: #9333ea;
-            --lte-sidebar-submenu-color: #6b21a8;
+            --lte-sidebar-submenu-color: #212529;
             --lte-sidebar-submenu-hover-color: #5b21b6;
             --lte-sidebar-submenu-hover-bg: rgba(147, 51, 234, 0.08);
             --lte-sidebar-submenu-active-color: #ffffff;
@@ -174,7 +128,10 @@
         }
 
         html:not([data-bs-theme="dark"]) .app-sidebar .nav-icon,
-        html:not([data-bs-theme="dark"]) .app-sidebar .nav-arrow,
+        html:not([data-bs-theme="dark"]) .app-sidebar .nav-arrow {
+            color: inherit;
+        }
+
         html:not([data-bs-theme="dark"]) .app-sidebar .brand-text {
             color: #6b21a8;
         }
@@ -192,17 +149,12 @@
         }
 
         html:not([data-bs-theme="dark"]) .sidebar-logout {
-            color: #6b21b6;
+            color: #212529;
         }
 
         html:not([data-bs-theme="dark"]) .sidebar-logout:hover {
             background-color: rgba(147, 51, 234, 0.08);
             color: #5b21b6;
-        }
-
-        /* Topnav search form */
-        .navbar-search-wrapper {
-            position: relative;
         }
 
         @media (max-width: 768px) {
@@ -229,35 +181,8 @@
                     </li>
                 </ul>
 
-                <!-- Búsqueda desktop -->
-                <form class="d-none d-lg-flex me-auto ms-3 navbar-search-wrapper" id="searchForm" style="width:480px;">
-                    <div class="input-group">
-                        <input class="form-control form-control-sm" type="search" id="globalSearchInput"
-                            placeholder="Buscar pacientes, especialistas, referenciales..." aria-label="Buscar" autocomplete="off">
-                        <span class="input-group-text"><i data-feather="search" style="width:14px;height:14px;"></i></span>
-                        <div id="searchResults" class="search-results-dropdown" style="display:none;"></div>
-                    </div>
-                </form>
-
                 <!-- Fin: acciones de usuario -->
                 <ul class="navbar-nav ms-auto">
-
-                    <!-- Búsqueda móvil -->
-                    <li class="nav-item dropdown d-lg-none">
-                        <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-label="Buscar">
-                            <i data-feather="search"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width:280px;">
-                            <div class="navbar-search-wrapper">
-                                <div class="input-group">
-                                    <input class="form-control form-control-sm" type="text" id="globalSearchInputMobile"
-                                        placeholder="Buscar..." aria-label="Buscar" autocomplete="off">
-                                    <span class="input-group-text"><i data-feather="search" style="width:14px;height:14px;"></i></span>
-                                    <div id="searchResultsMobile" class="search-results-dropdown" style="display:none;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
 
                     <!-- Ayuda: manual del usuario según su rol -->
                     {% if session.get('roles') %}
@@ -427,12 +352,6 @@
 
                     </ul>
                 </nav>
-
-                <!-- Usuario en sidebar (pie) -->
-                <div class="sidebar-user-footer text-muted small">
-                    <i class="fas fa-user-circle me-1"></i>
-                    {{ session.get('nombre_persona', 'Usuario') }}
-                </div>
 
                 <!-- Cerrar sesión -->
                 <a href="{{ url_for('login.logout') }}" class="sidebar-logout">
@@ -666,93 +585,6 @@
                 }
             });
         })();
-    </script>
-
-    <!-- Búsqueda global -->
-    <script>
-        $(document).ready(function () {
-            var searchTimeout;
-            var minLength = 2;
-            var delay = 300;
-
-            function escapeHtml(text) {
-                var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-                return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
-            }
-
-            function realizarBusqueda(termino, $container) {
-                if (termino.length < minLength) { $container.hide().empty(); return; }
-                $container.html('<div class="search-loading"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>').show();
-                $.ajax({
-                    url: '/api/v1/busqueda',
-                    method: 'GET',
-                    data: { q: termino, limite: 20 },
-                    success: function (response) {
-                        if (response.success && response.data) mostrarResultados(response.data, $container);
-                        else $container.html('<div class="search-no-results">Sin resultados</div>').show();
-                    },
-                    error: function () {
-                        $container.html('<div class="search-no-results">Error al buscar</div>').show();
-                    }
-                });
-            }
-
-            function mostrarResultados(data, $container) {
-                var html = '';
-                var tiene = false;
-                if (data.pacientes && data.pacientes.length > 0) {
-                    tiene = true;
-                    html += '<div class="search-results-section"><div class="search-results-section-title"><i class="fas fa-user-injured"></i> Pacientes</div>';
-                    data.pacientes.forEach(function (p) {
-                        html += '<div class="search-result-item" onclick="window.location.href=\'' + p.url + '\'">' +
-                            '<div class="search-result-item-title"><i class="fas fa-user-injured search-result-item-icon"></i>' + escapeHtml(p.nombre_completo) + '</div>' +
-                            '<div class="search-result-item-subtitle">HC: ' + escapeHtml(p.historia_clinica) + ' | CI: ' + escapeHtml(p.cedula) + '</div></div>';
-                    });
-                    html += '</div>';
-                }
-                if (data.especialistas && data.especialistas.length > 0) {
-                    tiene = true;
-                    html += '<div class="search-results-section"><div class="search-results-section-title"><i class="fas fa-user-md"></i> Especialistas</div>';
-                    data.especialistas.forEach(function (e) {
-                        html += '<div class="search-result-item" onclick="window.location.href=\'' + e.url + '\'">' +
-                            '<div class="search-result-item-title"><i class="fas fa-user-md search-result-item-icon"></i>' + escapeHtml(e.nombre_completo) + '</div>' +
-                            '<div class="search-result-item-subtitle">' + escapeHtml(e.especialidad || '') + '</div></div>';
-                    });
-                    html += '</div>';
-                }
-                if (data.referenciales && data.referenciales.length > 0) {
-                    tiene = true;
-                    html += '<div class="search-results-section"><div class="search-results-section-title"><i class="fas fa-list"></i> Referenciales</div>';
-                    data.referenciales.forEach(function (r) {
-                        html += '<div class="search-result-item" onclick="window.location.href=\'' + r.url + '\'">' +
-                            '<div class="search-result-item-title">' + escapeHtml(r.nombre) + '</div>' +
-                            '<div class="search-result-item-subtitle">' + escapeHtml(r.tipo || '') + '</div></div>';
-                    });
-                    html += '</div>';
-                }
-                if (!tiene) $container.html('<div class="search-no-results">Sin resultados para "' + escapeHtml($container.closest('.navbar-search-wrapper').find('input').val()) + '"</div>').show();
-                else $container.html(html).show();
-            }
-
-            function bindSearch(inputId, containerId) {
-                var $input = $('#' + inputId);
-                var $container = $('#' + containerId);
-                if (!$input.length) return;
-                $input.on('input', function () {
-                    clearTimeout(searchTimeout);
-                    var val = $(this).val().trim();
-                    searchTimeout = setTimeout(function () { realizarBusqueda(val, $container); }, delay);
-                });
-                $(document).on('click', function (e) {
-                    if (!$(e.target).closest('#' + containerId).length && !$(e.target).is($input)) {
-                        $container.hide();
-                    }
-                });
-            }
-
-            bindSearch('globalSearchInput', 'searchResults');
-            bindSearch('globalSearchInputMobile', 'searchResultsMobile');
-        });
     </script>
 
 </body>

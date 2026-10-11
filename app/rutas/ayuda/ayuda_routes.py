@@ -121,9 +121,21 @@ SECCIONES_MANUAL = {
 }
 
 
-def _armar_manual():
-    """Secciones del manual visibles para los roles del usuario, en el orden del menú."""
-    roles = [(r or "").strip().upper() for r in session.get("roles", [])]
+def _rol_solicitado():
+    """Rol pedido por ?rol= (manuales por rol del inicio del administrador).
+    Solo lo pueden usar ADMINISTRADOR/SUPERADMIN; el de SUPERADMIN, solo un Superadministrador."""
+    rol = (request.args.get("rol") or "").strip().upper()
+    roles_sesion = {(r or "").strip().upper() for r in session.get("roles", [])}
+    if rol not in ROLES_AYUDA or not roles_sesion & {"ADMINISTRADOR", "SUPERADMIN"}:
+        return None
+    if rol == "SUPERADMIN" and "SUPERADMIN" not in roles_sesion:
+        return None
+    return rol
+
+
+def _armar_manual(rol=None):
+    """Secciones del manual visibles para los roles del usuario (o para el rol pedido), en el orden del menú."""
+    roles = [rol] if rol else [(r or "").strip().upper() for r in session.get("roles", [])]
     paginas = MenuDao().getMenuParaRoles(roles) or []
 
     secciones = []
@@ -156,12 +168,14 @@ def _seccion_desde(endpoint, secciones):
 @role_required(*ROLES_AYUDA)
 def ayudaManual():
     """Vista previa del manual (se muestra dentro del modal de ayuda de base.html)."""
-    secciones, sin_guia = _armar_manual()
+    rol = _rol_solicitado()
+    secciones, sin_guia = _armar_manual(rol)
     return render_template('ayuda-manual.html',
                            secciones=secciones,
                            sin_guia=sin_guia,
                            seccion_activa=_seccion_desde(request.args.get('desde'), secciones),
                            es_pdf=False,
+                           perfil=rol or session.get('grupo'),
                            fecha=date.today().strftime('%d/%m/%Y'))
 
 
@@ -169,12 +183,15 @@ def ayudaManual():
 @role_required(*ROLES_AYUDA)
 def ayudaManualPdf():
     """Mismo manual que la vista previa, descargado como PDF."""
-    secciones, sin_guia = _armar_manual()
+    rol = _rol_solicitado()
+    perfil = rol or session.get('grupo')
+    secciones, sin_guia = _armar_manual(rol)
     html_renderizado = render_template('ayuda-manual.html',
                                        secciones=secciones,
                                        sin_guia=sin_guia,
                                        seccion_activa=None,
                                        es_pdf=True,
+                                       perfil=perfil,
                                        fecha=date.today().strftime('%d/%m/%Y'))
     pdf_bytes = AyudaService().generar_pdf_manual(html_renderizado)
 
@@ -182,5 +199,5 @@ def ayudaManualPdf():
         io.BytesIO(pdf_bytes),
         mimetype='application/pdf',
         as_attachment=True,
-        download_name=f"Guia_de_uso_{session.get('grupo', 'SYSCLIN')}.pdf"
+        download_name=f"Guia_de_uso_{perfil or 'SYSCLIN'}.pdf"
     )

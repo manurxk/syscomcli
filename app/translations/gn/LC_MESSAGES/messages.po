@@ -5,12 +5,11 @@
 #
 # ADVERTENCIA: borrador generado por IA, NO validado por un hablante nativo
 # de guaraní. Revisar cada msgstr antes de considerarlo definitivo.
-#
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-06 21:32+0000\n"
+"POT-Creation-Date: 2026-10-11 19:01+0000\n"
 "PO-Revision-Date: 2026-09-06 21:32+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: gn\n"
@@ -21,58 +20,108 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app/auth/templates/login.html:732
-msgid "Sistema de Gestión Clínica"
-msgstr "Clínica Ñangarekoha Sistema"
-
-#: app/auth/templates/login.html:738
+#: app/auth/templates/login.html:516
 msgid "Cuidado clínico"
 msgstr "Ñeñangareko katupyry"
 
-#: app/auth/templates/login.html:738
+#: app/auth/templates/login.html:516
 msgid "simple y seguro"
 msgstr "ha'eño ha segura"
 
-#: app/auth/templates/login.html:739
+#: app/auth/templates/login.html:517
 msgid "Gestionando la salud con tecnología y calidez humana."
 msgstr "Ñañangareko nde rekovére tecnología ha mborayhu reheve."
 
-#: app/auth/templates/login.html:758
-msgid "Acceso al sistema"
-msgstr "Sistema-pe jeike"
+#: app/auth/templates/login.html:524
+msgid "Verificación en dos pasos por correo"
+msgstr ""
 
-#: app/auth/templates/login.html:759
-msgid "Bienvenido de vuelta"
-msgstr "Eguahẽ porãite jey"
+#: app/auth/templates/login.html:530
+msgid "Acceso según el rol de cada usuario"
+msgstr ""
 
-#: app/auth/templates/login.html:760
+#: app/auth/templates/login.html:536
+msgid "Registro de auditoría de cada acción"
+msgstr ""
+
+#: app/auth/templates/login.html:541
+msgid "Todos los derechos reservados"
+msgstr ""
+
+#: app/auth/templates/login.html:555
+msgid "Idioma"
+msgstr ""
+
+#: app/auth/templates/login.html:561 app/auth/templates/login.html:562
+msgid "Cambiar tema"
+msgstr ""
+
+#: app/auth/templates/login.html:571
+msgid "Iniciar sesión"
+msgstr ""
+
+#: app/auth/templates/login.html:572
 msgid "Ingresá tus credenciales para continuar"
 msgstr "Emoinge nde rembiapoukapy eku'ejey hağua"
 
-#: app/auth/templates/login.html:790
+#: app/auth/templates/login.html:602
 msgid "Usuario"
 msgstr "Puruhára"
 
-#: app/auth/templates/login.html:799
+#: app/auth/templates/login.html:608
 msgid "Nombre de usuario"
 msgstr "Puruhára réra"
 
-#: app/auth/templates/login.html:806
+#: app/auth/templates/login.html:616
 msgid "Contraseña"
 msgstr "Ñe'ẽñemi"
 
-#: app/auth/templates/login.html:817
+#: app/auth/templates/login.html:617
+msgid "¿Olvidaste tu contraseña?"
+msgstr ""
+
+#: app/auth/templates/login.html:626 app/auth/templates/login.html:627
 msgid "Mostrar contraseña"
 msgstr "Ehechauka ñe'ẽñemi"
 
-#: app/auth/templates/login.html:830
-msgid "Recordarme"
-msgstr "Che mandu'a"
+#: app/auth/templates/login.html:627
+msgid "Ocultar contraseña"
+msgstr ""
 
-#: app/auth/templates/login.html:832
-msgid "¿Olvidó su contraseña?"
-msgstr "¿Nde resarái ne ñe'ẽñemígui?"
+#: app/auth/templates/login.html:633
+msgid "Bloq Mayús está activado"
+msgstr ""
 
-#: app/auth/templates/login.html:837
+#: app/auth/templates/login.html:640
+msgid "Ingresando…"
+msgstr ""
+
+#: app/auth/templates/login.html:640
 msgid "Ingresar"
 msgstr "Eike"
+
+#: app/auth/templates/login.html:646
+msgid ""
+"Por seguridad, podemos pedirte un código que enviamos a tu correo cuando "
+"ingresás desde un dispositivo nuevo."
+msgstr ""
+
+#: app/auth/templates/login.html:653
+msgid "Versión"
+msgstr ""
+
+#~ msgid "Sistema de Gestión Clínica"
+#~ msgstr "Clínica Ñangarekoha Sistema"
+
+#~ msgid "Acceso al sistema"
+#~ msgstr "Sistema-pe jeike"
+
+#~ msgid "Bienvenido de vuelta"
+#~ msgstr "Eguahẽ porãite jey"
+
+#~ msgid "Recordarme"
+#~ msgstr "Che mandu'a"
+
+#~ msgid "¿Olvidó su contraseña?"
+#~ msgstr "¿Nde resarái ne ñe'ẽñemígui?"
+

@@ -55,37 +55,6 @@ def limpiar_tokens_expirados():
             return 0
 
 
-def limpiar_historial_antiguo():
-    """
-    Limpia historial de contraseñas antiguo (mantener solo últimos 5 por usuario)
-    Ejecutar diariamente
-    """
-    from app import app
-    with app.app_context():
-        sql = """
-            DELETE FROM password_history
-            WHERE id_history NOT IN (
-                SELECT id_history
-                FROM (
-                    SELECT id_history,
-                           ROW_NUMBER() OVER (PARTITION BY id_usuario ORDER BY fecha_creacion DESC) as rn
-                    FROM password_history
-                ) ranked
-                WHERE rn <= 5
-            )
-        """
-        try:
-            cantidad_eliminados = _dao.execute_query(sql, commit=True)
-
-            if cantidad_eliminados > 0:
-                app.logger.info(f"TAREA: {cantidad_eliminados} registros antiguos de historial eliminados")
-
-            return cantidad_eliminados
-        except Exception as e:
-            app.logger.error(f"Error en limpiar_historial_antiguo: {str(e)}")
-            return 0
-
-
 # Ejemplo de uso con APScheduler (opcional)
 def configurar_tareas_programadas(scheduler):
     """
@@ -114,16 +83,6 @@ def configurar_tareas_programadas(scheduler):
             trigger='interval',
             hours=1,
             id='limpiar_tokens',
-            replace_existing=True
-        )
-
-        # Limpiar historial antiguo diariamente a las 2 AM
-        scheduler.add_job(
-            func=limpiar_historial_antiguo,
-            trigger='cron',
-            hour=2,
-            minute=0,
-            id='limpiar_historial',
             replace_existing=True
         )
 

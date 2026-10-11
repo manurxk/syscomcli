@@ -35,7 +35,8 @@ COPY . .
 # Exponer los puertos de Flask y Debugpy
 EXPOSE 5000 5678
 
-# Comando para ejecutar la aplicación con soporte para debug remoto
-# El script se encarga de esperar a que la BD esté lista si es necesario, 
-# pero aquí usamos el comando directo con debugpy
-CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "run.py"]
+# Arranque segun FLASK_DEBUG (.env):
+#   1 (desarrollo): debugpy + servidor de desarrollo de Flask con recarga automatica.
+#   0 (servidor):   gunicorn. UN solo worker (con hilos): el scheduler de run.py arranca
+#                   por proceso, y con mas workers se duplicarian los recordatorios por WhatsApp.
+CMD ["sh", "-c", "if [ \"$FLASK_DEBUG\" = \"1\" ]; then exec python -m debugpy --listen 0.0.0.0:5678 run.py; else exec gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 8 --timeout 120 --access-logfile - --error-logfile - run:app; fi"]

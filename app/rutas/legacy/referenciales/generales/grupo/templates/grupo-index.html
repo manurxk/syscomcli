@@ -24,7 +24,7 @@ Grupos
   <div class="card card-header-actions mb-4">
     <div class="card-header">
       Listado de Grupos
-      <button class="btn btn-sm btn-{{ ui.boton_agregar }} shadow-sm" type="button" id="btnAgregar">
+      <button class="btn btn-sm btn-primary shadow-sm" type="button" id="btnAgregar">
         <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Agregar Grupo
       </button>
     </div>
@@ -71,8 +71,8 @@ Grupos
         </form>
       </div>
       <div class="modal-footer bg-light border-top">
-        <button class="btn btn-{{ ui.boton_limpiar }}" type="button" data-bs-dismiss="modal">Cerrar</button>
-        <button class="btn btn-{{ ui.boton_guardar }}" type="button" id="btnGuardar">Guardar Cambios</button>
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cerrar</button>
+        <button class="btn btn-primary" type="button" id="btnGuardar">Guardar Cambios</button>
       </div>
     </div>
   </div>
@@ -93,8 +93,8 @@ Grupos
         { data: 'descripcion' },
         {
           data: 'estado', render: function (val) {
-            return val ? '<span class="badge bg-{{ ui.color_badge_activo }}-soft text-{{ ui.color_badge_activo }}">Activo</span>'
-              : '<span class="badge bg-{{ ui.color_badge_inactivo }}-soft text-{{ ui.color_badge_inactivo }}">Inactivo</span>';
+            return val ? '<span class="badge bg-success-soft text-success">Activo</span>'
+              : '<span class="badge bg-secondary-soft text-secondary">Inactivo</span>';
           }
         },
         {

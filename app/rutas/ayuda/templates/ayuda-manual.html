@@ -42,7 +42,7 @@
     <div class="portada">
         <h1>Guía de uso del sistema</h1>
         {% set nombres_perfil = {'SUPERADMIN': 'Superadministrador', 'ADMINISTRADOR': 'Administrador', 'RECEPCION': 'Recepción', 'CLINICO': 'Clínico', 'VENTAS': 'Ventas'} %}
-        <p>{{ clinica.nombre if clinica else 'SYSCLIN' }} · Perfil: {{ nombres_perfil.get(session.get('grupo'), session.get('grupo', 'Sin rol')) }} · {{ fecha }}</p>
+        <p>{{ clinica.nombre if clinica else 'SYSCLIN' }} · Perfil: {{ nombres_perfil.get(perfil, perfil or 'Sin rol') }} · {{ fecha }}</p>
     </div>
 
     <div class="indice">

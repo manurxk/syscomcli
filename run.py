@@ -6,36 +6,63 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.auth.tasks.auth_tasks import configurar_tareas_programadas
 from app.tasks.recordatorio_tasks import configurar_tarea_recordatorios
 from app.tasks.agenda_tasks import configurar_tarea_agenda
+from app.tasks.scheduler_lock import adquirir_lock_scheduler
+import logging
 import os
 import socket
+
+# En modo servidor (gunicorn, FLASK_DEBUG=0) Flask solo muestra WARNING: se baja a INFO
+# para conservar en el log los eventos operativos (scheduler, recordatorios, correos).
+if not app.debug:
+    app.logger.setLevel(logging.INFO)
+
+
+def debe_iniciar_scheduler():
+    """Las tareas programadas corren en UN solo proceso (si no, los recordatorios por
+    WhatsApp salen repetidos). Dos protecciones:
+    1. Con la recarga automática (FLASK_DEBUG=1), Werkzeug ejecuta run.py en el proceso
+       que vigila los archivos y en el que atiende (WERKZEUG_RUN_MAIN=true): solo este último.
+    2. Candado en PostgreSQL (app/tasks/scheduler_lock.py): si otro proceso o contenedor ya
+       ejecuta las tareas (más workers de gunicorn, dos contenedores), este no las inicia."""
+    if app.debug and os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        return False
+    try:
+        if adquirir_lock_scheduler():
+            return True
+        app.logger.warning("Tareas programadas NO iniciadas en este proceso: otro proceso ya las ejecuta (candado ocupado)")
+    except Exception as e:
+        app.logger.error(f"No se pudo verificar el candado del scheduler, no se inician tareas: {str(e)}")
+    return False
+
 
 # Configurar scheduler para tareas programadas
 scheduler = BackgroundScheduler()
 
-# Configurar tareas de autenticación (si existen)
-try:
-    configurar_tareas_programadas(scheduler)
-except Exception as e:
-    app.logger.warning(f"No se pudieron configurar tareas de autenticación: {str(e)}")
+if debe_iniciar_scheduler():
+    # Configurar tareas de autenticación (si existen)
+    try:
+        configurar_tareas_programadas(scheduler)
+    except Exception as e:
+        app.logger.warning(f"No se pudieron configurar tareas de autenticación: {str(e)}")
 
-# Configurar tarea de envío de recordatorios de citas (Fase B.4)
-try:
-    configurar_tarea_recordatorios(scheduler)
-except Exception as e:
-    app.logger.warning(f"No se pudo configurar la tarea de recordatorios: {str(e)}")
+    # Configurar tarea de envío de recordatorios de citas (Fase B.4)
+    try:
+        configurar_tarea_recordatorios(scheduler)
+    except Exception as e:
+        app.logger.warning(f"No se pudo configurar la tarea de recordatorios: {str(e)}")
 
-# Configurar tarea diaria que extiende los turnos de la Agenda Médica
-try:
-    configurar_tarea_agenda(scheduler)
-except Exception as e:
-    app.logger.warning(f"No se pudo configurar la tarea de turnos de agenda: {str(e)}")
+    # Configurar tarea diaria que extiende los turnos de la Agenda Médica
+    try:
+        configurar_tarea_agenda(scheduler)
+    except Exception as e:
+        app.logger.warning(f"No se pudo configurar la tarea de turnos de agenda: {str(e)}")
 
-# Iniciar scheduler
-try:
-    scheduler.start()
-    app.logger.info("✅ Scheduler iniciado correctamente")
-except Exception as e:
-    app.logger.error(f"Error al iniciar scheduler: {str(e)}")
+    # Iniciar scheduler
+    try:
+        scheduler.start()
+        app.logger.info(f"✅ Scheduler iniciado correctamente (pid {os.getpid()})")
+    except Exception as e:
+        app.logger.error(f"Error al iniciar scheduler: {str(e)}")
 
 
 def obtener_ip_local():
@@ -89,10 +116,12 @@ if __name__ == "__main__":
         
     except KeyboardInterrupt:
         print("\n\n🛑 Deteniendo aplicación...")
-        scheduler.shutdown()
+        if scheduler.running:
+            scheduler.shutdown()
         print("✅ Aplicación detenida correctamente")
         
     except Exception as e:
         app.logger.error(f"❌ Error en la aplicación: {str(e)}")
-        scheduler.shutdown()
+        if scheduler.running:
+            scheduler.shutdown()
         print(f"❌ Error: {str(e)}")

@@ -202,6 +202,15 @@ Dashboard - Inicio
             </div>
           </a>
         </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="javascript:void(0);"
+             data-bs-toggle="modal" data-bs-target="#modalManualesRol">
+            <div class="card-body d-flex align-items-center">
+              <i class="fas fa-book fa-2x text-muted me-3"></i>
+              <div><div class="small text-muted">Ayuda</div><h6 class="mb-0">Manuales por rol</h6></div>
+            </div>
+          </a>
+        </div>
       </div>
 
       {% elif r.cod == 'CLINICO' %}
@@ -474,6 +483,35 @@ Dashboard - Inicio
   </div>
 </div>
 
+{% if roles | selectattr('cod', 'equalto', 'ADMINISTRADOR') | list %}
+<!-- Modal Manuales por rol: vista previa y PDF del manual de cualquier rol (mismo manual del modal de Ayuda) -->
+<div class="modal fade" id="modalManualesRol" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Manuales por rol</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="d-flex align-items-center gap-2 p-3 border-bottom">
+          <label class="fw-semibold mb-0" for="selRolManual">Rol</label>
+          <select class="form-select form-select-sm" id="selRolManual" style="max-width:260px;">
+            <option value="">Seleccione un rol...</option>
+          </select>
+        </div>
+        <iframe id="iframeManualRol" title="Manual del rol" style="width:100%;height:65vh;border:0;"></iframe>
+      </div>
+      <div class="modal-footer bg-light">
+        <a class="btn btn-danger btn-sm disabled" id="btnManualRolPdf" href="#">
+          <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <style>
   .lift { transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .lift:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; }
@@ -490,5 +528,41 @@ document.querySelectorAll('#rolTabs [data-bs-toggle="pill"]').forEach(btn => {
     document.getElementById('dashTitle').textContent = 'Panel ' + btn.dataset.label;
   });
 });
+
+// Manuales por rol: los roles salen de /api/v1/roles (ya oculta SUPERADMIN a quien no lo es)
+(function () {
+  const modal = document.getElementById('modalManualesRol');
+  if (!modal) return;
+  const sel = document.getElementById('selRolManual');
+  const iframe = document.getElementById('iframeManualRol');
+  const btnPdf = document.getElementById('btnManualRolPdf');
+  const urlManual = "{{ url_for('ayuda.ayudaManual') }}";
+  const urlPdf = "{{ url_for('ayuda.ayudaManualPdf') }}";
+
+  modal.addEventListener('shown.bs.modal', function () {
+    if (sel.options.length > 1) return;
+    fetch('/api/v1/roles')
+      .then(r => r.json())
+      .then(data => {
+        (data.data || []).forEach(rol => {
+          sel.insertAdjacentHTML('beforeend', `<option value="${rol.cod_rol}">${rol.des_rol}</option>`);
+        });
+      });
+  });
+
+  sel.addEventListener('change', function () {
+    const rol = sel.value;
+    if (!rol) {
+      iframe.removeAttribute('src');
+      btnPdf.classList.add('disabled');
+      btnPdf.setAttribute('href', '#');
+      return;
+    }
+    const q = '?rol=' + encodeURIComponent(rol);
+    iframe.setAttribute('src', urlManual + q);
+    btnPdf.setAttribute('href', urlPdf + q);
+    btnPdf.classList.remove('disabled');
+  });
+})();
 </script>
 {% endblock %}

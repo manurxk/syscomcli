@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-06 21:32+0000\n"
+"POT-Creation-Date: 2026-10-11 19:01+0000\n"
 "PO-Revision-Date: 2026-09-06 21:32+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -18,58 +18,108 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app/auth/templates/login.html:732
-msgid "Sistema de Gestión Clínica"
-msgstr "Sistema de Gestión Clínica"
-
-#: app/auth/templates/login.html:738
+#: app/auth/templates/login.html:516
 msgid "Cuidado clínico"
 msgstr "Cuidado clínico"
 
-#: app/auth/templates/login.html:738
+#: app/auth/templates/login.html:516
 msgid "simple y seguro"
 msgstr "simple y seguro"
 
-#: app/auth/templates/login.html:739
+#: app/auth/templates/login.html:517
 msgid "Gestionando la salud con tecnología y calidez humana."
 msgstr "Gestionando la salud con tecnología y calidez humana."
 
-#: app/auth/templates/login.html:758
-msgid "Acceso al sistema"
-msgstr "Acceso al sistema"
+#: app/auth/templates/login.html:524
+msgid "Verificación en dos pasos por correo"
+msgstr ""
 
-#: app/auth/templates/login.html:759
-msgid "Bienvenido de vuelta"
-msgstr "Bienvenido de vuelta"
+#: app/auth/templates/login.html:530
+msgid "Acceso según el rol de cada usuario"
+msgstr ""
 
-#: app/auth/templates/login.html:760
+#: app/auth/templates/login.html:536
+msgid "Registro de auditoría de cada acción"
+msgstr ""
+
+#: app/auth/templates/login.html:541
+msgid "Todos los derechos reservados"
+msgstr ""
+
+#: app/auth/templates/login.html:555
+msgid "Idioma"
+msgstr ""
+
+#: app/auth/templates/login.html:561 app/auth/templates/login.html:562
+msgid "Cambiar tema"
+msgstr ""
+
+#: app/auth/templates/login.html:571
+msgid "Iniciar sesión"
+msgstr ""
+
+#: app/auth/templates/login.html:572
 msgid "Ingresá tus credenciales para continuar"
 msgstr "Ingresá tus credenciales para continuar"
 
-#: app/auth/templates/login.html:790
+#: app/auth/templates/login.html:602
 msgid "Usuario"
 msgstr "Usuario"
 
-#: app/auth/templates/login.html:799
+#: app/auth/templates/login.html:608
 msgid "Nombre de usuario"
 msgstr "Nombre de usuario"
 
-#: app/auth/templates/login.html:806
+#: app/auth/templates/login.html:616
 msgid "Contraseña"
 msgstr "Contraseña"
 
-#: app/auth/templates/login.html:817
+#: app/auth/templates/login.html:617
+msgid "¿Olvidaste tu contraseña?"
+msgstr ""
+
+#: app/auth/templates/login.html:626 app/auth/templates/login.html:627
 msgid "Mostrar contraseña"
 msgstr "Mostrar contraseña"
 
-#: app/auth/templates/login.html:830
-msgid "Recordarme"
-msgstr "Recordarme"
+#: app/auth/templates/login.html:627
+msgid "Ocultar contraseña"
+msgstr ""
 
-#: app/auth/templates/login.html:832
-msgid "¿Olvidó su contraseña?"
-msgstr "¿Olvidó su contraseña?"
+#: app/auth/templates/login.html:633
+msgid "Bloq Mayús está activado"
+msgstr ""
 
-#: app/auth/templates/login.html:837
+#: app/auth/templates/login.html:640
+msgid "Ingresando…"
+msgstr ""
+
+#: app/auth/templates/login.html:640
 msgid "Ingresar"
 msgstr "Ingresar"
+
+#: app/auth/templates/login.html:646
+msgid ""
+"Por seguridad, podemos pedirte un código que enviamos a tu correo cuando "
+"ingresás desde un dispositivo nuevo."
+msgstr ""
+
+#: app/auth/templates/login.html:653
+msgid "Versión"
+msgstr ""
+
+#~ msgid "Sistema de Gestión Clínica"
+#~ msgstr "Sistema de Gestión Clínica"
+
+#~ msgid "Acceso al sistema"
+#~ msgstr "Acceso al sistema"
+
+#~ msgid "Bienvenido de vuelta"
+#~ msgstr "Bienvenido de vuelta"
+
+#~ msgid "Recordarme"
+#~ msgstr "Recordarme"
+
+#~ msgid "¿Olvidó su contraseña?"
+#~ msgstr "¿Olvidó su contraseña?"
+

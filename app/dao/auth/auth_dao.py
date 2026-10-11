@@ -5,59 +5,22 @@ from app.core.base_dao import BaseDAO
 
 
 class AuthDao(BaseDAO):
-    """DAO para password history y tokens de recuperación de contraseña"""
+    """DAO de cambio de contraseña y tokens de recuperación.
+
+    No se guarda historial de contraseñas (decisión 2026-10-11): conservar
+    los hashes de contraseñas anteriores sería un depósito de contraseñas."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
-    def obtener_historial_passwords(self, id_usuario: int, limite: int = 5) -> list:
-        sql = """
-            SELECT clave_hash, fecha_creacion, motivo_cambio
-            FROM password_history
-            WHERE id_usuario = %s
-            ORDER BY fecha_creacion DESC
-            LIMIT %s
-        """
-        filas = self.execute_query(sql, (id_usuario, limite))
-        return [{'password_hash': f['clave_hash'], 'fecha_cambio': f['fecha_creacion'], 'motivo_cambio': f['motivo_cambio']} for f in filas]
-
-    def guardar_password_history(self, id_usuario: int, password_hash: str, cambiado_por: int = None, motivo_cambio: str = 'USUARIO') -> bool:
-        sql = """
-            INSERT INTO password_history (id_usuario, clave_hash, usuario_creacion, motivo_cambio)
-            VALUES (%s, %s, %s, %s)
-        """
-        return self.execute_query(sql, (id_usuario, password_hash, cambiado_por, motivo_cambio), commit=True) > 0
-
-    def limpiar_historial_antiguo(self, id_usuario: int, mantener: int = 5) -> bool:
-        sql = """
-            DELETE FROM password_history
-            WHERE id_usuario = %s
-            AND id_history NOT IN (
-                SELECT id_history
-                FROM password_history
-                WHERE id_usuario = %s
-                ORDER BY fecha_creacion DESC
-                LIMIT %s
-            )
-        """
-        self.execute_query(sql, (id_usuario, id_usuario, mantener), commit=True)
-        return True
-
     def cambiar_password(self, id_usuario: int, password_actual: str, password_nueva: str, password_hash_actual: str) -> Tuple[bool, str]:
-        """Cambia la contraseña de un usuario, validando contra el password actual y el historial."""
+        """Cambia la contraseña de un usuario, validando contra el password actual."""
         if not check_password_hash(password_hash_actual, password_actual):
             return False, "La contraseña actual es incorrecta"
 
-        historial = self.obtener_historial_passwords(id_usuario, limite=5)
         password_nueva_hash = generate_password_hash(password_nueva, method='pbkdf2:sha256')
 
-        for registro in historial:
-            if registro['password_hash'] == password_nueva_hash:
-                return False, "No puede reutilizar una contraseña reciente"
-
         try:
-            self.guardar_password_history(id_usuario=id_usuario, password_hash=password_hash_actual, motivo_cambio='USUARIO')
-
             sql = """
                 UPDATE usuarios
                 SET usu_clave = %s,
@@ -66,8 +29,6 @@ class AuthDao(BaseDAO):
                 WHERE id_usuario = %s
             """
             self.execute_query(sql, (password_nueva_hash, id_usuario), commit=True)
-
-            self.limpiar_historial_antiguo(id_usuario, mantener=5)
 
             app.logger.info(f"Password cambiado exitosamente para usuario {id_usuario}")
             return True, "Contraseña cambiada exitosamente"
@@ -113,19 +74,9 @@ class AuthDao(BaseDAO):
 
         id_usuario = token_data['id_usuario']
 
-        historial = self.obtener_historial_passwords(id_usuario, limite=5)
         password_nueva_hash = generate_password_hash(password_nueva, method='pbkdf2:sha256')
 
-        for registro in historial:
-            if registro['password_hash'] == password_nueva_hash:
-                return False, "No puede reutilizar una contraseña reciente"
-
         try:
-            fila = self.execute_query_one("SELECT usu_clave FROM usuarios WHERE id_usuario = %s", (id_usuario,))
-            password_actual_hash = fila["usu_clave"] if fila else None
-
-            self.guardar_password_history(id_usuario=id_usuario, password_hash=password_actual_hash, motivo_cambio='RECUPERACION')
-
             # mfa_habilitado se fuerza a TRUE: quien recuperó la contraseña ya demostró
             # conocer el correo vinculado a la cuenta (se exige que coincida antes de
             # generar el token), así que el próximo login exige además el código MFA.
@@ -154,8 +105,6 @@ class AuthDao(BaseDAO):
                 WHERE id_usuario = %s AND est_sesion = TRUE
             """
             self.execute_query(sql_sesiones, (id_usuario,), commit=True)
-
-            self.limpiar_historial_antiguo(id_usuario, mantener=5)
 
             app.logger.info(f"Password reseteado exitosamente para usuario {id_usuario} con token")
             return True, "Contraseña restablecida exitosamente"

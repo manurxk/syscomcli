@@ -94,22 +94,3 @@ def validar_politica_password(
     
     # Todo OK
     return True, "Contraseña válida"
-
-
-def verificar_password_en_historial(
-    password_hash: str,
-    historial_passwords: list
-) -> bool:
-    """
-    Verifica si un hash de contraseña está en el historial.
-    
-    Args:
-        password_hash: Hash de la contraseña a verificar
-        historial_passwords: Lista de hashes del historial
-    
-    Returns:
-        bool: True si está en historial, False si no
-    """
-    return password_hash in [h.get('password_hash') for h in historial_passwords if h.get('password_hash')]
-
-

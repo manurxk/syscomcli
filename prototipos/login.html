@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="es">
+<!--
+    Prototipo estático del login — SYSCLIN
+    Se abre con doble clic, no necesita Flask.
+
+    - "Versión actual": copia de app/auth/templates/login.html con el Jinja ya resuelto
+      (textos en español, sin mensajes flash, formulario sin envío real).
+    - "Versión nueva": propuesta de rediseño. Para simular el error de login, ingresá
+      cualquier contraseña distinta de "demo".
+
+    Cuando se apruebe la versión nueva, se pasa a login.html reponiendo url_for, _(),
+    csrf_token, los mensajes flash y el selector de idioma real.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prototipo login</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <style>
+        :root {
+            --bar-bg: #1e1b2e;
+            --bar-fg: #e2e8f0;
+            --bar-muted: #94a3b8;
+            --bar-active: #7c3aed;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: #2a2640;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .proto-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: safe center;
+            gap: 16px;
+            padding: 0 16px;
+            background: var(--bar-bg);
+            color: var(--bar-fg);
+            font-size: 13px;
+            z-index: 10;
+            overflow-x: auto;
+        }
+
+        .proto-bar .label {
+            color: var(--bar-muted);
+            white-space: nowrap;
+        }
+
+        .seg {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 3px;
+            flex-shrink: 0;
+        }
+
+        .seg button {
+            border: 0;
+            background: transparent;
+            color: var(--bar-fg);
+            font: inherit;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .seg button[aria-pressed="true"] {
+            background: var(--bar-active);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .sw {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 6px;
+            border-radius: 50%;
+            vertical-align: -1px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+
+        .seg.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .stage {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        .stage iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+        }
+
+        .stage.mobile iframe {
+            width: 390px;
+            height: 780px;
+            max-height: calc(100% - 32px);
+            border-radius: 24px;
+            box-shadow: 0 0 0 8px #0f0d1a, 0 24px 48px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 560px) {
+            .proto-bar { justify-content: flex-start; }
+            .proto-bar .label { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="proto-bar">
+        <span class="label">Login:</span>
+        <div class="seg" role="group" aria-label="Versión">
+            <button type="button" data-version="actual" aria-pressed="true">Versión actual</button>
+            <button type="button" data-version="nueva" aria-pressed="false">Versión nueva</button>
+        </div>
+        <span class="label">Vista:</span>
+        <div class="seg" role="group" aria-label="Tamaño">
+            <button type="button" data-vista="desktop" aria-pressed="true">Escritorio</button>
+            <button type="button" data-vista="mobile" aria-pressed="false">Celular</button>
+        </div>
+        <span class="label">Paleta:</span>
+        <div class="seg" role="group" aria-label="Paleta de morados" id="segPaleta">
+            <button type="button" data-paleta="violeta" aria-pressed="true"><i class="sw" style="background:#7c3aed"></i>Violeta</button>
+            <button type="button" data-paleta="uva" aria-pressed="false"><i class="sw" style="background:#7e22ce"></i>Uva</button>
+            <button type="button" data-paleta="indigo" aria-pressed="false"><i class="sw" style="background:#5b21b6"></i>Índigo</button>
+            <button type="button" data-paleta="ciruela" aria-pressed="false"><i class="sw" style="background:#a21caf"></i>Ciruela</button>
+            <button type="button" data-paleta="lavanda" aria-pressed="false"><i class="sw" style="background:#ddd6fe"></i>Lavanda</button>
+        </div>
+    </div>
+
+    <div class="stage" id="stage">
+        <iframe id="frame" title="Vista previa del login"></iframe>
+    </div>
+
+    <!-- ===================================================================
+         VERSIÓN ACTUAL — copia de app/auth/templates/login.html
+         =================================================================== -->
+    <template id="tpl-actual">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link
+                href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap"
+                rel="stylesheet">
+
+            <style>
+                :root {
+                    --blue: #5b21b6;
+                    --purple: #9333ea;
+                    --gradient: linear-gradient(135deg, #5b21b6 0%, #9333ea 100%);
+                    --dark: #1e293b;
+                    --muted: #64748b;
+                    --white: #ffffff;
+                    --radius: 1rem;
+                }
+
+                *,
+                *::before,
+                *::after {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                body {
+                    min-height: 100vh;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    background: #0d0a1a;
+                    overflow: hidden;
+                    position: relative;
+                }
+
+                /* ── Fondo ── */
+                .bg-wrap {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 0;
+                    background: linear-gradient(45deg, #0d0a1a, #1e1033, #4c1d95, #0d0a1a);
+                    background-size: 400% 400%;
+                    animation: bgAnim 20s ease infinite;
+                }
+
+                @keyframes bgAnim {
+                    0% {
+                        background-position: 0% 50%;
+                    }
+
+                    50% {
+                        background-position: 100% 50%;
+                    }
+
+                    100% {
+                        background-position: 0% 50%;
+                    }
+                }
+
+                .orb {
+                    position: fixed;
+                    border-radius: 50%;
+                    filter: blur(100px);
+                    opacity: 0.15;
+                    animation: orbF 24s ease-in-out infinite alternate;
+                    z-index: 0;
+                }
+
+                .orb-1 {
+                    width: 520px;
+                    height: 520px;
+                    top: -130px;
+                    left: -130px;
+                    background: var(--blue);
+                }
+
+                .orb-2 {
+                    width: 620px;
+                    height: 620px;
+                    bottom: -200px;
+                    right: -200px;
+                    background: var(--purple);
+                    animation-delay: -9s;
+                }
+
+                .orb-3 {
+                    width: 280px;
+                    height: 280px;
+                    top: 38%;
+                    left: 46%;
+                    background: #c026d3;
+                    animation-delay: -5s;
+                }
+
+                @keyframes orbF {
+                    from {
+                        transform: translate(0, 0) scale(1);
+                    }
+
+                    to {
+                        transform: translate(45px, 65px) scale(1.1);
+                    }
+                }
+
+                .giant-bg {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 0;
+                    background-image: url("../app/static/img/modern_clinic_bg.png");
+                    background-size: cover;
+                    background-position: center;
+                    opacity: 0.07;
+                    filter: grayscale(100%) brightness(1.8);
+                    pointer-events: none;
+                }
+
+                /* ── Footer exterior ── */
+                .footer-exterior {
+                    position: fixed;
+                    bottom: 1.6rem;
+                    left: 0;
+                    right: 0;
+                    text-align: center;
+                    z-index: 20;
+                    animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+                }
+
+                @keyframes fadeUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .footer-exterior span {
+                    font-size: 0.72rem;
+                    color: rgba(255, 255, 255, 0.3);
+                    letter-spacing: 1.5px;
+                    font-weight: 400;
+                }
+
+                .footer-exterior strong {
+                    color: rgba(255, 255, 255, 0.55);
+                    font-weight: 600;
+                    letter-spacing: 2px;
+                }
+
+                .footer-dot {
+                    display: inline-block;
+                    width: 3px;
+                    height: 3px;
+                    background: rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    vertical-align: middle;
+                    margin: 0 8px;
+                }
+
+                /* ── Card principal ── */
+                .login-card {
+                    position: relative;
+                    z-index: 10;
+                    width: 960px;
+                    min-height: 560px;
+                    display: flex;
+                    background: var(--white);
+                    border-radius: 2rem;
+                    box-shadow:
+                        0 60px 90px -20px rgba(0, 0, 0, 0.6),
+                        0 0 0 1px rgba(255, 255, 255, 0.07);
+                    overflow: hidden;
+                    animation: cardIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+                }
+
+                @keyframes cardIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.94) translateY(18px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+
+                /* ── Lado izquierdo (branding) ── */
+                .brand-side {
+                    flex: 1;
+                    background: var(--gradient);
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-end;
+                    padding: 3rem;
+                    overflow: hidden;
+                }
+
+                /* Marca de agua elevada — visible detrás del texto inferior */
+                .brand-watermark {
+                    position: absolute;
+                    bottom: 2.8rem;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 500px;
+                    height: 500px;
+                    object-fit: contain;
+                    opacity: 0.22;
+                    pointer-events: none;
+                    filter: brightness(100) saturate(0);
+                    animation: wmPulse 7s ease-in-out infinite;
+                    z-index: 1;
+                }
+
+                @keyframes wmPulse {
+
+                    0%,
+                    100% {
+                        opacity: 0.18;
+                        transform: translateX(-50%) scale(1);
+                    }
+
+                    50% {
+                        opacity: 0.27;
+                        transform: translateX(-50%) scale(1.04);
+                    }
+                }
+
+                /* Título SYSCLIN — arriba dentro del card */
+                .brand-title-block {
+                    position: absolute;
+                    top: 2.6rem;
+                    left: 3rem;
+                    right: 3rem;
+                    z-index: 3;
+                }
+
+                .brand-title-pre {
+                    font-size: 0.63rem;
+                    font-weight: 700;
+                    letter-spacing: 3.5px;
+                    text-transform: uppercase;
+                    color: rgba(255, 255, 255, 0.5);
+                    margin-bottom: 0.2rem;
+                }
+
+                .brand-title-name {
+                    font-size: 3.2rem;
+                    font-weight: 800;
+                    color: white;
+                    letter-spacing: 3px;
+                    text-transform: uppercase;
+                    line-height: 1;
+                    text-shadow: 0 4px 28px rgba(0, 0, 0, 0.18);
+                    animation: titleIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+                }
+
+                @keyframes titleIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-12px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                /* Decoraciones */
+                .deco {
+                    position: absolute;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.07);
+                    z-index: 1;
+                }
+
+                .deco-1 {
+                    width: 210px;
+                    height: 210px;
+                    bottom: -65px;
+                    left: -65px;
+                }
+
+                .deco-2 {
+                    width: 110px;
+                    height: 110px;
+                    bottom: 65px;
+                    right: -28px;
+                    background: rgba(255, 255, 255, 0.11);
+                }
+
+                .deco-3 {
+                    width: 55px;
+                    height: 55px;
+                    bottom: 155px;
+                    left: 22px;
+                    background: rgba(255, 255, 255, 0.15);
+                }
+
+                .brand-text {
+                    position: relative;
+                    z-index: 3;
+                }
+
+                .brand-text h1 {
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: white;
+                    line-height: 1.15;
+                    margin-bottom: 0.55rem;
+                }
+
+                .brand-text p {
+                    font-size: 0.88rem;
+                    color: rgba(255, 255, 255, 0.78);
+                    line-height: 1.6;
+                    max-width: 285px;
+                }
+
+                .version-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    margin-top: 1.2rem;
+                    padding: 0.32rem 0.85rem;
+                    background: rgba(255, 255, 255, 0.13);
+                    border: 1px solid rgba(255, 255, 255, 0.22);
+                    border-radius: 100px;
+                    color: rgba(255, 255, 255, 0.88);
+                    font-size: 0.73rem;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                    backdrop-filter: blur(8px);
+                }
+
+                /* ── Lado derecho ── */
+                .form-side {
+                    width: 455px;
+                    padding: 3.2rem 3.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    background: white;
+                }
+
+                .form-eyebrow {
+                    font-size: 0.68rem;
+                    font-weight: 700;
+                    color: var(--purple);
+                    text-transform: uppercase;
+                    letter-spacing: 2.5px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 0.45rem;
+                }
+
+                .form-eyebrow::after {
+                    content: '';
+                    flex: 1;
+                    height: 1px;
+                    background: linear-gradient(to right, var(--purple), transparent);
+                    opacity: 0.28;
+                }
+
+                .form-title {
+                    font-size: 1.6rem;
+                    font-weight: 800;
+                    color: var(--dark);
+                    line-height: 1.2;
+                }
+
+                .form-subtitle {
+                    font-size: 0.83rem;
+                    color: var(--muted);
+                    margin-top: 0.35rem;
+                    margin-bottom: 2rem;
+                }
+
+                /* ──────────────────────────────────────────────────
+                   INPUTS CORREGIDOS — sin superposición label/texto
+                   Estrategia: label SIEMPRE encima del input (no floating
+                   dentro), icono a la izquierda, padding claro
+                ────────────────────────────────────────────────── */
+                .field {
+                    margin-bottom: 1.2rem;
+                }
+
+                .field-label {
+                    display: block;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: var(--muted);
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                    margin-bottom: 0.4rem;
+                    transition: color 0.2s;
+                }
+
+                .field:focus-within .field-label {
+                    color: var(--purple);
+                }
+
+                .input-wrap {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .input-icon {
+                    position: absolute;
+                    left: 1rem;
+                    display: flex;
+                    align-items: center;
+                    color: #94a3b8;
+                    pointer-events: none;
+                    transition: color 0.2s;
+                    z-index: 1;
+                }
+
+                .input-icon svg {
+                    width: 17px;
+                    height: 17px;
+                }
+
+                .field:focus-within .input-icon {
+                    color: var(--purple);
+                }
+
+                .field input {
+                    width: 100%;
+                    /* padding: top/bottom | right | top/bottom | left(espacio para ícono) */
+                    padding: 0.85rem 3rem 0.85rem 2.8rem;
+                    font-family: inherit;
+                    font-size: 0.93rem;
+                    font-weight: 500;
+                    color: var(--dark);
+                    background: #f1f5ff;
+                    border: 1.5px solid transparent;
+                    border-radius: 0.85rem;
+                    outline: none;
+                    transition: all 0.22s ease;
+                    -webkit-appearance: none;
+                }
+
+                .field input::placeholder {
+                    color: #b0bdd6;
+                    font-weight: 400;
+                }
+
+                .field input:focus {
+                    background: #fff;
+                    border-color: var(--purple);
+                    box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.1);
+                }
+
+                /* Toggle ojo contraseña */
+                .toggle-pw {
+                    position: absolute;
+                    right: 0.85rem;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: #94a3b8;
+                    display: flex;
+                    align-items: center;
+                    padding: 4px;
+                    transition: color 0.2s;
+                    z-index: 2;
+                }
+
+                .toggle-pw:hover {
+                    color: var(--purple);
+                }
+
+                .toggle-pw svg {
+                    width: 17px;
+                    height: 17px;
+                }
+
+                /* ── Extras ── */
+                .extras {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1.4rem;
+                    font-size: 0.8rem;
+                }
+
+                .remember {
+                    display: flex;
+                    align-items: center;
+                    gap: 7px;
+                    color: var(--muted);
+                    cursor: pointer;
+                    user-select: none;
+                }
+
+                .remember input[type="checkbox"] {
+                    width: 14px;
+                    height: 14px;
+                    accent-color: var(--purple);
+                    cursor: pointer;
+                }
+
+                .forgot-link {
+                    color: var(--purple);
+                    text-decoration: none;
+                    font-weight: 600;
+                    opacity: 0.82;
+                    transition: opacity 0.2s;
+                }
+
+                .forgot-link:hover {
+                    opacity: 1;
+                }
+
+                /* ── Botón ── */
+                .btn-login {
+                    width: 100%;
+                    padding: 0.92rem;
+                    background: var(--gradient);
+                    color: white;
+                    font-family: inherit;
+                    font-size: 0.88rem;
+                    font-weight: 700;
+                    letter-spacing: 0.4px;
+                    border: none;
+                    border-radius: 0.85rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    box-shadow: 0 8px 22px -4px rgba(115, 103, 240, 0.45);
+                    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .btn-login::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: white;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                }
+
+                .btn-login:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 14px 28px -4px rgba(115, 103, 240, 0.58);
+                }
+
+                .btn-login:hover::before {
+                    opacity: 0.07;
+                }
+
+                .btn-login:active {
+                    transform: translateY(0);
+                }
+
+                .btn-login.loading {
+                    pointer-events: none;
+                    opacity: 0.82;
+                }
+
+                .spinner {
+                    display: none;
+                    width: 18px;
+                    height: 18px;
+                    border: 2.5px solid rgba(255, 255, 255, 0.32);
+                    border-top-color: white;
+                    border-radius: 50%;
+                    animation: spin 0.65s linear infinite;
+                }
+
+                .btn-login.loading .btn-text,
+                .btn-login.loading .btn-arr {
+                    display: none;
+                }
+
+                .btn-login.loading .spinner {
+                    display: block;
+                }
+
+                @keyframes spin {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                /* ── Flash ── */
+                .flash {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 0.75rem 1rem;
+                    border-radius: 0.75rem;
+                    font-size: 0.83rem;
+                    margin-bottom: 1.25rem;
+                    animation: flashIn 0.35s ease;
+                }
+
+                .flash-danger {
+                    background: #fef2f2;
+                    color: #dc2626;
+                    border: 1px solid #fecaca;
+                }
+
+                .flash-primary {
+                    background: #eef2ff;
+                    color: #4f46e5;
+                    border: 1px solid #c7d2fe;
+                }
+
+                @keyframes flashIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-5px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                /* ── Selector de idioma ── */
+                .lang-dropdown-wrap {
+                    margin-top: 1.2rem;
+                    display: flex;
+                    justify-content: center;
+                }
+
+                .lang-dropdown {
+                    position: relative;
+                }
+
+                .lang-dropdown-toggle {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.55rem 0.9rem;
+                    font-family: inherit;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: var(--dark);
+                    background: #f1f5ff;
+                    border: 1.5px solid transparent;
+                    border-radius: 0.85rem;
+                    outline: none;
+                    cursor: pointer;
+                    transition: all 0.22s ease;
+                }
+
+                .lang-dropdown-toggle:hover {
+                    background: #e9eefe;
+                }
+
+                .lang-dropdown.open .lang-dropdown-toggle {
+                    background: #fff;
+                    border-color: var(--purple);
+                    box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.1);
+                }
+
+                .lang-dropdown-toggle svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #94a3b8;
+                    transition: transform 0.2s ease;
+                }
+
+                .lang-dropdown.open .lang-dropdown-toggle svg {
+                    transform: rotate(180deg);
+                    color: var(--purple);
+                }
+
+                .lang-dropdown-menu {
+                    position: absolute;
+                    bottom: calc(100% + 0.5rem);
+                    left: 50%;
+                    transform: translateX(-50%);
+                    min-width: 100%;
+                    background: #fff;
+                    border-radius: 0.85rem;
+                    box-shadow: 0 12px 28px -6px rgba(30, 41, 59, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+                    padding: 0.4rem;
+                    display: none;
+                    z-index: 30;
+                }
+
+                .lang-dropdown.open .lang-dropdown-menu {
+                    display: block;
+                    animation: flashIn 0.18s ease;
+                }
+
+                .lang-option {
+                    display: block;
+                    width: 100%;
+                    padding: 0.5rem 0.75rem;
+                    font-family: inherit;
+                    font-size: 0.8rem;
+                    font-weight: 500;
+                    color: var(--dark);
+                    text-decoration: none;
+                    text-align: left;
+                    background: none;
+                    border: none;
+                    border-radius: 0.55rem;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: background 0.15s ease, color 0.15s ease;
+                }
+
+                .lang-option:hover {
+                    background: #f1f5ff;
+                    color: var(--purple);
+                }
+
+                .lang-option.active {
+                    background: var(--gradient);
+                    color: #fff;
+                    font-weight: 700;
+                }
+
+                /* ── Responsive ── */
+                @media (max-width: 991px) {
+                    .brand-exterior {
+                        top: 1.2rem;
+                        left: 1.2rem;
+                    }
+
+                    .brand-ext-name {
+                        font-size: 1.1rem;
+                        letter-spacing: 3px;
+                    }
+
+                    .login-card {
+                        flex-direction: column;
+                        width: calc(100vw - 2rem);
+                        max-width: 450px;
+                        height: auto;
+                        margin: 4rem 1rem 2rem;
+                    }
+
+                    .brand-side {
+                        padding: 2.5rem 2rem;
+                        min-height: 240px;
+                        justify-content: flex-end;
+                    }
+
+                    .logo-hero {
+                        top: 1.6rem;
+                    }
+
+                    .logo-ring {
+                        width: 84px;
+                        height: 84px;
+                        border-radius: 1.3rem;
+                    }
+
+                    .logo-ring img {
+                        width: 50px;
+                    }
+
+                    .brand-watermark {
+                        width: 220px;
+                        height: 220px;
+                    }
+
+                    .brand-text h1 {
+                        font-size: 1.45rem;
+                    }
+
+                    .form-side {
+                        width: 100%;
+                        padding: 2.2rem 1.8rem;
+                    }
+                }
+            </style>
+            <!-- Fondo -->
+            <div class="giant-bg"></div>
+            <div class="bg-wrap"></div>
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+
+            <!-- Footer exterior -->
+            <div class="footer-exterior">
+        <span>&copy; 2026 SYSCLIN — Todos los derechos reservados</span>
+            </div>
+
+            <!-- Card -->
+            <div class="login-card">
+
+        <!-- Lado izquierdo -->
+        <div class="brand-side">
+                    <!-- Watermark elevada -->
+                    <img src="../app/static/img/sys_logo.png" alt="" class="brand-watermark"
+                        aria-hidden="true">
+
+                    <div class="deco deco-1"></div>
+                    <div class="deco deco-2"></div>
+                    <div class="deco deco-3"></div>
+
+                    <!-- SYSCLIN como título grande arriba -->
+                    <div class="brand-title-block">
+                        <div class="brand-title-pre">Sistema de Gestión Clínica</div>
+                        <div class="brand-title-name">SYSCLIN</div>
+                    </div>
+
+                    <!-- Texto inferior -->
+                    <div class="brand-text">
+                        <h1>Cuidado clínico<br>simple y seguro</h1>
+                        <p>Gestionando la salud con tecnología y calidez humana.</p>
+                        <div class="version-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="4 17 10 11 4 5" />
+                                <line x1="12" y1="19" x2="20" y2="19" />
+                            </svg>
+                            v2.0.4
+                        </div>
+                    </div>
+        </div>
+
+        <!-- Lado derecho: formulario -->
+        <div class="form-side">
+                    <div class="form-eyebrow">Acceso al sistema</div>
+                    <h2 class="form-title">Bienvenido de vuelta</h2>
+                    <p class="form-subtitle">Ingresá tus credenciales para continuar</p>
+
+
+                    <form id="loginForm" method="POST" action="#">
+
+                        <!-- Usuario -->
+                        <div class="field">
+                            <label class="field-label" for="inputUsuario">Usuario</label>
+                            <div class="input-wrap">
+                                <div class="input-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="inputUsuario" name="usuario_nombre" placeholder="Nombre de usuario"
+                                    required autocomplete="username" />
+                            </div>
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="field">
+                            <label class="field-label" for="usuario_clave">Contraseña</label>
+                            <div class="input-wrap">
+                                <div class="input-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                    </svg>
+                                </div>
+                                <input type="password" id="usuario_clave" name="usuario_clave" placeholder="••••••••" required
+                                    autocomplete="current-password" />
+                                <button type="button" class="toggle-pw" id="togglePassword" aria-label="Mostrar contraseña">
+                                    <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Extras -->
+                        <div class="extras">
+                            <label class="remember">
+                                <input type="checkbox"> Recordarme
+                            </label>
+                            <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn-login" id="btnLogin">
+                            <span class="btn-text">Ingresar</span>
+                            <div class="spinner"></div>
+                            <svg class="btn-arr" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                                <polyline points="12 5 19 12 12 19" />
+                            </svg>
+                        </button>
+
+                        <!-- Selector de idioma -->
+                        <div class="lang-dropdown-wrap">
+                            <div class="lang-dropdown" id="langDropdown">
+                                <button type="button" class="lang-dropdown-toggle" id="langDropdownToggle">
+                                    <span id="langDropdownLabel">Español</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+                                <div class="lang-dropdown-menu" id="langDropdownMenu">
+                                    <a class="lang-option active" href="#">Español</a>
+                                    <a class="lang-option" href="#">Guaraní</a>
+                                    <a class="lang-option" href="#">English</a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+        </div>
+            </div>
+
+            <script>
+                // Toggle ojo contraseña
+                const pw = document.getElementById('usuario_clave');
+                const btn = document.getElementById('togglePassword');
+                const eye = document.getElementById('eyeIcon');
+
+                const svgOpen = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+                const svgOff = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
+                btn.addEventListener('click', () => {
+                    const show = pw.type === 'password';
+                    pw.type = show ? 'text' : 'password';
+                    eye.innerHTML = show ? svgOff : svgOpen;
+                });
+
+                // Loading al submit
+                document.getElementById('loginForm').addEventListener('submit', () => {
+                    document.getElementById('btnLogin').classList.add('loading');
+                });
+
+                // Dropdown de idioma
+                const langDropdown = document.getElementById('langDropdown');
+                const langDropdownToggle = document.getElementById('langDropdownToggle');
+
+                langDropdownToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    langDropdown.classList.toggle('open');
+                });
+
+                document.addEventListener('click', () => {
+                    langDropdown.classList.remove('open');
+                });
+            </script>
+        <script>
+                    // Solo prototipo: evita el envío real del formulario
+                    document.getElementById('loginForm').addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        setTimeout(() => document.getElementById('btnLogin').classList.remove('loading'), 1200);
+                    });
+        </script>
+    </template>
+
+    <!-- ===================================================================
+         VERSIÓN NUEVA — propuesta
+         =================================================================== -->
+    <template id="tpl-nueva">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+        <style>
+            :root {
+                --primary: #7c3aed;
+                --primary-dark: #6d28d9;
+                --primary-deep: #4c1d95;
+                --text: #1e293b;
+                --muted: #64748b;
+                --border: #cbd5e1;
+                --surface: #ffffff;
+                --surface-soft: #f8fafc;
+                --danger: #b91c1c;
+                --danger-bg: #fef2f2;
+                --danger-border: #fecaca;
+                --warning: #92400e;
+                --focus-ring: rgba(124, 58, 237, 0.22);
+                /* Panel de marca (los cambia el selector de paleta del prototipo) */
+                --brand-from: #4c1d95;
+                --brand-mid: #6d28d9;
+                --brand-to: #7c3aed;
+                --brand-fg: #ffffff;
+                --brand-fg-muted: rgba(255, 255, 255, 0.82);
+                --brand-fg-soft: rgba(255, 255, 255, 0.62);
+                --brand-chip: rgba(255, 255, 255, 0.13);
+                --brand-chip-border: rgba(255, 255, 255, 0.22);
+                --logo-filter: brightness(100) saturate(0);
+                --radius: 10px;
+                /* Texto de acento (enlaces, idioma activo, logo) y fondos de la columna */
+                --accent-text: var(--primary);
+                --col-bg: color-mix(in srgb, var(--primary) 5%, #f8fafc);
+                --chip-bg: #ffffff;
+                --note-bg: color-mix(in srgb, var(--primary) 5%, #f8fafc);
+                --placeholder: #94a3b8;
+                color-scheme: light;
+            }
+
+            /* ── Modo oscuro (mismo atributo que base.html: data-bs-theme) ── */
+            html[data-bs-theme="dark"] {
+                --text: #e2e8f0;
+                --muted: #94a3b8;
+                --border: #3b3552;
+                --surface: #171327;
+                --surface-soft: #221d36;
+                --danger: #fca5a5;
+                --danger-bg: rgba(185, 28, 28, 0.16);
+                --danger-border: rgba(248, 113, 113, 0.35);
+                --warning: #fbbf24;
+                --accent-text: color-mix(in srgb, var(--primary) 45%, #ffffff);
+                --col-bg: color-mix(in srgb, var(--primary) 9%, #0c0a14);
+                --chip-bg: #171327;
+                --note-bg: color-mix(in srgb, var(--primary) 10%, #171327);
+                --placeholder: #6b7280;
+                color-scheme: dark;
+            }
+
+            *, *::before, *::after { box-sizing: border-box; }
+
+            html, body { margin: 0; }
+
+            body {
+                min-height: 100vh;
+                font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+                color: var(--text);
+                background: var(--surface);
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .shell {
+                display: grid;
+                grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+                min-height: 100vh;
+            }
+
+            /* ── Panel de marca ── */
+            .brand {
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 40px;
+                padding: 48px 56px;
+                color: var(--brand-fg);
+                background: linear-gradient(160deg, var(--brand-from) 0%, var(--brand-mid) 55%, var(--brand-to) 100%);
+            }
+
+            .brand-body {
+                margin: auto 0;
+                position: relative;
+                max-width: 400px;
+            }
+
+            .brand-body h1 {
+                margin: 0 0 12px;
+                font-size: 2.25rem;
+                font-weight: 800;
+                line-height: 1.15;
+            }
+
+            .brand-body p {
+                margin: 0 0 28px;
+                font-size: 0.95rem;
+                line-height: 1.6;
+                color: var(--brand-fg-muted);
+            }
+
+            .trust-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                gap: 12px;
+            }
+
+            .trust-list li {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 0.875rem;
+                color: var(--brand-fg);
+            }
+
+            .trust-icon {
+                flex-shrink: 0;
+                width: 32px;
+                height: 32px;
+                display: grid;
+                place-items: center;
+                border-radius: 8px;
+                background: var(--brand-chip);
+            }
+
+            .trust-icon svg { width: 16px; height: 16px; }
+
+            .brand-foot {
+                position: relative;
+                font-size: 0.75rem;
+                color: var(--brand-fg-soft);
+            }
+
+            /* ── Columna del formulario ── */
+            .form-col {
+                display: flex;
+                flex-direction: column;
+                padding: 28px 48px;
+                background: var(--col-bg);
+            }
+
+            .form-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+            }
+
+            .form-logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 1rem;
+                font-weight: 800;
+                letter-spacing: 1.5px;
+                color: var(--accent-text);
+            }
+
+            .form-logo img {
+                width: 30px;
+                height: 30px;
+                object-fit: contain;
+            }
+
+            .lang-switch {
+                display: inline-flex;
+                padding: 3px;
+                background: var(--chip-bg);
+                border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+                border-radius: 999px;
+            }
+
+            .form-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .theme-toggle {
+                width: 34px;
+                height: 34px;
+                display: grid;
+                place-items: center;
+                color: var(--muted);
+                background: var(--chip-bg);
+                border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+                border-radius: 50%;
+                cursor: pointer;
+                transition: color 0.15s;
+            }
+
+            .theme-toggle:hover { color: var(--accent-text); }
+
+            .theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+            .theme-toggle svg { width: 16px; height: 16px; }
+
+            .theme-toggle .icon-sun { display: none; }
+
+            html[data-bs-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+            html[data-bs-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+            .lang-switch a {
+                padding: 5px 12px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--muted);
+                text-decoration: none;
+                border-radius: 999px;
+                transition: color 0.15s, background-color 0.15s;
+            }
+
+            .lang-switch a:hover { color: var(--accent-text); }
+
+            .lang-switch a[aria-current="true"] {
+                background: var(--surface);
+                color: var(--accent-text);
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+            }
+
+            .form-center {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 32px 0;
+            }
+
+            .form-box {
+                position: relative;
+                width: 100%;
+                max-width: 440px;
+                padding: 40px 40px 32px;
+                background: var(--surface);
+                border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--border));
+                border-radius: 20px;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+                animation: fadeIn 0.4s ease both;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(8px); }
+                to { opacity: 1; transform: none; }
+            }
+
+            .form-box h2 {
+                margin: 0 0 6px;
+                text-align: center;
+                font-size: 1.625rem;
+                font-weight: 800;
+            }
+
+            .form-lead {
+                margin: 0 0 28px;
+                text-align: center;
+                font-size: 0.9rem;
+                color: var(--muted);
+            }
+
+            /* Mensaje de error (equivale a los flash 'danger') */
+            .alert {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                margin-bottom: 20px;
+                padding: 12px 14px;
+                font-size: 0.85rem;
+                line-height: 1.45;
+                color: var(--danger);
+                background: var(--danger-bg);
+                border: 1px solid var(--danger-border);
+                border-radius: var(--radius);
+            }
+
+            .alert[hidden] { display: none; }
+
+            .alert svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; }
+
+            .field { margin-bottom: 18px; }
+
+            .field-head {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 6px;
+            }
+
+            .field label {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--text);
+            }
+
+            .link {
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: var(--accent-text);
+                text-decoration: none;
+            }
+
+            .link:hover { text-decoration: underline; }
+
+            .input-wrap { position: relative; }
+
+            .input-icon {
+                position: absolute;
+                top: 50%;
+                left: 14px;
+                transform: translateY(-50%);
+                display: flex;
+                color: #94a3b8;
+                pointer-events: none;
+            }
+
+            .input-icon svg { width: 18px; height: 18px; }
+
+            .field input {
+                width: 100%;
+                height: 48px;
+                padding: 0 44px 0 42px;
+                font: inherit;
+                font-size: 0.95rem;
+                color: var(--text);
+                background: var(--surface);
+                border: 1.5px solid var(--border);
+                border-radius: var(--radius);
+                outline: none;
+                transition: border-color 0.15s, box-shadow 0.15s;
+            }
+
+            .field input::placeholder { color: var(--placeholder); }
+
+            .field input:hover { border-color: var(--muted); }
+
+            .field input:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 4px var(--focus-ring);
+            }
+
+            .field:focus-within .input-icon { color: var(--primary); }
+
+            .field input[aria-invalid="true"] { border-color: var(--danger); }
+
+            .toggle-pw {
+                position: absolute;
+                top: 50%;
+                right: 6px;
+                transform: translateY(-50%);
+                width: 36px;
+                height: 36px;
+                display: grid;
+                place-items: center;
+                color: #64748b;
+                background: none;
+                border: 0;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            .toggle-pw:hover { color: var(--primary); background: var(--surface-soft); }
+
+            .toggle-pw:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+            .toggle-pw svg { width: 18px; height: 18px; }
+
+            .caps-hint {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 6px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: var(--warning);
+            }
+
+            .caps-hint[hidden] { display: none; }
+
+            .caps-hint svg { width: 14px; height: 14px; }
+
+            .btn-primary {
+                width: 100%;
+                height: 48px;
+                margin-top: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                font: inherit;
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #fff;
+                background: var(--primary);
+                border: 0;
+                border-radius: var(--radius);
+                cursor: pointer;
+                transition: background-color 0.15s, box-shadow 0.15s;
+            }
+
+            .btn-primary:hover { background: var(--primary-dark); }
+
+            .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--focus-ring); }
+
+            .btn-primary[disabled] { opacity: 0.75; cursor: progress; }
+
+            .spinner {
+                width: 18px;
+                height: 18px;
+                border: 2.5px solid rgba(255, 255, 255, 0.35);
+                border-top-color: #fff;
+                border-radius: 50%;
+                animation: spin 0.7s linear infinite;
+            }
+
+            .spinner[hidden] { display: none; }
+
+            @keyframes spin { to { transform: rotate(360deg); } }
+
+            .security-note {
+                display: flex;
+                gap: 10px;
+                margin-top: 24px;
+                padding: 12px 14px;
+                font-size: 0.8rem;
+                line-height: 1.5;
+                color: var(--muted);
+                background: var(--note-bg);
+                border: 1px dashed color-mix(in srgb, var(--primary) 22%, var(--border));
+                border-radius: var(--radius);
+            }
+
+            .security-note svg { flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; color: var(--accent-text); }
+
+            .form-foot {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 0.75rem;
+                color: var(--muted);
+            }
+
+            .form-foot .mobile-only { display: none; }
+
+            /* ── Celular / tablet ── */
+            @media (max-width: 900px) {
+                .shell { grid-template-columns: 1fr; }
+
+                /* En celular no hay panel de marca: queda el logo de la columna del formulario */
+                .brand { display: none; }
+
+                .form-col { padding: 16px 20px 20px; }
+
+                .form-center { align-items: flex-start; padding: 16px 0 32px; }
+
+                .form-box h2 { font-size: 1.4rem; }
+
+                .form-box { padding: 28px 22px 24px; border-radius: 16px; }
+
+                .form-foot { flex-direction: column; align-items: center; gap: 4px; }
+
+                .form-foot .mobile-only { display: inline; }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *, *::before, *::after {
+                    animation-duration: 0.01ms !important;
+                    transition-duration: 0.01ms !important;
+                }
+            }
+        </style>
+
+        <div class="shell">
+
+            <!-- Panel de marca -->
+            <aside class="brand">
+
+
+                <div class="brand-body">
+                    <h1>Cuidado clínico simple y seguro</h1>
+                    <p>Gestionando la salud con tecnología y calidez humana.</p>
+
+                    <ul class="trust-list">
+                        <li>
+                            <span class="trust-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                            </span>
+                            Verificación en dos pasos por correo
+                        </li>
+                        <li>
+                            <span class="trust-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </span>
+                            Acceso según el rol de cada usuario
+                        </li>
+                        <li>
+                            <span class="trust-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            </span>
+                            Registro de auditoría de cada acción
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="brand-foot">&copy; 2026 SYSCLIN — Todos los derechos reservados</div>
+            </aside>
+
+            <!-- Formulario -->
+            <main class="form-col">
+                <div class="form-top">
+                    <div class="form-logo">
+                        <img src="../app/static/img/sys_logo.png" alt="">
+                        SYSCLIN
+                    </div>
+                    <div class="form-actions">
+                        <nav class="lang-switch" aria-label="Idioma">
+                            <a href="#" aria-current="true" lang="es">ES</a>
+                            <a href="#" lang="gn">GN</a>
+                            <a href="#" lang="en">EN</a>
+                        </nav>
+                        <button type="button" class="theme-toggle" id="themeToggle" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
+                            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-center">
+                    <div class="form-box">
+                        <h2>Iniciar sesión</h2>
+                        <p class="form-lead">Ingresá tu usuario y contraseña para continuar.</p>
+
+                        <div class="alert" id="alertError" role="alert" hidden>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>Usuario o contraseña incorrectos. Te quedan 2 intentos antes del bloqueo temporal.</span>
+                        </div>
+
+                        <form id="loginForm" method="POST" action="#" novalidate>
+                            <div class="field">
+                                <div class="field-head">
+                                    <label for="inputUsuario">Usuario</label>
+                                </div>
+                                <div class="input-wrap">
+                                    <span class="input-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    </span>
+                                    <input type="text" id="inputUsuario" name="usuario_nombre" placeholder="Tu nombre de usuario"
+                                        required autocomplete="username" autocapitalize="none" spellcheck="false" autofocus>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <div class="field-head">
+                                    <label for="usuario_clave">Contraseña</label>
+                                    <a href="#" class="link">¿Olvidaste tu contraseña?</a>
+                                </div>
+                                <div class="input-wrap">
+                                    <span class="input-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    </span>
+                                    <input type="password" id="usuario_clave" name="usuario_clave" placeholder="Tu contraseña"
+                                        required autocomplete="current-password">
+                                    <button type="button" class="toggle-pw" id="togglePassword" aria-label="Mostrar contraseña" aria-pressed="false">
+                                        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                                <div class="caps-hint" id="capsHint" hidden>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    Bloq Mayús está activado
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-primary" id="btnLogin">
+                                <span class="spinner" id="btnSpinner" hidden></span>
+                                <span id="btnText">Ingresar</span>
+                            </button>
+                        </form>
+
+                        <div class="security-note">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <span>Por seguridad, podemos pedirte un código que enviamos a tu correo cuando ingresás desde un dispositivo nuevo.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-foot">
+                    <span class="mobile-only">&copy; 2026 SYSCLIN</span>
+                    <span>Versión 2.0.4</span>
+                </div>
+            </main>
+        </div>
+
+        <script>
+            const pw = document.getElementById('usuario_clave');
+            const user = document.getElementById('inputUsuario');
+            const toggle = document.getElementById('togglePassword');
+            const eye = document.getElementById('eyeIcon');
+            const capsHint = document.getElementById('capsHint');
+            const alertError = document.getElementById('alertError');
+            const btn = document.getElementById('btnLogin');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            const svgOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+            const svgOff = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+
+            // Mostrar / ocultar contraseña
+            toggle.addEventListener('click', () => {
+                const show = pw.type === 'password';
+                pw.type = show ? 'text' : 'password';
+                eye.innerHTML = show ? svgOff : svgOpen;
+                toggle.setAttribute('aria-pressed', String(show));
+                toggle.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                pw.focus();
+            });
+
+            // Aviso de Bloq Mayús
+            ['keydown', 'keyup'].forEach((ev) => {
+                pw.addEventListener(ev, (e) => {
+                    if (e.getModifierState) capsHint.hidden = !e.getModifierState('CapsLock');
+                });
+            });
+            pw.addEventListener('blur', () => { capsHint.hidden = true; });
+
+            // Al escribir de nuevo se limpia el estado de error
+            [user, pw].forEach((input) => {
+                input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
+            });
+
+            // Envío simulado (prototipo): contraseña "demo" = OK, cualquier otra = error
+            document.getElementById('loginForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                alertError.hidden = true;
+
+                let valido = true;
+                [user, pw].forEach((input) => {
+                    const vacio = !input.value.trim();
+                    input.setAttribute('aria-invalid', String(vacio));
+                    if (vacio && valido) { input.focus(); valido = false; }
+                });
+                if (!valido) return;
+
+                btn.disabled = true;
+                btnSpinner.hidden = false;
+                btnText.textContent = 'Ingresando…';
+
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btnSpinner.hidden = true;
+                    btnText.textContent = 'Ingresar';
+                    if (pw.value === 'demo') {
+                        btnText.textContent = 'Ingreso correcto (simulado)';
+                    } else {
+                        alertError.hidden = false;
+                        pw.value = '';
+                        pw.setAttribute('aria-invalid', 'true');
+                        pw.focus();
+                    }
+                }, 900);
+            });
+
+            // Tema claro/oscuro — misma clave y atributo que base.html
+            const THEME_KEY = 'lte-theme';
+            const themeToggle = document.getElementById('themeToggle');
+
+            function applyTheme(isDark) {
+                const theme = isDark ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+                try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+                themeToggle.setAttribute('aria-label', isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+            }
+
+            (function () {
+                let stored = null;
+                try { stored = localStorage.getItem(THEME_KEY); } catch (e) {}
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                applyTheme(stored === 'dark' || (!stored && prefersDark));
+            })();
+
+            themeToggle.addEventListener('click', () => {
+                applyTheme(document.documentElement.getAttribute('data-bs-theme') !== 'dark');
+            });
+
+            // Idioma (en el prototipo solo marca la opción)
+            document.querySelectorAll('.lang-switch a').forEach((a) => {
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.lang-switch a').forEach((x) => x.removeAttribute('aria-current'));
+                    a.setAttribute('aria-current', 'true');
+                });
+            });
+        </script>
+    </template>
+
+    <script>
+        (function () {
+            var frame = document.getElementById('frame');
+            var stage = document.getElementById('stage');
+            var KEY = 'proto-login';
+            var estado = { version: 'actual', vista: 'desktop', paleta: 'violeta' };
+
+            // Paletas de la versión nueva: botones/enlaces (primary) y panel de marca (brand)
+            var PALETAS = {
+                // Morado de la marca actual (= --bs-primary de base.html)
+                violeta: {
+                    '--primary': '#7c3aed', '--primary-dark': '#6d28d9', '--focus-ring': 'rgba(124, 58, 237, 0.22)',
+                    '--brand-from': '#4c1d95', '--brand-mid': '#6d28d9', '--brand-to': '#7c3aed'
+                },
+                // Más oscuro y sobrio
+                uva: {
+                    '--primary': '#7e22ce', '--primary-dark': '#6b21a8', '--focus-ring': 'rgba(126, 34, 206, 0.22)',
+                    '--brand-from': '#2e1065', '--brand-mid': '#581c87', '--brand-to': '#7e22ce'
+                },
+                // Tira hacia el azul, más "institucional"
+                indigo: {
+                    '--primary': '#5b21b6', '--primary-dark': '#4c1d95', '--focus-ring': 'rgba(91, 33, 182, 0.22)',
+                    '--brand-from': '#1e1b4b', '--brand-mid': '#3730a3', '--brand-to': '#6d28d9'
+                },
+                // Tira hacia el rojo/magenta, más cálido
+                ciruela: {
+                    '--primary': '#a21caf', '--primary-dark': '#86198f', '--focus-ring': 'rgba(162, 28, 175, 0.22)',
+                    '--brand-from': '#3b0a3f', '--brand-mid': '#701a75', '--brand-to': '#a21caf'
+                },
+                // Panel claro con texto morado oscuro
+                lavanda: {
+                    '--primary': '#6d28d9', '--primary-dark': '#5b21b6', '--focus-ring': 'rgba(109, 40, 217, 0.22)',
+                    '--brand-from': '#ede9fe', '--brand-mid': '#ddd6fe', '--brand-to': '#c4b5fd',
+                    '--brand-fg': '#2e1065', '--brand-fg-muted': 'rgba(46, 16, 101, 0.78)', '--brand-fg-soft': 'rgba(46, 16, 101, 0.6)',
+                    '--brand-chip': 'rgba(91, 33, 182, 0.1)', '--brand-chip-border': 'rgba(91, 33, 182, 0.2)',
+                    '--logo-filter': 'none',
+                    // En modo oscuro el panel claro encandila: pasa a morado profundo
+                    dark: {
+                        '--brand-from': '#2e1065', '--brand-mid': '#4c1d95', '--brand-to': '#6d28d9',
+                        '--brand-fg': '#ffffff', '--brand-fg-muted': 'rgba(255, 255, 255, 0.82)', '--brand-fg-soft': 'rgba(255, 255, 255, 0.62)',
+                        '--brand-chip': 'rgba(255, 255, 255, 0.13)', '--brand-chip-border': 'rgba(255, 255, 255, 0.22)',
+                        '--logo-filter': 'brightness(100) saturate(0)'
+                    }
+                }
+            };
+
+            function cssPaleta() {
+                var vars = PALETAS[estado.paleta] || PALETAS.violeta;
+                function decl(obj) {
+                    return Object.keys(obj).filter(function (k) { return k !== 'dark'; })
+                        .map(function (k) { return k + ': ' + obj[k] + ';'; }).join(' ');
+                }
+                var css = ':root { ' + decl(vars) + ' }';
+                if (vars.dark) css += ' html[data-bs-theme="dark"] { ' + decl(vars.dark) + ' }';
+                return '<style>' + css + '</style>';
+            }
+
+            try {
+                var guardado = JSON.parse(localStorage.getItem(KEY) || 'null');
+                if (guardado) estado = Object.assign(estado, guardado);
+            } catch (e) {}
+
+            function render() {
+                var tpl = document.getElementById('tpl-' + estado.version);
+                frame.srcdoc = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head><body>' +
+                    tpl.innerHTML + (estado.version === 'nueva' ? cssPaleta() : '') + '</body></html>';
+                stage.classList.toggle('mobile', estado.vista === 'mobile');
+                document.getElementById('segPaleta').classList.toggle('disabled', estado.version !== 'nueva');
+
+                document.querySelectorAll('[data-version]').forEach(function (b) {
+                    b.setAttribute('aria-pressed', String(b.dataset.version === estado.version));
+                });
+                document.querySelectorAll('[data-vista]').forEach(function (b) {
+                    b.setAttribute('aria-pressed', String(b.dataset.vista === estado.vista));
+                });
+                document.querySelectorAll('[data-paleta]').forEach(function (b) {
+                    b.setAttribute('aria-pressed', String(b.dataset.paleta === estado.paleta));
+                });
+
+                try { localStorage.setItem(KEY, JSON.stringify(estado)); } catch (e) {}
+            }
+
+            document.querySelectorAll('[data-version]').forEach(function (b) {
+                b.addEventListener('click', function () { estado.version = b.dataset.version; render(); });
+            });
+            document.querySelectorAll('[data-vista]').forEach(function (b) {
+                b.addEventListener('click', function () { estado.vista = b.dataset.vista; render(); });
+            });
+
+            document.querySelectorAll('[data-paleta]').forEach(function (b) {
+                b.addEventListener('click', function () { estado.paleta = b.dataset.paleta; render(); });
+            });
+
+            render();
+        })();
+    </script>
+</body>
+
+</html>
