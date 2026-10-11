@@ -1,5 +1,0 @@
-# Timbrado Routes
-
-
-
-
