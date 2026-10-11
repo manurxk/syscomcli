@@ -26,7 +26,7 @@ def _construir_pdf_factura(id_factura):
         'ruc': ruc,
         'nombre_empresa': empresa.get('razon_social', ''),
         'direccion': empresa.get('direccion', ''),
-        'ciudad': '',
+        'ciudad': empresa.get('des_ciudad') or '',
         'telefono': empresa.get('telefono', '') or empresa.get('celular', ''),
         'email': empresa.get('email', ''),
         'actividad_economica': empresa.get('actividad_economica_principal', ''),

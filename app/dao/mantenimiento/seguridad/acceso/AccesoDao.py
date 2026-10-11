@@ -93,9 +93,10 @@ class AccesoDao(BaseDAO):
         return self.execute_query(sql, (id_usuario,))
 
     def revocarMfa(self, id_usuario, usuario_modificacion=None):
-        """Desactiva el MFA del usuario, invalida códigos pendientes y cierra
-        sus sesiones activas (tipo_cierre='MFA_REVOKE'). El usuario deberá
-        volver a vincular MFA desde cero la próxima vez que lo active."""
+        """Desactiva el MFA del usuario, invalida códigos pendientes, revoca sus
+        dispositivos confiables y cierra sus sesiones activas (tipo_cierre='MFA_REVOKE').
+        El usuario deberá volver a vincular MFA desde cero la próxima vez que lo active:
+        sin revocar los dispositivos, uno marcado antes seguiría salteando el código."""
         def _fn(cur):
             cur.execute(
                 "UPDATE usuarios SET mfa_habilitado = FALSE WHERE id_usuario = %s",
@@ -103,6 +104,10 @@ class AccesoDao(BaseDAO):
             )
             cur.execute(
                 "UPDATE mfa_codigos SET usado = TRUE WHERE id_usuario = %s AND usado = FALSE",
+                (id_usuario,)
+            )
+            cur.execute(
+                "UPDATE mfa_dispositivos_confiables SET revocado = TRUE WHERE id_usuario = %s AND revocado = FALSE",
                 (id_usuario,)
             )
             cur.execute(

@@ -9,12 +9,13 @@ class EmpresaDao(BaseDAO):
 
     def getEmpresaPrincipal(self):
         sql = """
-            SELECT id_empresa, ruc_nit, digito_verificador, razon_social, nombre_comercial,
-                   tipo_contribuyente, id_ciudad, direccion, numero_casa, codigo_postal,
-                   telefono, celular, email, sitio_web, actividad_economica_principal,
-                   horario_atencion, es_principal, est_empresa
-            FROM empresa
-            ORDER BY id_empresa
+            SELECT e.id_empresa, e.ruc_nit, e.digito_verificador, e.razon_social, e.nombre_comercial,
+                   e.tipo_contribuyente, e.id_ciudad, c.des_ciudad, e.direccion, e.numero_casa, e.codigo_postal,
+                   e.telefono, e.celular, e.email, e.sitio_web, e.actividad_economica_principal,
+                   e.horario_atencion, e.es_principal, e.est_empresa
+            FROM empresa e
+            LEFT JOIN ciudades c ON c.id_ciudad = e.id_ciudad
+            ORDER BY e.id_empresa
             LIMIT 1
         """
         return self.execute_query_one(sql)
