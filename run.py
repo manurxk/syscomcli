@@ -1,3 +1,6 @@
+# Sysclin - Proyecto educativo (trabajo de tesis de grado), no apto para producción.
+# Ver AVISO_USO_EDUCATIVO.md
+
 from app import app
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.auth.tasks.auth_tasks import configurar_tareas_programadas

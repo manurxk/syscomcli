@@ -1,12 +1,16 @@
 from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
 from app.dao.agendamiento.cita.CitaDao import CitaDao
-from app.services.pdf_service import FichaMedicaPDFService
+from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
+from app.services.ficha_html_pdf_service import FichaHtmlPdfService
 from app.auth.utils.decorators import role_required
 
 fichaapi = Blueprint('fichaapi', __name__)
 
 ROLES_FICHA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+
+# Secciones que la plantilla FICHA.html realmente renderiza (ver ficha_html_pdf_service.py).
+SECCIONES_PDF = ('anamnesis', 'diagnosticos', 'tratamientos_activos', 'proximas_citas')
 
 
 def _resolver_id_especialista():
@@ -44,8 +48,26 @@ def getFichaPdf(id_paciente):
         if not data or not data.get('paciente'):
             return jsonify({'success': False, 'error': 'Paciente no encontrado.'}), 404
 
+        secciones_param = request.args.get('secciones')
+        if secciones_param is not None:
+            seleccionadas = {s.strip() for s in secciones_param.split(',') if s.strip()}
+            for clave in SECCIONES_PDF:
+                if clave not in seleccionadas:
+                    data[clave] = None
+
         generador = FichaDao().getDatosGenerador(id_especialista)
-        buffer = FichaMedicaPDFService().generar_ficha_completa(data, generado_por=generador)
+
+        empresa = EmpresaDao().getEmpresaPrincipal() or {}
+        ruc = f"{empresa.get('ruc_nit', '')}-{empresa.get('digito_verificador', '')}" if empresa.get('ruc_nit') else ''
+        config_empresa = {
+            'nombre': empresa.get('nombre_comercial') or empresa.get('razon_social', ''),
+            'direccion': empresa.get('direccion', ''),
+            'telefono': empresa.get('telefono') or empresa.get('celular', ''),
+            'ruc': ruc,
+            'sitio_web': empresa.get('sitio_web', ''),
+        }
+
+        buffer = FichaHtmlPdfService().generar_ficha_html_pdf(data, config_empresa=config_empresa, generado_por=generador)
         nombre_archivo = f"ficha_medica_{id_paciente}.pdf"
         return send_file(buffer, mimetype='application/pdf',
                           as_attachment=False, download_name=nombre_archivo)

@@ -1,14 +1,15 @@
 import os
+import secrets
 from datetime import timedelta
 
 def init_settings(app):
     """Initialize application settings and configuration."""
-    app.secret_key = b'***REMOVED***'
+    app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)
 
     # WhatsApp Notifications (Ultramsg)
-    app.config['ULTRAMSG_INSTANCE_ID'] = os.getenv('ULTRAMSG_INSTANCE_ID', '***REMOVED***')
-    app.config['ULTRAMSG_TOKEN'] = os.getenv('ULTRAMSG_TOKEN', '***REMOVED***')
+    app.config['ULTRAMSG_INSTANCE_ID'] = os.getenv('ULTRAMSG_INSTANCE_ID')
+    app.config['ULTRAMSG_TOKEN'] = os.getenv('ULTRAMSG_TOKEN')
     app.config['ULTRAMSG_API_URL'] = os.getenv('ULTRAMSG_API_URL', 'https://api.ultramsg.com')
 
     # General configuration

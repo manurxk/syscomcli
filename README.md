@@ -1,5 +1,10 @@
 # Sistema CIN - Sistema de Gestión Clínica
 
+> ⚠️ **Proyecto educativo.** Este sistema fue desarrollado como trabajo de tesis de grado,
+> con fines exclusivamente académicos. No es un producto comercial ni está pensado para
+> producción. Los datos de prueba (pacientes, clínicas, usuarios) son ficticios. Ver
+> [AVISO_USO_EDUCATIVO.md](AVISO_USO_EDUCATIVO.md) para más detalle.
+
 ## 📚 Documentación Principal
 
 ### Sistema de Roles y Superadministrador

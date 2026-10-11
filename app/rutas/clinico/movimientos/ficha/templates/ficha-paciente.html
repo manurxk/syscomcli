@@ -12,7 +12,7 @@
           <div class="page-header-subtitle" id="subtitulo-ficha">Cargando datos del paciente…</div>
         </div>
         <div class="col-auto mt-4">
-          <button class="btn btn-light btn-sm me-2" id="btn-ficha-pdf">
+          <button class="btn btn-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalPdfSecciones">
             <i data-feather="file-text"></i> Generar PDF
           </button>
           <a href="{{ url_for('ficha.fichaIndex') }}" class="btn btn-light btn-sm">
@@ -164,6 +164,43 @@
   </div>
 
 </div><!-- /container -->
+
+<!-- MODAL SECCIONES DEL PDF -->
+<div class="modal fade" id="modalPdfSecciones" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Generar PDF de la ficha</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Elegí qué secciones incluir en el documento. Los datos del paciente siempre se incluyen.</p>
+        <div class="form-check">
+          <input class="form-check-input chk-seccion-pdf" type="checkbox" value="anamnesis" id="sec-pdf-anamnesis" checked>
+          <label class="form-check-label" for="sec-pdf-anamnesis">Anamnesis</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input chk-seccion-pdf" type="checkbox" value="diagnosticos" id="sec-pdf-diagnosticos" checked>
+          <label class="form-check-label" for="sec-pdf-diagnosticos">Diagnósticos</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input chk-seccion-pdf" type="checkbox" value="tratamientos_activos" id="sec-pdf-tratamientos" checked>
+          <label class="form-check-label" for="sec-pdf-tratamientos">Tratamientos activos</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input chk-seccion-pdf" type="checkbox" value="proximas_citas" id="sec-pdf-citas" checked>
+          <label class="form-check-label" for="sec-pdf-citas">Próxima cita (resumen)</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-link btn-sm me-auto" id="btn-pdf-todas">Marcar todas</button>
+        <button class="btn btn-link btn-sm" id="btn-pdf-ninguna">Desmarcar todas</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-ficha-pdf">Generar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL NUEVA NOTA -->
 <div class="modal fade" id="modalNota" tabindex="-1">
@@ -573,8 +610,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-guardar-nota').addEventListener('click', guardarNota);
 
+  document.getElementById('btn-pdf-todas').addEventListener('click', () => {
+    document.querySelectorAll('.chk-seccion-pdf').forEach(chk => chk.checked = true);
+  });
+  document.getElementById('btn-pdf-ninguna').addEventListener('click', () => {
+    document.querySelectorAll('.chk-seccion-pdf').forEach(chk => chk.checked = false);
+  });
+
   document.getElementById('btn-ficha-pdf').addEventListener('click', () => {
-    fetch(`${API_FICHA}/pdf`, { method: 'GET' })
+    const secciones = Array.from(document.querySelectorAll('.chk-seccion-pdf:checked')).map(chk => chk.value);
+    const qs = new URLSearchParams({ secciones: secciones.join(',') });
+    fetch(`${API_FICHA}/pdf?${qs}`, { method: 'GET' })
       .then(res => {
         if (res.status === 403) {
           return res.json().then(r => { throw new Error(r.error || 'Solo un especialista puede generar este documento.'); });
@@ -583,6 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.blob();
       })
       .then(blob => {
+        bootstrap.Modal.getInstance(document.getElementById('modalPdfSecciones')).hide();
         const url = window.URL.createObjectURL(blob);
         window.open(url, '_blank');
       })
