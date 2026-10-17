@@ -76,7 +76,25 @@
             --bs-btn-focus-shadow-rgb: 91, 33, 182;
         }
 
-        .nav-underline { --bs-nav-underline-link-active-color: var(--bs-link-color); }
+        /* Banner del inicio: índigo sólido, recto; el primer bloque del panel se monta sobre su borde */
+        .dash-banner {
+            color: #fff;
+            background: #5b21b6;
+            padding-bottom: 4.5rem;
+        }
+
+        .dash-banner .banner-muted { color: rgba(255, 255, 255, 0.75); }
+
+        .dash-banner .role-pills {
+            --bs-nav-link-color: rgba(255, 255, 255, 0.75);
+            --bs-nav-link-hover-color: #fff;
+            --bs-nav-pills-link-active-bg: rgba(255, 255, 255, 0.18);
+            --bs-nav-pills-link-active-color: #fff;
+        }
+
+        .dash-banner .btn-light.text-primary { color: #4c1d95 !important; }
+
+        .dash-overlap { margin-top: -3rem; }
 
         .nav-pills {
             --bs-nav-pills-link-active-bg: var(--bs-primary-bg-subtle);
@@ -115,7 +133,7 @@
             align-items: center;
             gap: 0.65rem;
             color: var(--bs-body-color);
-            border-radius: 0.5rem;
+            border-radius: 0;
             padding: 0.55rem 0.75rem;
         }
 
@@ -131,15 +149,11 @@
 
         [data-bs-theme="dark"] .sidebar-head { color: #a78bfa; }
 
-        /* Tarjetas: sin borde, sombra suave, esquinas 0.75rem */
+        /* Tarjetas rectas: borde fino, sin sombra */
         .card {
-            --bs-card-border-width: 0;
-            --bs-card-border-radius: 0.75rem;
-            --bs-card-inner-border-radius: 0.75rem;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+            --bs-card-border-radius: 0;
+            --bs-card-inner-border-radius: 0;
         }
-
-        [data-bs-theme="dark"] .card { box-shadow: none; border: 1px solid var(--bs-border-color); }
 
         .card-header {
             background: transparent;
@@ -172,10 +186,6 @@
         .summary .progress { height: 4px; margin-top: 0.6rem; }
 
         .summary > div:hover { background: var(--bs-tertiary-bg); }
-
-        .summary > div:first-child:hover { border-top-left-radius: 0.75rem; border-bottom-left-radius: 0.75rem; }
-
-        .summary > div:last-child:hover { border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
 
         @media (min-width: 768px) {
             .summary > div + div { border-left: 1px solid var(--bs-border-color); }
@@ -224,19 +234,12 @@
             padding: 0.3em 0.65em;
         }
 
-        .estado::before {
-            content: '';
-            width: 0.4rem;
-            height: 0.4rem;
-            border-radius: 50%;
-            background: currentColor;
-        }
 
         .row-actions .btn { color: var(--bs-secondary-color); }
 
         .row-actions .btn:hover { color: var(--bs-body-color); background: var(--bs-tertiary-bg); }
 
-        .dropdown-menu { --bs-dropdown-font-size: 0.875rem; border: 0; box-shadow: var(--bs-box-shadow); }
+        .dropdown-menu { --bs-dropdown-font-size: 0.875rem; box-shadow: var(--bs-box-shadow-sm); }
 
         .dropdown-item svg { width: 1rem; margin-right: 0.5rem; color: var(--bs-secondary-color); }
 
@@ -310,8 +313,7 @@
                     <button type="button" class="btn btn-sm btn-link text-body-secondary" id="tbTheme" aria-label="Cambiar tema"><i class="fas fa-moon"></i></button>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-link text-body text-decoration-none d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="rounded-circle bg-primary-subtle text-primary-emphasis fw-bold d-inline-grid" style="width:32px;height:32px;place-items:center;font-size:.75rem;">MR</span>
-                            <span class="d-none d-sm-inline small fw-semibold">Manuel Ramírez</span>
+                            <span class="small fw-semibold">Manuel Ramírez</span>
                             <i class="fas fa-chevron-down small icon-muted"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -323,38 +325,42 @@
             </nav>
 
             <!-- ════════════════════ CONTENIDO REDISEÑADO ════════════════════ -->
-            <main class="container-fluid px-3 px-md-4 py-4" style="max-width:1320px;">
+            <!-- Banner: título + fecha + acción principal del rol (izq.) y pestañas por rol (der.) -->
+            <header class="dash-banner">
+                <div class="container-fluid px-3 px-md-4 pt-4" style="max-width:1320px;">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                        <div>
+                            <h1 class="h3 fw-bold mb-1">Inicio</h1>
+                            <div class="small banner-muted mb-3"><i class="far fa-calendar me-1"></i><span id="fechaHoy">Sábado, 11 de octubre de 2026</span></div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span data-acciones="admin">
+                                <a href="#" class="btn btn-outline-light"><i class="fas fa-chart-line me-1"></i>Reportes</a>
+                            </span>
+                            <span data-acciones="clinico" hidden>
+                                <a href="#" class="btn btn-outline-light"><i class="far fa-calendar-check me-1"></i>Mi Agenda</a>
+                            </span>
+                            <span data-acciones="recepcion" hidden>
+                                <a href="#" class="btn btn-outline-light me-2"><i class="fas fa-user-plus me-1"></i>Registrar paciente</a>
+                                <a href="#" class="btn btn-light text-primary fw-semibold"><i class="fas fa-plus me-1"></i>Nueva cita</a>
+                            </span>
+                            <span data-acciones="ventas" hidden>
+                                <a href="#" class="btn btn-light text-primary fw-semibold"><i class="fas fa-plus me-1"></i>Nueva factura</a>
+                            </span>
+                        </div>
+                        </div>
 
-                <!-- Cabecera: título + fecha + acción principal del rol -->
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                    <div>
-                        <h1 class="h4 fw-bold mb-1">Inicio</h1>
-                        <div class="small text-body-secondary"><i class="far fa-calendar me-1"></i><span class="text-capitalize" id="fechaHoy">sábado, 11 de octubre de 2026</span></div>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span data-acciones="admin">
-                            <a href="#" class="btn btn-outline-secondary"><i class="fas fa-chart-line me-1"></i>Reportes</a>
-                        </span>
-                        <span data-acciones="clinico" hidden>
-                            <a href="#" class="btn btn-outline-secondary"><i class="far fa-calendar-check me-1"></i>Mi Agenda</a>
-                        </span>
-                        <span data-acciones="recepcion" hidden>
-                            <a href="#" class="btn btn-outline-secondary me-2"><i class="fas fa-user-plus me-1"></i>Registrar paciente</a>
-                            <a href="#" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nueva cita</a>
-                        </span>
-                        <span data-acciones="ventas" hidden>
-                            <a href="#" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nueva factura</a>
-                        </span>
+                    <!-- Pestañas por rol (solo si el usuario tiene más de uno). El contador marca pendientes. -->
+                    <ul class="nav nav-pills role-pills gap-1 flex-nowrap overflow-x-auto" role="tablist">
+                        <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="admin"><i class="fas fa-chart-pie me-1"></i>Administrador <span class="badge bg-danger-subtle text-danger-emphasis ms-1">7</span></button></li>
+                        <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="clinico"><i class="fas fa-stethoscope me-1"></i>Clínico <span class="badge bg-warning-subtle text-warning-emphasis ms-1">1</span></button></li>
+                        <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="recepcion"><i class="fas fa-headset me-1"></i>Recepción <span class="badge bg-warning-subtle text-warning-emphasis ms-1">2</span></button></li>
+                        <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="ventas"><i class="fas fa-cash-register me-1"></i>Ventas <span class="badge bg-danger-subtle text-danger-emphasis ms-1">6</span></button></li>
+                    </ul>
                     </div>
                 </div>
+            </header>
 
-                <!-- Pestañas por rol (solo si el usuario tiene más de uno). El contador marca pendientes. -->
-                <ul class="nav nav-underline mb-4 border-bottom flex-nowrap overflow-x-auto" role="tablist">
-                    <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="admin"><i class="fas fa-chart-pie me-1"></i>Administrador <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis ms-1">7</span></button></li>
-                    <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="clinico"><i class="fas fa-stethoscope me-1"></i>Clínico <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1">1</span></button></li>
-                    <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="recepcion"><i class="fas fa-headset me-1"></i>Recepción <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1">2</span></button></li>
-                    <li class="nav-item"><button class="nav-link text-nowrap" type="button" role="tab" data-rol="ventas"><i class="fas fa-cash-register me-1"></i>Ventas <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis ms-1">6</span></button></li>
-                </ul>
+            <main class="container-fluid px-3 px-md-4 pb-4 dash-overlap" style="max-width:1320px;">
 
                 <!-- ══════════ ADMINISTRADOR ══════════ -->
                 <section data-panel="admin">
@@ -393,7 +399,7 @@
                             <div class="card h-100">
                                 <div class="card-header d-flex align-items-center justify-content-between">
                                     <span class="fw-bold">Requiere atención</span>
-                                    <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">7 pendientes</span>
+                                    <span class="badge bg-danger-subtle text-danger-emphasis">7 pendientes</span>
                                 </div>
                                 <div class="list-group list-group-flush">
                                     <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3">
@@ -430,7 +436,7 @@
                                     <li class="list-group-item d-flex align-items-center gap-3 py-3">
                                         <i class="fas fa-shield-halved text-warning lead-icon"></i>
                                         <span class="flex-grow-1">Intentos de login fallidos</span>
-                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis num">7</span>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis num">7</span>
                                     </li>
                                     <li class="list-group-item d-flex align-items-center gap-3 py-3">
                                         <i class="fas fa-network-wired icon-muted lead-icon"></i>
@@ -464,9 +470,9 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead><tr><th>Paciente</th><th class="d-none d-md-table-cell">Vencimiento</th><th>Atraso</th><th class="text-end">Pendiente</th><th></th></tr></thead>
                                 <tbody>
-                                    <tr><td><div class="fw-semibold">María Benítez</div><div class="sub num">CXC-2026-09-0012</div></td><td class="d-none d-md-table-cell num">12/09/2026</td><td><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis estado">29 días</span></td><td class="text-end num fw-semibold">Gs. 850.000</td><td class="text-end row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Cobrar</a></td></tr>
-                                    <tr><td><div class="fw-semibold">Jorge Acosta</div><div class="sub num">CXC-2026-09-0031</div></td><td class="d-none d-md-table-cell num">25/09/2026</td><td><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis estado">16 días</span></td><td class="text-end num fw-semibold">Gs. 1.200.000</td><td class="text-end row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Cobrar</a></td></tr>
-                                    <tr><td><div class="fw-semibold">Liz Fernández</div><div class="sub num">CXC-2026-10-0002</div></td><td class="d-none d-md-table-cell num">03/10/2026</td><td><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis estado">8 días</span></td><td class="text-end num fw-semibold">Gs. 420.000</td><td class="text-end row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Cobrar</a></td></tr>
+                                    <tr><td><div class="fw-semibold">María Benítez</div><div class="sub num">CXC-2026-09-0012</div></td><td class="d-none d-md-table-cell num">12/09/2026</td><td><span class="badge bg-danger-subtle text-danger-emphasis estado">29 días</span></td><td class="text-end num fw-semibold">Gs. 850.000</td><td class="text-end row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Cobrar</a></td></tr>
+                                    <tr><td><div class="fw-semibold">Jorge Acosta</div><div class="sub num">CXC-2026-09-0031</div></td><td class="d-none d-md-table-cell num">25/09/2026</td><td><span class="badge bg-danger-subtle text-danger-emphasis estado">16 días</span></td><td class="text-end num fw-semibold">Gs. 1.200.000</td><td class="text-end row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Cobrar</a></td></tr>
+                                    <tr><td><div class="fw-semibold">Liz Fernández</div><div class="sub num">CXC-2026-10-0002</div></td><td class="d-none d-md-table-cell num">03/10/2026</td><td><span class="badge bg-warning-subtle text-warning-emphasis estado">8 días</span></td><td class="text-end num fw-semibold">Gs. 420.000</td><td class="text-end row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Cobrar</a></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -527,14 +533,14 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead><tr><th style="width:90px;">Hora</th><th>Paciente</th><th>Estado</th><th></th></tr></thead>
                                 <tbody>
-                                    <tr class="done"><td class="num">08:00</td><td>Carlos Duarte<div class="sub">Primera consulta</div></td><td><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
-                                    <tr class="done"><td class="num">08:30</td><td>Rosa Villalba<div class="sub">Control</div></td><td><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
-                                    <tr class="done"><td class="num">09:15</td><td>Pedro Martínez<div class="sub">Evaluación</div></td><td><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
-                                    <tr class="table-active"><td class="num fw-bold">10:00</td><td class="fw-semibold">Laura Ortiz<div class="sub fw-normal">Seguimiento PEI</div></td><td><span class="badge rounded-pill bg-primary-subtle text-primary-emphasis estado">En consulta</span></td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Continuar</a></td></tr>
-                                    <tr><td class="num fw-semibold">10:30</td><td class="fw-semibold">Ana Rojas Giménez<div class="sub fw-normal">Control mensual</div></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-play"></i>Iniciar consulta</a></li><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
-                                    <tr><td class="num">11:15</td><td>Diego Cabrera<div class="sub">Primera consulta</div></td><td><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis estado">Por confirmar</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
-                                    <tr><td class="num">14:00</td><td>Sofía Paredes<div class="sub">Control</div></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
-                                    <tr><td class="num">16:00</td><td>Martín López<div class="sub">Evaluación</div></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
+                                    <tr class="done"><td class="num">08:00</td><td>Carlos Duarte<div class="sub">Primera consulta</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
+                                    <tr class="done"><td class="num">08:30</td><td>Rosa Villalba<div class="sub">Control</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
+                                    <tr class="done"><td class="num">09:15</td><td>Pedro Martínez<div class="sub">Evaluación</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
+                                    <tr class="table-active"><td class="num fw-bold">10:00</td><td class="fw-semibold">Laura Ortiz<div class="sub fw-normal">Seguimiento PEI</div></td><td><span class="badge bg-primary-subtle text-primary-emphasis estado">En consulta</span></td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Continuar</a></td></tr>
+                                    <tr><td class="num fw-semibold">10:30</td><td class="fw-semibold">Ana Rojas Giménez<div class="sub fw-normal">Control mensual</div></td><td><span class="badge bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-play"></i>Iniciar consulta</a></li><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
+                                    <tr><td class="num">11:15</td><td>Diego Cabrera<div class="sub">Primera consulta</div></td><td><span class="badge bg-warning-subtle text-warning-emphasis estado">Por confirmar</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
+                                    <tr><td class="num">14:00</td><td>Sofía Paredes<div class="sub">Control</div></td><td><span class="badge bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
+                                    <tr><td class="num">16:00</td><td>Martín López<div class="sub">Evaluación</div></td><td><span class="badge bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="far fa-folder-open"></i>Ver ficha</a></li></ul></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -583,25 +589,25 @@
                                         </div>
                                     </div>
                                     <ul class="nav nav-pills gap-1 mt-3 small flex-nowrap overflow-x-auto" id="filtrosCitas">
-                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap active" data-filtro="">Todas <span class="badge rounded-pill bg-body-secondary text-body-secondary ms-1">8</span></button></li>
-                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="POR_CONFIRMAR">Por confirmar <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1">2</span></button></li>
-                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="CONFIRMADA">Confirmadas <span class="badge rounded-pill bg-body-secondary text-body-secondary ms-1">3</span></button></li>
-                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="EN_CONSULTA">En consulta <span class="badge rounded-pill bg-body-secondary text-body-secondary ms-1">1</span></button></li>
-                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="COMPLETADA">Completadas <span class="badge rounded-pill bg-body-secondary text-body-secondary ms-1">2</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap active" data-filtro="">Todas <span class="badge bg-body-secondary text-body-secondary ms-1">8</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="POR_CONFIRMAR">Por confirmar <span class="badge bg-warning-subtle text-warning-emphasis ms-1">2</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="CONFIRMADA">Confirmadas <span class="badge bg-body-secondary text-body-secondary ms-1">3</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="EN_CONSULTA">En consulta <span class="badge bg-body-secondary text-body-secondary ms-1">1</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="COMPLETADA">Completadas <span class="badge bg-body-secondary text-body-secondary ms-1">2</span></button></li>
                                     </ul>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0">
                                         <thead><tr><th style="width:90px;">Hora</th><th>Paciente</th><th>Estado</th><th></th></tr></thead>
                                         <tbody id="listaCitas">
-                                            <tr class="done" data-estado="COMPLETADA"><td class="num">08:00</td><td>Carlos Duarte<div class="sub">Dra. Méndez · Psicología</div></td><td><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
-                                            <tr class="done" data-estado="COMPLETADA"><td class="num">08:30</td><td>Rosa Villalba<div class="sub">Dr. Ayala · Fonoaudiología</div></td><td><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
-                                            <tr data-estado="EN_CONSULTA"><td class="num fw-semibold">10:00</td><td class="fw-semibold">Laura Ortiz<div class="sub fw-normal">Dra. Méndez · Psicología</div></td><td><span class="badge rounded-pill bg-primary-subtle text-primary-emphasis estado">En consulta</span></td><td></td></tr>
-                                            <tr data-estado="CONFIRMADA"><td class="num">10:30</td><td>Ana Rojas Giménez<div class="sub">Dra. Méndez · Psicología</div></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
-                                            <tr data-estado="POR_CONFIRMAR"><td class="num">11:15</td><td>Diego Cabrera<div class="sub">Dr. Ayala · Fonoaudiología</div></td><td><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis estado">Por confirmar</span></td><td class="text-end text-nowrap row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Confirmar</a><div class="dropdown d-inline-block"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fab fa-whatsapp"></i>Reenviar recordatorio</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
-                                            <tr data-estado="CONFIRMADA"><td class="num">14:00</td><td>Sofía Paredes<div class="sub">Lic. Torres · Terapia ocupacional</div></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
-                                            <tr data-estado="POR_CONFIRMAR"><td class="num">15:00</td><td>Hugo Insfrán<div class="sub">Lic. Torres · Terapia ocupacional</div></td><td><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis estado">Por confirmar</span></td><td class="text-end text-nowrap row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Confirmar</a><div class="dropdown d-inline-block"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fab fa-whatsapp"></i>Reenviar recordatorio</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
-                                            <tr data-estado="CONFIRMADA"><td class="num">16:00</td><td>Martín López<div class="sub">Dra. Méndez · Psicología</div></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
+                                            <tr class="done" data-estado="COMPLETADA"><td class="num">08:00</td><td>Carlos Duarte<div class="sub">Dra. Méndez · Psicología</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
+                                            <tr class="done" data-estado="COMPLETADA"><td class="num">08:30</td><td>Rosa Villalba<div class="sub">Dr. Ayala · Fonoaudiología</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Completada</span></td><td></td></tr>
+                                            <tr data-estado="EN_CONSULTA"><td class="num fw-semibold">10:00</td><td class="fw-semibold">Laura Ortiz<div class="sub fw-normal">Dra. Méndez · Psicología</div></td><td><span class="badge bg-primary-subtle text-primary-emphasis estado">En consulta</span></td><td></td></tr>
+                                            <tr data-estado="CONFIRMADA"><td class="num">10:30</td><td>Ana Rojas Giménez<div class="sub">Dra. Méndez · Psicología</div></td><td><span class="badge bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
+                                            <tr data-estado="POR_CONFIRMAR"><td class="num">11:15</td><td>Diego Cabrera<div class="sub">Dr. Ayala · Fonoaudiología</div></td><td><span class="badge bg-warning-subtle text-warning-emphasis estado">Por confirmar</span></td><td class="text-end text-nowrap row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Confirmar</a><div class="dropdown d-inline-block"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fab fa-whatsapp"></i>Reenviar recordatorio</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
+                                            <tr data-estado="CONFIRMADA"><td class="num">14:00</td><td>Sofía Paredes<div class="sub">Lic. Torres · Terapia ocupacional</div></td><td><span class="badge bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
+                                            <tr data-estado="POR_CONFIRMAR"><td class="num">15:00</td><td>Hugo Insfrán<div class="sub">Lic. Torres · Terapia ocupacional</div></td><td><span class="badge bg-warning-subtle text-warning-emphasis estado">Por confirmar</span></td><td class="text-end text-nowrap row-actions"><a href="#" class="btn btn-sm btn-outline-secondary">Confirmar</a><div class="dropdown d-inline-block"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fab fa-whatsapp"></i>Reenviar recordatorio</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
+                                            <tr data-estado="CONFIRMADA"><td class="num">16:00</td><td>Martín López<div class="sub">Dra. Méndez · Psicología</div></td><td><span class="badge bg-success-subtle text-success-emphasis estado">Confirmada</span></td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-arrows-rotate"></i>Reprogramar</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#"><i class="fas fa-xmark"></i>Cancelar cita</a></li></ul></div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -622,7 +628,7 @@
                                     <li class="list-group-item py-3">
                                         <div class="d-flex justify-content-between align-items-start gap-2">
                                             <div><div class="fw-semibold">Valeria Gómez</div><div class="sub">Psicología · desde 02/10</div></div>
-                                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Turno libre</span>
+                                            <span class="badge bg-success-subtle text-success-emphasis estado">Turno libre</span>
                                         </div>
                                         <a href="#" class="btn btn-sm btn-primary mt-2 w-100"><i class="fas fa-calendar-plus me-1"></i>Asignar 11:15</a>
                                     </li>
@@ -641,7 +647,7 @@
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center gap-2 mb-1">
                                     <span class="fw-bold">Caja 1</span>
-                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis estado">Abierta</span>
+                                    <span class="badge bg-success-subtle text-success-emphasis estado">Abierta</span>
                                 </div>
                                 <div class="small text-body-secondary">Desde las 07:58 · Guaraníes · Punto de expedición 001-001</div>
                             </div>
@@ -690,10 +696,10 @@
                                     <table class="table table-hover align-middle mb-0">
                                         <thead><tr><th>Factura</th><th class="d-none d-md-table-cell">Condición</th><th class="text-end">Total</th><th></th></tr></thead>
                                         <tbody>
-                                            <tr><td><div class="fw-semibold">Laura Ortiz</div><div class="sub num">001-001-0000412 · 11:42</div></td><td class="d-none d-md-table-cell"><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Contado</span></td><td class="text-end num fw-semibold">Gs. 250.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-file-circle-minus"></i>Nota de crédito</a></li></ul></div></td></tr>
-                                            <tr><td><div class="fw-semibold">Pedro Martínez</div><div class="sub num">001-001-0000411 · 11:05</div></td><td class="d-none d-md-table-cell"><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis estado">Crédito 30 días</span></td><td class="text-end num fw-semibold">Gs. 600.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-money-bill-wave"></i>Registrar cobro</a></li></ul></div></td></tr>
-                                            <tr><td><div class="fw-semibold">Rosa Villalba</div><div class="sub num">001-001-0000410 · 10:20</div></td><td class="d-none d-md-table-cell"><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Contado</span></td><td class="text-end num fw-semibold">Gs. 180.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-file-circle-minus"></i>Nota de crédito</a></li></ul></div></td></tr>
-                                            <tr><td><div class="fw-semibold">Carlos Duarte</div><div class="sub num">001-001-0000409 · 09:47</div></td><td class="d-none d-md-table-cell"><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis estado">Contado</span></td><td class="text-end num fw-semibold">Gs. 350.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-file-circle-minus"></i>Nota de crédito</a></li></ul></div></td></tr>
+                                            <tr><td><div class="fw-semibold">Laura Ortiz</div><div class="sub num">001-001-0000412 · 11:42</div></td><td class="d-none d-md-table-cell"><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Contado</span></td><td class="text-end num fw-semibold">Gs. 250.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-file-circle-minus"></i>Nota de crédito</a></li></ul></div></td></tr>
+                                            <tr><td><div class="fw-semibold">Pedro Martínez</div><div class="sub num">001-001-0000411 · 11:05</div></td><td class="d-none d-md-table-cell"><span class="badge bg-warning-subtle text-warning-emphasis estado">Crédito 30 días</span></td><td class="text-end num fw-semibold">Gs. 600.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-money-bill-wave"></i>Registrar cobro</a></li></ul></div></td></tr>
+                                            <tr><td><div class="fw-semibold">Rosa Villalba</div><div class="sub num">001-001-0000410 · 10:20</div></td><td class="d-none d-md-table-cell"><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Contado</span></td><td class="text-end num fw-semibold">Gs. 180.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-file-circle-minus"></i>Nota de crédito</a></li></ul></div></td></tr>
+                                            <tr><td><div class="fw-semibold">Carlos Duarte</div><div class="sub num">001-001-0000409 · 09:47</div></td><td class="d-none d-md-table-cell"><span class="badge bg-secondary-subtle text-secondary-emphasis estado">Contado</span></td><td class="text-end num fw-semibold">Gs. 350.000</td><td class="text-end row-actions"><div class="dropdown"><button class="btn btn-sm" data-bs-toggle="dropdown" aria-label="Acciones"><i class="fas fa-ellipsis"></i></button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="fas fa-print"></i>Imprimir</a></li><li><a class="dropdown-item" href="#"><i class="fas fa-file-circle-minus"></i>Nota de crédito</a></li></ul></div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -707,9 +713,9 @@
                                     <a href="#" class="small text-decoration-none fw-semibold">Ver todas <i class="fas fa-arrow-right ms-1"></i></a>
                                 </div>
                                 <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3"><div><div class="fw-semibold">María Benítez</div><div class="sub num">Gs. 850.000</div></div><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis estado">29 días</span></li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3"><div><div class="fw-semibold">Jorge Acosta</div><div class="sub num">Gs. 1.200.000</div></div><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis estado">16 días</span></li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3"><div><div class="fw-semibold">Liz Fernández</div><div class="sub num">Gs. 420.000</div></div><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis estado">8 días</span></li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3"><div><div class="fw-semibold">María Benítez</div><div class="sub num">Gs. 850.000</div></div><span class="badge bg-danger-subtle text-danger-emphasis estado">29 días</span></li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3"><div><div class="fw-semibold">Jorge Acosta</div><div class="sub num">Gs. 1.200.000</div></div><span class="badge bg-danger-subtle text-danger-emphasis estado">16 días</span></li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3"><div><div class="fw-semibold">Liz Fernández</div><div class="sub num">Gs. 420.000</div></div><span class="badge bg-warning-subtle text-warning-emphasis estado">8 días</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -723,10 +729,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script>
         (function () {
-            // Fecha de hoy
+            // Fecha de hoy (solo la primera letra en mayúscula: "Domingo, 11 de octubre de 2026")
             try {
-                document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-PY',
+                var f = new Date().toLocaleDateString('es-PY',
                     { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                document.getElementById('fechaHoy').textContent = f.charAt(0).toUpperCase() + f.slice(1);
             } catch (e) {}
 
             var estado = { rol: 'admin', tema: 'light' };

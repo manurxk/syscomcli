@@ -262,8 +262,8 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,flask
 
 # Documentación del proyecto (tesis, base de datos, avances) - no se sube al repo
-documentacion/
-_por_eliminar/
+docs/base_de_datos/
+app/static/kude/
 
 # Backups automáticos de la BD (pg_dump) - no se suben al repo
 /backups/

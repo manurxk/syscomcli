@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático del login — enfoque clínico sobrio — SYSCLIN
+    Se abre con doble clic, no necesita Flask.
+
+    Criterio (el mismo de prototipos/inicio_clinico.html):
+    - Bootstrap 5.3.7 (la misma versión que base.html): grid, card, form-control, input-group,
+      btn, btn-group, alert, invalid-feedback, spinner-border. Sin sistema de diseño propio.
+    - Fuente Nunito y Font Awesome 6.1.1 (los de base.html).
+    - Esquinas rectas (radios de Bootstrap a 2px, card en 0), sin sombras.
+    - Banner de marca índigo con degradado a la izquierda; en celular se reduce a una franja.
+    - Modo oscuro nativo con data-bs-theme y la clave 'lte-theme' de base.html.
+
+    Para simular el error de login, ingresá cualquier contraseña distinta de "demo".
+    Precedente anterior (estilo SaaS): prototipos/login.html
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+
+    <!-- Tema antes de pintar (misma clave que base.html) -->
+    <script>
+        (function () {
+            var stored = null;
+            try { stored = localStorage.getItem('lte-theme'); } catch (e) {}
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-bs-theme',
+                stored === 'dark' || (!stored && prefersDark) ? 'dark' : 'light');
+        })();
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* Solo se ajustan variables de Bootstrap: fuente, color primario y radios */
+        :root {
+            --bs-border-radius: 2px;
+            --bs-border-radius-sm: 2px;
+            --bs-border-radius-lg: 2px;
+            --bs-border-radius-xl: 2px;
+            --bs-border-radius-xxl: 2px;
+            --bs-border-radius-pill: 2px;
+        }
+
+        :root,
+        [data-bs-theme="light"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-primary: #5b21b6;
+            --bs-primary-rgb: 91, 33, 182;
+            --bs-link-color: #5b21b6;
+            --bs-link-color-rgb: 91, 33, 182;
+            --bs-link-hover-color: #4c1d95;
+            --bs-link-hover-color-rgb: 76, 29, 149;
+        }
+
+        [data-bs-theme="dark"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-primary: #5b21b6;
+            --bs-primary-rgb: 91, 33, 182;
+            --bs-link-color: #a78bfa;
+            --bs-link-color-rgb: 167, 139, 250;
+            --bs-link-hover-color: #c4b5fd;
+            --bs-link-hover-color-rgb: 196, 181, 253;
+        }
+
+        .btn-primary {
+            --bs-btn-bg: #5b21b6;
+            --bs-btn-border-color: #5b21b6;
+            --bs-btn-hover-bg: #4c1d95;
+            --bs-btn-hover-border-color: #4c1d95;
+            --bs-btn-active-bg: #4c1d95;
+            --bs-btn-active-border-color: #4c1d95;
+            --bs-btn-disabled-bg: #5b21b6;
+            --bs-btn-disabled-border-color: #5b21b6;
+            --bs-btn-focus-shadow-rgb: 91, 33, 182;
+        }
+
+        .form-control:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 0.2rem rgba(91, 33, 182, 0.2);
+        }
+
+        .card {
+            --bs-card-border-radius: 0;
+            --bs-card-inner-border-radius: 0;
+        }
+
+        /* Banner de marca (paleta Índigo, degradado diagonal) */
+        .brand-banner {
+            color: #fff;
+            background: linear-gradient(160deg, #1e1b4b 0%, #3730a3 55%, #6d28d9 100%);
+        }
+
+        .brand-banner .text-white-75 { color: rgba(255, 255, 255, 0.78); }
+
+        .brand-banner .text-white-50 { color: rgba(255, 255, 255, 0.55) !important; }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: brightness(100) saturate(0);
+        }
+
+        .brand-rule {
+            width: 48px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .login-box { width: 100%; max-width: 420px; }
+
+        .btn-eye {
+            border-color: var(--bs-border-color);
+            color: var(--bs-secondary-color);
+        }
+
+        .btn-eye:hover,
+        .btn-eye:focus-visible {
+            color: var(--bs-body-color);
+            background: var(--bs-tertiary-bg);
+        }
+
+        .theme-sun { display: none; }
+        [data-bs-theme="dark"] .theme-sun { display: inline-block; }
+        [data-bs-theme="dark"] .theme-moon { display: none; }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+
+            <!-- ════════ Banner de marca ════════ -->
+            <!-- Escritorio: panel completo -->
+            <aside class="col-lg-5 col-xl-4 brand-banner d-none d-lg-flex flex-column justify-content-between p-5">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="../app/static/img/sys_logo.png" alt="" class="brand-logo">
+                    <div>
+                        <div class="fs-5 fw-bold lh-1">SYSCLIN</div>
+                        <div class="small text-white-75">Sistema de Gestión Clínica</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="brand-rule mb-4"></div>
+                    <h1 class="display-6 fw-bold mb-3">Cuidado clínico<br>simple y seguro</h1>
+                    <p class="text-white-75 mb-0" style="max-width:360px;">Gestionando la salud con tecnología y calidez humana.</p>
+                </div>
+
+                <div class="small text-white-50">&copy; 2026 SYSCLIN — Todos los derechos reservados</div>
+            </aside>
+
+            <!-- Celular / tablet: franja superior -->
+            <header class="col-12 brand-banner d-flex d-lg-none align-items-center gap-3 px-4 py-3">
+                <img src="../app/static/img/sys_logo.png" alt="" class="brand-logo" style="width:32px;height:32px;">
+                <div>
+                    <div class="fw-bold lh-1">SYSCLIN</div>
+                    <div class="small text-white-75">Sistema de Gestión Clínica</div>
+                </div>
+            </header>
+
+            <!-- ════════ Formulario ════════ -->
+            <main class="col-lg-7 col-xl-8 bg-body-tertiary d-flex flex-column px-3 px-md-5 py-4">
+
+                <!-- Idioma y tema -->
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Idioma">
+                        <a href="#" class="btn btn-outline-secondary active" aria-current="true" lang="es" title="Español">ES</a>
+                        <a href="#" class="btn btn-outline-secondary" lang="gn" title="Guaraní">GN</a>
+                        <a href="#" class="btn btn-outline-secondary" lang="en" title="English">EN</a>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">
+                        <span class="theme-moon"><i class="fas fa-moon"></i></span>
+                        <span class="theme-sun"><i class="fas fa-sun"></i></span>
+                    </button>
+                </div>
+
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center py-4">
+                    <div class="login-box">
+                        <div class="card border">
+                            <div class="card-body p-4 p-md-5">
+                                <h2 class="h4 fw-bold mb-1">Iniciar sesión</h2>
+                                <p class="small text-body-secondary mb-4">Ingresá tus credenciales para continuar.</p>
+
+                                <!-- Equivale a los mensajes flash 'danger' -->
+                                <div class="alert alert-danger small py-2" id="alertError" role="alert" hidden>
+                                    <i class="fas fa-circle-exclamation me-2"></i>Usuario o contraseña incorrectos.
+                                </div>
+
+                                <form id="loginForm" method="POST" action="#" novalidate>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold" for="inputUsuario">Usuario</label>
+                                        <input type="text" class="form-control" id="inputUsuario" name="usuario_nombre"
+                                            required autocomplete="username" autocapitalize="none" spellcheck="false" autofocus>
+                                        <div class="invalid-feedback">Ingresá tu usuario.</div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <div class="d-flex justify-content-between align-items-baseline">
+                                            <label class="form-label small fw-semibold" for="usuario_clave">Contraseña</label>
+                                            <a href="#" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+                                        </div>
+                                        <div class="input-group has-validation">
+                                            <input type="password" class="form-control" id="usuario_clave" name="usuario_clave"
+                                                required autocomplete="current-password">
+                                            <button type="button" class="btn btn-eye" id="togglePassword"
+                                                aria-label="Mostrar contraseña" aria-pressed="false">
+                                                <span id="eyeOpen"><i class="far fa-eye"></i></span>
+                                                <span id="eyeOff" hidden><i class="far fa-eye-slash"></i></span>
+                                            </button>
+                                            <div class="invalid-feedback">Ingresá tu contraseña.</div>
+                                        </div>
+                                        <div class="form-text text-warning-emphasis" id="capsHint" hidden>
+                                            <i class="fas fa-triangle-exclamation me-1"></i>Bloq Mayús está activado.
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 fw-semibold py-2" id="btnLogin">
+                                        <span class="spinner-border spinner-border-sm me-2" id="btnSpinner" aria-hidden="true" hidden></span>
+                                        <span id="btnText">Ingresar</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between small text-body-secondary">
+                    <span class="d-lg-none">&copy; 2026 SYSCLIN</span>
+                    <span class="ms-auto">Versión 2.0.4</span>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const pw = document.getElementById('usuario_clave');
+        const user = document.getElementById('inputUsuario');
+        const toggle = document.getElementById('togglePassword');
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeOff = document.getElementById('eyeOff');
+        const capsHint = document.getElementById('capsHint');
+        const alertError = document.getElementById('alertError');
+        const btn = document.getElementById('btnLogin');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+
+        // Mostrar / ocultar contraseña
+        toggle.addEventListener('click', () => {
+            const show = pw.type === 'password';
+            pw.type = show ? 'text' : 'password';
+            eyeOpen.hidden = show;
+            eyeOff.hidden = !show;
+            toggle.setAttribute('aria-pressed', String(show));
+            toggle.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            pw.focus();
+        });
+
+        // Aviso de Bloq Mayús
+        ['keydown', 'keyup'].forEach((ev) => {
+            pw.addEventListener(ev, (e) => {
+                if (e.getModifierState) capsHint.hidden = !e.getModifierState('CapsLock');
+            });
+        });
+        pw.addEventListener('blur', () => { capsHint.hidden = true; });
+
+        // Validación con las clases de Bootstrap (is-invalid / invalid-feedback)
+        [user, pw].forEach((input) => {
+            input.addEventListener('input', () => input.classList.remove('is-invalid'));
+        });
+
+        // Envío simulado (prototipo): contraseña "demo" = OK, cualquier otra = error
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alertError.hidden = true;
+
+            let valido = true;
+            [user, pw].forEach((input) => {
+                const vacio = !input.value.trim();
+                input.classList.toggle('is-invalid', vacio);
+                if (vacio && valido) { input.focus(); valido = false; }
+            });
+            if (!valido) return;
+
+            btn.disabled = true;
+            btnSpinner.hidden = false;
+            btnText.textContent = 'Ingresando…';
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btnSpinner.hidden = true;
+                btnText.textContent = 'Ingresar';
+                if (pw.value !== 'demo') {
+                    alertError.hidden = false;
+                    pw.value = '';
+                    pw.focus();
+                }
+            }, 800);
+        });
+
+        // Tema claro/oscuro — misma clave y atributo que base.html
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            try { localStorage.setItem('lte-theme', theme); } catch (e) {}
+        });
+
+        // Prototipo: los enlaces no navegan
+        document.querySelectorAll('a[href="#"]').forEach((a) => a.addEventListener('click', (e) => e.preventDefault()));
+    </script>
+</body>
+
+</html>
