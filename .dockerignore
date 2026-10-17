@@ -5,3 +5,13 @@ __pycache__
 dock/init-db/*.sql
 app/static/
 node_modules/
+
+# No necesarios para ejecutar la app (y backups/ tiene dumps de la BD)
+venv/
+backups/
+docs/
+migrations/
+.claude/
+.vscode/
+*.md
+app/translations/messages.pot

@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify, current_app as app, session
+from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.clinico.movimientos.certificado_medico.CertificadoMedicoDao import CertificadoMedicoDao
 from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.auth.utils.decorators import role_required
+from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
+from app.services.documento_clinico_pdf_service import DocumentoClinicoPdfService
 
 certificadomedicoapi = Blueprint('certificadomedicoapi', __name__)
 
@@ -55,4 +57,25 @@ def deleteCertificado(id_certificado):
         return jsonify({'success': False, 'error': 'No se encontró el registro con el ID proporcionado.'}), 404
     except Exception as e:
         app.logger.error(f"Error al eliminar certificado de consulta: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@certificadomedicoapi.route('/certificados/<int:id_certificado>/pdf', methods=['GET'])
+@role_required(*ROLES_CERTIFICADO)
+def getCertificadoPdf(id_certificado):
+    """PDF imprimible (CERTIFICADO.html). Lo firma el especialista de la consulta, que es quien lo emitió."""
+    try:
+        cert = CertificadoMedicoDao().getParaImprimir(id_certificado)
+        if not cert:
+            return jsonify({'success': False, 'error': 'No se encontró el documento.'}), 404
+        ficha = FichaDao()
+        buffer = DocumentoClinicoPdfService().generar_certificado_pdf(
+            cert, ficha.getDatosPaciente(cert['id_paciente']) or {},
+            ficha.getDatosGenerador(cert['id_especialista']) or {},
+            DocumentoClinicoPdfService.config_empresa(),
+        )
+        return send_file(buffer, mimetype='application/pdf', as_attachment=False,
+                         download_name=f"certificado_{cert['certificado_numero']}.pdf")
+    except Exception as e:
+        app.logger.error(f"Error al generar PDF de certificado {id_certificado}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500

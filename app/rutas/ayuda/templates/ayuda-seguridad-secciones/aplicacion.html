@@ -1,0 +1,65 @@
+<h4>SECRET_KEY</h4>
+<ul>
+    <li>Firma la cookie de sesión de cada usuario.</li>
+    <li><strong>La aplicación no arranca</strong> si falta o tiene menos de 32 caracteres; el log muestra <code>RuntimeError: SECRET_KEY ausente o con menos de 32 caracteres en .env</code>.</li>
+    <li>Cambiarla cierra la sesión de todos los usuarios. Hacerlo si se sospecha que se filtró.</li>
+    <li>En el servidor tiene que ser <strong>distinta</strong> de la de desarrollo.</li>
+</ul>
+
+<h4>Cookie de sesión</h4>
+<pre><code>curl.exe -sk -D - -o NUL https://localhost/login | Select-String 'Set-Cookie'</code></pre>
+<table class="datos">
+    <tr><th>Atributo</th><th>Protege contra</th><th>Dónde</th></tr>
+    <tr><td><code>HttpOnly</code></td><td>Robo de la sesión con JavaScript</td><td>Siempre</td></tr>
+    <tr><td><code>SameSite=Lax</code></td><td>Peticiones falsificadas desde otros sitios</td><td>Siempre</td></tr>
+    <tr><td><code>Secure</code></td><td>Envío de la cookie por HTTP sin cifrar</td><td>Servidor (<code>SESSION_COOKIE_SECURE=1</code>)</td></tr>
+</table>
+<p>Además, todo formulario lleva protección <strong>CSRF</strong>.</p>
+
+<h4>Modo depuración</h4>
+<p class="peligro"><code>FLASK_DEBUG=1</code> activa el depurador, que permite ejecutar código desde el navegador si ocurre un error. <strong>Solo para desarrollo.</strong> En el servidor, siempre <code>FLASK_DEBUG=0</code>.</p>
+
+<h4>IP de los usuarios en auditoría</h4>
+<pre><code>docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c "SELECT accion, ip_origen, fecha_evento FROM auditoria_sistema ORDER BY fecha_evento DESC LIMIT 10"</code></pre>
+<ul>
+    <li>En desarrollo, con Docker Desktop, los accesos desde la propia PC aparecen como <code>172.x.x.1</code>. Es normal.</li>
+    <li>Por HTTPS la IP <strong>no se puede falsificar</strong>: nginx reemplaza el encabezado <code>X-Forwarded-For</code> que mande el cliente. Por el puerto 5005 sí se podría; por eso en el servidor se cierra.</li>
+</ul>
+
+<h4>Bloqueo de cuentas y límites de intentos</h4>
+<table class="datos">
+    <tr><th>Nivel</th><th>Se activa con</th><th>Bloqueo</th><th>Se levanta</th></tr>
+    <tr><td>1</td><td>5 intentos fallidos</td><td>30 minutos</td><td>Solo, al vencer el tiempo</td></tr>
+    <tr><td>2</td><td>3 intentos fallidos más</td><td>1 hora</td><td>Solo, al vencer el tiempo</td></tr>
+    <tr><td>3</td><td>3 intentos fallidos más</td><td><strong>Indefinido</strong></td><td><strong>Solo un administrador</strong></td></tr>
+</table>
+<ul>
+    <li>Un inicio de sesión correcto reinicia el contador al nivel 0.</li>
+    <li>En cada fallo el usuario ve <code>Contraseña incorrecta. Intentos restantes: N</code>. Al bloquearse, le llega un <strong>correo de aviso</strong> si tiene uno vinculado.</li>
+    <li>Mientras la cuenta está bloqueada, <strong>ni la contraseña correcta deja entrar</strong>.</li>
+</ul>
+<table class="datos">
+    <tr><th>Límite</th><th>Regla</th><th>Qué ve el usuario</th><th>Se levanta</th></tr>
+    <tr><td>Por IP (login)</td><td>10 fallos desde una misma IP en 15 min, sumando todos los usuarios</td><td><code>Demasiados intentos fallidos desde esta IP...</code></td><td>Solo, a los 15 min</td></tr>
+    <tr><td>Recuperación de contraseña</td><td>3 correos por cuenta en 60 min</td><td>El mensaje genérico de siempre, pero no se envía otro correo</td><td>Solo, a los 60 min</td></tr>
+    <tr><td>Código MFA</td><td>5 intentos por código</td><td>Debe pedir un código nuevo</td><td>Al pedir otro código</td></tr>
+</table>
+
+<h5>Desbloquear una cuenta desde la aplicación</h5>
+<ul>
+    <li><strong>Seguridad → Accesos</strong> → botón <span class="btn-ref">Desbloquear</span> en la fila del usuario, o</li>
+    <li><strong>Usuarios</strong> → detalle del usuario → <span class="btn-ref">Resetear intentos y desbloquear</span>.</li>
+</ul>
+<p>La cuenta vuelve al <strong>nivel 0</strong>. Antes de desbloquear, revisar en Auditoría si los intentos fueron del propio usuario.</p>
+
+<h5>Consultas por consola</h5>
+<pre><code># Cuentas bloqueadas o con escalada activa
+docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c "SELECT usu_nick, nivel_escalada_bloqueo, usu_nro_intentos, motivo_bloqueo, bloqueado_hasta FROM usuarios WHERE fecha_bloqueo IS NOT NULL OR nivel_escalada_bloqueo > 0"
+
+# Eventos de seguridad recientes
+docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c "SELECT fecha_evento, accion, host(ip_origen) AS ip, detalle FROM auditoria_sistema WHERE accion IN ('ACCOUNT_LOCKED','ACCOUNT_UNLOCKED','RATE_LIMIT') ORDER BY fecha_evento DESC LIMIT 20"</code></pre>
+
+<h5>Desbloqueo de emergencia por consola</h5>
+<p class="importante">Solo si <strong>ningún administrador puede iniciar sesión</strong> (por ejemplo, el único administrador quedó en el nivel 3). Reemplazar <code>&lt;usuario&gt;</code> y <code>&lt;tu_nombre&gt;</code>; el comando deja el registro en auditoría.</p>
+<pre><code>"UPDATE usuarios SET usu_nro_intentos=0, nivel_escalada_bloqueo=0, fecha_bloqueo=NULL, bloqueado_hasta=NULL, motivo_bloqueo=NULL WHERE usu_nick='&lt;usuario&gt;'; INSERT INTO auditoria_sistema (accion, detalle) VALUES ('ACCOUNT_UNLOCKED', 'Desbloqueo de emergencia por consola de &lt;usuario&gt;, realizado por &lt;tu_nombre&gt;');" | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1</code></pre>
+<p><strong>Riesgo conocido:</strong> como el bloqueo es por cuenta, alguien que conozca un nombre de usuario puede provocar su bloqueo sin saber la contraseña. Ante bloqueos repetidos, revisar en Auditoría la IP de origen de los <code>LOGIN_FAILED</code>.</p>

@@ -1,0 +1,39 @@
+<p>Sysclin corre en <strong>contenedores Docker</strong> definidos en <code>dock/docker-compose.yml</code>. Cada contenedor cumple una sola función:</p>
+<table class="datos">
+    <tr><th>Contenedor</th><th>Función</th><th>Acceso desde la PC</th><th>Dentro de Docker</th></tr>
+    <tr><td><code>syscomcli_nginx</code></td><td><strong>Entrada oficial</strong>: HTTPS; redirige HTTP a HTTPS</td><td><code>https://localhost</code> (443) y <code>http://localhost</code> (80)</td><td><code>nginx</code></td></tr>
+    <tr><td><code>syscomcli_app</code></td><td>Aplicación web (Flask)</td><td><code>http://localhost:5005</code> (directo, solo desarrollo)</td><td><code>app:5000</code></td></tr>
+    <tr><td><code>syscomcli_bd</code></td><td>Base de datos PostgreSQL 17</td><td><code>localhost:5434</code></td><td><code>db:5432</code></td></tr>
+    <tr><td><code>syscomcli_backup</code></td><td>Backup automático cifrado cada 24 h</td><td>—</td><td>—</td></tr>
+    <tr><td>debugpy (en <code>syscomcli_app</code>)</td><td>Depurador remoto (solo desarrollo)</td><td><code>localhost:5680</code></td><td><code>app:5678</code></td></tr>
+</table>
+
+<pre><code>navegador ──HTTPS (443)──► nginx ──HTTP por la red interna──► app:5000 ──► db:5432
+navegador ──HTTP (80)────► nginx ──► redirige a HTTPS
+backup ──pg_dump (cada 24 h)──► db:5432 ──► backups/*.dump.gpg (cifrado)</code></pre>
+
+<ul>
+    <li>Los usuarios entran por <strong><code>https://localhost</code></strong> (en el servidor, <code>https://&lt;dominio&gt;</code>).</li>
+    <li>El puerto 5005 es un acceso directo a Flask sin cifrar; existe solo para desarrollo y en el servidor queda cerrado.</li>
+    <li><strong>Red interna</strong>: <code>dock_network-tesis</code>. La aplicación llega a la base por esa red (<code>db:5432</code>), no por el puerto 5434.</li>
+    <li><strong>Datos</strong>: volumen Docker <code>tesis_syscomcli_data</code>. Detener, recrear o actualizar los contenedores <strong>no borra datos</strong>.</li>
+    <li><strong>Backups</strong>: carpeta <code>backups/</code> del proyecto.</li>
+    <li><strong>Base de trabajo</strong>: <code>sysclin_bd</code>. La base <code>clinicain</code> es legado y no se usa.</li>
+    <li>Todos los contenedores tienen <code>restart: always</code>: si se caen o se reinicia Docker, vuelven a levantarse solos.</li>
+</ul>
+
+<h4>Archivos importantes</h4>
+<table class="datos">
+    <tr><th>Archivo o carpeta</th><th>Contenido</th><th>¿Se sube a git?</th></tr>
+    <tr><td><code>.env</code></td><td>Contraseñas y configuración</td><td><strong>Nunca</strong></td></tr>
+    <tr><td><code>.env.example</code></td><td>Plantilla del <code>.env</code> sin valores</td><td>Sí</td></tr>
+    <tr><td><code>dock/docker-compose.yml</code></td><td>Contenedores de desarrollo</td><td>Sí</td></tr>
+    <tr><td><code>dock/docker-compose.servidor.yml</code></td><td>Ajustes del servidor (se suma al anterior)</td><td>Sí</td></tr>
+    <tr><td><code>dock/Dockerfile</code></td><td>Imagen de la aplicación</td><td>Sí</td></tr>
+    <tr><td><code>dock/backup/</code></td><td>Scripts del backup y clave <strong>pública</strong></td><td>Sí (la clave privada nunca)</td></tr>
+    <tr><td><code>dock/nginx/</code></td><td>Configuración de HTTPS</td><td>Sí, salvo <code>certs/</code></td></tr>
+    <tr><td><code>dock/nginx/certs/</code></td><td>Certificado y su clave privada</td><td><strong>Nunca</strong></td></tr>
+    <tr><td><code>backups/</code></td><td>Backups cifrados</td><td><strong>Nunca</strong></td></tr>
+    <tr><td><code>migrations/</code></td><td>Cambios de la base, numerados</td><td>Sí</td></tr>
+</table>
+<p>El contenido de cada script está en el <a href="#anexo-scripts">Anexo</a>.</p>

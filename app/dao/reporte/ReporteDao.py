@@ -120,8 +120,10 @@ class ReporteDao:
             try:
                 # Limitado a la moneda local: el dashboard muestra una sola cifra por KPI,
                 # sumar monedas distintas (Gs. + USD) daria un numero sin sentido.
+                # La nota de credito resta (en el libro se guarda en positivo).
                 cur.execute("""
-                    SELECT COALESCE(SUM(lv.monto_total), 0)
+                    SELECT COALESCE(SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO'
+                                             THEN -lv.monto_total ELSE lv.monto_total END), 0)
                     FROM libro_ventas lv
                     JOIN monedas m ON lv.id_moneda = m.id_moneda AND m.es_moneda_local
                     WHERE DATE_TRUNC('month', lv.libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
@@ -173,7 +175,8 @@ class ReporteDao:
                              ELSE ROUND((COALESCE(SUM(monto_cobrado), 0) * 100.0) / COALESCE(SUM(monto_total), 1))
                         END
                     FROM (
-                        SELECT COALESCE(SUM(lv.monto_total), 0) as monto_total,
+                        SELECT COALESCE(SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO'
+                                                 THEN -lv.monto_total ELSE lv.monto_total END), 0) as monto_total,
                                (SELECT COALESCE(SUM(co.monto_cobrado), 0)
                                 FROM cobranzas co
                                 JOIN monedas mc ON co.id_moneda = mc.id_moneda AND mc.es_moneda_local
@@ -246,14 +249,15 @@ class ReporteDao:
         Soporta filtro opcional por método de pago (condicion_venta de factura).
         """
         # Se agrupa tambien por moneda: sumar Gs. + USD en la misma fila daria un total sin sentido.
+        # La nota de credito resta (en el libro se guarda en positivo).
         sql = """
             SELECT
                 lv.libro_fecha AS fecha,
                 lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 COUNT(*) AS cantidad_comprobantes,
-                SUM(lv.monto_gravado) AS total_gravado,
-                SUM(lv.monto_iva) AS total_iva,
-                SUM(lv.monto_total) AS total_general
+                SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO' THEN -lv.monto_gravado ELSE lv.monto_gravado END) AS total_gravado,
+                SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO' THEN -lv.monto_iva ELSE lv.monto_iva END) AS total_iva,
+                SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO' THEN -lv.monto_total ELSE lv.monto_total END) AS total_general
             FROM libro_ventas lv
             JOIN monedas m ON lv.id_moneda = m.id_moneda
             LEFT JOIN facturas f ON lv.id_factura = f.id_factura
@@ -562,3 +566,157 @@ class ReporteDao:
             cur.close()
             con.close()
         return resultados
+
+    # ------------------------------------------------------------------
+    # Estadísticas reutilizables (inicio por rol, reportes y otras pantallas).
+    # Los montos que se muestran como una sola cifra se limitan a la moneda
+    # local, mismo criterio que getMetricasDashboard.
+    # Para citas por estado de un día usar getAgendamientoReport(fecha, fecha).
+    # ------------------------------------------------------------------
+
+    def getResumenCuentasCobrar(self):
+        """Cuentas PENDIENTE/PARCIAL de facturas no anuladas: totales y vencidas."""
+        resumen = {'total': 0, 'vencidas': 0, 'monto_pendiente': 0,
+                   'monto_vencido': 0, 'max_dias_atraso': 0}
+        sql = """
+            SELECT
+                COUNT(*),
+                COUNT(*) FILTER (WHERE cc.fecha_vencimiento < CURRENT_DATE),
+                COALESCE(SUM(cc.monto_pendiente) FILTER (WHERE m.es_moneda_local), 0),
+                COALESCE(SUM(cc.monto_pendiente) FILTER (WHERE m.es_moneda_local
+                                                          AND cc.fecha_vencimiento < CURRENT_DATE), 0),
+                COALESCE(MAX(CURRENT_DATE - cc.fecha_vencimiento)
+                         FILTER (WHERE cc.fecha_vencimiento < CURRENT_DATE), 0)
+            FROM cuentas_cobrar cc
+            JOIN facturas f ON cc.id_factura = f.id_factura
+            JOIN monedas m ON cc.id_moneda = m.id_moneda
+            WHERE cc.est_cuenta_cobrar IN ('PENDIENTE', 'PARCIAL')
+              AND f.fecha_anulacion IS NULL
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        if not con: return resumen
+        cur = con.cursor()
+        try:
+            cur.execute(sql)
+            f = cur.fetchone()
+            if f:
+                resumen = {'total': int(f[0] or 0), 'vencidas': int(f[1] or 0),
+                           'monto_pendiente': f[2] or 0, 'monto_vencido': f[3] or 0,
+                           'max_dias_atraso': int(f[4] or 0)}
+        except Exception as e:
+            app.logger.error(f"Error en getResumenCuentasCobrar: {str(e)}")
+        finally:
+            cur.close()
+            con.close()
+        return resumen
+
+    def getVentasDia(self, fecha):
+        """Facturas no anuladas y cobranzas no anuladas de un día (montos en moneda local)."""
+        resumen = {'facturas': 0, 'facturado': 0, 'cobranzas': 0, 'cobrado': 0}
+        sql = """
+            SELECT
+                (SELECT COUNT(*) FROM facturas f
+                  WHERE f.fecha_factura = %s AND f.fecha_anulacion IS NULL),
+                (SELECT COALESCE(SUM(f.factura_total), 0) FROM facturas f
+                   JOIN monedas m ON f.id_moneda = m.id_moneda AND m.es_moneda_local
+                  WHERE f.fecha_factura = %s AND f.fecha_anulacion IS NULL),
+                (SELECT COUNT(*) FROM cobranzas co
+                  WHERE co.fecha_cobranza::DATE = %s AND co.est_cobranza != 'ANULADA'),
+                (SELECT COALESCE(SUM(co.monto_cobrado), 0) FROM cobranzas co
+                   JOIN monedas m ON co.id_moneda = m.id_moneda AND m.es_moneda_local
+                  WHERE co.fecha_cobranza::DATE = %s AND co.est_cobranza != 'ANULADA')
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        if not con: return resumen
+        cur = con.cursor()
+        try:
+            cur.execute(sql, (fecha, fecha, fecha, fecha))
+            f = cur.fetchone()
+            if f:
+                resumen = {'facturas': int(f[0] or 0), 'facturado': f[1] or 0,
+                           'cobranzas': int(f[2] or 0), 'cobrado': f[3] or 0}
+        except Exception as e:
+            app.logger.error(f"Error en getVentasDia: {str(e)}")
+        finally:
+            cur.close()
+            con.close()
+        return resumen
+
+    def getResumenConsultas(self, fecha, id_especialista=None):
+        """Consultas registradas en el día y consultas abiertas (EN_ATENCION)."""
+        resumen = {'consultas_dia': 0, 'abiertas': 0}
+        sql = """
+            SELECT
+                COUNT(*) FILTER (WHERE c.consulta_fecha::DATE = %s),
+                COUNT(*) FILTER (WHERE c.consulta_estado = 'EN_ATENCION')
+            FROM consultas c
+            WHERE c.est_consulta = TRUE
+        """
+        parametros = [fecha]
+        if id_especialista:
+            sql += " AND c.id_especialista = %s"
+            parametros.append(id_especialista)
+
+        conexion = Conexion()
+        con = conexion.getConexion()
+        if not con: return resumen
+        cur = con.cursor()
+        try:
+            cur.execute(sql, tuple(parametros))
+            f = cur.fetchone()
+            if f:
+                resumen = {'consultas_dia': int(f[0] or 0), 'abiertas': int(f[1] or 0)}
+        except Exception as e:
+            app.logger.error(f"Error en getResumenConsultas: {str(e)}")
+        finally:
+            cur.close()
+            con.close()
+        return resumen
+
+    def getResumenSeguridad(self, horas=24):
+        """Intentos de acceso fallidos, sesiones y códigos MFA de las últimas `horas`,
+        más los usuarios bloqueados en este momento (función esta_usuario_bloqueado)."""
+        resumen = {'intentos_fallidos': 0, 'ips_distintas': 0, 'sesiones_activas': 0,
+                   'usuarios_conectados': 0, 'mfa_enviados': 0, 'bloqueados': []}
+        sql = """
+            SELECT
+                (SELECT COUNT(*) FROM accesos_sistema
+                  WHERE resultado <> 'EXITOSO'
+                    AND fecha_intento > CURRENT_TIMESTAMP - make_interval(hours => %s)),
+                (SELECT COUNT(DISTINCT ip_origen) FROM accesos_sistema
+                  WHERE resultado <> 'EXITOSO'
+                    AND fecha_intento > CURRENT_TIMESTAMP - make_interval(hours => %s)),
+                (SELECT COUNT(*) FROM sesiones
+                  WHERE est_sesion = TRUE AND fecha_expiracion > CURRENT_TIMESTAMP),
+                (SELECT COUNT(DISTINCT id_usuario) FROM sesiones
+                  WHERE est_sesion = TRUE AND fecha_expiracion > CURRENT_TIMESTAMP),
+                (SELECT COUNT(*) FROM mfa_codigos
+                  WHERE fecha_generacion > CURRENT_TIMESTAMP - make_interval(hours => %s))
+        """
+        sql_bloqueados = """
+            SELECT usu_nick, usu_nro_intentos
+            FROM usuarios
+            WHERE est_usuario = TRUE AND esta_usuario_bloqueado(id_usuario)
+            ORDER BY usu_nick
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        if not con: return resumen
+        cur = con.cursor()
+        try:
+            cur.execute(sql, (horas, horas, horas))
+            f = cur.fetchone()
+            if f:
+                resumen.update({'intentos_fallidos': int(f[0] or 0), 'ips_distintas': int(f[1] or 0),
+                                'sesiones_activas': int(f[2] or 0), 'usuarios_conectados': int(f[3] or 0),
+                                'mfa_enviados': int(f[4] or 0)})
+            cur.execute(sql_bloqueados)
+            resumen['bloqueados'] = [{'usu_nick': b[0], 'intentos': int(b[1] or 0)} for b in cur.fetchall()]
+        except Exception as e:
+            app.logger.error(f"Error en getResumenSeguridad: {str(e)}")
+        finally:
+            cur.close()
+            con.close()
+        return resumen

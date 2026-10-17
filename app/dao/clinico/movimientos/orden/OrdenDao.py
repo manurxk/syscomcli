@@ -89,6 +89,25 @@ class OrdenDao(BaseDAO):
 
         return self.execute_transaction(_crear)
 
+    def getParaImprimir(self, id_orden):
+        """Orden con su detalle, paciente/especialista y los diagnósticos de la consulta (PDF de la orden)."""
+        cab = self.execute_query_one(
+            "SELECT id_consulta, id_paciente, id_especialista FROM ordenes WHERE id_orden = %s AND est_orden = TRUE",
+            (id_orden,))
+        if not cab:
+            return None
+        orden = next((o for o in self.getPorConsulta(cab['id_consulta']) if o['id_orden'] == id_orden), None)
+        orden.update(cab)
+        orden['diagnosticos'] = self.execute_query(
+            """
+            SELECT d.cod_cie10, d.des_diagnostico
+            FROM registro_diagnosticos r
+            JOIN diagnosticos d ON r.id_diagnostico = d.id_diagnostico
+            WHERE r.id_consulta = %s AND r.est_registro_diagnostico = TRUE
+            ORDER BY r.id_registro_diagnostico
+            """, (cab['id_consulta'],))
+        return orden
+
     def desactivar(self, id_orden, usuario_modificacion=None):
         sql = "UPDATE ordenes SET est_orden = FALSE, usuario_modificacion = %s WHERE id_orden = %s"
         return self.execute_query(sql, (usuario_modificacion, id_orden), commit=True) > 0

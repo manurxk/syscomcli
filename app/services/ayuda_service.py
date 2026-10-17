@@ -1,3 +1,5 @@
+import base64
+import os
 from io import BytesIO
 
 from flask import current_app as app
@@ -16,6 +18,15 @@ class AyudaService:
     Servicio del manual de ayuda: convierte el mismo HTML que se muestra en la
     vista previa a PDF, mismo patrón que ReporteService / FacturaPDFService.
     """
+
+    def logo_base64(self):
+        """Logo de SYSCLIN embebido (mismo criterio que factura/ficha): así sale igual en la vista previa y en el PDF."""
+        ruta = os.path.join(app.root_path, 'static', 'img', 'sys_logo.png')
+        try:
+            with open(ruta, 'rb') as f:
+                return base64.b64encode(f.read()).decode('ascii')
+        except OSError:
+            return None
 
     def generar_pdf_manual(self, html_renderizado):
         buffer = BytesIO()

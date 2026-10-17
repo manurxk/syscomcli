@@ -4,7 +4,7 @@
 
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
-  <div class="container-xl px-4">
+  <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
@@ -16,7 +16,7 @@
   </div>
 </header>
 
-<div class="container-xl px-4 mt-n10">
+<div class="container-fluid px-4 mt-n10">
 
   <div class="row gx-4 mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -73,53 +73,35 @@
     </div>
   </div>
 
-  <div class="row gx-4">
-    <div class="col-12">
-      <div class="card card-header-actions mb-4">
-        <div class="card-header">
-          <div class="d-flex align-items-center gap-2">
-            <i class="fas fa-list-ul text-primary"></i>
-            <span>Citas de Hoy</span>
-          </div>
-          <button class="btn btn-sm btn-outline-primary" id="btnRefrescar">
-            <i class="fas fa-sync-alt me-1"></i> Refrescar
-          </button>
-        </div>
-        <div class="card-body p-0">
-          <div id="loadingCitas" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-3 text-muted">Cargando tu agenda...</p>
-          </div>
+  <div class="card shadow-sm mb-4">
+    <div class="card-header py-3 d-flex align-items-center">
+      <h6 class="m-0 fw-bold">Citas de Hoy</h6>
+      <button type="button" class="btn btn-sm btn-outline-primary ms-auto" id="btnRefrescar">
+        <i class="fas fa-sync-alt fa-sm me-1"></i> Refrescar
+      </button>
+    </div>
 
-          <div id="sinEspecialista" class="text-center py-5" style="display:none;">
-            <h5 class="text-muted">Sin especialista asociado</h5>
-            <p class="text-muted small">Tu usuario no tiene un perfil de especialista vinculado.</p>
-          </div>
+    <div class="card-body">
+      <div id="sinEspecialista" class="alert alert-warning mb-3" style="display:none;">
+        <i class="fas fa-exclamation-triangle me-1"></i>
+        Tu usuario no tiene un perfil de especialista vinculado.
+      </div>
 
-          <div id="sinCitas" class="text-center py-5" style="display:none;">
-            <h5 class="text-muted">Sin citas para hoy</h5>
-            <p class="text-muted small">No tenés citas programadas para el día de hoy.</p>
-          </div>
-
-          <div id="tablaCitasWrapper" style="display:none;">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0" id="tblAgenda" style="font-size: 0.875rem;">
-                <thead class="bg-light text-muted fw-bold">
-                  <tr>
-                    <th class="border-0 px-3" style="width: 90px;">Hora</th>
-                    <th class="border-0">Paciente</th>
-                    <th class="border-0" style="width: 80px;">HC</th>
-                    <th class="border-0" style="width: 130px;">Tipo</th>
-                    <th class="border-0">Motivo</th>
-                    <th class="border-0 text-center" style="width: 130px;">Estado</th>
-                    <th class="border-0 text-center" style="width: 140px;">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyCitas" class="text-dark"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle w-100" id="tblAgenda">
+          <thead class="table-light">
+            <tr>
+              <th>Hora</th>
+              <th>Paciente</th>
+              <th>HC</th>
+              <th>Tipo</th>
+              <th>Motivo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -127,25 +109,8 @@
 </div>
 
 <style>
-  .hora-pill {
-    display: inline-block;
-    background: linear-gradient(135deg, #4e73df, #36b9cc);
-    color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 0.82rem;
-  }
-
-  .badge-estado {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 600;
-  }
-
   .motivo-text {
-    max-width: 220px;
+    max-width: 260px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -187,80 +152,78 @@
   function renderBotonConsulta(c) {
     const bloqueado = c.cod_estado_cita === 'CANCELADA' || c.cod_estado_cita === 'AUSENTE';
     if (bloqueado) {
-      return `<button class="btn btn-sm btn-secondary" disabled style="font-size:0.78rem;opacity:0.55;">
+      return `<button class="btn btn-sm btn-secondary" disabled>
                 <i class="fas fa-stethoscope me-1"></i>Consulta</button>`;
     }
     if (c.cod_estado_cita === 'COMPLETADA') {
-      return `<button class="btn btn-sm btn-outline-success" disabled style="font-size:0.78rem;">
+      return `<button class="btn btn-sm btn-outline-success" disabled>
                 <i class="fas fa-check me-1"></i>Completada</button>`;
     }
-    return `<button class="btn btn-sm btn-primary btn-iniciar-consulta" data-id-cita="${c.id_cita}" style="font-size:0.78rem;">
+    return `<button class="btn btn-sm btn-primary btn-iniciar-consulta" data-id-cita="${c.id_cita}">
               <i class="fas fa-stethoscope me-1"></i>${c.cod_estado_cita === 'EN_CONSULTA' ? 'Continuar' : 'Iniciar'}
             </button>`;
   }
 
-  function renderizarTabla(citas) {
-    const tbody = document.getElementById('tbodyCitas');
-    tbody.innerHTML = citas.map(c => {
-      const tipoBadge = c.cita_es_primera_vez
-        ? `<span class="badge bg-light text-dark border">Primera Vez</span>`
-        : `<span class="badge bg-light text-dark border">Seguimiento${c.cita_numero_sesion ? ' #' + c.cita_numero_sesion : ''}</span>`;
-      const clase = ESTADOS_BADGE[c.cod_estado_cita] || 'border border-secondary text-secondary';
-      const motivo = c.cita_motivo
-        ? `<span class="motivo-text" title="${escapeHtml(c.cita_motivo)}">${escapeHtml(c.cita_motivo)}</span>`
-        : `<span class="text-muted small">—</span>`;
+  let tablaAgenda = null;
 
-      return `<tr>
-        <td class="px-3">
-          <span class="hora-pill">${c.cita_hora_inicio || '—'}</span>
-        </td>
-        <td>
-          <div class="fw-semibold text-dark">${escapeHtml(c.paciente_nombre)} ${escapeHtml(c.paciente_apellido)}</div>
-          ${c.paciente_telefono ? `<div class="text-muted small"><i class="fas fa-phone fa-xs me-1"></i>${escapeHtml(c.paciente_telefono)}</div>` : ''}
-        </td>
-        <td><span class="badge bg-light text-dark border">${c.pac_historia_clinica || '—'}</span></td>
-        <td>${tipoBadge}</td>
-        <td>${motivo}</td>
-        <td class="text-center"><span class="badge-estado ${clase}">${c.des_estado_cita}</span></td>
-        <td class="text-center">${renderBotonConsulta(c)}</td>
-      </tr>`;
-    }).join('');
+  function initTablaAgenda() {
+    tablaAgenda = $('#tblAgenda').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+        emptyTable: 'No tenés citas programadas para el día de hoy'
+      },
+      dom: 't',
+      paging: false,
+      searching: false,
+      info: false,
+      order: [[0, 'asc']],
+      data: [],
+      columns: [
+        { data: 'cita_hora_inicio', className: 'text-center',
+          render: (data) => `<i class="far fa-clock me-1"></i>${data || '—'}` },
+        { data: null, render: (data, type, c) => `
+            <div class="fw-semibold">${escapeHtml(c.paciente_nombre)} ${escapeHtml(c.paciente_apellido)}</div>
+            ${c.paciente_telefono ? `<div class="text-muted small"><i class="fas fa-phone fa-xs me-1"></i>${escapeHtml(c.paciente_telefono)}</div>` : ''}` },
+        { data: 'pac_historia_clinica', render: (data) => escapeHtml(data) || '—' },
+        { data: null, render: (data, type, c) => c.cita_es_primera_vez
+            ? 'Primera Vez'
+            : `Seguimiento${c.cita_numero_sesion ? ' #' + c.cita_numero_sesion : ''}` },
+        { data: 'cita_motivo', render: (data) => data
+            ? `<span class="motivo-text" title="${escapeHtml(data)}">${escapeHtml(data)}</span>`
+            : '<span class="text-muted">—</span>' },
+        { data: null, className: 'text-center', render: (data, type, c) => {
+            const clase = ESTADOS_BADGE[c.cod_estado_cita] || 'border border-secondary text-secondary';
+            return `<span class="badge ${clase} bg-white">${c.des_estado_cita}</span>`;
+          } },
+        { data: null, orderable: false, className: 'text-center', render: (data, type, c) => renderBotonConsulta(c) }
+      ]
+    });
+  }
+
+  function setMensajeTablaVacia(mensaje) {
+    tablaAgenda.settings()[0].oLanguage.sEmptyTable = mensaje;
   }
 
   function cargarCitas() {
-    document.getElementById('loadingCitas').style.display = 'block';
     document.getElementById('sinEspecialista').style.display = 'none';
-    document.getElementById('sinCitas').style.display = 'none';
-    document.getElementById('tablaCitasWrapper').style.display = 'none';
 
     fetch('/api/v1/mi-agenda/citas-hoy')
       .then(r => r.json())
       .then(data => {
-        document.getElementById('loadingCitas').style.display = 'none';
-
         if (!data.success) {
           Swal.fire('Error', 'No se pudo cargar la agenda.', 'error');
           return;
         }
         if (data.sin_especialista) {
           document.getElementById('sinEspecialista').style.display = 'block';
-          actualizarContadores([]);
-          return;
-        }
-
-        actualizarContadores(data.data);
-
-        if (data.data.length === 0) {
-          document.getElementById('sinCitas').style.display = 'block';
+          setMensajeTablaVacia('Sin especialista asociado');
         } else {
-          document.getElementById('tablaCitasWrapper').style.display = 'block';
-          renderizarTabla(data.data);
+          setMensajeTablaVacia('No tenés citas programadas para el día de hoy');
         }
+        actualizarContadores(data.data);
+        tablaAgenda.clear().rows.add(data.data).draw();
       })
-      .catch(() => {
-        document.getElementById('loadingCitas').style.display = 'none';
-        Swal.fire('Error', 'Error de conexión al cargar la agenda.', 'error');
-      });
+      .catch(() => Swal.fire('Error', 'Error de conexión al cargar la agenda.', 'error'));
   }
 
   $(document).on('click', '.btn-iniciar-consulta', function () {
@@ -289,6 +252,9 @@
 
   $('#btnRefrescar').on('click', cargarCitas);
 
-  document.addEventListener('DOMContentLoaded', cargarCitas);
+  $(document).ready(function () {
+    initTablaAgenda();
+    cargarCitas();
+  });
 </script>
 {% endblock %}

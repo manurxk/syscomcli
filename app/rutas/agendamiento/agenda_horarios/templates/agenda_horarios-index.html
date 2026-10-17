@@ -5,13 +5,15 @@ Agenda Médica
 {% endblock %}
 
 {% block contenido %}
+{% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+{% set solo_agenda_propia = not ('ADMINISTRADOR' in roles_usuario or 'SUPERADMIN' in roles_usuario or 'RECEPCION' in roles_usuario) %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
     <div class="container-fluid px-4">
         <div class="page-header-content pt-4">
             <div class="row align-items-center justify-content-between">
                 <div class="col-auto mt-4">
                     <h1 class="page-header-title">Agenda Médica</h1>
-                    <div class="page-header-subtitle">Configuración de horarios semanales por especialista</div>
+                    <div class="page-header-subtitle">{{ 'Mis horarios semanales y cupos disponibles' if solo_agenda_propia else 'Configuración de horarios semanales por especialista' }}</div>
                 </div>
             </div>
         </div>
@@ -21,7 +23,8 @@ Agenda Médica
 <div class="container-fluid px-4 mt-n10">
     <div class="card shadow-sm mb-4">
         <div class="card-header py-3 d-flex align-items-center">
-            <h6 class="m-0 fw-bold">Agenda Médica</h6>
+            <h6 class="m-0 fw-bold">{{ 'Mi Agenda Médica' if solo_agenda_propia else 'Agenda Médica' }}</h6>
+            {% if not solo_agenda_propia %}
             <div class="ms-auto" style="min-width: 280px;">
                 <select class="form-select form-select-sm" id="selectEspecialista" name="selectEspecialista">
                     <option value="">-- Seleccione un especialista --</option>
@@ -30,6 +33,7 @@ Agenda Médica
             <button type="button" class="btn btn-sm btn-primary ms-2" id="btnNuevoHorario">
                 <i class="fas fa-plus fa-sm me-1"></i> Nuevo Horario
             </button>
+            {% endif %}
         </div>
 
         <div class="card-body">
@@ -254,6 +258,7 @@ Agenda Médica
 {% block js %}
 <script>
     const CSRFToken = "{{ csrf_token() }}" || null;
+    const SOLO_AGENDA_PROPIA = {{ 'true' if solo_agenda_propia else 'false' }};
     let especialistaSeleccionado = null;
     let agendaHorarios = [];
     let tablaHorarios = null;
@@ -434,14 +439,14 @@ Agenda Médica
                         <button type="button" class="btn btn-outline-info btn-sm" onclick="verSlots(${row.id_agenda_horario})" title="Ver cupos generados">
                             <i class="fas fa-calendar-alt"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="editarHorario(${row.id_agenda_horario})" title="Editar">
+                        ${SOLO_AGENDA_PROPIA ? '' : `<button type="button" class="btn btn-outline-primary btn-sm" onclick="editarHorario(${row.id_agenda_horario})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button type="button" class="btn btn-outline-${row.est_agenda_horario ? 'warning' : 'success'} btn-sm"
                                 onclick="toggleEstado(${row.id_agenda_horario}, ${!row.est_agenda_horario})"
                                 title="${row.est_agenda_horario ? 'Desactivar' : 'Activar'}">
                             <i class="fas fa-${row.est_agenda_horario ? 'eye-slash' : 'eye'}"></i>
-                        </button>
+                        </button>`}
                     `
                 }
             ]
@@ -452,6 +457,22 @@ Agenda Médica
     // CARGAR AGENDA DEL ESPECIALISTA
     // ==========================================
     const cargarAgendaHorarios = (idEspecialista) => {
+        if (SOLO_AGENDA_PROPIA) {
+            // El backend resuelve el especialista desde la sesión; no se envía id_especialista
+            $.ajax({
+                url: '/api/v1/agenda-horarios',
+                type: 'GET',
+                success: (response) => {
+                    agendaHorarios = (response.success && response.data) ? response.data : [];
+                    setMensajeTablaVacia(response.sin_especialista
+                        ? 'Tu usuario no tiene un perfil de especialista vinculado'
+                        : 'No tenés horarios configurados');
+                    tablaHorarios.clear().rows.add(agendaHorarios).draw();
+                },
+                error: () => Swal.fire('Error', 'No se pudieron cargar los horarios', 'error')
+            });
+            return;
+        }
         if (!idEspecialista) {
             agendaHorarios = [];
             setMensajeTablaVacia('Seleccione un especialista para ver sus horarios');
@@ -659,6 +680,10 @@ Agenda Médica
     // ==========================================
     $(document).ready(function () {
         initTablaHorarios();
+        if (SOLO_AGENDA_PROPIA) {
+            cargarAgendaHorarios();
+            return;
+        }
         cargarEspecialistas();
         cargarDiasSemana();
         cargarSedes();

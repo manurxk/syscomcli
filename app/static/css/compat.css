@@ -178,7 +178,7 @@
 /* ============================================================
    CARD HEADER ACTIONS
    ============================================================ */
-.card-header-actions {
+.card-header-actions > .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;

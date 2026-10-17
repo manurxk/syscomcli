@@ -240,13 +240,18 @@ class AgendaHorariosDao(BaseDAO):
         return insertados
 
     def getAgendasVigentesActivas(self):
-        """Horarios activos cuya vigencia no terminó: los únicos que siguen generando slots."""
+        """Horarios activos cuya vigencia no terminó: los únicos que siguen generando slots.
+        Un especialista o funcionario dado de baja deja de generar; si se reactiva, vuelve a generar."""
         sql = """
-            SELECT id_agenda_horario
-            FROM agenda_horarios
-            WHERE est_agenda_horario = TRUE
-              AND (fec_hasta IS NULL OR fec_hasta >= CURRENT_DATE)
-            ORDER BY id_agenda_horario
+            SELECT ah.id_agenda_horario
+            FROM agenda_horarios ah
+            JOIN especialistas e ON ah.id_especialista = e.id_especialista
+            JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+            WHERE ah.est_agenda_horario = TRUE
+              AND (ah.fec_hasta IS NULL OR ah.fec_hasta >= CURRENT_DATE)
+              AND e.est_especialista = TRUE
+              AND f.est_funcionario = TRUE
+            ORDER BY ah.id_agenda_horario
         """
         return self.execute_query(sql)
 

@@ -899,6 +899,7 @@ Atender Consulta
       descLabel: 'Motivo', resultadoLabel: 'Diagnóstico', observacionesLabel: 'Recomendaciones',
       requiredFields: [{ id: 'ri_fecha', label: 'La fecha' }, { id: 'ri_desc', label: 'El motivo' }],
       deleteUrl: id => `/api/v1/certificados/${id}`,
+      pdfUrl: id => `/api/v1/certificados/${id}/pdf`, documento: 'Certificado guardado',
       cols: row => [
         row.des_tipo_certificado_medico, row.certificado_numero, row.certificado_fecha,
         row.certificado_motivo, row.certificado_estado
@@ -941,7 +942,8 @@ Atender Consulta
         if (data.success && data.data.length > 0) {
           tbody.html(data.data.map(row => {
             const cols = cfg.cols(row).map(c => `<td>${c}</td>`).join('');
-            return `<tr>${cols}<td class="text-center">
+            const imprimir = cfg.pdfUrl ? botonImprimir(cfg.pdfUrl(row[cfg.idKeyRow])) : '';
+            return `<tr>${cols}<td class="text-center">${imprimir}
               <button type="button" class="btn btn-sm btn-outline-danger btn-borrar-registro" data-tipo="${tipo}" data-id="${row[cfg.idKeyRow]}">&times;</button>
             </td></tr>`;
           }).join(''));
@@ -973,6 +975,7 @@ Atender Consulta
       $('.fld-observaciones').show();
 
       $('#ri_tipo_dx, #ri_gravedad, #ri_intensidad, #ri_desc, #ri_duracion, #ri_resultado, #ri_cantidad, #ri_observaciones, #ri_objetivos, #ri_fecha_inicio, #ri_numero_sesiones, #ri_frecuencia_sesiones, #ri_fecha, #ri_dias_reposo, #ri_fecha_desde, #ri_fecha_hasta').val('');
+      $('#ri_fecha, #ri_fecha_desde, #ri_fecha_inicio').val(fechaConsulta());
 
       const select = $('#ri_catalogo');
       select.html('<option value="">Cargando...</option>');
@@ -1024,6 +1027,9 @@ Atender Consulta
           if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modalRegistroItem')).hide();
             cargarTablaRegistro(tipo);
+            if (cfg.pdfUrl && data.data && data.data[cfg.idKeyRow]) {
+              ofrecerImprimir(cfg.pdfUrl(data.data[cfg.idKeyRow]), cfg.documento);
+            }
           } else {
             Swal.fire('Error', data.error || 'No se pudo guardar el registro.', 'error');
           }
@@ -1054,6 +1060,24 @@ Atender Consulta
           })
           .catch(() => Swal.fire('Error', 'Ocurrió un error al eliminar el registro.', 'error'));
       });
+    });
+  };
+
+  // ==========================================
+  // IMPRESIÓN de orden, receta y certificado (PDF: ORDEN.html, RECETA.html, CERTIFICADO.html)
+  // ==========================================
+  const botonImprimir = (url) =>
+    `<a class="btn btn-sm btn-outline-secondary me-1" href="${url}" target="_blank" rel="noopener" title="Imprimir"><i class="fas fa-print"></i></a>`;
+
+  // Enlace (no window.open) para que el navegador no lo bloquee como ventana emergente
+  const ofrecerImprimir = (url, titulo) => {
+    Swal.fire({
+      title: titulo,
+      html: `<a class="btn btn-primary mt-2" href="${url}" target="_blank" rel="noopener"><i class="fas fa-print me-1"></i>Imprimir</a>`,
+      icon: 'success',
+      showConfirmButton: false,
+      showCancelButton: true,
+      cancelButtonText: 'Cerrar'
     });
   };
 
@@ -1097,6 +1121,7 @@ Atender Consulta
       lineasOrden = [];
       renderItemsOrden();
       $('#ord_fecha, #ord_indicaciones, #ord_observaciones').val('');
+      $('#ord_fecha').val(fechaConsulta());
       cargarCatalogoOrdenItem();
       new bootstrap.Modal(document.getElementById('modalOrden')).show();
     });
@@ -1155,6 +1180,7 @@ Atender Consulta
           if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modalOrden')).hide();
             cargarOrdenes();
+            ofrecerImprimir(`/api/v1/ordenes/${data.data.id_orden}/pdf`, 'Orden guardada');
           } else {
             Swal.fire('Error', data.error || 'No se pudo guardar la orden.', 'error');
           }
@@ -1173,7 +1199,7 @@ Atender Consulta
             <tr><td>${o.orden_numero}</td><td>${o.orden_fecha}</td>
             <td>${o.detalles.map(d => d.descripcion).join(', ')}</td>
             <td>${o.orden_estado}</td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-borrar-orden" data-id="${o.id_orden}">&times;</button></td></tr>
+            <td class="text-center">${botonImprimir(`/api/v1/ordenes/${o.id_orden}/pdf`)}<button type="button" class="btn btn-sm btn-outline-danger btn-borrar-orden" data-id="${o.id_orden}">&times;</button></td></tr>
           `).join(''));
         } else {
           tbody.html('<tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr>');
@@ -1239,6 +1265,7 @@ Atender Consulta
       renderItemsReceta();
       $('#rec_fecha, #rec_indicaciones_generales, #rec_observaciones, #rec_item_dosis, #rec_item_frecuencia, #rec_item_duracion, #rec_item_indicaciones').val('');
       $('#rec_validez_dias').val(30);
+      $('#rec_fecha').val(fechaConsulta());
       cargarCatalogoMedicamentos();
       new bootstrap.Modal(document.getElementById('modalReceta')).show();
     });
@@ -1301,6 +1328,7 @@ Atender Consulta
           if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modalReceta')).hide();
             cargarRecetas();
+            ofrecerImprimir(`/api/v1/recetas/${data.data.id_receta}/pdf`, 'Receta guardada');
           } else {
             Swal.fire('Error', data.error || 'No se pudo guardar la receta.', 'error');
           }
@@ -1319,7 +1347,7 @@ Atender Consulta
             <tr><td>${r.receta_numero}</td><td>${r.receta_fecha}</td>
             <td>${r.detalles.map(d => d.des_medicamento).join(', ')}</td>
             <td>${r.receta_validez_dias} días</td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-borrar-receta" data-id="${r.id_receta}">&times;</button></td></tr>
+            <td class="text-center">${botonImprimir(`/api/v1/recetas/${r.id_receta}/pdf`)}<button type="button" class="btn btn-sm btn-outline-danger btn-borrar-receta" data-id="${r.id_receta}">&times;</button></td></tr>
           `).join(''));
         } else {
           tbody.html('<tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr>');
@@ -1398,6 +1426,8 @@ Atender Consulta
   // CARGA INICIAL (siempre hay una consulta real, nace de una cita)
   // ==========================================
   let consultaFechaCruda = null;
+  // Fecha (AAAA-MM-DD) de la consulta: valor por defecto de órdenes, recetas, certificados y tratamientos
+  const fechaConsulta = () => (consultaFechaCruda || '').split('T')[0];
 
   const cargarConsulta = () => {
     return fetch(`/api/v1/consultas/${idConsultaEdit}/editar`)

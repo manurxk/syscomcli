@@ -136,3 +136,27 @@ class CuentaCobrarDao(BaseDAO):
             ORDER BY cc.fecha_vencimiento ASC
         """
         return self.execute_query(sql)
+
+    def getCuentasVencidas(self, limite=5):
+        """Cuentas PENDIENTE/PARCIAL ya vencidas, de la más atrasada a la menos (dashboard)."""
+        sql = """
+            SELECT
+                cc.id_cuenta_cobrar,
+                cc.cuenta_numero,
+                cc.monto_pendiente,
+                m.cod_moneda, m.simbolo_moneda, m.decimales_moneda, m.es_moneda_local,
+                CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
+                TO_CHAR(cc.fecha_vencimiento, 'DD/MM/YYYY') AS fecha_vencimiento_fmt,
+                CURRENT_DATE - cc.fecha_vencimiento AS dias_atraso
+            FROM cuentas_cobrar cc
+            JOIN facturas f    ON cc.id_factura  = f.id_factura
+            JOIN monedas m     ON cc.id_moneda   = m.id_moneda
+            JOIN pacientes pac ON cc.id_paciente = pac.id_paciente
+            JOIN personas pp   ON pac.id_persona = pp.id_persona
+            WHERE cc.est_cuenta_cobrar IN ('PENDIENTE', 'PARCIAL')
+              AND f.fecha_anulacion IS NULL
+              AND cc.fecha_vencimiento < CURRENT_DATE
+            ORDER BY cc.fecha_vencimiento ASC
+            LIMIT %s
+        """
+        return self.execute_query(sql, (limite,))

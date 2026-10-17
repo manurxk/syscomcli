@@ -1,0 +1,20 @@
+<p>Un incidente es cualquier hecho que comprometa o pueda comprometer la confidencialidad, integridad o disponibilidad de la información: un acceso indebido, una contraseña filtrada, un equipo robado, datos borrados o el sistema caído.</p>
+<table class="datos">
+    <tr><th>Fase</th><th>Acciones</th></tr>
+    <tr><td><strong>1. Detección</strong></td><td>Alertas por correo de bloqueo de cuenta; revisión de <strong>Seguridad → Auditoría</strong> (<code>ACCOUNT_LOCKED</code>, <code>RATE_LIMIT</code>, <code>LOGIN_FAILED</code>); avisos de los usuarios; errores en los logs (<code>docker logs syscomcli_app</code>)</td></tr>
+    <tr><td><strong>2. Contención</strong></td><td>Bloquear o desactivar la cuenta comprometida. Cerrar sus sesiones y revocar su MFA (<strong>Seguridad → Accesos</strong>). Cambiar su contraseña desde <strong>Usuarios</strong>. Si se sospecha del servidor, cambiar las credenciales de servicio y la <code>SECRET_KEY</code> (cierra todas las sesiones)</td></tr>
+    <tr><td><strong>3. Evaluación</strong></td><td>Determinar qué datos se vieron afectados, desde cuándo y desde qué IP, con <code>auditoria_sistema</code> y <code>accesos_sistema</code></td></tr>
+    <tr><td><strong>4. Recuperación</strong></td><td>Si los datos se dañaron, restaurar el último backup íntegro (capítulo <a href="#backups">Backups</a>, restauración de emergencia). Verificar que se pueda iniciar sesión y que los datos estén</td></tr>
+    <tr><td><strong>5. Comunicación</strong></td><td>Informar a la dirección de la clínica. Si hubo datos de pacientes expuestos, informar a los afectados según la normativa vigente</td></tr>
+    <tr><td><strong>6. Registro y mejora</strong></td><td>Documentar el incidente (fecha, causa, impacto, acciones) y ajustar estas políticas si corresponde</td></tr>
+</table>
+
+<h4>Casos frecuentes</h4>
+<table class="datos">
+    <tr><th>Situación</th><th>Qué hacer primero</th></tr>
+    <tr><td>Un usuario cree que alguien usó su cuenta</td><td>Revocar MFA y cerrar sesiones (Accesos), cambiar su contraseña, revisar en Auditoría las IP y horarios de sus <code>LOGIN</code></td></tr>
+    <tr><td>Se filtró el <code>.env</code></td><td>Cambiar las contraseñas de <code>sysclin_app</code> y <code>postgres</code> (capítulo <a href="#base-datos">Base de datos</a>), la <code>SECRET_KEY</code>, y las claves de SMTP y UltraMsg en sus proveedores</td></tr>
+    <tr><td>Se perdió o robaron la PC o el USB con la clave privada del backup</td><td>Generar un par de claves nuevo y hacer un backup manual (capítulo <a href="#backups">Backups</a>). Los backups viejos quedan ilegibles para quien no tenga la contraseña de la clave</td></tr>
+    <tr><td>Se borraron o alteraron datos por error</td><td>No hacer más cambios; restaurar el backup previo al error en una base de prueba con <code>restore_test.sh</code> para confirmar que tiene los datos, y recién entonces decidir la restauración de emergencia</td></tr>
+    <tr><td>El sistema está caído</td><td>Capítulo <a href="#contenedores">Contenedores</a>, "Reactivar el sistema"</td></tr>
+</table>

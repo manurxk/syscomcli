@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático del INICIO por rol — "aspecto Tailwind sobre Bootstrap 5" — SYSCLIN
+    Se abre con doble clic, no necesita Flask. Datos de ejemplo.
+
+    Cómo está armado (opción A):
+    1. Bootstrap 5.3.7 = la misma base que AdminLTE 4 / base.html. NO se usa Tailwind.
+    2. Bloque <style id="tema">: es el futuro static/css/tema.css. Solo redefine variables de
+       Bootstrap (grises slate, colores suaves, radios, fuente, botones, tablas) + 2 piezas
+       mínimas (.kpi, .kpi-icon). Cargado después de AdminLTE, todas las pantallas lo heredan.
+    3. El contenido usa solo clases de Bootstrap (card, list-group, badge, nav-pills, table,
+       utilidades). Font Awesome 6.1.1 = el mismo de base.html.
+
+    La barra oscura de arriba NO es parte del diseño (cambia rol y tema). Para ver la versión
+    celular, achicá la ventana. Sidebar y topbar aproximan base.html.
+    Precedentes: inicio.html (CSS propio), inicio_clinico.html (Bootstrap sobrio).
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inicio - SYSCLIN</title>
+    <link rel="shortcut icon" href="../../app/static/img/sys_logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+
+    <!-- ═══════════════════════ TEMA (futuro static/css/tema.css) ═══════════════════════ -->
+    <style id="tema">
+        /* ── Claro: grises "slate", primario índigo, colores de estado suaves ── */
+        :root,
+        [data-bs-theme="light"] {
+            --bs-body-font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --bs-body-font-size: 0.9375rem;
+            --bs-body-color: #1e293b;
+            --bs-body-color-rgb: 30, 41, 59;
+            --bs-emphasis-color: #0f172a;
+            --bs-emphasis-color-rgb: 15, 23, 42;
+            --bs-secondary-color: #64748b;
+            --bs-secondary-color-rgb: 100, 116, 139;
+            --bs-tertiary-color: #94a3b8;
+            --bs-tertiary-color-rgb: 148, 163, 184;
+            --bs-body-bg: #ffffff;
+            --bs-secondary-bg: #f1f5f9;
+            --bs-tertiary-bg: #f8fafc;
+            --bs-tertiary-bg-rgb: 248, 250, 252;
+            --bs-border-color: #e2e8f0;
+            --bs-border-color-translucent: rgba(15, 23, 42, 0.08);
+
+            --bs-primary: #5b21b6;
+            --bs-primary-rgb: 91, 33, 182;
+            --bs-primary-text-emphasis: #4c1d95;
+            --bs-primary-bg-subtle: #f3effd;
+            --bs-primary-border-subtle: #ddd6fe;
+            --bs-success-text-emphasis: #15803d;
+            --bs-success-bg-subtle: #f0fdf4;
+            --bs-success-border-subtle: #bbf7d0;
+            --bs-warning-text-emphasis: #b45309;
+            --bs-warning-bg-subtle: #fffbeb;
+            --bs-warning-border-subtle: #fde68a;
+            --bs-danger-text-emphasis: #b91c1c;
+            --bs-danger-bg-subtle: #fef2f2;
+            --bs-danger-border-subtle: #fecaca;
+            --bs-info-text-emphasis: #3730a3;
+            --bs-info-bg-subtle: #eef2ff;
+            --bs-info-border-subtle: #c7d2fe;
+            --bs-secondary-text-emphasis: #475569;
+            --bs-secondary-bg-subtle: #f1f5f9;
+            --bs-secondary-border-subtle: #e2e8f0;
+
+            --bs-link-color: #5b21b6;
+            --bs-link-color-rgb: 91, 33, 182;
+            --bs-link-hover-color: #4c1d95;
+            --bs-link-hover-color-rgb: 76, 29, 149;
+
+            /* Radios moderados (un solo lugar para hacerlos más rectos o más redondos) */
+            --bs-border-radius: 0.375rem;
+            --bs-border-radius-sm: 0.25rem;
+            --bs-border-radius-lg: 0.5rem;
+            --bs-border-radius-xl: 0.5rem;
+            --bs-border-radius-pill: 0.375rem;
+            --bs-box-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+        }
+
+        /* ── Oscuro ── */
+        [data-bs-theme="dark"] {
+            --bs-body-color: #e2e8f0;
+            --bs-body-color-rgb: 226, 232, 240;
+            --bs-emphasis-color: #f8fafc;
+            --bs-emphasis-color-rgb: 248, 250, 252;
+            --bs-secondary-color: #94a3b8;
+            --bs-secondary-color-rgb: 148, 163, 184;
+            --bs-tertiary-color: #64748b;
+            --bs-tertiary-color-rgb: 100, 116, 139;
+            --bs-body-bg: #151225;
+            --bs-secondary-bg: #1f1a33;
+            --bs-tertiary-bg: #0e0b19;
+            --bs-tertiary-bg-rgb: 14, 11, 25;
+            --bs-border-color: #2a2540;
+
+            --bs-primary-text-emphasis: #c4b5fd;
+            --bs-primary-bg-subtle: #2a1b4d;
+            --bs-primary-border-subtle: #4c1d95;
+            --bs-success-text-emphasis: #86efac;
+            --bs-success-bg-subtle: #0c2a18;
+            --bs-success-border-subtle: #14532d;
+            --bs-warning-text-emphasis: #fcd34d;
+            --bs-warning-bg-subtle: #2e1d05;
+            --bs-warning-border-subtle: #78350f;
+            --bs-danger-text-emphasis: #fca5a5;
+            --bs-danger-bg-subtle: #2d0f0f;
+            --bs-danger-border-subtle: #7f1d1d;
+            --bs-info-text-emphasis: #c7d2fe;
+            --bs-info-bg-subtle: #1e1b4b;
+            --bs-info-border-subtle: #3730a3;
+            --bs-secondary-text-emphasis: #cbd5e1;
+            --bs-secondary-bg-subtle: #1f1a33;
+            --bs-secondary-border-subtle: #2a2540;
+
+            --bs-link-color: #a78bfa;
+            --bs-link-color-rgb: 167, 139, 250;
+            --bs-link-hover-color: #c4b5fd;
+            --bs-link-hover-color-rgb: 196, 181, 253;
+        }
+
+        /* ── Componentes de Bootstrap: solo variables ── */
+        .btn { --bs-btn-font-weight: 600; --bs-btn-font-size: 0.875rem; --bs-btn-padding-y: 0.5rem; --bs-btn-padding-x: 0.9rem; }
+
+        .btn-primary {
+            --bs-btn-bg: #5b21b6; --bs-btn-border-color: #5b21b6;
+            --bs-btn-hover-bg: #4c1d95; --bs-btn-hover-border-color: #4c1d95;
+            --bs-btn-active-bg: #4c1d95; --bs-btn-active-border-color: #4c1d95;
+            --bs-btn-focus-shadow-rgb: 91, 33, 182;
+        }
+
+        /* Botón secundario "blanco con borde gris" */
+        .btn-outline-secondary {
+            --bs-btn-color: var(--bs-body-color);
+            --bs-btn-bg: var(--bs-body-bg);
+            --bs-btn-border-color: #cbd5e1;
+            --bs-btn-hover-color: var(--bs-emphasis-color);
+            --bs-btn-hover-bg: var(--bs-tertiary-bg);
+            --bs-btn-hover-border-color: #94a3b8;
+            --bs-btn-active-color: var(--bs-emphasis-color);
+            --bs-btn-active-bg: var(--bs-secondary-bg);
+            --bs-btn-active-border-color: #94a3b8;
+        }
+
+        [data-bs-theme="dark"] .btn-outline-secondary { --bs-btn-border-color: #3b3552; --bs-btn-hover-border-color: #64748b; --bs-btn-active-border-color: #64748b; }
+
+        .card { --bs-card-cap-bg: transparent; --bs-card-spacer-y: 1.1rem; --bs-card-spacer-x: 1.25rem; box-shadow: var(--bs-box-shadow-sm); }
+
+        .nav-pills { --bs-nav-pills-link-active-bg: var(--bs-primary-bg-subtle); --bs-nav-pills-link-active-color: var(--bs-primary-text-emphasis); --bs-nav-link-color: var(--bs-secondary-color); --bs-nav-link-hover-color: var(--bs-primary-text-emphasis); --bs-nav-link-font-weight: 600; }
+
+        .badge { --bs-badge-font-weight: 600; --bs-badge-padding-x: 0.6em; --bs-badge-padding-y: 0.4em; }
+
+        .progress { --bs-progress-height: 6px; --bs-progress-bar-bg: #5b21b6; --bs-progress-bg: var(--bs-secondary-bg); }
+
+        .table { --bs-table-bg: transparent; font-size: 0.875rem; }
+
+        .table > thead > tr > th {
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+            color: var(--bs-secondary-color); background: var(--bs-tertiary-bg); white-space: nowrap;
+        }
+
+        .table > :not(caption) > * > * { padding: 0.75rem 1.25rem; }
+
+        .list-group { --bs-list-group-item-padding-x: 1.25rem; --bs-list-group-item-padding-y: 0.8rem; }
+
+        .dropdown-menu { --bs-dropdown-font-size: 0.875rem; --bs-dropdown-border-color: var(--bs-border-color); box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.18); }
+
+        .form-control:focus, .btn:focus-visible { box-shadow: 0 0 0 0.2rem rgba(91, 33, 182, 0.2); }
+
+        .form-control:focus { border-color: #8b5cf6; }
+
+        /* ── Piezas mínimas propias del tema ── */
+        /* Tarjeta de indicador clicable */
+        .kpi { transition: border-color 0.15s; }
+        .kpi:hover { border-color: var(--bs-primary-border-subtle); }
+        .kpi:hover .kpi-go { color: var(--bs-primary-text-emphasis) !important; }
+
+        /* Cuadro del ícono del indicador (toma el color de las clases bg-*-subtle text-*-emphasis) */
+        .kpi-icon { width: 2.4rem; height: 2.4rem; display: inline-grid; place-items: center; border-radius: var(--bs-border-radius-lg); flex-shrink: 0; }
+
+        .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    </style>
+
+    <!-- Solo para el prototipo (no va al tema) -->
+    <style>
+        .proto-bar { position: sticky; top: 0; z-index: 1050; display: flex; align-items: center; justify-content: safe center; gap: 12px; padding: 8px 16px; background: #1e1b2e; color: #cbd5e1; font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; overflow-x: auto; }
+        .proto-bar .btn { --bs-btn-font-size: 12px; --bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-color: #e2e8f0; --bs-btn-bg: transparent; --bs-btn-border-color: #475569; --bs-btn-hover-bg: #334155; --bs-btn-hover-color: #fff; --bs-btn-active-bg: #5b21b6; --bs-btn-active-border-color: #5b21b6; --bs-btn-active-color: #fff; white-space: nowrap; }
+        .app-sidebar { width: 250px; flex-shrink: 0; }
+        .app-sidebar .nav-link { display: flex; align-items: center; gap: .65rem; color: var(--bs-body-color); border-radius: var(--bs-border-radius); padding: .55rem .75rem; font-weight: 500; }
+        .app-sidebar .nav-link svg { width: 1rem; color: var(--bs-secondary-color); }
+        .app-sidebar .nav-link:hover { background: var(--bs-tertiary-bg); }
+        .app-sidebar .nav-link.active { background: #5b21b6; color: #fff; }
+        .app-sidebar .nav-link.active svg { color: #fff; }
+    </style>
+</head>
+
+<body class="bg-body-tertiary">
+
+    <!-- ════════ Barra del prototipo ════════ -->
+    <div class="proto-bar">
+        <span>Rol:</span>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn" data-p-rol="admin">Administrador</button>
+            <button type="button" class="btn" data-p-rol="clinico">Clínico</button>
+            <button type="button" class="btn" data-p-rol="recepcion">Recepción</button>
+            <button type="button" class="btn" data-p-rol="ventas">Ventas</button>
+        </div>
+        <span class="ms-2">Tema:</span>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn" data-p-tema="light">Claro</button>
+            <button type="button" class="btn" data-p-tema="dark">Oscuro</button>
+        </div>
+    </div>
+
+    <div class="d-flex">
+
+        <!-- ════════ Sidebar (contexto) ════════ -->
+        <aside class="app-sidebar bg-body border-end d-none d-lg-flex flex-column" style="min-height: calc(100vh - 46px);">
+            <div class="d-flex align-items-center gap-2 px-3 border-bottom" style="height:60px;">
+                <img src="../../app/static/img/sys_logo.png" alt="" width="28" height="28" style="object-fit:contain;">
+                <span class="fw-bold">SYSCLIN</span>
+            </div>
+            <div class="px-3 pt-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-transparent text-body-tertiary"><i class="fas fa-magnifying-glass"></i></span>
+                    <input type="search" class="form-control" placeholder="Buscar en el menú..." aria-label="Buscar en el menú">
+                </div>
+            </div>
+            <div class="px-3 pt-3 pb-1 small fw-bold text-primary-emphasis">Menú principal</div>
+            <nav class="nav flex-column px-2 gap-1">
+                <a class="nav-link active" href="#"><i class="fas fa-house"></i>Inicio</a>
+                <a class="nav-link" href="#"><i class="fas fa-calendar-days"></i>Agendamiento</a>
+                <a class="nav-link" href="#"><i class="fas fa-stethoscope"></i>Clínico</a>
+                <a class="nav-link" href="#"><i class="fas fa-cash-register"></i>Ventas</a>
+                <a class="nav-link" href="#"><i class="fas fa-gear"></i>Configuración</a>
+            </nav>
+            <div class="mt-auto border-top p-2">
+                <a class="nav-link" href="#"><i class="fas fa-arrow-right-from-bracket"></i>Cerrar sesión</a>
+            </div>
+        </aside>
+
+        <div class="flex-grow-1" style="min-width:0;">
+
+            <!-- ════════ Topbar (contexto) ════════ -->
+            <nav class="navbar bg-body border-bottom px-3" style="height:60px;">
+                <button class="btn btn-sm btn-link text-body-secondary" type="button" aria-label="Menú"><i class="fas fa-bars"></i></button>
+                <div class="d-flex align-items-center gap-1">
+                    <button type="button" class="btn btn-sm btn-link text-body-secondary" aria-label="Ayuda"><i class="far fa-circle-question"></i></button>
+                    <button type="button" class="btn btn-sm btn-link text-body-secondary" id="tbTheme" aria-label="Cambiar tema"><i class="far fa-moon"></i></button>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-body text-decoration-none d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="kpi-icon bg-primary-subtle text-primary-emphasis fw-bold small" style="width:2rem;height:2rem;">MR</span>
+                            <span class="d-none d-sm-inline small fw-semibold">Manuel Ramírez</span>
+                            <i class="fas fa-chevron-down small text-body-tertiary"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Administrador</h6></li>
+                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-arrow-right-from-bracket me-2"></i>Cerrar sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- ════════════════════ CONTENIDO ════════════════════ -->
+            <main class="container-fluid px-3 px-md-4 py-4" style="max-width:1320px;">
+
+                <!-- Cabecera -->
+                <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+                    <div>
+                        <div class="small fw-semibold text-body-secondary mb-1" id="fechaHoy">Sábado, 11 de octubre de 2026</div>
+                        <h1 class="h3 fw-bold text-body-emphasis mb-1"><span id="saludo">Buenos días</span>, Manuel</h1>
+                        <div class="text-body-secondary" id="resumenRol">Resumen general de la clínica hoy.</div>
+                    </div>
+                    <ul class="nav nav-pills bg-body border rounded-3 p-1 gap-1 flex-nowrap overflow-x-auto" role="tablist">
+                        <li class="nav-item"><button class="nav-link py-1 px-3 text-nowrap" type="button" data-rol="admin"><i class="fas fa-chart-simple me-1"></i>Administrador</button></li>
+                        <li class="nav-item"><button class="nav-link py-1 px-3 text-nowrap" type="button" data-rol="clinico"><i class="fas fa-stethoscope me-1"></i>Clínico</button></li>
+                        <li class="nav-item"><button class="nav-link py-1 px-3 text-nowrap" type="button" data-rol="recepcion"><i class="far fa-calendar me-1"></i>Recepción</button></li>
+                        <li class="nav-item"><button class="nav-link py-1 px-3 text-nowrap" type="button" data-rol="ventas"><i class="far fa-credit-card me-1"></i>Ventas</button></li>
+                    </ul>
+                </div>
+
+                <!-- ══════════ ADMINISTRADOR ══════════ -->
+                <section data-panel="admin" data-sub="Resumen general de la clínica hoy.">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="far fa-calendar"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Citas de hoy</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">24</div>
+                                <div class="small text-body-secondary">18 confirmadas · 3 completadas</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="fas fa-dollar-sign"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Facturado hoy</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num"><span class="fs-6 text-body-secondary">Gs.</span> 4.350.000</div>
+                                <div class="small text-body-secondary">12 facturas emitidas</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="fas fa-cash-register"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Cajas abiertas</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">2 <span class="fs-6 text-body-secondary">de 3</span></div>
+                                <div class="small text-body-secondary">Operando normalmente</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-warning-subtle text-warning-emphasis"><i class="far fa-file-lines"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Cuentas por cobrar</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">37</div>
+                                <div class="small text-warning-emphasis fw-semibold">6 vencidas · Gs. 12.840.000</div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-8">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-body-emphasis">Citas de hoy por estado</span>
+                                    <a href="#" class="small fw-semibold text-decoration-none">Agenda general <i class="fas fa-arrow-right ms-1"></i></a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="progress-stacked mb-3" style="height:10px;">
+                                        <div class="progress" role="progressbar" aria-label="Completadas" style="width:12.5%"><div class="progress-bar bg-secondary"></div></div>
+                                        <div class="progress" role="progressbar" aria-label="En consulta" style="width:8.3%"><div class="progress-bar"></div></div>
+                                        <div class="progress" role="progressbar" aria-label="Confirmadas" style="width:62.5%"><div class="progress-bar bg-success"></div></div>
+                                        <div class="progress" role="progressbar" aria-label="Por confirmar" style="width:8.3%"><div class="progress-bar bg-warning"></div></div>
+                                        <div class="progress" role="progressbar" aria-label="Canceladas" style="width:8.4%"><div class="progress-bar bg-danger"></div></div>
+                                    </div>
+                                    <div class="row row-cols-2 row-cols-md-3 g-2 small">
+                                        <div class="col d-flex align-items-center gap-2"><i class="fas fa-square text-secondary"></i>Completadas <span class="ms-auto fw-bold num">3</span></div>
+                                        <div class="col d-flex align-items-center gap-2"><i class="fas fa-square text-primary"></i>En consulta <span class="ms-auto fw-bold num">2</span></div>
+                                        <div class="col d-flex align-items-center gap-2"><i class="fas fa-square text-success"></i>Confirmadas <span class="ms-auto fw-bold num">15</span></div>
+                                        <div class="col d-flex align-items-center gap-2"><i class="fas fa-square text-warning"></i>Por confirmar <span class="ms-auto fw-bold num">2</span></div>
+                                        <div class="col d-flex align-items-center gap-2"><i class="fas fa-square text-danger"></i>Canceladas <span class="ms-auto fw-bold num">2</span></div>
+                                    </div>
+                                    <hr class="my-3">
+                                    <div class="row g-3 small text-body-secondary">
+                                        <div class="col-4">Recordatorios por enviar<div class="fs-5 fw-bold text-body-emphasis num">4</div></div>
+                                        <div class="col-4">En lista de espera<div class="fs-5 fw-bold text-body-emphasis num">3</div></div>
+                                        <div class="col-4">Consultas abiertas<div class="fs-5 fw-bold text-body-emphasis num">2</div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-body-emphasis">Seguridad</span>
+                                    <span class="small text-body-secondary">Últimas 24 h</span>
+                                </div>
+                                <div class="list-group list-group-flush">
+                                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                                        <span class="kpi-icon bg-danger-subtle text-danger-emphasis" style="width:2.1rem;height:2.1rem;"><i class="fas fa-user-lock small"></i></span>
+                                        <div class="flex-grow-1"><div class="fw-semibold small">1 usuario bloqueado</div><div class="small text-body-secondary">lgonzalez · 3 intentos</div></div>
+                                        <i class="fas fa-chevron-right small text-body-tertiary"></i>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                                        <span class="kpi-icon bg-warning-subtle text-warning-emphasis" style="width:2.1rem;height:2.1rem;"><i class="fas fa-shield-halved small"></i></span>
+                                        <div class="flex-grow-1"><div class="fw-semibold small">7 intentos fallidos</div><div class="small text-body-secondary">Desde 3 direcciones IP</div></div>
+                                        <i class="fas fa-chevron-right small text-body-tertiary"></i>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                                        <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis" style="width:2.1rem;height:2.1rem;"><i class="fas fa-desktop small"></i></span>
+                                        <div class="flex-grow-1"><div class="fw-semibold small">9 sesiones activas</div><div class="small text-body-secondary">En 7 usuarios</div></div>
+                                        <i class="fas fa-chevron-right small text-body-tertiary"></i>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                                        <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis" style="width:2.1rem;height:2.1rem;"><i class="far fa-envelope small"></i></span>
+                                        <div class="flex-grow-1"><div class="fw-semibold small">5 códigos MFA enviados</div><div class="small text-body-secondary">Todos utilizados</div></div>
+                                        <i class="fas fa-chevron-right small text-body-tertiary"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-body-emphasis">Cuentas vencidas</span>
+                            <a href="#" class="small fw-semibold text-decoration-none">Ver cobranzas <i class="fas fa-arrow-right ms-1"></i></a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead><tr><th>Paciente</th><th class="d-none d-md-table-cell">Cuenta</th><th>Atraso</th><th class="text-end">Pendiente</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="fw-semibold">María Benítez</td><td class="d-none d-md-table-cell text-body-secondary num">CXC-2026-09-0012</td><td><span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">29 días</span></td><td class="text-end fw-semibold num">Gs. 850.000</td></tr>
+                                    <tr><td class="fw-semibold">Jorge Acosta</td><td class="d-none d-md-table-cell text-body-secondary num">CXC-2026-09-0031</td><td><span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">16 días</span></td><td class="text-end fw-semibold num">Gs. 1.200.000</td></tr>
+                                    <tr><td class="fw-semibold">Liz Fernández</td><td class="d-none d-md-table-cell text-body-secondary num">CXC-2026-10-0002</td><td><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">8 días</span></td><td class="text-end fw-semibold num">Gs. 420.000</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══════════ CLÍNICO ══════════ -->
+                <section data-panel="clinico" data-sub="Tenés 8 pacientes hoy · 3 atendidos." hidden>
+                    <div class="card border-start border-4 border-primary mb-4">
+                        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                            <span class="kpi-icon bg-primary-subtle text-primary-emphasis fw-bold fs-5" style="width:3.25rem;height:3.25rem;">AR</span>
+                            <div class="flex-grow-1">
+                                <div class="small fw-semibold text-primary-emphasis"><i class="far fa-clock me-1"></i>Próximo paciente · en 15 minutos</div>
+                                <div class="h5 fw-bold text-body-emphasis mb-1">Ana Rojas Giménez</div>
+                                <div class="small text-body-secondary d-flex flex-wrap gap-3">
+                                    <span><i class="far fa-clock me-1"></i>10:30 – 11:00</span>
+                                    <span><i class="far fa-file-lines me-1"></i>Control mensual</span>
+                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="#" class="btn btn-outline-secondary"><i class="far fa-folder-open me-1"></i>Ver ficha</a>
+                                <a href="#" class="btn btn-primary"><i class="fas fa-play me-1"></i>Iniciar consulta</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="fas fa-user-group"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Pacientes hoy</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">8</div>
+                                <div class="progress mt-2" role="progressbar" aria-label="Avance del día" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:38%"></div></div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="card card-body h-100">
+                                <div class="mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="far fa-circle-check"></i></span></div>
+                                <div class="small fw-semibold text-body-secondary">Atendidos</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">3</div>
+                                <div class="small text-body-secondary">Quedan 5</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-warning-subtle text-warning-emphasis"><i class="fas fa-file-pen"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Consultas sin cerrar</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">1</div>
+                                <div class="small text-warning-emphasis fw-semibold">Falta diagnóstico</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-info-subtle text-info-emphasis"><i class="fas fa-share-nodes"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Derivaciones recibidas</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">2</div>
+                                <div class="small text-body-secondary">Sin revisar</div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-body-emphasis">Mi agenda de hoy</span>
+                            <a href="#" class="small fw-semibold text-decoration-none">Ver Mi Agenda <i class="fas fa-arrow-right ms-1"></i></a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead><tr><th style="width:90px;">Hora</th><th>Paciente</th><th>Estado</th><th></th></tr></thead>
+                                <tbody>
+                                    <tr class="text-body-secondary"><td class="num">08:00</td><td>Carlos Duarte<div class="small">Primera consulta</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Completada</span></td><td></td></tr>
+                                    <tr class="text-body-secondary"><td class="num">08:30</td><td>Rosa Villalba<div class="small">Control</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Completada</span></td><td></td></tr>
+                                    <tr class="text-body-secondary"><td class="num">09:15</td><td>Pedro Martínez<div class="small">Evaluación</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Completada</span></td><td></td></tr>
+                                    <tr class="table-active"><td class="num fw-bold">10:00</td><td class="fw-semibold">Laura Ortiz<div class="small text-body-secondary fw-normal">Seguimiento PEI</div></td><td><span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">En consulta</span></td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Continuar</a></td></tr>
+                                    <tr><td class="num fw-semibold">10:30</td><td class="fw-semibold">Ana Rojas Giménez<div class="small text-body-secondary fw-normal">Control mensual</div></td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span></td><td></td></tr>
+                                    <tr><td class="num">11:15</td><td>Diego Cabrera<div class="small text-body-secondary">Primera consulta</div></td><td><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Por confirmar</span></td><td></td></tr>
+                                    <tr><td class="num">14:00</td><td>Sofía Paredes<div class="small text-body-secondary">Control</div></td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span></td><td></td></tr>
+                                    <tr><td class="num">16:00</td><td>Martín López<div class="small text-body-secondary">Evaluación</div></td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span></td><td></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══════════ RECEPCIÓN ══════════ -->
+                <section data-panel="recepcion" data-sub="24 citas hoy · 2 por confirmar." hidden>
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <a href="#" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nueva cita</a>
+                        <a href="#" class="btn btn-outline-secondary"><i class="fas fa-user-plus me-1"></i>Registrar paciente</a>
+                        <a href="#" class="btn btn-outline-secondary"><i class="fas fa-list-ol me-1"></i>Lista de espera</a>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="far fa-calendar"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Citas de hoy</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">24</div>
+                                <div class="small text-body-secondary">En 4 especialistas</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi" data-filtro-link="POR_CONFIRMAR">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-warning-subtle text-warning-emphasis"><i class="far fa-clock"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Por confirmar</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">2</div>
+                                <div class="small text-warning-emphasis fw-semibold">Llamar o reenviar recordatorio</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-info-subtle text-info-emphasis"><i class="far fa-bell"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Recordatorios</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">4</div>
+                                <div class="small text-body-secondary">Se envían automáticamente</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-secondary-subtle text-secondary-emphasis"><i class="fas fa-list-ol"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Lista de espera</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">3</div>
+                                <div class="small text-success-emphasis fw-semibold">1 con turno liberado</div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                        <span class="fw-bold text-body-emphasis">Citas de hoy</span>
+                                        <div class="input-group input-group-sm" style="max-width:220px;">
+                                            <span class="input-group-text bg-transparent text-body-tertiary"><i class="fas fa-magnifying-glass"></i></span>
+                                            <input type="search" class="form-control" placeholder="Buscar paciente" id="buscarCita" aria-label="Buscar paciente">
+                                        </div>
+                                    </div>
+                                    <ul class="nav nav-pills gap-1 mt-3 small flex-nowrap overflow-x-auto" id="filtrosCitas">
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap active" data-filtro="">Todas <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">8</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="POR_CONFIRMAR">Por confirmar <span class="badge bg-warning-subtle text-warning-emphasis ms-1">2</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="CONFIRMADA">Confirmadas <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">3</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="EN_CONSULTA">En consulta <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">1</span></button></li>
+                                        <li class="nav-item"><button class="nav-link py-1 px-2 text-nowrap" data-filtro="COMPLETADA">Completadas <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">2</span></button></li>
+                                    </ul>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead><tr><th style="width:90px;">Hora</th><th>Paciente</th><th>Estado</th><th></th></tr></thead>
+                                        <tbody id="listaCitas">
+                                            <tr class="text-body-secondary" data-estado="COMPLETADA"><td class="num">08:00</td><td>Carlos Duarte<div class="small">Dra. Méndez · Psicología</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Completada</span></td><td></td></tr>
+                                            <tr class="text-body-secondary" data-estado="COMPLETADA"><td class="num">08:30</td><td>Rosa Villalba<div class="small">Dr. Ayala · Fonoaudiología</div></td><td><span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Completada</span></td><td></td></tr>
+                                            <tr data-estado="EN_CONSULTA"><td class="num fw-semibold">10:00</td><td class="fw-semibold">Laura Ortiz<div class="small text-body-secondary fw-normal">Dra. Méndez · Psicología</div></td><td><span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">En consulta</span></td><td></td></tr>
+                                            <tr data-estado="CONFIRMADA"><td class="num">10:30</td><td>Ana Rojas Giménez<div class="small text-body-secondary">Dra. Méndez · Psicología</div></td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span></td><td></td></tr>
+                                            <tr data-estado="POR_CONFIRMAR"><td class="num">11:15</td><td>Diego Cabrera<div class="small text-body-secondary">Dr. Ayala · Fonoaudiología</div></td><td><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Por confirmar</span></td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Confirmar</a></td></tr>
+                                            <tr data-estado="CONFIRMADA"><td class="num">14:00</td><td>Sofía Paredes<div class="small text-body-secondary">Lic. Torres · Terapia ocupacional</div></td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span></td><td></td></tr>
+                                            <tr data-estado="POR_CONFIRMAR"><td class="num">15:00</td><td>Hugo Insfrán<div class="small text-body-secondary">Lic. Torres · Terapia ocupacional</div></td><td><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Por confirmar</span></td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Confirmar</a></td></tr>
+                                            <tr data-estado="CONFIRMADA"><td class="num">16:00</td><td>Martín López<div class="small text-body-secondary">Dra. Méndez · Psicología</div></td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Confirmada</span></td><td></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="text-center text-body-secondary small py-4" id="citasVacio" hidden>No hay citas que coincidan.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-body-emphasis">Lista de espera</span>
+                                    <a href="#" class="small fw-semibold text-decoration-none">Ver todo <i class="fas fa-arrow-right ms-1"></i></a>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis fw-bold small">VG</span>
+                                            <div class="flex-grow-1"><div class="fw-semibold small">Valeria Gómez</div><div class="small text-body-secondary">Psicología · desde 02/10</div></div>
+                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Turno libre</span>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis fw-bold small">RB</span>
+                                            <div><div class="fw-semibold small">Ramón Báez</div><div class="small text-body-secondary">Fonoaudiología · desde 05/10</div></div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis fw-bold small">CN</span>
+                                            <div><div class="fw-semibold small">Clara Núñez</div><div class="small text-body-secondary">Psicología · desde 09/10</div></div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══════════ VENTAS ══════════ -->
+                <section data-panel="ventas" data-sub="Caja abierta · 12 facturas emitidas hoy." hidden>
+                    <div class="card border-success-subtle bg-success-subtle mb-4">
+                        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                            <span class="kpi-icon bg-body text-success-emphasis"><i class="fas fa-cash-register"></i></span>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-success-emphasis">Caja 1 abierta</div>
+                                <div class="small text-body-secondary">Desde las 07:58 · Guaraníes · Punto de expedición 001-001</div>
+                            </div>
+                            <a href="#" class="btn btn-outline-secondary">Ver estado</a>
+                            <a href="#" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nueva factura</a>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="fas fa-dollar-sign"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Facturado hoy</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num"><span class="fs-6 text-body-secondary">Gs.</span> 4.350.000</div>
+                                <div class="small text-body-secondary">12 facturas</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="far fa-credit-card"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Cobrado hoy</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num"><span class="fs-6 text-body-secondary">Gs.</span> 3.100.000</div>
+                                <div class="progress mt-2" role="progressbar" aria-label="Cobrado sobre facturado" aria-valuenow="71" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:71%"></div></div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-secondary-subtle text-secondary-emphasis"><i class="far fa-file-lines"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Cuentas por cobrar</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">37</div>
+                                <div class="small text-body-secondary">Gs. 12.840.000 pendientes</div>
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <a href="#" class="card card-body h-100 text-decoration-none kpi">
+                                <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-danger-subtle text-danger-emphasis"><i class="fas fa-triangle-exclamation"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+                                <div class="small fw-semibold text-body-secondary">Vencidas</div>
+                                <div class="fs-3 fw-bold text-body-emphasis num">6</div>
+                                <div class="small text-danger-emphasis fw-semibold">Gs. 3.270.000</div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-body-emphasis">Últimas facturas</span>
+                                    <a href="#" class="small fw-semibold text-decoration-none">Ver facturas <i class="fas fa-arrow-right ms-1"></i></a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead><tr><th>Factura</th><th class="d-none d-md-table-cell">Condición</th><th>Estado</th><th class="text-end">Total</th></tr></thead>
+                                        <tbody>
+                                            <tr><td><div class="fw-semibold">Laura Ortiz</div><div class="small text-body-secondary num">001-001-0000412 · 11:42</div></td><td class="d-none d-md-table-cell text-body-secondary">Contado · Efectivo</td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Pagada</span></td><td class="text-end fw-semibold num">Gs. 250.000</td></tr>
+                                            <tr><td><div class="fw-semibold">Pedro Martínez</div><div class="small text-body-secondary num">001-001-0000411 · 11:05</div></td><td class="d-none d-md-table-cell text-body-secondary">Crédito · 30 días</td><td><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Pendiente</span></td><td class="text-end fw-semibold num">Gs. 600.000</td></tr>
+                                            <tr><td><div class="fw-semibold">Rosa Villalba</div><div class="small text-body-secondary num">001-001-0000410 · 10:20</div></td><td class="d-none d-md-table-cell text-body-secondary">Contado · Tarjeta</td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Pagada</span></td><td class="text-end fw-semibold num">Gs. 180.000</td></tr>
+                                            <tr><td><div class="fw-semibold">Carlos Duarte</div><div class="small text-body-secondary num">001-001-0000409 · 09:47</div></td><td class="d-none d-md-table-cell text-body-secondary">Contado · Transferencia</td><td><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Pagada</span></td><td class="text-end fw-semibold num">Gs. 350.000</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-body-emphasis">Vencidas</span>
+                                    <a href="#" class="small fw-semibold text-decoration-none">Cobrar <i class="fas fa-arrow-right ms-1"></i></a>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><div><div class="fw-semibold small">María Benítez</div><div class="small text-body-secondary num">Gs. 850.000</div></div><span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">29 días</span></li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><div><div class="fw-semibold small">Jorge Acosta</div><div class="small text-body-secondary num">Gs. 1.200.000</div></div><span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">16 días</span></li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><div><div class="fw-semibold small">Liz Fernández</div><div class="small text-body-secondary num">Gs. 420.000</div></div><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">8 días</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+        (function () {
+            // Fecha y saludo según la hora
+            var ahora = new Date();
+            var h = ahora.getHours();
+            document.getElementById('saludo').textContent = h < 12 ? 'Buenos días' : (h < 19 ? 'Buenas tardes' : 'Buenas noches');
+            try {
+                var f = ahora.toLocaleDateString('es-PY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                document.getElementById('fechaHoy').textContent = f.charAt(0).toUpperCase() + f.slice(1);
+            } catch (e) {}
+
+            var estado = { rol: 'admin', tema: 'light' };
+            try {
+                var g = JSON.parse(localStorage.getItem('proto-inicio-tema') || 'null');
+                if (g) estado = Object.assign(estado, g);
+            } catch (e) {}
+
+            function render() {
+                document.querySelectorAll('[data-panel]').forEach(function (p) {
+                    var on = p.dataset.panel === estado.rol;
+                    p.hidden = !on;
+                    if (on) document.getElementById('resumenRol').textContent = p.dataset.sub;
+                });
+                document.querySelectorAll('[data-rol]').forEach(function (b) {
+                    b.classList.toggle('active', b.dataset.rol === estado.rol);
+                });
+                document.querySelectorAll('[data-p-rol]').forEach(function (b) {
+                    b.classList.toggle('active', b.dataset.pRol === estado.rol);
+                });
+                document.querySelectorAll('[data-p-tema]').forEach(function (b) {
+                    b.classList.toggle('active', b.dataset.pTema === estado.tema);
+                });
+                document.documentElement.setAttribute('data-bs-theme', estado.tema);
+                try { localStorage.setItem('proto-inicio-tema', JSON.stringify(estado)); } catch (e) {}
+            }
+
+            document.querySelectorAll('[data-rol]').forEach(function (b) {
+                b.addEventListener('click', function () { estado.rol = b.dataset.rol; render(); });
+            });
+            document.querySelectorAll('[data-p-rol]').forEach(function (b) {
+                b.addEventListener('click', function () { estado.rol = b.dataset.pRol; render(); });
+            });
+            document.querySelectorAll('[data-p-tema]').forEach(function (b) {
+                b.addEventListener('click', function () { estado.tema = b.dataset.pTema; render(); });
+            });
+            document.getElementById('tbTheme').addEventListener('click', function () {
+                estado.tema = estado.tema === 'dark' ? 'light' : 'dark';
+                render();
+            });
+
+            // Recepción: filtro por estado + búsqueda por paciente
+            var filtro = '';
+            function aplicar() {
+                var texto = (document.getElementById('buscarCita').value || '').trim().toLowerCase();
+                var n = 0;
+                document.querySelectorAll('#listaCitas [data-estado]').forEach(function (tr) {
+                    var ok = (!filtro || tr.dataset.estado === filtro) && (!texto || tr.textContent.toLowerCase().indexOf(texto) !== -1);
+                    tr.hidden = !ok;
+                    if (ok) n++;
+                });
+                document.getElementById('citasVacio').hidden = n > 0;
+                document.querySelectorAll('#filtrosCitas [data-filtro]').forEach(function (b) {
+                    b.classList.toggle('active', b.dataset.filtro === filtro);
+                });
+            }
+            document.querySelectorAll('#filtrosCitas [data-filtro]').forEach(function (b) {
+                b.addEventListener('click', function () { filtro = b.dataset.filtro; aplicar(); });
+            });
+            document.querySelectorAll('[data-filtro-link]').forEach(function (a) {
+                a.addEventListener('click', function () { filtro = a.dataset.filtroLink; aplicar(); });
+            });
+            document.getElementById('buscarCita').addEventListener('input', aplicar);
+
+            // Prototipo: los enlaces no navegan
+            document.querySelectorAll('a[href="#"]').forEach(function (a) {
+                a.addEventListener('click', function (e) { e.preventDefault(); });
+            });
+
+            render();
+        })();
+    </script>
+</body>
+
+</html>

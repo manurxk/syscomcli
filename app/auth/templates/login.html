@@ -101,6 +101,8 @@
 
         /* ── Panel de marca ── */
         .brand {
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -108,6 +110,34 @@
             padding: 48px 56px;
             color: var(--brand-fg);
             background: linear-gradient(160deg, var(--brand-from) 0%, var(--brand-mid) 55%, var(--brand-to) 100%);
+        }
+
+        /* Logo de fondo (mismo que el login anterior): blanco translúcido con pulso suave */
+        .brand-watermark {
+            position: absolute;
+            bottom: 2.8rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            height: 500px;
+            max-width: 90%;
+            object-fit: contain;
+            opacity: 0.22;
+            pointer-events: none;
+            filter: brightness(100) saturate(0);
+            animation: wmPulse 7s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes wmPulse {
+            0%, 100% { opacity: 0.18; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.27; transform: translateX(-50%) scale(1.04); }
+        }
+
+        .brand-body,
+        .brand-foot {
+            position: relative;
+            z-index: 1;
         }
 
         .brand-body {
@@ -163,10 +193,33 @@
 
         /* ── Columna del formulario ── */
         .form-col {
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             padding: 28px 48px;
             background: var(--col-bg);
+        }
+
+        /* Logo de fondo detrás del formulario: otro formato que el del panel
+           (colores originales, muy tenue, fijo y cortado en la esquina inferior derecha) */
+        .form-watermark {
+            position: absolute;
+            right: -120px;
+            bottom: -120px;
+            width: 520px;
+            height: 520px;
+            object-fit: contain;
+            opacity: 0.06;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        html[data-bs-theme="dark"] .form-watermark { opacity: 0.08; filter: brightness(1.6); }
+
+        .form-col > :not(.form-watermark) {
+            position: relative;
+            z-index: 1;
         }
 
         .form-top {
@@ -487,6 +540,8 @@
 
             .form-col { padding: 16px 20px 20px; }
 
+            .form-watermark { width: 340px; height: 340px; right: -90px; bottom: -90px; }
+
             .form-center { align-items: flex-start; padding: 16px 0 32px; }
 
             .form-box { padding: 28px 22px 24px; border-radius: 16px; }
@@ -512,6 +567,8 @@
 
         <!-- Panel de marca -->
         <aside class="brand">
+            <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="" class="brand-watermark" aria-hidden="true">
+
             <div class="brand-body">
                 <h1>{{ _('Cuidado clínico') }} {{ _('simple y seguro') }}</h1>
                 <p>{{ _('Gestionando la salud con tecnología y calidez humana.') }}</p>
@@ -543,6 +600,8 @@
 
         <!-- Formulario -->
         <main class="form-col">
+            <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="" class="form-watermark" aria-hidden="true">
+
             <div class="form-top">
                 <div class="form-logo">
                     <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="">

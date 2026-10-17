@@ -135,6 +135,27 @@ class FacturaDao(BaseDAO):
         """
         return self.execute_query(sql)
 
+    def getUltimasFacturas(self, limite=5):
+        """Últimas facturas registradas, con paciente, condición y estado (dashboard)."""
+        sql = """
+            SELECT
+                f.id_factura, f.factura_numero, f.factura_total,
+                CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
+                cv.des_condicion_venta,
+                ef.des_estado_factura,
+                m.cod_moneda, m.simbolo_moneda, m.decimales_moneda, m.es_moneda_local,
+                TO_CHAR(f.fecha_creacion, 'DD/MM HH24:MI') AS fecha_hora
+            FROM facturas f
+            JOIN pacientes pac ON f.id_paciente = pac.id_paciente
+            JOIN personas pp ON pac.id_persona = pp.id_persona
+            JOIN condiciones_venta cv ON f.id_condicion_venta = cv.id_condicion_venta
+            JOIN estados_factura ef ON f.id_estado_factura = ef.id_estado_factura
+            JOIN monedas m ON f.id_moneda = m.id_moneda
+            ORDER BY f.fecha_creacion DESC, f.id_factura DESC
+            LIMIT %s
+        """
+        return self.execute_query(sql, (limite,))
+
     def getFacturaById(self, id_factura):
         sql = """
             SELECT
@@ -250,6 +271,22 @@ class FacturaDao(BaseDAO):
         moneda = get_moneda(data.get('id_moneda'))
         id_moneda = moneda['id_moneda']
         decimales = int(moneda['decimales_moneda'])
+
+        # Descuento de la factura: se prorratea entre los ítems para que el IVA se
+        # calcule sobre el precio ya descontado (si se resta al final, el IVA queda inflado).
+        descuento = redondear(data.get('factura_descuento', 0), decimales)
+        if descuento:
+            brutos = [Decimal(str(d.get('item_precio_con_iva', 0))) * Decimal(str(d.get('item_cantidad', 1)))
+                      - Decimal(str(d.get('item_descuento', 0))) for d in detalles_enriquecidos]
+            total_bruto = sum(brutos)
+            if descuento < 0 or descuento > total_bruto:
+                raise ValueError('El descuento no puede ser negativo ni mayor al total de la factura.')
+            restante = descuento
+            for i, (d, bruto) in enumerate(zip(detalles_enriquecidos, brutos)):
+                parte = restante if i == len(brutos) - 1 else redondear(descuento * bruto / total_bruto, decimales)
+                d['item_descuento'] = Decimal(str(d.get('item_descuento', 0))) + parte
+                restante -= parte
+
         detalles_calc = [self._calcularItem(d, decimales) for d in detalles_enriquecidos]
 
         def _fn(cur):
@@ -282,10 +319,13 @@ class FacturaDao(BaseDAO):
             numero_timbrado = num_tim_row[0] if num_tim_row else None
 
             # 3. Totales
+            # El descuento ya está dentro de cada ítem (prorrateo de arriba)
             subtotal = sum(d['item_subtotal'] for d in detalles_calc)
             impuestos = sum(d['impuesto_monto'] for d in detalles_calc)
-            descuento = redondear(data.get('factura_descuento', 0), decimales)
-            total = subtotal + impuestos - descuento
+            total = subtotal + impuestos
+            # Para el libro de ventas: base gravada (ítems con IVA) y monto exento por separado
+            monto_gravado = sum(d['item_subtotal'] for d in detalles_calc if d['impuesto_porcentaje'] > 0)
+            monto_exento = sum(d['item_subtotal'] for d in detalles_calc if d['impuesto_porcentaje'] == 0)
             try:
                 total_letras = numero_a_letras(total, moneda)
             except Exception:
@@ -303,7 +343,6 @@ class FacturaDao(BaseDAO):
                 if dias > 0:
                     fecha_fac = data['fecha_factura']
                     if isinstance(fecha_fac, str):
-                        from datetime import datetime
                         fecha_fac = datetime.strptime(fecha_fac, '%Y-%m-%d').date()
                     fecha_vencimiento = fecha_fac + timedelta(days=dias)
 
@@ -373,13 +412,14 @@ class FacturaDao(BaseDAO):
                     monto_gravado, monto_exento, monto_iva, monto_total,
                     numero_timbrado, usuario_creacion, id_moneda
                 )
-                VALUES (%s,'FACTURA',%s,%s,%s,%s,0,%s,%s,%s,%s,%s)
+                VALUES (%s,'FACTURA',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
                 data['fecha_factura'],
                 factura_numero,
                 data['id_paciente'],
                 id_factura,
-                subtotal,
+                monto_gravado,
+                monto_exento,
                 impuestos,
                 total,
                 numero_timbrado,
@@ -488,6 +528,13 @@ class FacturaDao(BaseDAO):
                     usuario_modificacion = %s
                 WHERE id_factura = %s AND est_cobranza = 'REGISTRADA'
             """, (usuario_anulacion, id_factura))
+
+            # En el libro de ventas el comprobante anulado sigue figurando, pero en 0
+            cur.execute("""
+                UPDATE libro_ventas
+                SET monto_gravado = 0, monto_exento = 0, monto_iva = 0, monto_total = 0
+                WHERE id_factura = %s AND tipo_comprobante = 'FACTURA'
+            """, (id_factura,))
             return True
 
         return self.execute_transaction(_fn)

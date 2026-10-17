@@ -1,0 +1,100 @@
+<h4>Política</h4>
+<table class="datos">
+    <tr><th>Aspecto</th><th>Política</th></tr>
+    <tr><td>Frecuencia</td><td>Automático cada 24 h (y uno apenas arranca el contenedor). Manual antes de cada migración, actualización o despliegue</td></tr>
+    <tr><td>Retención</td><td>14 días; los más viejos se borran solos</td></tr>
+    <tr><td>Cifrado</td><td>GPG asimétrico. El servidor tiene solo la clave pública: <strong>puede cifrar, no descifrar</strong>. Nunca se genera un backup sin cifrar</td></tr>
+    <tr><td>Custodia</td><td>Clave privada y su contraseña en poder del administrador, guardadas por separado, fuera del servidor</td></tr>
+    <tr><td>Prueba de restauración</td><td><strong>Mensual</strong>, y antes de cada entrega o despliegue. Un backup que no se probó no se da por válido</td></tr>
+    <tr><td>Copia fuera del equipo</td><td>Recomendada, semanal. Al estar cifrados, pueden guardarse en una nube sin exponer datos</td></tr>
+    <tr><td>Objetivo de recuperación</td><td>Pérdida máxima de 24 h de datos</td></tr>
+</table>
+
+<h4>Cómo funciona</h4>
+<pre><code>             clave PÚBLICA (servidor)                 clave PRIVADA + contraseña (solo el administrador)
+pg_dump ──► cifrar ──► backups/*.dump.gpg ───────────────► descifrar ──► restaurar</code></pre>
+<ul>
+    <li>Archivo: <code>backups/sysclin_bd_AAAAMMDD_HHMMSS.dump.gpg</code>.</li>
+    <li>Clave pública: <code>dock/backup/keys/backup_pub.asc</code>. Aunque alguien se lleve el servidor, los backups son ilegibles.</li>
+    <li>Si falta la clave pública, el backup <strong>no se hace</strong>. El dump sin cifrar existe solo un instante dentro del contenedor y se borra siempre, salga bien o mal.</li>
+    <li>Los scripts son <code>dock/backup/entrypoint.sh</code> (ciclo cada 24 h) y <code>dock/backup/backup.sh</code> (la copia); ver el <a href="#anexo-scripts">Anexo</a>.</li>
+</ul>
+
+<h4>Custodia de la clave privada</h4>
+<table class="datos">
+    <tr><th>Elemento</th><th>Dónde</th></tr>
+    <tr><td>Clave pública</td><td><code>dock/backup/keys/backup_pub.asc</code>. Se puede compartir</td></tr>
+    <tr><td>Clave privada</td><td><code>backup_privada.asc</code>, en USB o gestor de contraseñas del administrador. <strong>Nunca</strong> en el servidor ni en el repositorio</td></tr>
+    <tr><td>Contraseña de la clave privada</td><td>Gestor de contraseñas, <strong>separada</strong> del archivo</td></tr>
+    <tr><td>Huella de la clave vigente</td><td><code>5CBD D0C3 C3A5 7281 CEE5 AF1B C0CE EFF6 A6B5 D972</code></td></tr>
+</table>
+<p class="peligro"><strong>Sin la clave privada y su contraseña, ningún backup se puede recuperar.</strong> Conviene tener dos copias de la clave privada en lugares distintos.</p>
+<p>En los comandos siguientes, <code>&lt;ruta_clave_privada&gt;</code> es la ubicación del archivo (por ejemplo <code>E:\backup_privada.asc</code> en un USB).</p>
+<p><strong>Ver la huella de la clave pública instalada:</strong></p>
+<pre><code>docker run --rm -v "${PWD}\dock\backup\keys\backup_pub.asc:/k/pub.asc:ro" postgres:17 bash -c "mkdir -m 700 /tmp/g &amp;&amp; GNUPGHOME=/tmp/g gpg --show-keys --with-fingerprint /k/pub.asc"</code></pre>
+
+<h4>Hacer un backup manual</h4>
+<pre><code>docker exec syscomcli_backup sh /scripts/backup.sh</code></pre>
+<p>Termina con <code>Backup creado: sysclin_bd_&lt;fecha&gt;.dump.gpg (&lt;tamaño&gt;)</code> y la lista de backups.</p>
+<pre><code># Listar los backups
+Get-ChildItem backups | Select-Object Name, Length, LastWriteTime
+
+# Ver los últimos backups automáticos y si hubo errores
+docker logs syscomcli_backup --tail 20
+
+# Copia fuera del equipo (por ejemplo, a un USB en E:)
+Copy-Item backups\*.dump.gpg E:\sysclin_backups\</code></pre>
+
+<h4>Prueba de restauración</h4>
+<p>Una vez por mes y antes de cada entrega o despliegue. <strong>La base real no se toca.</strong></p>
+<pre><code># El backup más reciente
+docker run --rm -it --network dock_network-tesis --env-file .env -v "${PWD}\backups:/backups:ro" -v "${PWD}\dock\backup:/scripts:ro" -v "&lt;ruta_clave_privada&gt;:/clave/backup_privada.asc:ro" postgres:17 sh /scripts/restore_test.sh
+
+# Un backup en particular: agregar su nombre al final
+# ... postgres:17 sh /scripts/restore_test.sh sysclin_bd_&lt;fecha&gt;.dump.gpg</code></pre>
+<p>El script (<code>dock/backup/restore_test.sh</code>):</p>
+<ol>
+    <li>pide la contraseña de la clave privada;</li>
+    <li>descifra el backup;</li>
+    <li>lo restaura en una base temporal (<code>sysclin_restore_test</code>);</li>
+    <li>compara la cantidad de registros de <code>usuarios</code>, <code>pacientes</code>, <code>citas</code>, <code>consultas</code>, <code>facturas</code> y <code>auditoria_sistema</code> contra la base real;</li>
+    <li>borra la base temporal y el archivo descifrado.</li>
+</ol>
+<p>Resultado esperado: una tabla con las cantidades y <code>RESTAURACION OK</code>. Que "restaurada" sea menor que "actual" es normal: corresponde a lo cargado después del backup. Si dice <code>RESTAURACION FALLO: &lt;motivo&gt;</code>, el motivo indica el problema (no se encontró el backup, falta la clave, contraseña incorrecta o archivo dañado).</p>
+
+<h4>Restauración de emergencia</h4>
+<p class="peligro">Solo si la base se dañó o se perdió. <strong>Reemplaza el contenido de <code>sysclin_bd</code></strong> por el del backup elegido.</p>
+<ol>
+    <li>Si la base todavía responde, hacer antes un backup del estado actual.</li>
+    <li>Elegir el backup (listado de arriba).</li>
+    <li>Detener la aplicación y el backup; la base queda corriendo:
+<pre><code>docker compose -f dock/docker-compose.yml stop app backup</code></pre></li>
+    <li>Descifrar y restaurar (pide la contraseña de la clave):
+<pre><code>docker run --rm -it --network dock_network-tesis --env-file .env -v "${PWD}\backups:/backups:ro" -v "&lt;ruta_clave_privada&gt;:/clave/k.asc:ro" postgres:17 bash -c 'mkdir -m 700 /tmp/g &amp;&amp; export GNUPGHOME=/tmp/g &amp;&amp; gpg --batch --quiet --import /clave/k.asc &amp;&amp; gpg --pinentry-mode loopback --output /tmp/r.dump --decrypt /backups/&lt;archivo&gt;.dump.gpg &amp;&amp; PGPASSWORD=$POSTGRES_PASSWORD pg_restore -h db -U $POSTGRES_USER -d $DB_NAME --clean --if-exists /tmp/r.dump'</code></pre></li>
+    <li>Volver a levantar:
+<pre><code>docker compose -f dock/docker-compose.yml start app backup</code></pre></li>
+    <li>Comprobar que se puede iniciar sesión y que los datos están.</li>
+</ol>
+<p>Los permisos de <code>sysclin_app</code> sobre las tablas vienen incluidos en el backup.</p>
+
+<h4>Si se pierde la clave privada</h4>
+<ul>
+    <li>Los backups ya cifrados con esa clave <strong>no se pueden recuperar</strong>.</li>
+    <li>Generar enseguida un par de claves nuevo (abajo), hacer un backup manual y una prueba de restauración.</li>
+</ul>
+
+<h4>Generar un par de claves nuevo</h4>
+<p>Solo en una instalación nueva, o si se perdió o se comprometió la clave privada. Pide la contraseña de la clave dos veces.</p>
+<pre><code>$dir = "$env:USERPROFILE\sysclin_clave_backup"
+New-Item -ItemType Directory -Force $dir | Out-Null
+docker run --rm -it -v "${dir}:/clave" postgres:17 bash -c "mkdir -m 700 /tmp/g &amp;&amp; export GNUPGHOME=/tmp/g &amp;&amp; gpg --pinentry-mode loopback --quick-gen-key 'Sysclin Backup &lt;backup@sysclin.local&gt;' default default never &amp;&amp; gpg --armor --export 'Sysclin Backup' &gt; /clave/backup_pub.asc &amp;&amp; gpg --pinentry-mode loopback --armor --export-secret-keys 'Sysclin Backup' &gt; /clave/backup_privada.asc &amp;&amp; gpg --list-keys"
+
+# Instalar la pública y reiniciar el backup
+Copy-Item "$dir\backup_pub.asc" dock\backup\keys\backup_pub.asc
+docker restart syscomcli_backup</code></pre>
+<ol>
+    <li>Pasar <code>backup_privada.asc</code> a su lugar de custodia y <strong>borrarla de la PC</strong>.</li>
+    <li>Anotar la huella nueva en la tabla de custodia.</li>
+    <li>Hacer una prueba de restauración.</li>
+</ol>
+<p>Conservar la clave privada anterior mientras existan backups cifrados con ella (14 días).</p>

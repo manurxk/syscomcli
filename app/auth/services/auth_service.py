@@ -276,6 +276,50 @@ class AuthService:
             app.logger.error(f"Error al contar solicitudes de recuperación de {id_usuario}: {str(e)}")
             return False
 
+    ROLES_AUTORIZAN_CORRECCION = ('ADMINISTRADOR',)
+
+    @staticmethod
+    def verificar_autorizacion_administrador(usuario_nombre: str, password: str) -> Dict:
+        """Autorización puntual de un administrador presente (ej. corregir una cita cerrada):
+        escribe SU usuario y contraseña en la PC de otro usuario, sin abrir sesión ni pedir MFA.
+
+        Mismas defensas que el login: límite por IP, cuenta inactiva o bloqueada, y cada
+        contraseña errónea cuenta para el bloqueo escalonado de ESA cuenta (se registra
+        en Accesos como intento fallido). Devuelve {'id_usuario', 'usu_nick'} o lanza ValueError.
+        """
+        ip_address = AuthService.obtener_ip_cliente()
+        user_agent = AuthService.obtener_user_agent()
+        error_generico = "Usuario o contraseña de administrador incorrectos."
+
+        if AuthService.contar_intentos_fallidos_ip(ip_address, 15) >= 10:
+            AuthService.auditar_rate_limit(
+                ip_address, 15, f"Autorización de administrador frenada (usuario intentado: '{usuario_nombre}')"
+            )
+            raise ValueError("Demasiados intentos fallidos desde esta PC. Intente nuevamente más tarde.")
+
+        usuario = AuthService.buscar_usuario_seguridad(usuario_nombre or '')
+        if not usuario:
+            AuthService.registrar_intento_login(usuario_nombre, None, False, 'usuario_no_existe', ip_address, user_agent)
+            raise ValueError(error_generico)
+
+        id_usuario = usuario['id_usuario']
+        if not usuario['usu_estado'] or usuario.get('esta_bloqueado') or AuthService.esta_usuario_bloqueado(id_usuario):
+            AuthService.registrar_intento_login(usuario_nombre, id_usuario, False, 'cuenta_bloqueada', ip_address, user_agent)
+            raise ValueError("La cuenta del administrador está inactiva o bloqueada.")
+
+        if not check_password_hash(usuario['usu_clave'], password or ''):
+            AuthService.registrar_intento_login(usuario_nombre, id_usuario, False, 'password_invalido', ip_address, user_agent)
+            if AuthService.esta_usuario_bloqueado(id_usuario):
+                AuthService._auditar_bloqueo_cuenta(id_usuario, usuario_nombre, ip_address)
+                AuthService._alertar_bloqueo_por_correo(id_usuario, usuario.get('correo'), ip_address)
+            raise ValueError(error_generico)
+
+        roles = {(r or '').upper() for r in AuthService.obtener_roles_usuario(id_usuario)}
+        if not roles.intersection(AuthService.ROLES_AUTORIZAN_CORRECCION):
+            raise ValueError("El usuario indicado no tiene rol de Administrador.")
+
+        return {'id_usuario': id_usuario, 'usu_nick': usuario['usu_nick']}
+
     @staticmethod
     def contar_intentos_fallidos_ip(ip_address: str, minutos: int = 15) -> int:
         """Cuenta intentos de login fallidos desde una IP en una ventana de tiempo"""
@@ -603,7 +647,8 @@ class AuthService:
         datos_usuario = {
             'id_usuario': id_usuario,
             'usu_nick': usuario['usu_nick'],
-            'nombre_completo': usuario['nombre_completo'],
+            # Usuario sin funcionario/persona: se muestra el nick (mismo criterio que auth_api)
+            'nombre_completo': (usuario['nombre_completo'] or '').strip() or usuario['usu_nick'],
             'grupo': usuario['grupo_nombre'],
             'id_grupo': usuario['id_grupo'],
             'roles': AuthService.obtener_roles_usuario(id_usuario),

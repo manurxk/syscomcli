@@ -139,9 +139,75 @@ class FacturaPDFService:
 
         return total_exentas, total_5, total_10
     
-    def generar_factura_pdf(self, factura_data, detalle_data=None, config_empresa=None):
+    @staticmethod
+    def config_empresa():
+        """Datos del emisor para el KuDE (empresa principal)."""
+        from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
+        empresa = EmpresaDao().getEmpresaPrincipal() or {}
+        return {
+            'ruc': f"{empresa.get('ruc_nit', '')}-{empresa.get('digito_verificador', '')}",
+            'nombre_empresa': empresa.get('razon_social', ''),
+            'direccion': empresa.get('direccion', ''),
+            'ciudad': empresa.get('des_ciudad') or '',
+            'telefono': empresa.get('telefono', '') or empresa.get('celular', ''),
+            'email': empresa.get('email', ''),
+            'actividad_economica': empresa.get('actividad_economica_principal', ''),
+        }
+
+    def generar_nota_pdf(self, tipo, nota, detalle_nota, factura, detalle_factura, config_empresa=None):
         """
-        Genera un PDF de la factura usando la plantilla HTML FE.html
+        KuDE de nota de crédito (tipo 'NC') o de débito ('ND'): misma plantilla FE.html que la
+        factura, con los rótulos del documento y la factura asociada.
+
+        nota/detalle_nota: NotaCreditoDao/NotaDebitoDao (getXById + getXDetalle).
+        factura/detalle_factura: FacturaDao.getFacturaById/getFacturaDetalle de la factura asociada.
+        La tasa de IVA de cada línea sale del ítem de factura que ajusta (id_factura_detalle); si la
+        línea no lo indica, se usa la tasa de la factura cuando todos sus ítems tienen la misma, y
+        si no, la línea va como exenta.
+        """
+        from app.core.moneda import get_moneda
+        from app.dao.ventas.movimientos.factura.FacturaDao import numero_a_letras
+
+        campo = 'nota_credito' if tipo == 'NC' else 'nota_debito'
+        tasas = {d['id_factura_detalle']: float(d.get('impuesto_porcentaje') or 0) for d in detalle_factura or []}
+        tasa_unica = next(iter(set(tasas.values()))) if len(set(tasas.values())) == 1 else 0
+
+        detalle = []
+        for i, d in enumerate(detalle_nota or [], 1):
+            detalle.append({
+                'item_codigo': f'{i:03d}',
+                'item_descripcion': d.get('item_descripcion'),
+                'item_cantidad': d.get('item_cantidad'),
+                'item_total': d.get('monto_total'),
+                'item_descuento': 0,
+                'impuesto_porcentaje': tasas.get(d.get('id_factura_detalle'), tasa_unica),
+            })
+
+        # 'DD/MM/YYYY HH24:MI' -> 'YYYY-MM-DDTHH:MI:00' (formato que espera generar_factura_pdf)
+        fecha, hora = (nota.get(f'fecha_{campo}_fmt') or ' ').split(' ')
+        fecha_iso = f"{fecha[6:10]}-{fecha[3:5]}-{fecha[0:2]}T{hora}:00" if fecha else ''
+
+        datos = dict(factura)
+        if factura.get('paciente_tipo_documento') == 'RUC' and factura.get('paciente_ruc'):
+            datos['paciente_cedula'] = factura['paciente_ruc']
+        datos.update({
+            'factura_numero': nota.get(f'{campo}_numero'),
+            'fecha_factura': fecha_iso,
+            'codigo_sifen': nota.get('codigo_sifen') or '',
+            'numero_timbrado': nota.get('numero_timbrado') or factura.get('numero_timbrado'),
+            'condicion_venta': '',
+            'moneda': factura.get('cod_moneda', 'PYG'),
+            'tipo_operacion': nota.get(f'motivo_{campo}', ''),
+            'factura_total_letras': numero_a_letras(nota.get('monto_total') or 0, get_moneda(factura.get('id_moneda'))),
+        })
+        nombre = 'Nota de Crédito' if tipo == 'NC' else 'Nota de Débito'
+        documento = {'nombre': nombre, 'factura_asociada': factura.get('factura_numero', '')}
+        return self.generar_factura_pdf(datos, detalle, config_empresa or self.config_empresa(), documento)
+
+    def generar_factura_pdf(self, factura_data, detalle_data=None, config_empresa=None, documento=None):
+        """
+        Genera un PDF de la factura usando la plantilla HTML FE.html.
+        documento: {'nombre', 'factura_asociada'} para emitir una NC/ND con la misma plantilla.
         """
         # Normalizar estructuras
         factura_data = factura_data or {}
@@ -412,7 +478,18 @@ class FacturaPDFService:
 
         for marcador, valor in reemplazos.items():
             html = html.replace(marcador, str(valor) if valor is not None else '')
-        
+
+        # NC/ND: rótulos del documento, factura asociada y motivo de emisión
+        if documento:
+            nombre = documento['nombre']
+            html = html.replace('KuDE de Factura Electrónica', f'KuDE de {nombre} Electrónica')
+            html = html.replace('FACTURA ELECTRÓNICA', f'{nombre.upper()} ELECTRÓNICA')
+            html = html.replace('esta Factura Electrónica', f'esta {nombre} Electrónica')
+            html = re.sub(r'(?<!Tipo de )Documento asociado: ',
+                          f"Documento asociado: Factura {documento['factura_asociada']}", html)
+            html = html.replace('Tipo de Documento asociado: ', 'Tipo de Documento asociado: Electrónico')
+            html = html.replace('Tipo de Operación: ', 'Motivo de emisión: ')
+
         # Workaround para bug de xhtml2pdf con tablas complejas - CORREGIDO
         # Remover estilos problemáticos del tbody
         html = re.sub(r'<tbody[^>]*style="[^"]*min-height[^"]*"[^>]*>', '<tbody style="font-size: 7pt;">', html)

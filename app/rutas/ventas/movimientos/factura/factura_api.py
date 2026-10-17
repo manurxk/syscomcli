@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify, current_app as app, session, send
 
 from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
-from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
 from app.services.factura_pdf_service import FacturaPDFService
 from app.services.EmailService import EmailService
 from app.auth.utils.decorators import role_required
@@ -20,20 +19,10 @@ def _construir_pdf_factura(id_factura):
         return None, None
     detalle = dao.getFacturaDetalle(id_factura)
 
-    empresa = EmpresaDao().getEmpresaPrincipal() or {}
-    ruc = f"{empresa.get('ruc_nit', '')}-{empresa.get('digito_verificador', '')}"
-    config_empresa = {
-        'ruc': ruc,
-        'nombre_empresa': empresa.get('razon_social', ''),
-        'direccion': empresa.get('direccion', ''),
-        'ciudad': empresa.get('des_ciudad') or '',
-        'telefono': empresa.get('telefono', '') or empresa.get('celular', ''),
-        'email': empresa.get('email', ''),
-        'actividad_economica': empresa.get('actividad_economica_principal', ''),
-    }
+    config_empresa = FacturaPDFService.config_empresa()
 
     factura_data = dict(factura)
-    factura_data['ruc_emisor'] = ruc
+    factura_data['ruc_emisor'] = config_empresa['ruc']
     factura_data['condicion_venta'] = factura.get('des_condicion_venta', 'Contado')
     factura_data['moneda'] = factura.get('cod_moneda', 'PYG')
     # Documento del receptor a mostrar en el KuDE: RUC (con DV) si el paciente lo tiene, sino cédula

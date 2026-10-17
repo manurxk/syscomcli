@@ -6,8 +6,17 @@ Dashboard - Inicio
 
 {% block layout_content %}
 
-{% set primer_rol = roles[0] if roles else {'label': 'Usuario', 'icon': 'fa-house', 'color': '#7c3aed'} %}
+{% set primer_rol = roles[0] if roles else {'cod': '', 'label': 'Usuario', 'icon': 'fa-house', 'color': '#7c3aed'} %}
+{% set nombre_corto = (usuario or 'Usuario').split(' ')[0] %}
 
+{# Pastilla de estado de cita: color por código, texto del sistema (des_estado_cita) #}
+{% macro badge_cita(cod, des) -%}
+  {%- set clase = {'AGENDADA': 'text-bg-warning', 'CONFIRMADA': 'text-bg-success', 'EN_CONSULTA': 'text-bg-primary',
+                   'COMPLETADA': 'text-bg-secondary', 'CANCELADA': 'text-bg-danger', 'AUSENTE': 'text-bg-secondary'} -%}
+  <span class="badge {{ clase.get(cod, 'text-bg-light border') }}">{{ des }}</span>
+{%- endmacro %}
+
+<!-- Banner del panel de cada rol (page-header de compat.css). Color, ícono y título cambian con la pestaña. -->
 <header class="page-header page-header-dark pb-10" id="dashHeader" style="background: {{ primer_rol.color }};">
   <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
@@ -17,9 +26,8 @@ Dashboard - Inicio
             <i class="fas {{ primer_rol.icon }} me-2" id="dashIcon"></i>
             <span id="dashTitle">Panel {{ primer_rol.label }}</span>
           </h1>
-          <div class="page-header-subtitle">
-            ¡Bienvenido, {{ usuario or 'Usuario' }}!
-          </div>
+          <div class="page-header-subtitle"><span id="saludo">Hola</span>, {{ nombre_corto }} · <span id="fechaHoy"></span></div>
+          <div class="page-header-subtitle" id="resumenRol"></div>
         </div>
 
         {% if roles|length > 1 %}
@@ -28,14 +36,9 @@ Dashboard - Inicio
             {% for r in roles %}
             <li class="nav-item" role="presentation">
               <button class="nav-link {% if loop.first %}active{% endif %} d-flex align-items-center gap-1"
-                      id="tab-{{ r.cod }}"
-                      data-bs-toggle="pill"
-                      data-bs-target="#panel-{{ r.cod }}"
-                      data-color="{{ r.color }}"
-                      data-icon="{{ r.icon }}"
-                      data-label="{{ r.label }}"
-                      type="button" role="tab"
-                      aria-controls="panel-{{ r.cod }}"
+                      id="tab-{{ r.cod }}" data-bs-toggle="pill" data-bs-target="#panel-{{ r.cod }}"
+                      data-color="{{ r.color }}" data-icon="{{ r.icon }}" data-label="{{ r.label }}"
+                      type="button" role="tab" aria-controls="panel-{{ r.cod }}"
                       aria-selected="{{ 'true' if loop.first else 'false' }}">
                 <i class="fas {{ r.icon }}"></i> {{ r.label }}
               </button>
@@ -49,431 +52,519 @@ Dashboard - Inicio
   </div>
 </header>
 
+<div class="app-content">
 <div class="container-fluid px-4" style="margin-top:-4rem;">
   <div class="tab-content" id="rolTabsContent">
     {% for r in roles %}
     {% set d = data_por_rol.get(r.cod, {}) %}
-    <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
-         id="panel-{{ r.cod }}" role="tabpanel" aria-labelledby="tab-{{ r.cod }}">
 
+    {% if r.cod == 'ADMINISTRADOR' %}
+    {% set c = d.citas or {} %}
+    {% set cxc = d.cxc or {} %}
+    {% set seg = d.seguridad or {} %}
+    {% set resumen = 'Resumen general de la clínica hoy.' %}
+    {% elif r.cod == 'CLINICO' %}
+    {% set resumen = ('Tenés ' ~ (d.citas|length) ~ ' pacientes hoy · ' ~ d.atendidos ~ ' atendidos.') if not d.sin_especialista else '' %}
+    {% elif r.cod == 'RECEPCION' %}
+    {% set resumen = (d.citas|length) ~ ' citas hoy · ' ~ (d.por_estado.get('AGENDADA', 0)) ~ ' por confirmar.' %}
+    {% else %}
+    {% set resumen = ('Caja abierta' if d.caja_abierta else 'Sin caja abierta') ~ ' · ' ~ ((d.ventas or {}).get('facturas', 0)) ~ ' facturas emitidas hoy.' %}
+    {% endif %}
+
+    <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+         id="panel-{{ r.cod }}" role="tabpanel" aria-labelledby="tab-{{ r.cod }}" data-resumen="{{ resumen }}">
+
+      {# ═══════════════════════ ADMINISTRADOR ═══════════════════════ #}
       {% if r.cod == 'ADMINISTRADOR' %}
-      <div class="row mb-3">
-        <div class="col-lg-3 col-sm-6 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Citas de Hoy</p>
-              <div class="h2 fw-bold mb-1">{{ d.citas_hoy }}</div>
-              <p class="text-muted small mb-0">Agendadas para hoy</p>
-            </div>
-          </div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cita.citaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="far fa-calendar"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Citas de hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.citas_total }}</div>
+            <div class="small text-body-secondary">{{ c.get('CONFIRMADA', 0) }} confirmadas · {{ c.get('COMPLETADA', 0) }} completadas</div>
+          </a>
         </div>
-        <div class="col-lg-3 col-sm-6 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Recordatorios Pendientes</p>
-              <div class="h2 fw-bold mb-1">{{ d.recordatorios_pendientes }}</div>
-              <p class="text-muted small mb-0">Por enviar</p>
-            </div>
-          </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('factura.facturaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="fas fa-dollar-sign"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Facturado hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ (d.ventas or {}).get('facturado_fmt', '—') }}</div>
+            <div class="small text-body-secondary">{{ (d.ventas or {}).get('facturas', 0) }} facturas emitidas</div>
+          </a>
         </div>
-        <div class="col-lg-3 col-sm-6 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Cajas Abiertas</p>
-              <div class="h2 fw-bold mb-1">{{ d.cajas_abiertas }}</div>
-              <p class="text-muted small mb-0">Sobre el total</p>
-            </div>
-          </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('apertura_cierre_caja.cajaEstado') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon {{ 'bg-success-subtle text-success-emphasis' if d.cajas_abiertas else 'bg-warning-subtle text-warning-emphasis' }}"><i class="fas fa-cash-register"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Cajas abiertas</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.cajas_abiertas }} <span class="fs-6 text-body-secondary">de {{ d.cajas_total }}</span></div>
+            {% if d.cajas_abiertas %}
+            <div class="small text-body-secondary">Operando</div>
+            {% else %}
+            <div class="small text-warning-emphasis fw-semibold">Ninguna caja abierta</div>
+            {% endif %}
+          </a>
         </div>
-        <div class="col-lg-3 col-sm-6 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Facturado Hoy</p>
-              <div class="h2 fw-bold mb-1">{{ d.facturado_hoy_count }}</div>
-              <p class="text-muted small mb-0">{{ d.facturado_hoy_monto }}</p>
-            </div>
-          </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cuenta_cobrar.cuentaCobrarIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon {{ 'bg-warning-subtle text-warning-emphasis' if cxc.get('vencidas') else 'bg-secondary-subtle text-secondary-emphasis' }}"><i class="far fa-file-lines"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Cuentas por cobrar</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ cxc.get('total', 0) }}</div>
+            <div class="small {{ 'text-warning-emphasis fw-semibold' if cxc.get('vencidas') else 'text-body-secondary' }}">{{ cxc.get('vencidas', 0) }} vencidas · {{ cxc.get('monto_pendiente_fmt', '') }}</div>
+          </a>
         </div>
       </div>
 
-      <div class="row mb-4">
-        <div class="col-lg-8 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header d-flex align-items-center justify-content-between border-bottom py-3">
-              <span class="fw-semibold">Cuentas por Cobrar Pendientes</span>
-              <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver cobranzas</a>
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{{ url_for('reporte.reporteIndex') }}" class="btn btn-outline-secondary"><i class="fas fa-chart-line me-1"></i>Reportes</a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualesRol"><i class="fas fa-book me-1"></i>Manuales por rol</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualSeguridad"><i class="fas fa-shield-halved me-1"></i>Manual de seguridad</button>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span class="fw-bold text-body-emphasis">Citas de hoy por estado</span>
+              <a href="{{ url_for('cita.citaIndex') }}" class="small fw-semibold text-decoration-none">Agenda general <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
-            <div class="card-body p-0">
-              {% if d.cxc %}
-              <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                  <thead class="table-light">
-                    <tr><th>Cuenta</th><th>Paciente</th><th>Vencimiento</th><th class="text-end">Pendiente</th></tr>
-                  </thead>
-                  <tbody>
-                    {% for c in d.cxc %}
-                    <tr>
-                      <td class="fw-semibold">{{ c.cuenta_numero }}</td>
-                      <td>{{ c.paciente_nombre }}</td>
-                      <td><small class="text-muted">{{ c.fecha_vencimiento_fmt }}</small></td>
-                      <td class="text-end">{{ '{:,.0f}'.format(c.monto_pendiente).replace(',', '.') }}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
+            <div class="card-body">
+              {% set estados_barra = [('COMPLETADA', 'Completadas', 'secondary'), ('EN_CONSULTA', 'En consulta', 'primary'),
+                                      ('CONFIRMADA', 'Confirmadas', 'success'), ('AGENDADA', 'Por confirmar', 'warning'),
+                                      ('CANCELADA', 'Canceladas', 'danger'), ('AUSENTE', 'Ausentes', 'dark')] %}
+              {% if d.citas_total %}
+              <div class="progress-stacked mb-3" style="height:10px;">
+                {% for cod, etiqueta, color in estados_barra if c.get(cod) %}
+                <div class="progress" role="progressbar" aria-label="{{ etiqueta }}" style="width: {{ (c.get(cod) * 100 / d.citas_total)|round(1) }}%">
+                  <div class="progress-bar bg-{{ color }}"></div>
+                </div>
+                {% endfor %}
               </div>
               {% else %}
-              <div class="text-center text-muted py-4">
-                <i class="fas fa-file-invoice-dollar" style="font-size:2rem;opacity:0.3;"></i>
-                <p class="small mt-2 mb-0">Sin cuentas por cobrar pendientes</p>
-              </div>
+              <p class="text-body-secondary small mb-3">No hay citas para hoy.</p>
               {% endif %}
+              <div class="row row-cols-2 row-cols-md-3 g-2 small">
+                {% for cod, etiqueta, color in estados_barra %}
+                <div class="col d-flex align-items-center gap-2"><i class="fas fa-square text-{{ color }}"></i>{{ etiqueta }} <span class="ms-auto fw-bold num">{{ c.get(cod, 0) }}</span></div>
+                {% endfor %}
+              </div>
+              <hr class="my-3">
+              <div class="row g-3 small text-body-secondary">
+                <div class="col-4">Recordatorios por enviar<div class="fs-5 fw-bold text-body-emphasis num">{{ d.recordatorios_pendientes }}</div></div>
+                <div class="col-4">En lista de espera<div class="fs-5 fw-bold text-body-emphasis num">{{ d.lista_espera }}</div></div>
+                <div class="col-4">Consultas abiertas<div class="fs-5 fw-bold text-body-emphasis num">{{ d.consultas_abiertas }}</div></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="col-lg-4 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-bottom py-3">
-              <span class="fw-semibold">Alertas de seguridad</span>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span class="fw-bold text-body-emphasis">Seguridad</span>
+              <span class="small text-body-secondary">Últimas 24 h</span>
             </div>
-            <div class="card-body p-3 d-flex flex-column gap-3">
-              {% set hay_intentos = d.intentos_fallidos and d.intentos_fallidos > 0 %}
-              <div class="d-flex align-items-center gap-3 p-3 rounded"
-                   style="background:{% if hay_intentos %}rgba(245,158,11,0.08){% else %}var(--bs-body-bg,#f8f9fa){% endif %};">
-                <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
-                     style="width:2.2rem;height:2.2rem;background:{% if hay_intentos %}rgba(245,158,11,0.15){% else %}rgba(108,117,125,0.1){% endif %};">
-                  <i class="fas fa-shield-halved" style="font-size:1rem;color:{% if hay_intentos %}#f59e0b{% else %}#6c757d{% endif %};"></i>
+            {% set bloqueados = seg.get('bloqueados', []) %}
+            <div class="list-group list-group-flush">
+              <a href="{{ url_for('usuario.usuarioIndex') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <span class="kpi-icon {{ 'bg-danger-subtle text-danger-emphasis' if bloqueados else 'bg-secondary-subtle text-secondary-emphasis' }}" style="width:2.1rem;height:2.1rem;"><i class="fas fa-user-lock small"></i></span>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold small">{{ bloqueados|length }} usuario{{ '' if bloqueados|length == 1 else 's' }} bloqueado{{ '' if bloqueados|length == 1 else 's' }}</div>
+                  <div class="small text-body-secondary">{{ bloqueados|map(attribute='usu_nick')|join(', ') if bloqueados else 'Ninguno' }}</div>
                 </div>
-                <div>
-                  <div class="fw-semibold" style="font-size:0.9rem;color:{% if hay_intentos %}#d97706{% else %}inherit{% endif %};">
-                    {{ d.intentos_fallidos }} intento{{ 's' if d.intentos_fallidos != 1 else '' }} fallido{{ 's' if d.intentos_fallidos != 1 else '' }}
-                  </div>
-                  <div class="text-muted" style="font-size:0.78rem;">Últimos 15 minutos · esta IP</div>
+                <i class="fas fa-chevron-right small text-body-tertiary"></i>
+              </a>
+              <a href="{{ url_for('acceso.accesoIndex') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <span class="kpi-icon {{ 'bg-warning-subtle text-warning-emphasis' if seg.get('intentos_fallidos') else 'bg-secondary-subtle text-secondary-emphasis' }}" style="width:2.1rem;height:2.1rem;"><i class="fas fa-shield-halved small"></i></span>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold small">{{ seg.get('intentos_fallidos', 0) }} intentos fallidos</div>
+                  <div class="small text-body-secondary">Desde {{ seg.get('ips_distintas', 0) }} direcciones IP</div>
                 </div>
-              </div>
-
-              <div class="d-flex align-items-center gap-3 p-3 rounded" style="background:var(--bs-body-bg,#f8f9fa);">
-                <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
-                     style="width:2.2rem;height:2.2rem;background:rgba(108,117,125,0.1);">
-                  <i class="fas fa-clipboard-list" style="font-size:1rem;color:#6c757d;"></i>
+                <i class="fas fa-chevron-right small text-body-tertiary"></i>
+              </a>
+              <a href="{{ url_for('acceso.accesoIndex') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis" style="width:2.1rem;height:2.1rem;"><i class="fas fa-desktop small"></i></span>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold small">{{ seg.get('sesiones_activas', 0) }} sesiones activas</div>
+                  <div class="small text-body-secondary">En {{ seg.get('usuarios_conectados', 0) }} usuarios</div>
                 </div>
-                <div>
-                  <div class="fw-semibold" style="font-size:0.9rem;">{{ d.eventos_auditoria }} eventos registrados</div>
-                  <div class="text-muted" style="font-size:0.78rem;">Total en auditoría del sistema</div>
+                <i class="fas fa-chevron-right small text-body-tertiary"></i>
+              </a>
+              <a href="{{ url_for('auditoria.auditoriaIndex') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <span class="kpi-icon bg-secondary-subtle text-secondary-emphasis" style="width:2.1rem;height:2.1rem;"><i class="far fa-envelope small"></i></span>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold small">{{ seg.get('mfa_enviados', 0) }} códigos MFA enviados</div>
+                  <div class="small text-body-secondary">Verificación por correo</div>
                 </div>
-              </div>
+                <i class="fas fa-chevron-right small text-body-tertiary"></i>
+              </a>
             </div>
           </div>
         </div>
       </div>
 
-      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
-      <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('cita.citaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-calendar-days fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Programación</div><h6 class="mb-0">Agenda General</h6></div>
-            </div>
-          </a>
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-body-emphasis">Cuentas vencidas</span>
+          <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="small fw-semibold text-decoration-none">Ver cobranzas <i class="fas fa-arrow-right ms-1"></i></a>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('paciente.pacienteIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-users fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Listado</div><h6 class="mb-0">Pacientes</h6></div>
-            </div>
-          </a>
+        {% if d.vencidas %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Paciente</th><th class="d-none d-md-table-cell">Cuenta</th><th>Atraso</th><th class="text-end">Pendiente</th></tr></thead>
+            <tbody>
+              {% for v in d.vencidas %}
+              <tr>
+                <td class="fw-semibold">{{ v.paciente_nombre }}</td>
+                <td class="d-none d-md-table-cell text-body-secondary num">{{ v.cuenta_numero }}</td>
+                <td><span class="badge {{ 'text-bg-danger' if v.dias_atraso >= 15 else 'text-bg-warning' }}">{{ v.dias_atraso }} días</span></td>
+                <td class="text-end fw-semibold num">{{ v.monto_pendiente_fmt }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('funcionario.funcionarioIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-user-tie fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Personal</div><h6 class="mb-0">Funcionarios</h6></div>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('acceso.accesoIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-user-shield fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Seguridad</div><h6 class="mb-0">Accesos</h6></div>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="javascript:void(0);"
-             data-bs-toggle="modal" data-bs-target="#modalManualesRol">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-book fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Ayuda</div><h6 class="mb-0">Manuales por rol</h6></div>
-            </div>
-          </a>
-        </div>
+        {% else %}
+        <div class="card-body text-center text-body-secondary small">Sin cuentas vencidas.</div>
+        {% endif %}
       </div>
 
+      {# ═══════════════════════ CLÍNICO ═══════════════════════ #}
       {% elif r.cod == 'CLINICO' %}
-      <div class="row mb-3">
-        <div class="col-lg-4 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Mis Citas de Hoy</p>
-              <div class="h2 fw-bold mb-1">{{ d.citas|length }}</div>
-              <p class="text-muted small mb-0">Pacientes programados</p>
-            </div>
-          </div>
+      {% if d.sin_especialista %}
+      <div class="card mb-4">
+        <div class="card-body text-center text-body-secondary py-5">
+          <i class="fas fa-user-doctor fa-2x mb-2 opacity-50"></i>
+          <p class="mb-0">Tu usuario no tiene un perfil de especialista vinculado.</p>
         </div>
       </div>
-
-      <div class="card mb-4">
-        <div class="card-header d-flex align-items-center justify-content-between">
-          <span class="fw-bold">Agenda de hoy</span>
-          <a href="{{ url_for('mi_agenda.miAgendaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver Mi Agenda</a>
-        </div>
-        <div class="card-body p-0">
-          {% if d.sin_especialista %}
-          <div class="text-center text-muted py-4">
-            <i class="fas fa-user-doctor" style="font-size:2rem;opacity:0.3;"></i>
-            <p class="small mt-2 mb-0">Tu usuario no tiene un perfil de especialista vinculado.</p>
+      {% else %}
+      {% set p = d.proxima %}
+      <div class="card border-start border-4 border-primary mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+          {% if p %}
+          <div class="flex-grow-1">
+            <div class="small fw-semibold text-primary-emphasis">
+              <i class="far fa-clock me-1"></i>{{ 'Consulta en curso' if p.cod_estado_cita == 'EN_CONSULTA' else 'Próximo paciente' }} · {{ p.cita_hora_inicio }} – {{ p.cita_hora_fin }}
+            </div>
+            <div class="h5 fw-bold text-body-emphasis mb-1">{{ p.paciente_nombre }} {{ p.paciente_apellido }}</div>
+            <div class="small text-body-secondary d-flex flex-wrap align-items-center gap-3">
+              <span><i class="far fa-file-lines me-1"></i>{{ p.cita_motivo or ('Primera consulta' if p.cita_es_primera_vez else 'Seguimiento') }}</span>
+              {{ badge_cita(p.cod_estado_cita, p.des_estado_cita) }}
+            </div>
           </div>
-          {% elif d.citas %}
-          <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-              <thead class="table-light">
-                <tr><th>Hora</th><th>Paciente</th><th>Motivo</th><th>Estado</th></tr>
-              </thead>
-              <tbody>
-                {% for c in d.citas %}
-                <tr>
-                  <td class="fw-semibold">{{ c.cita_hora_inicio }}</td>
-                  <td>{{ c.paciente_nombre }} {{ c.paciente_apellido }}</td>
-                  <td><small class="text-muted">{{ c.cita_motivo or '—' }}</small></td>
-                  <td>
-                    {% if c.cod_estado_cita == 'CONFIRMADA' %}
-                      <span class="badge border border-success text-success">Confirmada</span>
-                    {% elif c.cod_estado_cita == 'EN_CONSULTA' %}
-                      <span class="badge border border-primary text-primary">En consulta</span>
-                    {% elif c.cod_estado_cita == 'COMPLETADA' %}
-                      <span class="badge border border-info text-info">Completada</span>
-                    {% else %}
-                      <span class="badge border border-secondary text-secondary">{{ c.des_estado_cita }}</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('ficha.fichaPaciente', id_paciente=p.id_paciente) }}" class="btn btn-outline-secondary"><i class="far fa-folder-open me-1"></i>Ver ficha</a>
+            <button type="button" class="btn btn-primary btn-iniciar-consulta" data-id-cita="{{ p.id_cita }}">
+              <i class="fas fa-play me-1"></i>{{ 'Continuar consulta' if p.cod_estado_cita == 'EN_CONSULTA' else 'Iniciar consulta' }}
+            </button>
           </div>
           {% else %}
-          <div class="text-center text-muted py-4">
-            <i class="fas fa-calendar" style="font-size:2rem;opacity:0.3;"></i>
-            <p class="small mt-2 mb-0">Sin citas para hoy</p>
-          </div>
+          <div class="flex-grow-1 text-body-secondary"><i class="far fa-circle-check me-2"></i>No quedan pacientes por atender hoy.</div>
+          <a href="{{ url_for('mi_agenda.miAgendaIndex') }}" class="btn btn-outline-secondary">Ver Mi Agenda</a>
           {% endif %}
         </div>
       </div>
 
-      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
-      <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('mi_agenda.miAgendaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-calendar-days fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Hoy</div><h6 class="mb-0">Mi Agenda</h6></div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('mi_agenda.miAgendaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="fas fa-user-group"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Pacientes hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.citas|length }}</div>
+            <div class="progress mt-2" role="progressbar" aria-label="Avance del día" aria-valuenow="{{ d.atendidos }}" aria-valuemin="0" aria-valuemax="{{ d.citas|length }}">
+              <div class="progress-bar" style="width: {{ (d.atendidos * 100 / d.citas|length)|round(0) if d.citas else 0 }}%"></div>
             </div>
           </a>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('consulta.consultaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-stethoscope fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Clínico</div><h6 class="mb-0">Consultas</h6></div>
-            </div>
+        <div class="col-6 col-xl-3">
+          <div class="card card-body h-100">
+            <div class="mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="far fa-circle-check"></i></span></div>
+            <div class="small fw-semibold text-body-secondary">Atendidos</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.atendidos }}</div>
+            <div class="small text-body-secondary">Quedan {{ d.pendientes }}{% if d.hora_fin %} · hasta las {{ d.hora_fin }}{% endif %}</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('consulta.consultaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon {{ 'bg-warning-subtle text-warning-emphasis' if d.consultas.abiertas else 'bg-secondary-subtle text-secondary-emphasis' }}"><i class="fas fa-file-pen"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Consultas sin cerrar</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.consultas.abiertas }}</div>
+            <div class="small {{ 'text-warning-emphasis fw-semibold' if d.consultas.abiertas else 'text-body-secondary' }}">En atención</div>
           </a>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('ficha.fichaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-folder-open fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Historial</div><h6 class="mb-0">Fichas Médicas</h6></div>
-            </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('consulta.consultaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-info-subtle text-info-emphasis"><i class="fas fa-stethoscope"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Consultas de hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.consultas.consultas_dia }}</div>
+            <div class="small text-body-secondary">Registradas hoy</div>
           </a>
         </div>
       </div>
 
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-body-emphasis">Mi agenda de hoy</span>
+          <a href="{{ url_for('mi_agenda.miAgendaIndex') }}" class="small fw-semibold text-decoration-none">Ver Mi Agenda <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+        {% if d.citas %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th style="width:90px;">Hora</th><th>Paciente</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              {% for ct in d.citas %}
+              {% set cerrada = ct.cod_estado_cita in ('COMPLETADA', 'CANCELADA', 'AUSENTE') %}
+              <tr class="{{ 'text-body-secondary' if cerrada else '' }} {{ 'table-active' if ct.cod_estado_cita == 'EN_CONSULTA' else '' }}">
+                <td class="num {{ 'fw-semibold' if not cerrada else '' }}">{{ ct.cita_hora_inicio }}</td>
+                <td>{{ ct.paciente_nombre }} {{ ct.paciente_apellido }}<div class="small text-body-secondary">{{ ct.cita_motivo or ('Primera consulta' if ct.cita_es_primera_vez else 'Seguimiento') }}</div></td>
+                <td>{{ badge_cita(ct.cod_estado_cita, ct.des_estado_cita) }}</td>
+                <td class="text-end">
+                  {% if not cerrada %}
+                  <button type="button" class="btn btn-sm {{ 'btn-primary' if p and p.id_cita == ct.id_cita else 'btn-outline-secondary' }} btn-iniciar-consulta" data-id-cita="{{ ct.id_cita }}">
+                    {{ 'Continuar' if ct.cod_estado_cita == 'EN_CONSULTA' else 'Iniciar' }}
+                  </button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="card-body text-center text-body-secondary small">Sin citas para hoy.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# ═══════════════════════ RECEPCIÓN ═══════════════════════ #}
       {% elif r.cod == 'RECEPCION' %}
-      <div class="row mb-3">
-        <div class="col-lg-3 col-sm-6 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Citas de Hoy</p>
-              <div class="h2 fw-bold mb-1">{{ d.citas|length }}</div>
-              <p class="text-muted small mb-0">Programadas</p>
-            </div>
-          </div>
+      {% set pe = d.por_estado or {} %}
+      {% set notificados = d.lista_espera|selectattr('estado', 'equalto', 'NOTIFICADO')|list|length %}
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cita.citaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="far fa-calendar"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Citas de hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.citas|length }}</div>
+            <div class="small text-body-secondary">En {{ d.especialistas }} especialista{{ '' if d.especialistas == 1 else 's' }}</div>
+          </a>
         </div>
-        <div class="col-lg-3 col-sm-6 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Recordatorios Pendientes</p>
-              <div class="h2 fw-bold mb-1">{{ d.recordatorios_pendientes }}</div>
-              <p class="text-muted small mb-0">Por enviar</p>
-            </div>
-          </div>
+        <div class="col-6 col-xl-3">
+          <a href="#" class="card card-body h-100 text-decoration-none kpi" data-filtro-link="AGENDADA">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon {{ 'bg-warning-subtle text-warning-emphasis' if pe.get('AGENDADA') else 'bg-secondary-subtle text-secondary-emphasis' }}"><i class="far fa-clock"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Por confirmar</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ pe.get('AGENDADA', 0) }}</div>
+            <div class="small {{ 'text-warning-emphasis fw-semibold' if pe.get('AGENDADA') else 'text-body-secondary' }}">Citas agendadas sin confirmar</div>
+          </a>
+        </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cita.citaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-info-subtle text-info-emphasis"><i class="far fa-bell"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Recordatorios</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.recordatorios_pendientes }}</div>
+            <div class="small text-body-secondary">Por enviar · automático</div>
+          </a>
+        </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('lista_espera.listaEsperaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-secondary-subtle text-secondary-emphasis"><i class="fas fa-list-ol"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Lista de espera</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ d.lista_espera|length }}</div>
+            <div class="small {{ 'text-success-emphasis fw-semibold' if notificados else 'text-body-secondary' }}">{{ notificados }} notificado{{ '' if notificados == 1 else 's' }}</div>
+          </a>
         </div>
       </div>
 
-      <div class="card mb-4">
-        <div class="card-header d-flex align-items-center justify-content-between">
-          <span class="fw-bold">Citas de hoy</span>
-          <a href="{{ url_for('cita.citaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver agenda</a>
-        </div>
-        <div class="card-body p-0">
-          {% if d.citas %}
-          <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-              <thead class="table-light">
-                <tr><th>Hora</th><th>Paciente</th><th>Especialista</th><th>Estado</th></tr>
-              </thead>
-              <tbody>
-                {% for c in d.citas %}
-                <tr>
-                  <td class="fw-semibold">{{ c.cita_inicio.split(' ')[1] if c.cita_inicio else '—' }}</td>
-                  <td>{{ c.paciente_nombre }} {{ c.paciente_apellido }}</td>
-                  <td><small class="text-muted">{{ c.especialista_nombre }} {{ c.especialista_apellido }}</small></td>
-                  <td>
-                    {% if c.cod_estado_cita == 'CONFIRMADA' %}
-                      <span class="badge border border-success text-success">Confirmada</span>
-                    {% elif c.cod_estado_cita == 'EN_CONSULTA' %}
-                      <span class="badge border border-primary text-primary">En consulta</span>
-                    {% else %}
-                      <span class="badge border border-secondary text-secondary">{{ c.des_estado_cita }}</span>
-                    {% endif %}
-                  </td>
-                </tr>
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{{ url_for('cita.citaAgregar') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nueva cita</a>
+        <a href="{{ url_for('paciente.pacienteAgregar') }}" class="btn btn-outline-secondary"><i class="fas fa-user-plus me-1"></i>Registrar paciente</a>
+        <a href="{{ url_for('lista_espera.listaEsperaIndex') }}" class="btn btn-outline-secondary"><i class="fas fa-list-ol me-1"></i>Lista de espera</a>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header">
+              <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <span class="fw-bold text-body-emphasis">Citas de hoy</span>
+                <div class="input-group input-group-sm" style="max-width:220px;">
+                  <span class="input-group-text bg-transparent text-body-tertiary"><i class="fas fa-magnifying-glass"></i></span>
+                  <input type="search" class="form-control" placeholder="Buscar paciente" id="buscarCita" aria-label="Buscar paciente">
+                </div>
+              </div>
+              <ul class="nav nav-pills gap-1 mt-3 small flex-nowrap overflow-x-auto" id="filtrosCitas">
+                {% set filtros = [('', 'Todas', d.citas|length), ('AGENDADA', 'Por confirmar', pe.get('AGENDADA', 0)),
+                                  ('CONFIRMADA', 'Confirmadas', pe.get('CONFIRMADA', 0)), ('EN_CONSULTA', 'En consulta', pe.get('EN_CONSULTA', 0)),
+                                  ('COMPLETADA', 'Completadas', pe.get('COMPLETADA', 0))] %}
+                {% for cod, etiqueta, cant in filtros %}
+                <li class="nav-item"><button type="button" class="nav-link py-1 px-2 text-nowrap {{ 'active' if not cod else '' }}" data-filtro="{{ cod }}">{{ etiqueta }} <span class="badge {{ 'bg-warning-subtle text-warning-emphasis' if cod == 'AGENDADA' and cant else 'bg-secondary-subtle text-secondary-emphasis' }} ms-1">{{ cant }}</span></button></li>
                 {% endfor %}
-              </tbody>
-            </table>
+              </ul>
+            </div>
+            {% if d.citas %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th style="width:90px;">Hora</th><th>Paciente</th><th>Estado</th><th></th></tr></thead>
+                <tbody id="listaCitas">
+                  {% for ct in d.citas %}
+                  {% set cerrada = ct.cod_estado_cita in ('COMPLETADA', 'CANCELADA', 'AUSENTE') %}
+                  <tr class="{{ 'text-body-secondary' if cerrada else '' }}" data-estado="{{ ct.cod_estado_cita }}">
+                    <td class="num {{ 'fw-semibold' if ct.cod_estado_cita == 'EN_CONSULTA' else '' }}">{{ ct.hora }}</td>
+                    <td>{{ ct.paciente_nombre }} {{ ct.paciente_apellido }}<div class="small text-body-secondary">{{ ct.especialista_nombre }} {{ ct.especialista_apellido }}{% if ct.des_especialidad %} · {{ ct.des_especialidad }}{% endif %}</div></td>
+                    <td>{{ badge_cita(ct.cod_estado_cita, ct.des_estado_cita) }}</td>
+                    <td class="text-end">
+                      {% if ct.cod_estado_cita == 'AGENDADA' %}
+                      <button type="button" class="btn btn-sm btn-outline-success btn-confirmar-cita" data-id-cita="{{ ct.id_cita }}">Confirmar</button>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="text-center text-body-secondary small py-4" id="citasVacio" hidden>No hay citas que coincidan.</div>
+            {% else %}
+            <div class="card-body text-center text-body-secondary small">Sin citas para hoy.</div>
+            {% endif %}
           </div>
-          {% else %}
-          <div class="text-center text-muted py-4">
-            <i class="fas fa-calendar" style="font-size:2rem;opacity:0.3;"></i>
-            <p class="small mt-2 mb-0">Sin citas para hoy</p>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span class="fw-bold text-body-emphasis">Lista de espera</span>
+              <a href="{{ url_for('lista_espera.listaEsperaIndex') }}" class="small fw-semibold text-decoration-none">Ver todo <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+            {% if d.lista_espera %}
+            <ul class="list-group list-group-flush">
+              {% set clase_espera = {'NOTIFICADO': 'text-bg-success', 'ACEPTADO': 'text-bg-primary', 'PENDIENTE': 'text-bg-secondary', 'EXPIRADO': 'text-bg-light border'} %}
+              {% for le in d.lista_espera[:5] %}
+              <li class="list-group-item d-flex justify-content-between align-items-start gap-2">
+                <div>
+                  <div class="fw-semibold small">{{ le.paciente_nombre }}</div>
+                  <div class="small text-body-secondary">{{ le.especialista_nombre }} · {{ le.des_dia }} {{ le.hora_inicio }}</div>
+                </div>
+                <span class="badge {{ clase_espera.get(le.estado, 'text-bg-light border') }}">{{ le.estado|capitalize }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-center text-body-secondary small">Nadie en lista de espera.</div>
+            {% endif %}
           </div>
-          {% endif %}
         </div>
       </div>
 
-      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
-      <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('cita.citaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-calendar-days fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Programación</div><h6 class="mb-0">Agenda General</h6></div>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('paciente.pacienteIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-users fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Listado</div><h6 class="mb-0">Pacientes</h6></div>
-            </div>
-          </a>
-        </div>
-      </div>
-
+      {# ═══════════════════════ VENTAS ═══════════════════════ #}
       {% elif r.cod == 'VENTAS' %}
-      <div class="row mb-3">
-        <div class="col-lg-4 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Cajas Abiertas</p>
-              <div class="h2 fw-bold mb-1">{{ d.cajas_abiertas }}</div>
-              <p class="text-muted small mb-0">Sobre el total</p>
-            </div>
+      {% set v = d.ventas or {} %}
+      {% set cxc = d.cxc or {} %}
+      {% set caja = d.caja_abierta %}
+      <div class="card {{ 'border-success-subtle bg-success-subtle' if caja else 'border-warning-subtle bg-warning-subtle' }} mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+          <span class="kpi-icon bg-body {{ 'text-success-emphasis' if caja else 'text-warning-emphasis' }}"><i class="fas fa-cash-register"></i></span>
+          <div class="flex-grow-1">
+            {% if caja %}
+            <div class="fw-bold text-success-emphasis">{{ caja.des_caja }} abierta</div>
+            <div class="small text-body-secondary">Desde {{ caja.fecha_apertura }} · {{ caja.cod_moneda }} · {{ caja.usuario_apertura }}</div>
+            {% else %}
+            <div class="fw-bold text-warning-emphasis">No hay ninguna caja abierta</div>
+            <div class="small text-body-secondary">Abrí una caja para poder facturar y cobrar.</div>
+            {% endif %}
           </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Facturado Hoy</p>
-              <div class="h2 fw-bold mb-1">{{ d.facturado_hoy_count }}</div>
-              <p class="text-muted small mb-0">{{ d.facturado_hoy_monto }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <p class="text-muted mb-2" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07rem;font-weight:600;">Cuentas por Cobrar</p>
-              <div class="h2 fw-bold mb-1">{{ d.cxc|length }}</div>
-              <p class="text-muted small mb-0">Pendientes de pago</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mb-4">
-        <div class="card-header d-flex align-items-center justify-content-between">
-          <span class="fw-bold">Cuentas por Cobrar Pendientes</span>
-          <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="btn btn-sm btn-outline-secondary">Ver cobranzas</a>
-        </div>
-        <div class="card-body p-0">
-          {% if d.cxc %}
-          <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-              <thead class="table-light">
-                <tr><th>Cuenta</th><th>Paciente</th><th>Vencimiento</th><th class="text-end">Pendiente</th></tr>
-              </thead>
-              <tbody>
-                {% for c in d.cxc %}
-                <tr>
-                  <td class="fw-semibold">{{ c.cuenta_numero }}</td>
-                  <td>{{ c.paciente_nombre }}</td>
-                  <td><small class="text-muted">{{ c.fecha_vencimiento_fmt }}</small></td>
-                  <td class="text-end">{{ '{:,.0f}'.format(c.monto_pendiente).replace(',', '.') }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-          <div class="text-center text-muted py-4">
-            <i class="fas fa-file-invoice-dollar" style="font-size:2rem;opacity:0.3;"></i>
-            <p class="small mt-2 mb-0">Sin cuentas por cobrar pendientes</p>
-          </div>
+          <a href="{{ url_for('apertura_cierre_caja.cajaEstado') }}" class="btn btn-outline-secondary">Estado de caja</a>
+          {% if caja %}
+          <a href="{{ url_for('factura.facturaAgregar') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nueva factura</a>
           {% endif %}
         </div>
       </div>
 
-      <h5 class="mb-3 fw-semibold">Acceso Rápido</h5>
-      <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('factura.facturaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-file-lines fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Emisión</div><h6 class="mb-0">Facturas</h6></div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('factura.facturaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-success-subtle text-success-emphasis"><i class="fas fa-dollar-sign"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Facturado hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ v.get('facturado_fmt', '—') }}</div>
+            <div class="small text-body-secondary">{{ v.get('facturas', 0) }} facturas</div>
+          </a>
+        </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-primary-subtle text-primary-emphasis"><i class="far fa-credit-card"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Cobrado hoy</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ v.get('cobrado_fmt', '—') }}</div>
+            <div class="progress mt-2" role="progressbar" aria-label="Cobrado sobre facturado" aria-valuenow="{{ v.get('porcentaje_cobrado', 0) }}" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar" style="width: {{ [v.get('porcentaje_cobrado', 0), 100]|min }}%"></div>
             </div>
           </a>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('cobranza.cobranzaIndex') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-dollar-sign fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Pagos</div><h6 class="mb-0">Cobranzas</h6></div>
-            </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cuenta_cobrar.cuentaCobrarIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon bg-secondary-subtle text-secondary-emphasis"><i class="far fa-file-lines"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Cuentas por cobrar</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ cxc.get('total', 0) }}</div>
+            <div class="small text-body-secondary">{{ cxc.get('monto_pendiente_fmt', '') }} pendientes</div>
           </a>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-          <a class="card lift h-100 border-0 shadow-sm text-decoration-none" href="{{ url_for('apertura_cierre_caja.cajaEstado') }}">
-            <div class="card-body d-flex align-items-center">
-              <i class="fas fa-cash-register fa-2x text-muted me-3"></i>
-              <div><div class="small text-muted">Operaciones</div><h6 class="mb-0">Estado de Caja</h6></div>
-            </div>
+        <div class="col-6 col-xl-3">
+          <a href="{{ url_for('cuenta_cobrar.cuentaCobrarIndex') }}" class="card card-body h-100 text-decoration-none kpi">
+            <div class="d-flex justify-content-between align-items-start mb-3"><span class="kpi-icon {{ 'bg-danger-subtle text-danger-emphasis' if cxc.get('vencidas') else 'bg-secondary-subtle text-secondary-emphasis' }}"><i class="fas fa-triangle-exclamation"></i></span><i class="fas fa-chevron-right small text-body-tertiary kpi-go"></i></div>
+            <div class="small fw-semibold text-body-secondary">Vencidas</div>
+            <div class="fs-3 fw-bold text-body-emphasis num">{{ cxc.get('vencidas', 0) }}</div>
+            <div class="small {{ 'text-danger-emphasis fw-semibold' if cxc.get('vencidas') else 'text-body-secondary' }}">{{ cxc.get('monto_vencido_fmt', '') }}</div>
           </a>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span class="fw-bold text-body-emphasis">Últimas facturas</span>
+              <a href="{{ url_for('factura.facturaIndex') }}" class="small fw-semibold text-decoration-none">Ver facturas <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+            {% if d.facturas %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Factura</th><th class="d-none d-md-table-cell">Condición</th><th>Estado</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                  {% for f in d.facturas %}
+                  <tr>
+                    <td><div class="fw-semibold">{{ f.paciente_nombre }}</div><div class="small text-body-secondary num">{{ f.factura_numero }} · {{ f.fecha_hora }}</div></td>
+                    <td class="d-none d-md-table-cell text-body-secondary">{{ f.des_condicion_venta }}</td>
+                    <td><span class="badge text-bg-light border">{{ f.des_estado_factura }}</span></td>
+                    <td class="text-end fw-semibold num">{{ f.total_fmt }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="card-body text-center text-body-secondary small">Todavía no hay facturas.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span class="fw-bold text-body-emphasis">Vencidas</span>
+              <a href="{{ url_for('cobranza.cobranzaIndex') }}" class="small fw-semibold text-decoration-none">Cobrar <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+            {% if d.vencidas %}
+            <ul class="list-group list-group-flush">
+              {% for ve in d.vencidas %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div><div class="fw-semibold small">{{ ve.paciente_nombre }}</div><div class="small text-body-secondary num">{{ ve.monto_pendiente_fmt }}</div></div>
+                <span class="badge {{ 'text-bg-danger' if ve.dias_atraso >= 15 else 'text-bg-warning' }}">{{ ve.dias_atraso }} días</span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-center text-body-secondary small">Sin cuentas vencidas.</div>
+            {% endif %}
+          </div>
         </div>
       </div>
       {% endif %}
@@ -481,6 +572,7 @@ Dashboard - Inicio
     </div>
     {% endfor %}
   </div>
+</div>
 </div>
 
 {% if roles | selectattr('cod', 'equalto', 'ADMINISTRADOR') | list %}
@@ -510,24 +602,180 @@ Dashboard - Inicio
     </div>
   </div>
 </div>
+
+<!-- Modal Manual de seguridad: políticas + operación (contenedores, backups, scripts), vista previa y PDF -->
+<div class="modal fade" id="modalManualSeguridad" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Manual de seguridad y operación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <iframe id="iframeManualSeguridad" title="Manual de seguridad" style="width:100%;height:70vh;border:0;"
+                data-src="{{ url_for('ayuda.ayudaSeguridad') }}"></iframe>
+      </div>
+      <div class="modal-footer bg-light">
+        <a class="btn btn-danger btn-sm" href="{{ url_for('ayuda.ayudaSeguridadPdf') }}">
+          <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
 <style>
-  .lift { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-  .lift:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; }
+  /* Colores del inicio: el violeta del sistema en los componentes "primary" de Bootstrap/AdminLTE
+     (AdminLTE los trae compilados en azul). Solo aplica a esta pantalla. */
+  .app-content .btn-primary {
+    --bs-btn-bg: #7c3aed; --bs-btn-border-color: #7c3aed;
+    --bs-btn-hover-bg: #6d28d9; --bs-btn-hover-border-color: #6d28d9;
+    --bs-btn-active-bg: #5b21b6; --bs-btn-active-border-color: #5b21b6;
+    --bs-btn-disabled-bg: #7c3aed; --bs-btn-disabled-border-color: #7c3aed;
+    --bs-btn-focus-shadow-rgb: 124, 58, 237;
+  }
+  .app-content .text-bg-primary { background-color: #7c3aed !important; color: #fff !important; }
+  .app-content .progress-bar:not([class*="bg-"]) { background-color: #7c3aed; }
+  .app-content .border-primary { border-color: #7c3aed !important; }
+  .app-content {
+    --bs-primary-text-emphasis: #5b21b6;
+    --bs-primary-bg-subtle: #ede9fe;
+    --bs-primary-border-subtle: #ddd6fe;
+  }
+  [data-bs-theme="dark"] .app-content {
+    --bs-primary-text-emphasis: #c4b5fd;
+    --bs-primary-bg-subtle: #2e1065;
+    --bs-primary-border-subtle: #5b21b6;
+  }
+  .app-content .nav-pills {
+    --bs-nav-pills-link-active-bg: var(--bs-primary-bg-subtle);
+    --bs-nav-pills-link-active-color: var(--bs-primary-text-emphasis);
+    --bs-nav-link-color: var(--bs-secondary-color);
+    --bs-nav-link-hover-color: var(--bs-primary-text-emphasis);
+  }
+  .app-content a:not(.btn):not(.nav-link):not(.list-group-item):not(.card) { color: #6d28d9; }
+  [data-bs-theme="dark"] .app-content a:not(.btn):not(.nav-link):not(.list-group-item):not(.card) { color: #a78bfa; }
+
+  /* Tarjeta de indicador clicable + cuadro del ícono */
+  .kpi { transition: border-color 0.15s; }
+  .kpi:hover { border-color: var(--bs-primary-border-subtle); }
+  .kpi:hover .kpi-go { color: var(--bs-primary-text-emphasis) !important; }
+  .kpi-icon { width: 2.4rem; height: 2.4rem; display: inline-grid; place-items: center; border-radius: var(--bs-border-radius-lg); flex-shrink: 0; }
+  .app-content .progress { --bs-progress-height: 6px; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Pestañas de rol sobre el banner */
   #rolTabs .nav-link { font-size: .82rem; padding: .3rem .85rem; color: rgba(255,255,255,.7); }
   #rolTabs .nav-link:hover { color: #fff; background: rgba(255,255,255,.15); }
   #rolTabs .nav-link.active { color: #fff; background: rgba(255,255,255,.25); }
+  #dashHeader { transition: background-color .2s; }
 </style>
 
 <script>
-document.querySelectorAll('#rolTabs [data-bs-toggle="pill"]').forEach(btn => {
-  btn.addEventListener('shown.bs.tab', () => {
-    document.getElementById('dashHeader').style.background = btn.dataset.color;
-    document.getElementById('dashIcon').className = `fas ${btn.dataset.icon} me-2`;
-    document.getElementById('dashTitle').textContent = 'Panel ' + btn.dataset.label;
+(function () {
+  const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  // Saludo según la hora y fecha de hoy (solo la primera letra en mayúscula)
+  const ahora = new Date();
+  const h = ahora.getHours();
+  document.getElementById('saludo').textContent = h < 12 ? 'Buenos días' : (h < 19 ? 'Buenas tardes' : 'Buenas noches');
+  const fecha = ahora.toLocaleDateString('es-PY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('fechaHoy').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+
+  // Resumen de la línea del banner según el panel visible
+  function actualizarResumen(panel) {
+    document.getElementById('resumenRol').textContent = panel ? (panel.dataset.resumen || '') : '';
+  }
+  actualizarResumen(document.querySelector('#rolTabsContent .tab-pane.active'));
+
+  // Pestañas por rol: cambian color, ícono y título del banner
+  document.querySelectorAll('#rolTabs [data-bs-toggle="pill"]').forEach(btn => {
+    btn.addEventListener('shown.bs.tab', () => {
+      document.getElementById('dashHeader').style.background = btn.dataset.color;
+      document.getElementById('dashIcon').className = `fas ${btn.dataset.icon} me-2`;
+      document.getElementById('dashTitle').textContent = 'Panel ' + btn.dataset.label;
+      actualizarResumen(document.querySelector(btn.dataset.bsTarget));
+    });
   });
-});
+
+  // Clínico: iniciar / continuar consulta (mismo endpoint que Mi Agenda)
+  document.querySelectorAll('.btn-iniciar-consulta').forEach(btn => {
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      fetch(`/api/v1/citas/${btn.dataset.idCita}/iniciar-consulta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = `/clinico/consulta/consulta-editar/${data.data.id_consulta}`;
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo iniciar la consulta.', 'error');
+            btn.disabled = false;
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Ocurrió un error al iniciar la consulta.', 'error');
+          btn.disabled = false;
+        });
+    });
+  });
+
+  // Recepción: confirmar cita (mismo endpoint de cambio de estado que Citas)
+  document.querySelectorAll('.btn-confirmar-cita').forEach(btn => {
+    btn.addEventListener('click', function () {
+      Swal.fire({
+        title: '¿Confirmar la cita?', icon: 'question', showCancelButton: true,
+        confirmButtonText: 'Confirmar', cancelButtonText: 'Cancelar'
+      }).then(res => {
+        if (!res.isConfirmed) return;
+        btn.disabled = true;
+        fetch(`/api/v1/citas/${btn.dataset.idCita}/estado`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+          body: JSON.stringify({ cod_estado_nuevo: 'CONFIRMADA' })
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo confirmar la cita.', 'error');
+              btn.disabled = false;
+            }
+          })
+          .catch(() => {
+            Swal.fire('Error', 'Ocurrió un error al confirmar la cita.', 'error');
+            btn.disabled = false;
+          });
+      });
+    });
+  });
+
+  // Recepción: filtro por estado + búsqueda por paciente
+  const lista = document.getElementById('listaCitas');
+  if (lista) {
+    let filtro = '';
+    const buscar = document.getElementById('buscarCita');
+    const aplicar = () => {
+      const texto = (buscar.value || '').trim().toLowerCase();
+      let visibles = 0;
+      lista.querySelectorAll('tr[data-estado]').forEach(tr => {
+        const ok = (!filtro || tr.dataset.estado === filtro) && (!texto || tr.textContent.toLowerCase().includes(texto));
+        tr.hidden = !ok;
+        if (ok) visibles++;
+      });
+      document.getElementById('citasVacio').hidden = visibles > 0;
+      document.querySelectorAll('#filtrosCitas [data-filtro]').forEach(b => b.classList.toggle('active', b.dataset.filtro === filtro));
+    };
+    document.querySelectorAll('#filtrosCitas [data-filtro]').forEach(b => b.addEventListener('click', () => { filtro = b.dataset.filtro; aplicar(); }));
+    document.querySelectorAll('[data-filtro-link]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); filtro = a.dataset.filtroLink; aplicar(); }));
+    buscar.addEventListener('input', aplicar);
+  }
+})();
 
 // Manuales por rol: los roles salen de /api/v1/roles (ya oculta SUPERADMIN a quien no lo es)
 (function () {
@@ -562,6 +810,16 @@ document.querySelectorAll('#rolTabs [data-bs-toggle="pill"]').forEach(btn => {
     iframe.setAttribute('src', urlManual + q);
     btnPdf.setAttribute('href', urlPdf + q);
     btnPdf.classList.remove('disabled');
+  });
+})();
+
+// Manual de seguridad: el iframe se carga recién al abrir el modal
+(function () {
+  const modal = document.getElementById('modalManualSeguridad');
+  if (!modal) return;
+  const iframe = document.getElementById('iframeManualSeguridad');
+  modal.addEventListener('shown.bs.modal', function () {
+    if (!iframe.getAttribute('src')) iframe.setAttribute('src', iframe.dataset.src);
   });
 })();
 </script>

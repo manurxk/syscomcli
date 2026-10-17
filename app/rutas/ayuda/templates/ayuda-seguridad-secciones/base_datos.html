@@ -1,0 +1,68 @@
+<h4>Ver los usuarios de la base</h4>
+<pre><code>docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c "\du"</code></pre>
+<p>Esperado: <code>postgres</code> con <code>Superuser, Create role, Create DB, Replication, Bypass RLS</code>, y <code>sysclin_app</code> sin atributos. El rol y sus permisos los crea <code>migrations/103_rol_sysclin_app.sql</code>; las tablas, vistas y funciones que se creen después reciben los mismos permisos automáticamente.</p>
+
+<h4>Consola SQL</h4>
+<pre><code># Como administrador (todos los permisos)
+docker exec -it syscomcli_bd psql -U postgres -d sysclin_bd
+
+# Como la aplicación (permisos mínimos): para comprobar qué puede hacer la app
+docker exec -it syscomcli_bd psql -U sysclin_app -d sysclin_bd</code></pre>
+<p>Estas consolas no piden contraseña porque se conectan desde dentro del contenedor. Desde fuera (DBeaver, otra PC) <strong>siempre</strong> se pide. Para salir: <code>\q</code>.</p>
+
+<h4>Conectarse con DBeaver o pgAdmin</h4>
+<table class="datos">
+    <tr><th>Campo</th><th>Valor</th></tr>
+    <tr><td>Host / Puerto</td><td><code>localhost</code> / <code>5434</code></td></tr>
+    <tr><td>Base</td><td><code>sysclin_bd</code></td></tr>
+    <tr><td>Usuario / Contraseña</td><td><code>postgres</code> / la de <code>POSTGRES_PASSWORD</code> del <code>.env</code></td></tr>
+</table>
+<p>En el servidor el puerto de la base no se publica a internet: conectarse por <strong>túnel SSH</strong> (pestaña "SSH" de la conexión en DBeaver, o <code>ssh -L 5434:127.0.0.1:5434 &lt;usuario&gt;@&lt;servidor&gt;</code>).</p>
+
+<h4>Aplicar una migración</h4>
+<p>Las migraciones están en <code>migrations/</code>, numeradas, y se aplican en orden, como administrador. <strong>Antes, hacer un backup manual</strong> (capítulo <a href="#backups">Backups</a>).</p>
+<pre><code>Get-Content migrations\&lt;NNN_nombre&gt;.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1</code></pre>
+<p><code>ON_ERROR_STOP=1</code> frena al primer error, así no queda una migración aplicada a medias sin aviso.</p>
+
+<h4>Cambiar la contraseña de la aplicación (<code>sysclin_app</code>)</h4>
+<p>Cada 6 meses, o enseguida si se sospecha que se filtró. Hacerlo fuera del horario de atención: entre los pasos 2 y 3 la app no puede conectarse.</p>
+<ol>
+    <li>Generar un valor nuevo (capítulo <a href="#configuracion">Configuración</a>) y ponerlo en <code>DB_PASSWORD</code> del <code>.env</code>.</li>
+    <li>Aplicarlo en la base:
+<pre><code>$appPwd = (Select-String -Path .env -Pattern '^DB_PASSWORD=(.*)$').Matches[0].Groups[1].Value
+Get-Content migrations\103_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 -v "app_password=$appPwd" -q</code></pre></li>
+    <li>Recrear la app: <code>docker compose -f dock/docker-compose.yml up -d app</code>.</li>
+    <li>Comprobar que responde y que se puede iniciar sesión.</li>
+</ol>
+
+<h4>Cambiar la contraseña del administrador (<code>postgres</code>)</h4>
+<ol>
+    <li>Generar un valor nuevo y ponerlo en <code>POSTGRES_PASSWORD</code> del <code>.env</code>.</li>
+    <li>Aplicarlo en la base:
+<pre><code>$admPwd = (Select-String -Path .env -Pattern '^POSTGRES_PASSWORD=(.*)$').Matches[0].Groups[1].Value
+docker exec syscomcli_bd psql -U postgres -qc "ALTER ROLE postgres PASSWORD '$admPwd'"</code></pre></li>
+    <li>Recrear el backup para que tome la contraseña nueva: <code>docker compose -f dock/docker-compose.yml up -d backup</code>.</li>
+    <li>Hacer un backup manual para confirmar que funciona.</li>
+    <li>Actualizar la contraseña guardada en DBeaver o pgAdmin.</li>
+</ol>
+<p class="importante">Con una base ya creada, cambiar solo el <code>.env</code> <strong>no</strong> cambia la contraseña: siempre hace falta el paso 2. Solo en una instalación nueva (volumen vacío) el contenedor crea <code>postgres</code> directamente con la contraseña del <code>.env</code>.</p>
+
+<h4>Comprobar los permisos de la aplicación</h4>
+<pre><code># Deben dar ERROR (la aplicación no puede hacerlo)
+docker exec syscomcli_bd psql -U sysclin_app -d sysclin_bd -c "DROP TABLE usuarios"
+docker exec syscomcli_bd psql -U sysclin_app -d sysclin_bd -c "CREATE TABLE zz_prueba (id int)"
+docker exec syscomcli_bd psql -U sysclin_app -d sysclin_bd -c "TRUNCATE auditoria_sistema"
+
+# Debe funcionar (la aplicación sí puede leer)
+docker exec syscomcli_bd psql -U sysclin_app -d sysclin_bd -Atc "SELECT current_user, count(*) FROM usuarios GROUP BY 1"</code></pre>
+<table class="datos">
+    <tr><th>Comando</th><th>Resultado esperado</th></tr>
+    <tr><td><code>DROP TABLE</code></td><td><code>ERROR: must be owner of table usuarios</code></td></tr>
+    <tr><td><code>CREATE TABLE</code></td><td><code>ERROR: permission denied for schema public</code></td></tr>
+    <tr><td><code>TRUNCATE</code></td><td><code>ERROR: permission denied for table auditoria_sistema</code></td></tr>
+    <tr><td><code>SELECT</code></td><td><code>sysclin_app|&lt;cantidad de usuarios&gt;</code></td></tr>
+</table>
+
+<h4>Comprobar que la contraseña por defecto no sirve</h4>
+<pre><code>docker run --rm --network dock_network-tesis -e PGPASSWORD=postgres postgres:17 psql -h db -U postgres -d sysclin_bd -c "SELECT 1"</code></pre>
+<p>Esperado: <code>FATAL: password authentication failed for user "postgres"</code>.</p>

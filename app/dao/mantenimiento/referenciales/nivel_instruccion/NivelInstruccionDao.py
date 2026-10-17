@@ -29,7 +29,3 @@ class NivelInstruccionDao(BaseDAO):
             WHERE id_nivel_instruccion = %s
         """
         return self.execute_query(sql, (descripcion, estado, nivel_instruccion_id), commit=True) > 0
-
-    def deleteNivelInstruccion(self, nivel_instruccion_id):
-        sql = "DELETE FROM niveles_instruccion WHERE id_nivel_instruccion = %s"
-        return self.execute_query(sql, (nivel_instruccion_id,), commit=True) > 0

@@ -86,6 +86,17 @@ class RecetaDao(BaseDAO):
 
         return self.execute_transaction(_crear)
 
+    def getParaImprimir(self, id_receta):
+        """Receta con sus medicamentos y paciente/especialista (PDF de la receta)."""
+        cab = self.execute_query_one(
+            "SELECT id_consulta, id_paciente, id_especialista FROM recetas WHERE id_receta = %s AND est_receta = TRUE",
+            (id_receta,))
+        if not cab:
+            return None
+        receta = next((r for r in self.getPorConsulta(cab['id_consulta']) if r['id_receta'] == id_receta), None)
+        receta.update(cab)
+        return receta
+
     def desactivar(self, id_receta, usuario_modificacion=None):
         sql = "UPDATE recetas SET est_receta = FALSE, usuario_modificacion = %s WHERE id_receta = %s"
         return self.execute_query(sql, (usuario_modificacion, id_receta), commit=True) > 0

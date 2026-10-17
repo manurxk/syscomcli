@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, current_app as app, session
+from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.ventas.movimientos.nota_credito.NotaCreditoDao import NotaCreditoDao
+from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
+from app.services.factura_pdf_service import FacturaPDFService
 from app.auth.utils.decorators import role_required
 
 notacreditoapi = Blueprint('notacreditoapi', __name__)
@@ -73,3 +75,24 @@ def anularNotaCredito(id_nota_credito):
     except Exception as e:
         app.logger.error(f"Error al anular nota de crédito {id_nota_credito}: {e}")
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@notacreditoapi.route('/notas-credito/<int:id_nota_credito>/pdf', methods=['GET'])
+@role_required(*ROLES_VENTAS)
+def getNotaCreditoPDF(id_nota_credito):
+    """KuDE de la nota (FE.html, misma plantilla que la factura asociada)."""
+    try:
+        dao = NotaCreditoDao()
+        nota = dao.getNotaCreditoById(id_nota_credito)
+        if not nota:
+            return jsonify({'success': False, 'error': 'No se encontró la nota de crédito.'}), 404
+        fdao = FacturaDao()
+        buffer = FacturaPDFService().generar_nota_pdf(
+            'NC', nota, dao.getNotaCreditoDetalle(id_nota_credito),
+            fdao.getFacturaById(nota['id_factura']) or {}, fdao.getFacturaDetalle(nota['id_factura']),
+        )
+        nombre = f"nota_credito_{nota['nota_credito_numero'].replace('-', '_')}.pdf"
+        return send_file(buffer, mimetype='application/pdf', as_attachment=False, download_name=nombre)
+    except Exception as e:
+        app.logger.error(f"Error al generar PDF de nota de crédito {id_nota_credito}: {e}", exc_info=True)
+        return jsonify({'success': False, 'error': 'No se pudo generar el PDF.'}), 500

@@ -1,7 +1,9 @@
 import io
+import os
 from datetime import date
 
-from flask import Blueprint, render_template, session, request, send_file
+from flask import Blueprint, render_template, session, request, send_file, url_for, current_app
+from markupsafe import Markup, escape
 from app.auth.utils.decorators import role_required
 from app.dao.mantenimiento.seguridad.menu.MenuDao import MenuDao
 from app.services.ayuda_service import AyudaService
@@ -17,6 +19,10 @@ SECCIONES_MANUAL = {
     'paciente.pacienteIndex': {
         'template': 'ayuda-secciones/pacientes.html',
         'endpoints': ('paciente.pacienteIndex', 'paciente.pacienteAgregar'),
+    },
+    'funcionario.funcionarioIndex': {
+        'template': 'ayuda-secciones/funcionarios.html',
+        'endpoints': ('funcionario.funcionarioIndex', 'funcionario.funcionarioAgregar'),
     },
     'agenda_horarios.agendaHorariosIndex': {
         'template': 'ayuda-secciones/agenda_medica.html',
@@ -121,6 +127,60 @@ SECCIONES_MANUAL = {
 }
 
 
+# Manual de seguridad: solo para quien administra el sistema.
+ROLES_SEGURIDAD = ('SUPERADMIN', 'ADMINISTRADOR')
+
+# Capítulos del manual de seguridad, en orden.
+SECCIONES_SEGURIDAD = (
+    {'id': 'objetivo', 'titulo': 'Objetivo, alcance y clasificación de la información', 'template': 'ayuda-seguridad-secciones/objetivo.html'},
+    {'id': 'componentes', 'titulo': 'Componentes del sistema (contenedores)', 'template': 'ayuda-seguridad-secciones/componentes.html'},
+    {'id': 'configuracion', 'titulo': 'Configuración (.env)', 'template': 'ayuda-seguridad-secciones/configuracion.html'},
+    {'id': 'contenedores', 'titulo': 'Manejo de contenedores y reactivación del sistema', 'template': 'ayuda-seguridad-secciones/contenedores.html'},
+    {'id': 'contrasenas', 'titulo': 'Contraseñas y autenticación', 'template': 'ayuda-seguridad-secciones/contrasenas.html'},
+    {'id': 'roles', 'titulo': 'Roles y control de acceso', 'template': 'ayuda-seguridad-secciones/roles.html'},
+    {'id': 'base-datos', 'titulo': 'Base de datos: usuarios, contraseñas y migraciones', 'template': 'ayuda-seguridad-secciones/base_datos.html'},
+    {'id': 'aplicacion', 'titulo': 'Seguridad de la aplicación', 'template': 'ayuda-seguridad-secciones/aplicacion.html'},
+    {'id': 'https', 'titulo': 'HTTPS, red y despliegue en el servidor', 'template': 'ayuda-seguridad-secciones/https.html'},
+    {'id': 'backups', 'titulo': 'Backups y restauración', 'template': 'ayuda-seguridad-secciones/backups.html'},
+    {'id': 'auditoria', 'titulo': 'Auditoría y chequeo periódico', 'template': 'ayuda-seguridad-secciones/auditoria.html'},
+    {'id': 'dependencias', 'titulo': 'Gestión de vulnerabilidades (dependencias)', 'template': 'ayuda-seguridad-secciones/dependencias.html'},
+    {'id': 'incidentes', 'titulo': 'Respuesta a incidentes', 'template': 'ayuda-seguridad-secciones/incidentes.html'},
+    {'id': 'problemas', 'titulo': 'Solución de problemas', 'template': 'ayuda-seguridad-secciones/problemas.html'},
+    {'id': 'riesgos', 'titulo': 'Riesgos aceptados y normativa', 'template': 'ayuda-seguridad-secciones/riesgos.html'},
+)
+
+# Anexo de scripts: se leen del repositorio al generar el manual, así nunca queda desactualizado.
+# Ninguno contiene secretos (las claves viven en .env, que no se incluye).
+SCRIPTS_SEGURIDAD = (
+    ('dock/docker-compose.yml', 'Definición de los contenedores (desarrollo)'),
+    ('dock/docker-compose.servidor.yml', 'Ajustes del servidor: puertos cerrados y HSTS'),
+    ('dock/Dockerfile', 'Imagen de la aplicación y modo de arranque'),
+    ('.env.example', 'Plantilla del .env, sin valores'),
+    ('dock/backup/entrypoint.sh', 'Servicio de backup: ciclo cada 24 h'),
+    ('dock/backup/backup.sh', 'Backup cifrado con GPG y rotación'),
+    ('dock/backup/restore_test.sh', 'Prueba de restauración'),
+    ('dock/nginx/conf.d/default.conf', 'Proxy HTTPS (nginx)'),
+    ('dock/nginx/hsts.conf', 'HSTS (solo servidor)'),
+    ('dock/nginx/generar_cert_local.sh', 'Certificado autofirmado de desarrollo'),
+    ('migrations/103_rol_sysclin_app.sql', 'Rol de la aplicación con permisos mínimos'),
+)
+
+
+def _leer_scripts():
+    """Contenido actual de los scripts del anexo; si alguno falta, se indica en lugar de fallar."""
+    raiz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    scripts = []
+    for ruta, descripcion in SCRIPTS_SEGURIDAD:
+        try:
+            with open(os.path.join(raiz, ruta), encoding='utf-8') as f:
+                contenido = f.read()
+        except OSError:
+            contenido = None
+        scripts.append({'id': 'script-' + ruta.replace('/', '-').replace('.', '-'),
+                        'ruta': ruta, 'descripcion': descripcion, 'contenido': contenido})
+    return scripts
+
+
 def _rol_solicitado():
     """Rol pedido por ?rol= (manuales por rol del inicio del administrador).
     Solo lo pueden usar ADMINISTRADOR/SUPERADMIN; el de SUPERADMIN, solo un Superadministrador."""
@@ -155,6 +215,19 @@ def _armar_manual(rol=None):
     return secciones, sin_guia
 
 
+def _figura(es_pdf):
+    """Captura de pantalla de la guía (generadas con docs/scripts/capturas_manual.py en static/img/ayuda/).
+    La vista previa la pide por URL; el PDF, por ruta de archivo. Si la imagen no existe, no muestra nada."""
+    def figura(ruta, pie=''):
+        archivo = os.path.join(current_app.static_folder, 'img', 'ayuda', *ruta.split('/'))
+        if not os.path.isfile(archivo):
+            return ''
+        src = ('file://' + archivo) if es_pdf else url_for('static', filename=f'img/ayuda/{ruta}')
+        pie_html = f'<figcaption>{escape(pie)}</figcaption>' if pie else ''
+        return Markup(f'<figure class="captura"><img src="{escape(src)}" alt="{escape(pie)}">{pie_html}</figure>')
+    return figura
+
+
 def _seccion_desde(endpoint, secciones):
     """Id de la sección de la pantalla desde donde se pidió ayuda, si el rol la ve."""
     visibles = {s["id"] for s in secciones}
@@ -174,6 +247,8 @@ def ayudaManual():
                            secciones=secciones,
                            sin_guia=sin_guia,
                            seccion_activa=_seccion_desde(request.args.get('desde'), secciones),
+                           logo_base64=AyudaService().logo_base64(),
+                           figura=_figura(False),
                            es_pdf=False,
                            perfil=rol or session.get('grupo'),
                            fecha=date.today().strftime('%d/%m/%Y'))
@@ -190,6 +265,8 @@ def ayudaManualPdf():
                                        secciones=secciones,
                                        sin_guia=sin_guia,
                                        seccion_activa=None,
+                                       logo_base64=AyudaService().logo_base64(),
+                                       figura=_figura(True),
                                        es_pdf=True,
                                        perfil=perfil,
                                        fecha=date.today().strftime('%d/%m/%Y'))
@@ -200,4 +277,36 @@ def ayudaManualPdf():
         mimetype='application/pdf',
         as_attachment=True,
         download_name=f"Guia_de_uso_{perfil or 'SYSCLIN'}.pdf"
+    )
+
+
+@ayudamod.route('/seguridad')
+@role_required(*ROLES_SEGURIDAD)
+def ayudaSeguridad():
+    """Vista previa del manual de seguridad y operación (modal del inicio del administrador)."""
+    return render_template('ayuda-seguridad.html',
+                           secciones=SECCIONES_SEGURIDAD,
+                           scripts=_leer_scripts(),
+                           logo_base64=AyudaService().logo_base64(),
+                           es_pdf=False,
+                           fecha=date.today().strftime('%d/%m/%Y'))
+
+
+@ayudamod.route('/seguridad/pdf')
+@role_required(*ROLES_SEGURIDAD)
+def ayudaSeguridadPdf():
+    """Mismo manual de seguridad, descargado como PDF."""
+    html_renderizado = render_template('ayuda-seguridad.html',
+                                       secciones=SECCIONES_SEGURIDAD,
+                                       scripts=_leer_scripts(),
+                                       logo_base64=AyudaService().logo_base64(),
+                                       es_pdf=True,
+                                       fecha=date.today().strftime('%d/%m/%Y'))
+    pdf_bytes = AyudaService().generar_pdf_manual(html_renderizado)
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f"Manual_de_seguridad_SYSCLIN_{date.today().strftime('%Y%m%d')}.pdf"
     )

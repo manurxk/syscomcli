@@ -384,6 +384,8 @@ def deleteFuncionario(id_funcionario):
                 'error': 'No se encontró el funcionario con el ID proporcionado o no se pudo desactivar.'
             }), 404
 
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         app.logger.error(f"Error al desactivar funcionario: {str(e)}")
         return jsonify({

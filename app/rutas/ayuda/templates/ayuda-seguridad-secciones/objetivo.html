@@ -1,0 +1,29 @@
+<p>Este manual reúne en un solo documento <strong>las políticas de seguridad</strong> de Sysclin (qué se protege y con qué reglas) y <strong>los procedimientos de operación</strong> para aplicarlas: cómo manejar los contenedores, reactivar el sistema, hacer y restaurar backups, cambiar contraseñas, desplegar en el servidor y responder ante un incidente.</p>
+<p>No reemplaza a la <strong>Guía de uso</strong> (botón de Ayuda), que explica el trabajo diario de cada rol en agenda, consultorio y ventas.</p>
+
+<h4>Objetivo</h4>
+<p>Proteger la información de los pacientes y de la clínica en sus tres dimensiones:</p>
+<ul>
+    <li><strong>Confidencialidad</strong>: solo accede quien debe.</li>
+    <li><strong>Integridad</strong>: los datos no se alteran sin control y queda registro de los cambios.</li>
+    <li><strong>Disponibilidad</strong>: el sistema funciona y, si algo falla, se recupera desde un backup.</li>
+</ul>
+
+<h4>Alcance</h4>
+<p>Alcanza a la aplicación web, la base de datos, los respaldos, la infraestructura donde corre (desarrollo y servidor) y a todas las personas que usan o administran el sistema.</p>
+
+<h4>Convenciones de este manual</h4>
+<ul>
+    <li>Los comandos se ejecutan en <strong>PowerShell</strong>, desde la <strong>carpeta raíz del proyecto</strong> (<code>syscomcli</code>), salvo que se indique otra cosa. Los marcados como <code>bash</code> son para el servidor Linux.</li>
+    <li>Donde aparece <code>&lt;algo&gt;</code>, se reemplaza por el valor real, sin los signos <code>&lt; &gt;</code>.</li>
+    <li>El texto con borde amarillo es una advertencia; con borde rojo, una acción que puede causar pérdida de datos o corte del servicio.</li>
+</ul>
+
+<h4>Clasificación de la información</h4>
+<table class="datos">
+    <tr><th>Nivel</th><th>Qué incluye</th><th>Exigencias</th></tr>
+    <tr><td><strong>Sensible</strong></td><td>Historia clínica (consultas, diagnósticos, recetas, PEI, derivaciones), datos personales de pacientes, credenciales</td><td>Acceso solo por rol; cifrado en tránsito y en los respaldos; auditoría de acceso; <strong>no se borra físicamente</strong> (la historia clínica se conserva)</td></tr>
+    <tr><td><strong>Interna</strong></td><td>Facturación, caja, cobranzas, agenda, configuración</td><td>Acceso por rol; cifrado en tránsito y en los respaldos</td></tr>
+    <tr><td><strong>Pública</strong></td><td>Pantalla de inicio de sesión, guía de uso</td><td>Sin restricción</td></tr>
+</table>
+<p class="importante">Como se trata de datos de salud, <strong>el cifrado, el respaldo y la auditoría tienen prioridad sobre la comodidad</strong>.</p>

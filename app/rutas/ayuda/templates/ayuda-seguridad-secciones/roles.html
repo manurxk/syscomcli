@@ -1,0 +1,23 @@
+<h4>Roles de la aplicación</h4>
+<table class="datos">
+    <tr><th>Rol</th><th>Alcance</th></tr>
+    <tr><td>Super Administrador (<code>SUPERADMIN</code>)</td><td>Configuración técnica del sistema y baja de usuarios. No participa de la gestión clínica</td></tr>
+    <tr><td>Administrador (<code>ADMINISTRADOR</code>)</td><td>Usuarios, permisos, menú, accesos, auditoría y desbloqueo de cuentas</td></tr>
+    <tr><td>Recepción (<code>RECEPCION</code>)</td><td>Agenda, citas, lista de espera, pacientes</td></tr>
+    <tr><td>Clínico (<code>CLINICO</code>)</td><td>Consultas, historia clínica, recetas, órdenes, PEI, derivaciones</td></tr>
+    <tr><td>Ventas (<code>VENTAS</code>)</td><td>Caja, facturación, cobranzas, notas de crédito y débito</td></tr>
+</table>
+<ul>
+    <li><strong>Mínimo privilegio</strong>: cada usuario recibe solo el rol que necesita. El menú se arma por rol: qué páginas ve cada rol se configura en <strong>Seguridad → Menú</strong>, y qué acciones puede hacer, en <strong>Seguridad → Permisos</strong>.</li>
+    <li>El alta de usuarios la hace un administrador; <strong>no existe autoregistro ni ingreso con redes sociales</strong>.</li>
+    <li>La baja la hace el Super Administrador. La cuenta se <strong>desactiva</strong>, no se borra, para conservar su rastro en la auditoría; queda registrada como <code>RECORD_DELETE</code>.</li>
+    <li>Para ver exactamente qué ve cada rol, el inicio del administrador tiene el botón <span class="btn-ref">Manuales por rol</span>.</li>
+</ul>
+
+<h4>Roles de la base de datos</h4>
+<table class="datos">
+    <tr><th>Rol de la base</th><th>Uso</th><th>Permisos</th></tr>
+    <tr><td><code>postgres</code></td><td>Administración, migraciones, backup</td><td>Superusuario</td></tr>
+    <tr><td><code>sysclin_app</code></td><td>La aplicación</td><td>Solo leer y escribir datos, usar secuencias y ejecutar funciones. <strong>Sin</strong> <code>DROP</code>, <code>CREATE</code>, <code>TRUNCATE</code>, <code>ALTER</code>, creación de roles o bases, ni tablas temporales</td></tr>
+</table>
+<p>Si alguien aprovechara una falla de la aplicación, solo tendría los permisos de <code>sysclin_app</code>.</p>

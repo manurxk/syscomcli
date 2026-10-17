@@ -158,12 +158,14 @@ def verificar_sesion_mejorada():
         _dao.execute_query(sql_ping, (sesion_data['id_sesion'],), commit=True)
 
         roles = list(sesion_data['roles'] or [])
+        # Usuario sin funcionario/persona: el CONCAT devuelve ' ', se muestra el nick
+        nombre_persona = (sesion_data['nombre_completo'] or '').strip() or sesion_data['usu_nick']
 
         # Cargar usuario en g.user
         g.user = {
             'id_usuario': sesion_data['id_usuario'],
             'usu_nick': sesion_data['usu_nick'],
-            'nombre_persona': sesion_data['nombre_completo'],
+            'nombre_persona': nombre_persona,
             'grupo': sesion_data['rol_principal'],
             'roles': roles,
             'sesion_id': sesion_data['id_sesion']
@@ -172,7 +174,7 @@ def verificar_sesion_mejorada():
         # Actualizar sesión Flask (compatibilidad)
         session['id_usuario'] = sesion_data['id_usuario']
         session['usu_nick'] = sesion_data['usu_nick']
-        session['nombre_persona'] = sesion_data['nombre_completo']
+        session['nombre_persona'] = nombre_persona
         session['grupo'] = sesion_data['rol_principal']
         session['roles'] = roles
         session['session_token'] = session_token

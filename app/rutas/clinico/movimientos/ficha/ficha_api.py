@@ -114,7 +114,7 @@ def addNota(id_paciente):
 @role_required(*ROLES_FICHA)
 def deleteNota(id_nota):
     try:
-        ok = FichaDao().eliminarNota(id_nota)
+        ok = FichaDao().eliminarNota(id_nota, usuario_modificacion=session.get('id_usuario'))
         if not ok:
             return jsonify({'success': False, 'error': 'Nota no encontrada.'}), 404
         return jsonify({'success': True, 'data': None, 'error': None}), 200

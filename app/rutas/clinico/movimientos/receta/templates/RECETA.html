@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!-- Plantilla del PDF de la receta (ver app/services/documento_clinico_pdf_service.py).
+     Mismo patrón que FICHA.html: los marcadores #!#...#!# se reemplazan por los datos ya escapados
+     y el HTML se convierte a PDF con WeasyPrint. Diseño aprobado sobre docs/prototipos/receta_ejemplo.pdf -->
+<html>
+
+<head>
+  <title>Receta</title>
+  <meta charset="UTF-8" />
+  <style type="text/css">
+    @page {
+      size: A4;
+      margin: 10mm 9mm 14mm 9mm;
+
+      @bottom-center {
+        content: "Receta #!#NUMERO#!# · Página " counter(page) " de " counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 6.5pt;
+        color: #555555;
+      }
+    }
+
+    body { font-family: Arial, sans-serif; font-size: 8pt; color: #000000; margin: 0; padding: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    .encabezado td { vertical-align: top; }
+    .encabezado img { width: 80px; height: auto; margin-bottom: 6px; }
+    .titulo-doc { font-size: 13pt; font-weight: bold; text-align: center; margin-top: 6px; }
+    .doc-num { text-align: center; font-size: 10pt; margin-top: 6px; }
+    .seccion {
+      background-color: #c9c9c9; border: 1px solid #040303; font-size: 8pt; font-weight: bold;
+      text-transform: uppercase; padding: 3px 6px; margin-top: 8px;
+    }
+    .tabla-datos td { border: 1px solid #040303; padding: 3px 6px; vertical-align: top; line-height: 1.4; }
+    .lbl { display: block; font-size: 6.5pt; color: #555555; text-transform: uppercase; }
+    .texto-largo { white-space: pre-line; }
+    .rp { font-size: 16pt; font-weight: bold; font-style: italic; margin: 6px 0 2px 2px; }
+    .detalle th { background: #dcdcdc; border: 1px solid #040303; padding: 3px; font-weight: normal; text-align: center; }
+    .detalle td { border: 1px solid #040303; padding: 3px 5px; vertical-align: top; }
+    .indic { font-size: 7.5pt; color: #333333; font-style: italic; }
+    .firma { margin-top: 30px; width: 45%; margin-left: auto; text-align: center; }
+    .firma .linea { border-top: 1px solid #000000; padding-top: 3px; }
+    .confidencial {
+      margin-top: 14px; border: 1px solid #040303; padding: 5px 7px; font-size: 6.5pt;
+      color: #333333; line-height: 1.4;
+    }
+    .no-cortar { page-break-inside: avoid; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ENCABEZADO: empresa | datos del documento -->
+  <table class="encabezado" style="border: 1px solid #040303;">
+    <tr style="background-color: #dcdcdc;">
+      <td colspan="2" style="text-align: center; font-size: 7pt; padding: 3px; border-bottom: 1px solid #040303;">
+        Receta médica · Documento confidencial
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 60%; padding: 10px 12px; line-height: 1.5;">
+        #!#pathLogo#!#
+        <div style="font-size: 10pt; font-weight: bold;">#!#EMPRESA_NOMBRE#!#</div>
+        <div>#!#EMPRESA_DIRECCION#!#</div>
+        <div>Teléfono: #!#EMPRESA_TELEFONO#!#</div>
+        <div>RUC: #!#EMPRESA_RUC#!#</div>
+      </td>
+      <td style="width: 40%; padding: 10px 12px; border-left: 1px solid #040303; line-height: 1.6;">
+        <div class="titulo-doc">RECETA</div>
+        <div class="doc-num">Nº <b>#!#NUMERO#!#</b></div>
+        <div style="text-align: center; margin-top: 10px;">Fecha: #!#FECHA#!#</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- PACIENTE -->
+  <div class="seccion">Paciente</div>
+  <table class="tabla-datos">
+    <tr>
+      <td style="width: 50%;"><span class="lbl">Nombre completo</span><b>#!#PAC_NOMBRE#!#</b></td>
+      <td style="width: 17%;"><span class="lbl">Cédula</span>#!#PAC_CEDULA#!#</td>
+      <td style="width: 20%;"><span class="lbl">Fecha de nacimiento · edad</span>#!#PAC_NAC_EDAD#!#</td>
+      <td style="width: 13%;"><span class="lbl">Historia clínica</span>#!#PAC_HISTORIA#!#</td>
+    </tr>
+    #!#FILA_RESPONSABLE#!#
+  </table>
+
+  <!-- MEDICAMENTOS -->
+  <div class="rp">Rp/</div>
+  <table class="detalle">
+    <tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Cantidad</th></tr>
+    #!#ITEMS#!#
+  </table>
+
+  <table class="tabla-datos" style="margin-top: 6px;">
+    <tr><td><span class="lbl">Indicaciones generales</span><span class="texto-largo">#!#INDICACIONES#!#</span></td></tr>
+    #!#FILA_OBSERVACIONES#!#
+    <tr><td><span class="lbl">Validez</span>#!#VALIDEZ#!#</td></tr>
+  </table>
+
+  <!-- FIRMA -->
+  <div class="firma no-cortar">
+    <div class="linea">
+      <b>#!#FIRMA_NOMBRE#!#</b><br>
+      Matrícula Nº #!#FIRMA_MATRICULA#!#<br>
+      #!#FIRMA_ESPECIALIDAD#!#
+    </div>
+  </div>
+
+  <div class="confidencial">
+    Receta personal e intransferible. Documento con datos de salud del paciente.
+  </div>
+
+</body>
+
+</html>

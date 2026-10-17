@@ -56,10 +56,14 @@ class RemisionDao(BaseDAO):
                 r.usuario_creacion,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 pp.per_cedula AS paciente_cedula,
-                pac.pac_historia_clinica
+                pac.pac_historia_clinica,
+                f.factura_numero,
+                pe.pedido_numero
             FROM remisiones r
             JOIN pacientes pac ON r.id_paciente = pac.id_paciente
             JOIN personas pp  ON pac.id_persona = pp.id_persona
+            LEFT JOIN facturas f ON r.id_factura = f.id_factura
+            LEFT JOIN pedidos pe ON r.id_pedido = pe.id_pedido
             WHERE r.id_remision = %s
         """
         row = self.execute_query_one(sql, (id_remision,))

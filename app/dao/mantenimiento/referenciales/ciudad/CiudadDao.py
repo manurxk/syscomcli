@@ -29,7 +29,3 @@ class CiudadDao(BaseDAO):
             WHERE id_ciudad = %s
         """
         return self.execute_query(sql, (id_departamento, descripcion, estado, ciudad_id), commit=True) > 0
-
-    def deleteCiudad(self, ciudad_id):
-        sql = "DELETE FROM ciudades WHERE id_ciudad = %s"
-        return self.execute_query(sql, (ciudad_id,), commit=True) > 0

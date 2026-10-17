@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!-- Plantilla del PDF del certificado (ver app/services/documento_clinico_pdf_service.py).
+     Mismo patrón que FICHA.html: los marcadores #!#...#!# se reemplazan por los datos ya escapados
+     y el HTML se convierte a PDF con WeasyPrint. Diseño aprobado sobre docs/prototipos/certificado_asistencia_ejemplo.pdf
+     El diagnóstico solo aparece si el especialista lo cargó en el certificado (dato sensible de salud). -->
+<html>
+
+<head>
+  <title>Certificado</title>
+  <meta charset="UTF-8" />
+  <style type="text/css">
+    @page {
+      size: A4;
+      margin: 10mm 9mm 14mm 9mm;
+
+      @bottom-center {
+        content: "Certificado #!#NUMERO#!# · Página " counter(page) " de " counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 6.5pt;
+        color: #555555;
+      }
+    }
+
+    body { font-family: Arial, sans-serif; font-size: 8pt; color: #000000; margin: 0; padding: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    .encabezado td { vertical-align: top; }
+    .encabezado img { width: 80px; height: auto; margin-bottom: 6px; }
+    .titulo-doc { font-size: 13pt; font-weight: bold; text-align: center; margin-top: 6px; }
+    .doc-num { text-align: center; font-size: 10pt; margin-top: 6px; }
+    .tabla-datos td { border: 1px solid #040303; padding: 3px 6px; vertical-align: top; line-height: 1.4; }
+    .lbl { display: block; font-size: 6.5pt; color: #555555; text-transform: uppercase; }
+    .texto-largo { white-space: pre-line; }
+    .cuerpo-cert { font-size: 10pt; line-height: 1.9; text-align: justify; margin: 14px 4px; }
+    .lugar-fecha { text-align: right; margin-top: 10px; font-size: 9pt; }
+    .firma { margin-top: 30px; width: 45%; margin-left: auto; text-align: center; }
+    .firma .linea { border-top: 1px solid #000000; padding-top: 3px; }
+    .confidencial {
+      margin-top: 14px; border: 1px solid #040303; padding: 5px 7px; font-size: 6.5pt;
+      color: #333333; line-height: 1.4;
+    }
+    .no-cortar { page-break-inside: avoid; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ENCABEZADO: empresa | datos del documento -->
+  <table class="encabezado" style="border: 1px solid #040303;">
+    <tr style="background-color: #dcdcdc;">
+      <td colspan="2" style="text-align: center; font-size: 7pt; padding: 3px; border-bottom: 1px solid #040303;">
+        Certificado · Documento confidencial
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 60%; padding: 10px 12px; line-height: 1.5;">
+        #!#pathLogo#!#
+        <div style="font-size: 10pt; font-weight: bold;">#!#EMPRESA_NOMBRE#!#</div>
+        <div>#!#EMPRESA_DIRECCION#!#</div>
+        <div>Teléfono: #!#EMPRESA_TELEFONO#!#</div>
+        <div>RUC: #!#EMPRESA_RUC#!#</div>
+      </td>
+      <td style="width: 40%; padding: 10px 12px; border-left: 1px solid #040303; line-height: 1.6;">
+        <div class="titulo-doc">#!#TITULO#!#</div>
+        <div class="doc-num">Nº <b>#!#NUMERO#!#</b></div>
+        <div style="text-align: center; margin-top: 10px;">Fecha: #!#FECHA#!#</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- TEXTO DEL CERTIFICADO -->
+  <div class="cuerpo-cert">#!#TEXTO#!#</div>
+
+  <table class="tabla-datos">
+    #!#FILAS_DATOS#!#
+  </table>
+
+  <div class="cuerpo-cert">Se extiende el presente a solicitud del interesado, para ser presentado ante quien corresponda.</div>
+  <div class="lugar-fecha">#!#FECHA_LARGA#!#</div>
+
+  <!-- FIRMA -->
+  <div class="firma no-cortar">
+    <div class="linea">
+      <b>#!#FIRMA_NOMBRE#!#</b><br>
+      Matrícula Nº #!#FIRMA_MATRICULA#!#<br>
+      #!#FIRMA_ESPECIALIDAD#!#
+    </div>
+  </div>
+
+  <div class="confidencial">
+    Documento con datos de salud del paciente. Prohibida su reproducción o divulgación sin autorización.
+  </div>
+
+</body>
+
+</html>

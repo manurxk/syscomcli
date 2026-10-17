@@ -1,0 +1,34 @@
+<ul>
+    <li>Las librerías de Python están en <code>requirements.txt</code>, cada una con su <strong>versión exacta</strong>. Solo se instalan las que el sistema usa.</li>
+    <li>La revisión se hace <strong>cada mes</strong>, antes de cada despliegue y cuando se agrega una librería.</li>
+    <li>Las imágenes base (<code>python:3.12-slim</code>, <code>postgres:17</code>, <code>nginx:1.27-alpine</code>) se actualizan junto con las dependencias.</li>
+</ul>
+
+<h4>1. Buscar vulnerabilidades conocidas</h4>
+<p>Corre en un contenedor temporal, sin tocar la app:</p>
+<pre><code>docker run --rm -v "${PWD}\requirements.txt:/r/requirements.txt:ro" python:3.12-slim sh -c "pip install -q --root-user-action=ignore --disable-pip-version-check pip-audit &amp;&amp; pip-audit -r /r/requirements.txt --progress-spinner off"</code></pre>
+<p>Esperado: <code>No known vulnerabilities found</code>. Si aparece alguna, la columna <code>Fix Versions</code> indica la versión que la corrige.</p>
+
+<h4>2. Ver qué versiones nuevas hay</h4>
+<pre><code>docker run --rm -v "${PWD}\requirements.txt:/r/requirements.txt:ro" python:3.12-slim sh -c "pip install -q --root-user-action=ignore --disable-pip-version-check -r /r/requirements.txt &amp;&amp; pip list --outdated"</code></pre>
+
+<h4>3. Actualizar</h4>
+<ol>
+    <li>Cambiar la versión en <code>requirements.txt</code>.</li>
+    <li>Volver a correr el paso 1.</li>
+    <li>Reconstruir la imagen y recrear la app (capítulo <a href="#contenedores">Contenedores</a>). Corta el servicio unos 30 a 60 segundos.</li>
+    <li>Probar: inicio de sesión, una pantalla de cada módulo, un PDF de factura y uno de reporte, y este manual en PDF.</li>
+</ol>
+<p>Si una actualización de versión mayor (por ejemplo, de 4.x a 5.x) rompe algo, volver a la versión anterior y reconstruir. Si una vulnerabilidad <strong>no</strong> tiene corrección, documentarla como riesgo aceptado con su mitigación.</p>
+<p>Antes de quitar una librería, confirmar que nada la importe:</p>
+<pre><code>Get-ChildItem app, run.py -Recurse -Include *.py | Select-String -Pattern "^\s*(import|from)\s+&lt;modulo&gt;\b"</code></pre>
+
+<h4>Última auditoría (2026-10-11)</h4>
+<table class="datos">
+    <tr><th>Indicador</th><th>Antes</th><th>Después</th></tr>
+    <tr><td>Paquetes en <code>requirements.txt</code></td><td>53</td><td>30</td></tr>
+    <tr><td>Paquetes instalados, con dependencias indirectas</td><td>81</td><td>64</td></tr>
+    <tr><td>Paquetes vulnerables</td><td>11</td><td><strong>0</strong></td></tr>
+    <tr><td>Vulnerabilidades conocidas</td><td>85</td><td><strong>0</strong></td></tr>
+</table>
+<p>Se eliminaron 23 paquetes sin uso y los 30 restantes se actualizaron y se fijaron con versión exacta.</p>

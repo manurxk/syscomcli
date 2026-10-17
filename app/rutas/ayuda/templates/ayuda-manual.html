@@ -4,45 +4,95 @@
     <meta charset="UTF-8">
     <title>Guía de uso - {{ clinica.nombre if clinica else 'SYSCLIN' }}</title>
     <style>
+        /* Paleta SYSCLIN: la misma del panel de login (índigo → violeta) y del manual de seguridad */
+        :root {
+            --marca-oscuro: #1e1b4b;
+            --marca-medio: #3730a3;
+            --marca-claro: #6d28d9;
+            --primario: #5b21b6;
+            --acento: #7c3aed;
+            --lila-fondo: #f5f3ff;
+            --lila-suave: #ede9fe;
+            --lila-borde: #ddd6fe;
+            --texto: #1f1b2e;
+            --texto-suave: #6b6880;
+        }
         @page {
             size: A4 portrait;
             margin: 2cm 1.8cm;
+            @top-right {
+                content: "SYSCLIN · Guía de uso del sistema";
+                font-family: Arial, sans-serif;
+                font-size: 8px;
+                color: #6d28d9;
+            }
             @bottom-right {
                 content: "Página " counter(page) " de " counter(pages);
                 font-family: Arial, sans-serif;
                 font-size: 9px;
-                color: #777;
+                color: #5b21b6;
             }
         }
-        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 28px 40px; color: #222; font-size: 15px; line-height: 1.6; background: #fff; max-width: 820px; }
+        @page :first {
+            @top-right { content: none; }
+        }
+        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 28px 40px; color: var(--texto); font-size: 15px; line-height: 1.6; background: #fff; max-width: 820px; counter-reset: capitulo; }
         body.pdf { padding: 0; font-size: 12px; max-width: none; }
-        .portada { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 22px; }
-        .portada h1 { font-size: 24px; margin: 0; color: #222; }
-        .portada p { margin: 2px 0 0; color: #666; font-size: 13px; }
-        .indice { margin-bottom: 30px; }
-        .indice h2 { font-size: 15px; margin: 0 0 6px; }
-        .indice ol { margin: 0; padding-left: 20px; }
-        .indice a { color: #1a56a8; text-decoration: none; }
-        .indice a:hover { text-decoration: underline; }
+        a { color: var(--acento); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Portada: banda con el degradé de marca */
+        /* Color sólido (sin degradé) para que la vista previa y el PDF se vean iguales; el logo va suelto (es transparente) */
+        .portada { background-color: #1e1b4b; color: #fff; border-radius: 10px; padding: 20px 24px; margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
+        .portada .logo { width: 58px; height: 58px; flex: 0 0 auto; }
+        .portada .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .portada .marca { font-size: 12px; letter-spacing: 3px; font-weight: bold; color: #c4b5fd; }
+        .portada h1 { font-size: 24px; margin: 2px 0 0; color: #fff; line-height: 1.25; }
+        .portada p { margin: 4px 0 0; color: #ddd6fe; font-size: 13px; }
+
+        /* Índice */
+        .indice { margin-bottom: 30px; background: var(--lila-fondo); border: 1px solid var(--lila-borde); border-radius: 8px; padding: 14px 20px; }
+        .indice h2 { font-size: 15px; margin: 0 0 6px; color: var(--primario); }
+        .indice ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+        .indice li { break-inside: avoid; }
+        .indice li::marker { color: var(--acento); font-weight: bold; }
+        .indice a { color: var(--marca-medio); }
+
+        /* Secciones: cada una trae su propio h3; el número sale de un contador, en el mismo orden que el índice */
         section.seccion { margin-bottom: 34px; padding-top: 6px; }
-        section.seccion.activa { background: #fffbe6; padding: 6px 14px; border-radius: 4px; }
-        .aqui { display: inline-block; font-size: 12px; font-weight: bold; color: #8a6d00; margin-bottom: 4px; }
-        section.seccion h3 { font-size: 20px; color: #1a56a8; margin: 0 0 4px; border-bottom: 1px solid #e3e3e3; padding-bottom: 4px; }
-        section.seccion h4 { font-size: 15px; margin: 20px 0 4px; }
+        section.seccion.activa { background: var(--lila-fondo); border: 1px solid var(--lila-borde); padding: 10px 16px; border-radius: 8px; }
+        .aqui { display: inline-block; font-size: 12px; font-weight: bold; color: #fff; background: var(--acento); border-radius: 20px; padding: 1px 10px; margin-bottom: 6px; }
+        section.seccion h3 { font-size: 20px; color: var(--primario); margin: 0 0 8px; border-bottom: 2px solid var(--lila-borde); padding-bottom: 6px; }
+        section.seccion h3::before { counter-increment: capitulo; content: counter(capitulo); color: var(--acento); margin-right: 10px; }
+        section.seccion h4 { font-size: 15px; margin: 20px 0 4px; color: var(--marca-oscuro); padding-left: 8px; border-left: 3px solid var(--acento); }
+        body.pdf section.seccion h3 { font-size: 18px; }
+        body.pdf section.seccion h4 { font-size: 13px; }
         p { margin: 6px 0; }
         ol, ul { padding-left: 22px; margin: 6px 0; }
         li { margin-bottom: 3px; }
-        .btn-ref { font-weight: bold; }
-        .importante { margin: 10px 0; padding-left: 10px; border-left: 3px solid #d9a400; }
-        .pendientes { color: #777; font-size: 13px; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 30px; }
+        li::marker { color: var(--acento); }
+        .btn-ref { font-weight: bold; color: var(--primario); }
+        .importante { margin: 10px 0; padding: 6px 10px; border-left: 3px solid #d9a400; background: #fffbeb; border-radius: 0 4px 4px 0; }
+        /* Capturas de pantalla (docs/scripts/capturas_manual.py): los números ①②③ coinciden con los pasos */
+        figure.captura { margin: 10px 0 16px; padding: 6px; border: 1px solid var(--lila-borde); border-radius: 6px; background: #fff; }
+        figure.captura img { display: block; width: 100%; height: auto; border-radius: 4px; }
+        figure.captura figcaption { font-size: 12px; color: var(--texto-suave); margin-top: 5px; text-align: center; }
+        body.pdf figure.captura { page-break-inside: avoid; }
+        .pendientes { color: var(--texto-suave); font-size: 13px; border-top: 2px solid var(--lila-borde); padding-top: 10px; margin-top: 30px; }
+        .pie { margin-top: 30px; padding-top: 10px; border-top: 2px solid var(--lila-borde); color: var(--texto-suave); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+        .pie img { width: 18px; height: 18px; }
         body.pdf h3, body.pdf h4 { page-break-after: avoid; }
     </style>
 </head>
 <body class="{{ 'pdf' if es_pdf else '' }}">
+    {% set nombres_perfil = {'SUPERADMIN': 'Superadministrador', 'ADMINISTRADOR': 'Administrador', 'RECEPCION': 'Recepción', 'CLINICO': 'Clínico', 'VENTAS': 'Ventas'} %}
     <div class="portada">
-        <h1>Guía de uso del sistema</h1>
-        {% set nombres_perfil = {'SUPERADMIN': 'Superadministrador', 'ADMINISTRADOR': 'Administrador', 'RECEPCION': 'Recepción', 'CLINICO': 'Clínico', 'VENTAS': 'Ventas'} %}
-        <p>{{ clinica.nombre if clinica else 'SYSCLIN' }} · Perfil: {{ nombres_perfil.get(perfil, perfil or 'Sin rol') }} · {{ fecha }}</p>
+        {% if logo_base64 %}<div class="logo"><img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo SYSCLIN"></div>{% endif %}
+        <div>
+            <div class="marca">{{ (clinica.nombre if clinica else 'SYSCLIN') | upper }}</div>
+            <h1>Guía de uso del sistema</h1>
+            <p>Perfil: {{ nombres_perfil.get(perfil, perfil or 'Sin rol') }} · {{ fecha }}</p>
+        </div>
     </div>
 
     <div class="indice">
@@ -69,6 +119,11 @@
         Todavía sin guía: {{ sin_guia | join(', ') }}.
     </div>
     {% endif %}
+
+    <div class="pie">
+        {% if logo_base64 %}<img src="data:image/png;base64,{{ logo_base64 }}" alt="">{% endif %}
+        <span>SYSCLIN · Guía de uso · Perfil {{ nombres_perfil.get(perfil, perfil or 'Sin rol') }} · {{ fecha }}</span>
+    </div>
 
     {% if not es_pdf and seccion_activa %}
     <script>

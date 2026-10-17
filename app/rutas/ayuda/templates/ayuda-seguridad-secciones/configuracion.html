@@ -1,0 +1,29 @@
+<p>Toda la configuración sensible está en el archivo <strong><code>.env</code></strong> de la raíz del proyecto.</p>
+<p class="peligro">El <code>.env</code> <strong>nunca</strong> se sube a git ni se comparte por chat o correo. Quien lo tiene, tiene acceso total a la base de datos.</p>
+
+<table class="datos">
+    <tr><th>Variable</th><th>Qué es</th><th>Desarrollo</th><th>Servidor</th></tr>
+    <tr><td><code>DB_HOST</code> / <code>DB_PORT</code></td><td>Dónde está la base, vista desde la app</td><td><code>db</code> / <code>5432</code></td><td>igual</td></tr>
+    <tr><td><code>DB_NAME</code>, <code>DB_NAME_NUEVA</code></td><td>Base de trabajo</td><td><code>sysclin_bd</code></td><td>igual</td></tr>
+    <tr><td><code>DB_USER</code> / <code>DB_PASSWORD</code></td><td>Usuario de la <strong>aplicación</strong> (permisos mínimos)</td><td><code>sysclin_app</code> / clave aleatoria</td><td>igual, otra clave</td></tr>
+    <tr><td><code>POSTGRES_USER</code> / <code>POSTGRES_PASSWORD</code></td><td>Usuario <strong>administrador</strong> de la base (backup, migraciones)</td><td><code>postgres</code> / clave aleatoria</td><td>igual, otra clave</td></tr>
+    <tr><td><code>POSTGRES_DB</code></td><td>Base que se crea solo en una instalación nueva</td><td><code>clinicain</code></td><td>igual</td></tr>
+    <tr><td><code>SECRET_KEY</code></td><td>Firma de las sesiones. <strong>Obligatoria</strong>, mínimo 32 caracteres</td><td>aleatoria</td><td>aleatoria, <strong>distinta</strong></td></tr>
+    <tr><td><code>SESSION_COOKIE_SECURE</code></td><td>Cookie de sesión solo por HTTPS</td><td><code>0</code></td><td><code>1</code></td></tr>
+    <tr><td><code>FLASK_DEBUG</code></td><td>Modo depuración</td><td><code>1</code></td><td><code>0</code></td></tr>
+    <tr><td><code>SMTP_*</code></td><td>Correo saliente (MFA, recuperación de contraseña, alertas)</td><td>cuenta Gmail</td><td>igual</td></tr>
+    <tr><td><code>ULTRAMSG_*</code></td><td>Recordatorios por WhatsApp</td><td>credenciales propias</td><td>igual</td></tr>
+</table>
+
+<h4>Ver la configuración sin mostrar los secretos</h4>
+<pre><code>Get-Content .env | ForEach-Object { if ($_ -match 'PASSWORD|SECRET|TOKEN') { ($_ -split '=',2)[0] + '=***' } else { $_ } }</code></pre>
+
+<h4>Generar un valor aleatorio (contraseñas, SECRET_KEY)</h4>
+<pre><code>$rng = [Security.Cryptography.RandomNumberGenerator]::Create(); $b = New-Object byte[] 32; $rng.GetBytes($b); -join ($b | ForEach-Object { $_.ToString('x2') })</code></pre>
+<p>Genera 64 caracteres hexadecimales: solo letras y números, sin problemas de comillas ni símbolos.</p>
+
+<h4>Aplicar un cambio del .env</h4>
+<p class="importante"><code>docker restart</code> <strong>no</strong> vuelve a leer el <code>.env</code>. Después de cambiarlo, siempre hay que <strong>recrear</strong> los contenedores:</p>
+<pre><code>docker compose -f dock/docker-compose.yml up -d</code></pre>
+<p>Si la variable la usa un solo servicio, alcanza con recrear ese: <code>docker compose -f dock/docker-compose.yml up -d app</code>.</p>
+<p class="importante">En <code>docker-compose.yml</code>, las variables del <code>.env</code> llegan a los contenedores solo con <code>env_file:</code>. Escribir <code>${VAR}</code> dentro de <code>environment:</code> deja el valor vacío, porque Compose no lee el <code>.env</code> de la raíz para eso.</p>

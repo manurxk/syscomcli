@@ -2,6 +2,8 @@
 <p>En esta pantalla se agendan las citas y se sigue cada una hasta que el paciente es atendido. La tabla muestra fecha, hora, paciente, especialista, estado y recordatorios de cada cita.</p>
 
 <h4>¿Cómo registro una cita?</h4>
+{{ figura('citas/01_listado.jpg', 'Pantalla de Citas: ① Nueva Cita') }}
+{{ figura('citas/02_nueva_cita.jpg', 'Registrar Nueva Cita: los números coinciden con los pasos') }}
 <ol>
     <li>Presione <span class="btn-ref">Nueva Cita</span>.</li>
     <li>En <strong>Paciente</strong>, presione <span class="btn-ref">Buscar</span>, busque al paciente por nombre o cédula y presione <span class="btn-ref">Seleccionar</span>.</li>
@@ -18,17 +20,25 @@
 <h4>¿Qué pasa con la cita después?</h4>
 <p>Cada cita pasa por estos estados. En la columna <strong>Acciones</strong> solo aparecen los botones que se pueden usar en el estado actual.</p>
 <ul>
-    <li><strong>Agendada:</strong> el turno está reservado. Puede <span class="btn-ref">Confirmar</span>, <span class="btn-ref">Editar</span> o <span class="btn-ref">Cancelar</span>.</li>
+    <li><strong>Agendada:</strong> el turno está reservado. Puede <span class="btn-ref">Confirmar</span>, <span class="btn-ref">Marcar ausente</span>, <span class="btn-ref">Editar</span> o <span class="btn-ref">Cancelar</span>.</li>
     <li><strong>Confirmada:</strong> el paciente avisó que viene. Puede <span class="btn-ref">Iniciar consulta</span>, <span class="btn-ref">Marcar ausente</span>, <span class="btn-ref">Editar</span> o <span class="btn-ref">Cancelar</span>.</li>
     <li><strong>En consulta:</strong> el paciente está siendo atendido. Cuando el profesional finaliza la consulta, la cita pasa sola a Completada. Si hace falta, también puede cerrarla usted con <span class="btn-ref">Completar</span>.</li>
-    <li><strong>Completada, Ausente o Cancelada:</strong> la cita terminó y ya no se puede modificar. Solo se puede ver su historial.</li>
+    <li><strong>Completada, Ausente o Cancelada:</strong> la cita terminó. El mismo día se puede deshacer un ausente o una cancelación hechos por error; después, solo se corrige con autorización de un administrador (vea más abajo).</li>
 </ul>
+
+<h4>¿Qué cambia según el día de la cita?</h4>
+<ul>
+    <li><strong>Citas de días futuros:</strong> se pueden confirmar, editar o cancelar. <span class="btn-ref">Iniciar consulta</span> y <span class="btn-ref">Marcar ausente</span> recién aparecen el día de la cita.</li>
+    <li><strong>Citas de hoy:</strong> todos los botones, a cualquier hora del día.</li>
+    <li><strong>Citas de días anteriores</strong> que quedaron abiertas: solo se pueden cerrar (<span class="btn-ref">Marcar ausente</span>, <span class="btn-ref">Cancelar</span> o, si estaba en consulta, <span class="btn-ref">Completar</span>) o pasar a otra fecha con <span class="btn-ref">Editar</span>.</li>
+</ul>
+<p>No se puede reservar ni pasar una cita a un horario que ya pasó.</p>
 
 <h4>¿Cómo confirmo una cita?</h4>
 <p>Cuando el paciente confirme que asiste, presione <span class="btn-ref">Confirmar</span> en la fila de su cita y acepte. Al confirmarla, el sistema programa los recordatorios que se le envían por correo antes del turno.</p>
 
 <h4>¿Qué hago cuando llega el paciente?</h4>
-<p>Presione <span class="btn-ref">Iniciar consulta</span>. La cita pasa a <strong>En consulta</strong> y el profesional la ve en su pantalla Mi Agenda para atenderla.</p>
+<p>Presione <span class="btn-ref">Iniciar consulta</span>. La cita pasa a <strong>En consulta</strong> y el profesional la ve en su pantalla Mi Agenda para atenderla. Esto solo se puede hacer el día de la cita.</p>
 <p>Si el paciente no se presentó, presione <span class="btn-ref">Marcar ausente</span>.</p>
 
 <h4>¿Cómo cancelo una cita?</h4>
@@ -46,6 +56,29 @@
     <li>Presione <span class="btn-ref">Guardar Cambios</span>.</li>
 </ol>
 <p>El paciente y el especialista no se pueden cambiar. Si hace falta, cancele la cita y registre una nueva.</p>
+<p>Así también se recupera una cita de un día anterior que quedó sin atender: elija un horario nuevo y la cita vuelve a quedar activa.</p>
+
+<h4>Marqué ausente o cancelé una cita por error, ¿cómo lo deshago?</h4>
+<p>Si es el mismo día de la cita, en su fila aparece el botón amarillo:</p>
+<ul>
+    <li><span class="btn-ref">Volver a confirmada</span> en una cita marcada como ausente (por ejemplo, el paciente llegó tarde).</li>
+    <li><span class="btn-ref">Reactivar</span> en una cita cancelada. Solo funciona si su horario sigue libre: si ya lo tomó otro paciente, el sistema se lo avisa y hay que registrar una cita nueva.</li>
+</ul>
+<p>Una cita <strong>Completada</strong> no se puede deshacer así: necesita la corrección autorizada por un administrador.</p>
+
+<h4>¿Cómo corrijo una cita ya cerrada o de un día anterior?</h4>
+<p>Es para casos excepcionales, por ejemplo una cita que se marcó como completada y el paciente no vino.</p>
+{{ figura('citas/03_corregir_boton.jpg', 'Citas: ① Corregir en una cita cerrada') }}
+{{ figura('citas/04_corregir.jpg', 'Corregir cita: los números coinciden con los pasos') }}
+<ol>
+    <li>Presione el botón del escudo <span class="btn-ref">Corregir</span> en la fila de la cita. Aparece en las citas cerradas y en las de días anteriores.</li>
+    <li>Elija el <strong>Nuevo estado</strong> (o deje "Sin cambio de estado" si solo corrige las observaciones).</li>
+    <li>Escriba el <strong>Motivo de la corrección</strong>. Es obligatorio.</li>
+    <li>Si usted no es administrador, un administrador presente escribe <strong>su</strong> usuario y contraseña en la misma ventana.</li>
+    <li>Presione <span class="btn-ref">Guardar corrección</span>.</li>
+</ol>
+<p>La corrección no modifica lo cargado en la consulta (diagnósticos, recetas, etc.). Queda en el historial de la cita con el motivo y el administrador que la autorizó, y en la auditoría del sistema.</p>
+<p class="importante">Si la contraseña del administrador se escribe mal varias veces, su cuenta se bloquea igual que al iniciar sesión.</p>
 
 <h4>¿Cómo sé si se enviaron los recordatorios?</h4>
 <p>Mire la columna <strong>Recordatorios</strong>:</p>
@@ -58,4 +91,4 @@
 <p>Si hace clic en esa etiqueta, ve el detalle. Con <span class="btn-ref">Enviar por WhatsApp</span> puede mandarle el recordatorio también por WhatsApp.</p>
 
 <h4>¿Cómo veo quién modificó una cita?</h4>
-<p>Presione <span class="btn-ref">Historial</span>. Se muestran todos los cambios de estado, con la fecha, el motivo y el usuario que los hizo.</p>
+<p>Presione <span class="btn-ref">Historial</span>. Se muestran todos los cambios de estado, con la fecha, el motivo y el usuario que los hizo. Las correcciones aparecen como <em>"Corrección autorizada por …"</em> con el motivo.</p>

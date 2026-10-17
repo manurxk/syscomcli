@@ -13,7 +13,7 @@ class PresupuestoDao(BaseDAO):
             SELECT p.id_presupuesto, p.presupuesto_numero, p.id_paciente, p.id_profesional,
                    p.fecha_presupuesto, p.fecha_validez, p.presupuesto_subtotal,
                    p.presupuesto_descuento, p.presupuesto_total, p.id_moneda, p.observaciones,
-                   p.presupuesto_estado, p.est_presupuesto,
+                   p.presupuesto_estado, p.est_presupuesto, p.id_pei,
                    CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                    pp.per_cedula AS paciente_cedula,
                    CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre,
@@ -38,7 +38,9 @@ class PresupuestoDao(BaseDAO):
             SELECT p.id_presupuesto, p.presupuesto_numero, p.id_paciente, p.id_profesional,
                    p.fecha_presupuesto, p.fecha_validez, p.presupuesto_subtotal,
                    p.presupuesto_descuento, p.presupuesto_total, p.id_moneda, p.observaciones,
-                   p.presupuesto_estado,
+                   p.presupuesto_estado, p.id_pei,
+                   pei.nro_version AS pei_nro_version, pei.pei_estado,
+                   pei.pei_cronograma_seguimiento, pei.id_especialista AS pei_id_especialista,
                    CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                    pp.per_cedula AS paciente_cedula,
                    CONCAT(pe.per_nombre, ' ', pe.per_apellido) AS profesional_nombre,
@@ -49,6 +51,7 @@ class PresupuestoDao(BaseDAO):
             JOIN monedas m ON p.id_moneda = m.id_moneda
             LEFT JOIN funcionarios f ON p.id_profesional = f.id_funcionario
             LEFT JOIN personas pe ON f.id_persona = pe.id_persona
+            LEFT JOIN pei ON p.id_pei = pei.id_pei
             WHERE p.id_presupuesto = %s AND p.est_presupuesto = TRUE
         """
         presupuesto = self.execute_query_one(sql, (id_presupuesto,))
@@ -69,6 +72,20 @@ class PresupuestoDao(BaseDAO):
             ORDER BY pd.id_presupuesto_detalle
         """
         return self.execute_query(sql, (id_presupuesto,))
+
+    def getPeiReferencia(self, id_paciente):
+        """PEI vigente del paciente, solo los datos de referencia que puede ver Ventas
+        (versión, estado, especialista); sin objetivos, áreas ni estrategias."""
+        sql = """
+            SELECT p.id_pei, p.nro_version, p.pei_estado,
+                   fp.per_nombre || ' ' || fp.per_apellido AS especialista_nombre
+            FROM pei p
+            JOIN especialistas e ON p.id_especialista = e.id_especialista
+            JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+            JOIN personas fp ON f.id_persona = fp.id_persona
+            WHERE p.id_paciente = %s AND p.es_version_actual = TRUE AND p.est_pei = TRUE
+        """
+        return self.execute_query_one(sql, (id_paciente,))
 
     def _generarNumero(self, cur):
         anio = date.today().year
@@ -95,6 +112,13 @@ class PresupuestoDao(BaseDAO):
             id_moneda = moneda['id_moneda']
             decimales = int(moneda['decimales_moneda'])
 
+            id_pei = datos.get('id_pei') or None
+            if id_pei:
+                cur.execute("SELECT 1 FROM pei WHERE id_pei = %s AND id_paciente = %s AND est_pei = TRUE",
+                            (id_pei, datos['id_paciente']))
+                if not cur.fetchone():
+                    raise ValueError('El plan de tratamiento (PEI) indicado no corresponde al paciente.')
+
             numero = self._generarNumero(cur)
             subtotal = sum(
                 redondear(float(d['item_cantidad']) * float(d['item_precio_unitario']) - float(d.get('item_descuento') or 0), decimales)
@@ -107,13 +131,13 @@ class PresupuestoDao(BaseDAO):
                 INSERT INTO presupuestos(
                     presupuesto_numero, id_paciente, id_profesional, fecha_presupuesto, fecha_validez,
                     presupuesto_subtotal, presupuesto_descuento, presupuesto_total, id_moneda, observaciones,
-                    presupuesto_estado, usuario_creacion
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    presupuesto_estado, usuario_creacion, id_pei
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id_presupuesto
                 """,
                 (numero, datos['id_paciente'], datos.get('id_profesional'), datos['fecha_presupuesto'],
                  datos.get('fecha_validez'), subtotal, descuento, subtotal - descuento, id_moneda,
-                 datos.get('observaciones'), 'PENDIENTE', usuario_creacion)
+                 datos.get('observaciones'), 'PENDIENTE', usuario_creacion, id_pei)
             )
             id_presupuesto = cur.fetchone()[0]
 

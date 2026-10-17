@@ -4,15 +4,14 @@ from app.core.base_dao import BaseDAO
 
 class FuncionarioDao(BaseDAO):
 
-    # IDs de cargos que requieren datos de especialista
-    CARGOS_ESPECIALISTAS = [3]
-
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def es_cargo_especialista(self, id_cargo):
-        """Verifica si un cargo requiere datos de especialista"""
-        return id_cargo in self.CARGOS_ESPECIALISTAS
+        """Un cargo requiere datos de especialista si está marcado como clínico
+        (cargos.es_clinico), el mismo criterio que usa la pantalla de funcionarios."""
+        fila = self.execute_query_one("SELECT es_clinico FROM cargos WHERE id_cargo = %s", (id_cargo,))
+        return bool(fila and fila['es_clinico'])
 
     def validarNombreApellido(self, texto):
         """Regla más permisiva que los referenciales de catálogo: letras, espacios, guion y apóstrofe (nombres reales)."""
@@ -27,6 +26,33 @@ class FuncionarioDao(BaseDAO):
             sql += " AND id_funcionario != %s"
             params.append(excluir_id_funcionario)
         return self.execute_query_one(sql, tuple(params)) is not None
+
+    def validarSinCitasPendientes(self, id_funcionario):
+        """Impide dar de baja a un especialista con citas futuras sin cerrar (estado no final).
+        Las citas no cambian de especialista (COMMENT ON TABLE citas): primero se cancelan
+        o se reagendan con otro especialista."""
+        sql = """
+            SELECT p.per_nombre || ' ' || p.per_apellido AS nombre_completo,
+                   COUNT(*) AS pendientes,
+                   TO_CHAR(MIN(c.cita_inicio), 'DD/MM/YYYY HH24:MI') AS proxima
+            FROM citas c
+            JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
+            JOIN especialistas e ON c.id_especialista = e.id_especialista
+            JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
+            JOIN personas p ON f.id_persona = p.id_persona
+            WHERE e.id_funcionario = %s
+              AND e.est_especialista = TRUE
+              AND ec.es_final = FALSE
+              AND c.cita_inicio >= (now() AT TIME ZONE 'America/Asuncion')
+            GROUP BY p.per_nombre, p.per_apellido
+        """
+        fila = self.execute_query_one(sql, (id_funcionario,))
+        if fila and fila['pendientes'] > 0:
+            raise ValueError(
+                f"{fila['nombre_completo']} tiene {fila['pendientes']} cita(s) pendiente(s) "
+                f"(próxima: {fila['proxima']}). Cancélelas o reagéndelas con otro especialista "
+                f"antes de darlo de baja."
+            )
 
     def cedulaExiste(self, cedula, excluir_id_persona=None):
         """Verifica si la cédula ya está registrada en personas (paciente o funcionario)."""
@@ -51,7 +77,7 @@ class FuncionarioDao(BaseDAO):
             JOIN personas p ON f.id_persona = p.id_persona
             LEFT JOIN especialista_especialidades ee ON e.id_especialista = ee.id_especialista AND ee.est_especialista_especialidad = TRUE
             LEFT JOIN especialidades esp ON ee.id_especialidad = esp.id_especialidad AND esp.est_especialidad = TRUE
-            WHERE f.est_funcionario = TRUE
+            WHERE f.est_funcionario = TRUE AND e.est_especialista = TRUE
             GROUP BY e.id_especialista, e.esp_matricula, e.esp_color_agenda, p.per_nombre, p.per_apellido
             ORDER BY p.per_apellido, p.per_nombre
         """
@@ -81,7 +107,7 @@ class FuncionarioDao(BaseDAO):
             JOIN cargos car ON f.id_cargo = car.id_cargo
             LEFT JOIN generos g ON p.id_genero = g.id_genero AND g.est_genero = TRUE
             LEFT JOIN ciudades c ON p.id_ciudad = c.id_ciudad
-            LEFT JOIN especialistas e ON f.id_funcionario = e.id_funcionario
+            LEFT JOIN especialistas e ON f.id_funcionario = e.id_funcionario AND e.est_especialista = TRUE
             LEFT JOIN especialista_especialidades ee ON e.id_especialista = ee.id_especialista AND ee.est_especialista_especialidad = TRUE
             LEFT JOIN especialidades esp ON ee.id_especialidad = esp.id_especialidad AND esp.est_especialidad = TRUE
             GROUP BY f.id_funcionario, p.per_nombre, p.per_apellido, p.per_cedula,
@@ -149,7 +175,7 @@ class FuncionarioDao(BaseDAO):
             LEFT JOIN ciudades cn ON p.id_ciudad_nacimiento = cn.id_ciudad AND cn.est_ciudad = TRUE
             LEFT JOIN niveles_instruccion ni ON p.id_nivel_instruccion = ni.id_nivel_instruccion AND ni.est_nivel_instruccion = TRUE
             LEFT JOIN profesiones pr ON p.id_profesion = pr.id_profesion AND pr.est_profesion = TRUE
-            LEFT JOIN especialistas e ON f.id_funcionario = e.id_funcionario
+            LEFT JOIN especialistas e ON f.id_funcionario = e.id_funcionario AND e.est_especialista = TRUE
             LEFT JOIN especialista_especialidades ee ON e.id_especialista = ee.id_especialista AND ee.est_especialista_especialidad = TRUE
             LEFT JOIN especialidades esp ON ee.id_especialidad = esp.id_especialidad AND esp.est_especialidad = TRUE
             WHERE f.id_funcionario = %s
@@ -229,7 +255,7 @@ class FuncionarioDao(BaseDAO):
             LEFT JOIN ciudades cn ON p.id_ciudad_nacimiento = cn.id_ciudad
             LEFT JOIN niveles_instruccion ni ON p.id_nivel_instruccion = ni.id_nivel_instruccion
             LEFT JOIN profesiones pr ON p.id_profesion = pr.id_profesion
-            LEFT JOIN especialistas e ON f.id_funcionario = e.id_funcionario
+            LEFT JOIN especialistas e ON f.id_funcionario = e.id_funcionario AND e.est_especialista = TRUE
             WHERE f.id_funcionario = %s
         """
 
@@ -370,6 +396,10 @@ class FuncionarioDao(BaseDAO):
             if self.matriculaExiste(esp_matricula, excluir_id_funcionario=id_funcionario):
                 raise ValueError(f'Ya existe un especialista registrado con la matrícula "{esp_matricula}".')
 
+        # Baja como especialista (cargo no clínico) o del funcionario desde el formulario
+        if not self.es_cargo_especialista(id_cargo) or not est_funcionario:
+            self.validarSinCitasPendientes(id_funcionario)
+
         fila_persona = self.execute_query_one(
             "SELECT id_persona FROM funcionarios WHERE id_funcionario = %s", (id_funcionario,)
         )
@@ -392,9 +422,10 @@ class FuncionarioDao(BaseDAO):
             WHERE id_funcionario = %s
         """
 
+        # Reactiva la fila si estaba dada de baja: UNIQUE(id_funcionario) impide un segundo INSERT
         updateEspecialistaSQL = """
             UPDATE especialistas
-            SET esp_matricula = %s, esp_color_agenda = %s, usuario_modificacion = %s
+            SET esp_matricula = %s, esp_color_agenda = %s, est_especialista = TRUE, usuario_modificacion = %s
             WHERE id_funcionario = %s
         """
 
@@ -404,18 +435,33 @@ class FuncionarioDao(BaseDAO):
             RETURNING id_especialista
         """
 
-        deleteEspecialidadesSQL = """
-            DELETE FROM especialista_especialidades
-            WHERE id_especialista = (SELECT id_especialista FROM especialistas WHERE id_funcionario = %s)
+        # Borrado lógico: citas, consultas y demás historia clínica referencian al especialista
+        desactivarEspecialidadesSQL = """
+            UPDATE especialista_especialidades
+            SET est_especialista_especialidad = FALSE, usuario_modificacion = %s
+            WHERE id_especialista = %s AND est_especialista_especialidad = TRUE
         """
 
-        insertEspecialidadSQL = """
+        # Mismo patrón "buscar y reactivar" que ListaEsperaDao.agregarOReactivar
+        activarEspecialidadSQL = """
             INSERT INTO especialista_especialidades(id_especialista, id_especialidad, usuario_creacion)
             VALUES(%s, %s, %s)
+            ON CONFLICT (id_especialista, id_especialidad) DO UPDATE
+            SET est_especialista_especialidad = TRUE, usuario_modificacion = EXCLUDED.usuario_creacion
         """
 
-        deleteEspecialistaSQL = """
-            DELETE FROM especialistas WHERE id_funcionario = %s
+        desactivarEspecialistaSQL = """
+            UPDATE especialistas
+            SET est_especialista = FALSE, usuario_modificacion = %s
+            WHERE id_funcionario = %s
+        """
+
+        # Mismo criterio que AgendaHorariosDao al editar un horario: solo turnos libres a futuro
+        quitarSlotsLibresSQL = """
+            DELETE FROM slots_agenda
+            WHERE id_especialista = %s
+              AND estado_slot = 'DISPONIBLE'
+              AND slot_inicio >= (now() AT TIME ZONE 'America/Asuncion')
         """
 
         def _actualizar(cur):
@@ -444,17 +490,18 @@ class FuncionarioDao(BaseDAO):
                         cur.execute(insertEspecialistaSQL, (id_funcionario, esp_matricula, esp_color_agenda, usuario_modificacion))
                         id_especialista = cur.fetchone()[0]
 
-                    # Actualizar especialidades: eliminar viejas e insertar nuevas
-                    cur.execute(deleteEspecialidadesSQL, (id_funcionario,))
+                    # Actualizar especialidades: desactivar todas y reactivar/insertar las elegidas
+                    cur.execute(desactivarEspecialidadesSQL, (usuario_modificacion, id_especialista))
 
                     if especialidades:
                         for id_especialidad in especialidades:
-                            cur.execute(insertEspecialidadSQL, (id_especialista, id_especialidad, usuario_modificacion))
+                            cur.execute(activarEspecialidadSQL, (id_especialista, id_especialidad, usuario_modificacion))
             else:
-                # Si ya no es especialista, eliminar datos
+                # Si ya no es especialista, darlo de baja (se conserva para su historia clínica)
                 if existe_especialista:
-                    cur.execute(deleteEspecialidadesSQL, (id_funcionario,))
-                    cur.execute(deleteEspecialistaSQL, (id_funcionario,))
+                    cur.execute(desactivarEspecialidadesSQL, (usuario_modificacion, existe_especialista[0]))
+                    cur.execute(desactivarEspecialistaSQL, (usuario_modificacion, id_funcionario))
+                    cur.execute(quitarSlotsLibresSQL, (existe_especialista[0],))
 
             return True
 
@@ -462,6 +509,7 @@ class FuncionarioDao(BaseDAO):
 
     def desactivarFuncionario(self, id_funcionario, usuario_modificacion=None):
         """Desactiva un funcionario (soft-delete, est_funcionario = FALSE)."""
+        self.validarSinCitasPendientes(id_funcionario)
         sql = "UPDATE funcionarios SET est_funcionario = FALSE, usuario_modificacion = %s WHERE id_funcionario = %s"
         return self.execute_query(sql, (usuario_modificacion, id_funcionario), commit=True) > 0
 

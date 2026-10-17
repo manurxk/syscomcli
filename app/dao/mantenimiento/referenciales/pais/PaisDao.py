@@ -29,7 +29,3 @@ class PaisDao(BaseDAO):
             WHERE id_pais = %s
         """
         return self.execute_query(sql, (descripcion, codigo, estado, pais_id), commit=True) > 0
-
-    def deletePais(self, pais_id):
-        sql = "DELETE FROM paises WHERE id_pais = %s"
-        return self.execute_query(sql, (pais_id,), commit=True) > 0

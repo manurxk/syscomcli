@@ -1,0 +1,71 @@
+<h4>Protección de las comunicaciones</h4>
+<ul>
+    <li>Todo acceso de los usuarios es por <strong>HTTPS</strong> (nginx), con TLS 1.2 o 1.3; las versiones anteriores se rechazan.</li>
+    <li>HTTP redirige siempre a HTTPS. En el servidor se activa <strong>HSTS</strong> por 1 año.</li>
+    <li>Encabezados de seguridad: <code>X-Frame-Options: SAMEORIGIN</code> (el sistema no se puede abrir dentro de otro sitio), <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy: strict-origin-when-cross-origin</code>.</li>
+    <li>Certificado: Let's Encrypt en el servidor, renovado cada 60 días; autofirmado solo en desarrollo.</li>
+    <li>La configuración de nginx es <strong>la misma</strong> en desarrollo y en el servidor; solo cambian el certificado, el HSTS y los puertos cerrados.</li>
+</ul>
+
+<h4>Exposición de red</h4>
+<table class="datos">
+    <tr><th>Puerto</th><th>Servicio</th><th>Desarrollo</th><th>Servidor</th></tr>
+    <tr><td>443 / 80</td><td>nginx (HTTPS / redirección)</td><td>Abierto</td><td>Abierto: <strong>única entrada</strong></td></tr>
+    <tr><td>5005</td><td>Aplicación directa, sin cifrar</td><td>Abierto</td><td>Solo <code>127.0.0.1</code></td></tr>
+    <tr><td>5434</td><td>Base de datos</td><td>Abierto</td><td>Solo <code>127.0.0.1</code>; administración por túnel SSH</td></tr>
+    <tr><td>5680</td><td>Depurador (debugpy)</td><td>Abierto</td><td>Solo <code>127.0.0.1</code>; además no corre en el servidor</td></tr>
+</table>
+<p class="importante">No alcanza con cerrar puertos con <code>ufw</code> en el servidor: Docker lo saltea y publica los puertos igual. Por eso el cierre se hace en <code>docker-compose.servidor.yml</code>, y en el servidor el sistema se levanta <strong>siempre</strong> con los dos archivos.</p>
+<p><strong>Ver qué puertos va a publicar cada configuración</strong> (no levanta nada):</p>
+<pre><code>docker compose -f dock/docker-compose.yml -f dock/docker-compose.servidor.yml config --format json | ConvertFrom-Json | ForEach-Object { $_.services.PSObject.Properties | ForEach-Object { $n=$_.Name; $_.Value.ports | ForEach-Object { "{0,-7} {1}:{2} -> {3}" -f $n, $_.host_ip, $_.published, $_.target } } }</code></pre>
+<p>Esperado en el servidor: <code>127.0.0.1</code> delante de 5005, 5434 y 5680; 80 y 443 sin IP.</p>
+
+<h4>HTTPS en desarrollo (certificado autofirmado)</h4>
+<pre><code># Generar el certificado (una vez; vale 825 días)
+docker run --rm -v "${PWD}\dock\nginx:/nginx" postgres:17 sh /nginx/generar_cert_local.sh
+
+# Levantar o recrear nginx
+docker compose -f dock/docker-compose.yml up -d nginx</code></pre>
+<p>El navegador avisa que el certificado no es de confianza: es lo esperado con uno autofirmado. Se acepta una vez ("Configuración avanzada → Continuar").</p>
+
+<h4>Comprobar HTTPS</h4>
+<pre><code># Validar la configuración de nginx
+docker exec syscomcli_nginx nginx -t
+
+# HTTP redirige a HTTPS (esperado: 301 -> https://localhost/login)
+curl.exe -s -o NUL -w "%{http_code} -> %{redirect_url}`n" http://localhost/login
+
+# Encabezados de seguridad
+curl.exe -sk -D - -o NUL https://localhost/login | Select-String -Pattern '^HTTP|X-Frame|X-Content|Referrer|Strict-Transport'
+
+# Versión de TLS (esperado: TLSv1.3)
+docker run --rm --network dock_network-tesis postgres:17 sh -c "echo | openssl s_client -connect nginx:443 -brief 2>&amp;1 | grep -E 'Protocol|Ciphersuite'"
+
+# TLS 1.1 rechazado (esperado: 000 = sin conexión)
+curl.exe -sk --tlsv1.1 --tls-max 1.1 -o NUL -w "%{http_code}`n" https://localhost/login</code></pre>
+<p>Logs de acceso de nginx: <code>docker logs syscomcli_nginx --tail 50</code>.</p>
+
+<h4>Desplegar en el servidor</h4>
+<p><strong>Requisitos:</strong> servidor Linux con Docker; un <strong>dominio</strong> que apunte a su IP (Let's Encrypt no emite certificados para IP); puertos 80 y 443 abiertos en el firewall del proveedor.</p>
+<ol>
+    <li>Copiar el proyecto y crear su <code>.env</code> desde <code>.env.example</code>, con <strong>todas las claves nuevas</strong>, <code>SESSION_COOKIE_SECURE=1</code> y <code>FLASK_DEBUG=0</code>.</li>
+    <li>Obtener el certificado de Let's Encrypt. Primero se levanta nginx con un certificado autofirmado provisorio (comando de desarrollo de arriba) para que responda en el puerto 80:
+<pre><code>docker compose -f dock/docker-compose.yml -f dock/docker-compose.servidor.yml up -d
+docker run --rm -v "$PWD/dock/nginx/acme:/var/www/acme" -v "/etc/letsencrypt:/etc/letsencrypt" \
+  certbot/certbot certonly --webroot -w /var/www/acme -d &lt;dominio&gt; --email &lt;correo&gt; --agree-tos --no-eff-email
+cp -L /etc/letsencrypt/live/&lt;dominio&gt;/fullchain.pem dock/nginx/certs/fullchain.pem
+cp -L /etc/letsencrypt/live/&lt;dominio&gt;/privkey.pem dock/nginx/certs/privkey.pem
+docker exec syscomcli_nginx nginx -s reload</code></pre></li>
+    <li><strong>Siempre</strong> levantar con los dos archivos:
+<pre><code>docker compose -f dock/docker-compose.yml -f dock/docker-compose.servidor.yml up -d</code></pre></li>
+    <li>Comprobar HTTPS con el dominio (debe aparecer <code>Strict-Transport-Security</code>), que la cookie tenga <code>Secure</code> y que los puertos 5005, 5434 y 5680 <strong>no</strong> respondan desde otra máquina.</li>
+</ol>
+
+<h4>Renovar el certificado (servidor)</h4>
+<p>Los certificados de Let's Encrypt duran 90 días. Renovarlos cada 60; conviene programarlo con <code>cron</code>:</p>
+<pre><code>docker run --rm -v "$PWD/dock/nginx/acme:/var/www/acme" -v "/etc/letsencrypt:/etc/letsencrypt" certbot/certbot renew
+cp -L /etc/letsencrypt/live/&lt;dominio&gt;/fullchain.pem dock/nginx/certs/fullchain.pem
+cp -L /etc/letsencrypt/live/&lt;dominio&gt;/privkey.pem dock/nginx/certs/privkey.pem
+docker exec syscomcli_nginx nginx -s reload</code></pre>
+<p>Ver la fecha de vencimiento del certificado instalado:</p>
+<pre><code>docker run --rm -v "${PWD}\dock\nginx\certs:/c:ro" postgres:17 openssl x509 -in /c/fullchain.pem -noout -subject -enddate</code></pre>

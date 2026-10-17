@@ -29,7 +29,3 @@ class DepartamentoDao(BaseDAO):
             WHERE id_departamento = %s
         """
         return self.execute_query(sql, (id_pais, descripcion, estado, departamento_id), commit=True) > 0
-
-    def deleteDepartamento(self, departamento_id):
-        sql = "DELETE FROM departamentos WHERE id_departamento = %s"
-        return self.execute_query(sql, (departamento_id,), commit=True) > 0

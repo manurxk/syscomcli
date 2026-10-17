@@ -59,7 +59,7 @@
       },
       columns: [
         { data: null, orderable: false, render: (d,t,r,m) => m.row+1 },
-        { data: 'presupuesto_numero' },
+        { data: row => row.presupuesto_numero + (row.id_pei ? '<br><span class="badge bg-info">Plan de tratamiento</span>' : '') },
         { data: row => `${row.paciente_nombre}<br><small class="text-muted">${row.paciente_cedula||''}</small>` },
         { data: row => row.profesional_nombre || '<span class="text-muted">-</span>' },
         { data: 'fecha_presupuesto' },
@@ -72,7 +72,8 @@
             return `
               <button class="btn btn-datatable btn-icon btn-outline-success me-1" name="btn_aprobar" data-id="${row.id_presupuesto}" title="Aprobar" ${row.presupuesto_estado!=='PENDIENTE'?'disabled':''}><i class="fas fa-check"></i></button>
               <button class="btn btn-datatable btn-icon btn-outline-danger me-1" name="btn_rechazar" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Rechazar" ${!puedeEstado?'disabled':''}><i class="fas fa-times"></i></button>
-              <button class="btn btn-datatable btn-icon btn-outline-primary" name="btn_convertir" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Convertir en pedido" ${row.presupuesto_estado!=='APROBADO'?'disabled':''}><i class="fas fa-share"></i></button>
+              <button class="btn btn-datatable btn-icon btn-outline-primary me-1" name="btn_convertir" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Convertir en pedido" ${row.presupuesto_estado!=='APROBADO'?'disabled':''}><i class="fas fa-share"></i></button>
+              <a class="btn btn-datatable btn-icon btn-outline-secondary" href="/api/v1/presupuestos/${row.id_presupuesto}/pdf" target="_blank" title="Imprimir PDF"><i class="fas fa-print"></i></a>
             `;
           },
           className: 'text-center', orderable: false

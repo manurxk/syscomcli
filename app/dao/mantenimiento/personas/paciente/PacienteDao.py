@@ -264,7 +264,7 @@ class PacienteDao(BaseDAO):
             LEFT JOIN ciudades cn ON p.id_ciudad_nacimiento = cn.id_ciudad AND cn.est_ciudad = TRUE
             LEFT JOIN niveles_instruccion ni ON p.id_nivel_instruccion = ni.id_nivel_instruccion AND ni.est_nivel_instruccion = TRUE
             LEFT JOIN profesiones pr ON p.id_profesion = pr.id_profesion AND pr.est_profesion = TRUE
-            LEFT JOIN pacientes_menores pm ON pac.id_paciente = pm.id_paciente
+            LEFT JOIN pacientes_menores pm ON pac.id_paciente = pm.id_paciente AND pm.est_paciente_menor = TRUE
             WHERE pac.id_paciente = %s
         """
 
@@ -509,10 +509,12 @@ class PacienteDao(BaseDAO):
             WHERE id_paciente = %s
         """
 
+        # Reactiva la fila si estaba dada de baja: UNIQUE(id_paciente) impide un segundo INSERT
         updateMenorSQL = """
             UPDATE pacientes_menores
             SET pam_nom_madre = %s, pam_tel_madre = %s, pam_nom_padre = %s, pam_tel_padre = %s,
-                pam_educacion = %s, pam_colegio = %s, pam_tel_colegio = %s, usuario_modificacion = %s
+                pam_educacion = %s, pam_colegio = %s, pam_tel_colegio = %s,
+                est_paciente_menor = TRUE, usuario_modificacion = %s
             WHERE id_paciente = %s
         """
 
@@ -522,8 +524,11 @@ class PacienteDao(BaseDAO):
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
-        deleteMenorSQL = """
-            DELETE FROM pacientes_menores WHERE id_paciente = %s
+        # Borrado lógico: se conservan los datos de los padres y del colegio
+        desactivarMenorSQL = """
+            UPDATE pacientes_menores
+            SET est_paciente_menor = FALSE, usuario_modificacion = %s
+            WHERE id_paciente = %s AND est_paciente_menor = TRUE
         """
 
         def _actualizar(cur):
@@ -548,7 +553,7 @@ class PacienteDao(BaseDAO):
                     cur.execute(insertMenorSQL, (pac_id, nom_madre, tel_madre, nom_padre,
                                                 tel_padre, educacion, colegio, tel_colegio, usuario_modificacion))
             elif existe_menor:
-                cur.execute(deleteMenorSQL, (pac_id,))
+                cur.execute(desactivarMenorSQL, (usuario_modificacion, pac_id))
 
             return True
 
@@ -590,7 +595,7 @@ class PacienteDao(BaseDAO):
                 pm.pam_colegio
             FROM pacientes pac
             JOIN personas p ON pac.id_persona = p.id_persona
-            LEFT JOIN pacientes_menores pm ON pac.id_paciente = pm.id_paciente
+            LEFT JOIN pacientes_menores pm ON pac.id_paciente = pm.id_paciente AND pm.est_paciente_menor = TRUE
             WHERE pac.pac_es_menor = TRUE
             ORDER BY p.per_nombre
         """

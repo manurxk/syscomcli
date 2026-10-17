@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.agendamiento.agenda_horarios.AgendaHorariosDao import AgendaHorariosDao
+from app.dao.agendamiento.cita.CitaDao import CitaDao
 from app.dao.agendamiento.referenciales.dia_semana.DiaSemanaDao import DiaSemanaDao
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.auth.utils.decorators import role_required
@@ -11,6 +12,19 @@ agendahorariosapi = Blueprint('agendahorariosapi', __name__)
 
 DURACIONES_VALIDAS = (10, 15, 20, 30, 45, 60, 90)
 MODALIDADES_VALIDAS = ('PRESENCIAL', 'TELEMEDICINA', 'DOMICILIO')
+ROLES_GESTION_AGENDA = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+
+
+def _soloAgendaPropia():
+    """True si el usuario es CLINICO sin rol de gestión: solo puede ver su propia agenda."""
+    roles = {(r or '').upper() for r in session.get('roles', [])}
+    return not roles.intersection(ROLES_GESTION_AGENDA)
+
+
+def _especialistaPropio():
+    """id_especialista del usuario logueado (resuelto desde session['id_funcionario'])."""
+    id_funcionario = session.get('id_funcionario')
+    return CitaDao().getEspecialistaPorFuncionario(id_funcionario) if id_funcionario else None
 
 
 def _calcularCuposTotales(hora_inicio, hora_fin, duracion_turno_min):
@@ -73,10 +87,15 @@ def getDiasSemana():
 
 
 @agendahorariosapi.route('/agenda-horarios', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required(*ROLES_GESTION_AGENDA, "CLINICO")
 def getAgendaHorarios():
     try:
-        id_especialista = request.args.get('id_especialista', type=int)
+        if _soloAgendaPropia():
+            id_especialista = _especialistaPropio()
+            if not id_especialista:
+                return jsonify({'success': True, 'data': [], 'sin_especialista': True, 'error': None}), 200
+        else:
+            id_especialista = request.args.get('id_especialista', type=int)
         data = AgendaHorariosDao().getAgendaHorarios(id_especialista)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
     except Exception as e:
@@ -85,12 +104,12 @@ def getAgendaHorarios():
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required(*ROLES_GESTION_AGENDA, "CLINICO")
 def getAgendaHorario(id_agenda_horario):
     try:
         agendadao = AgendaHorariosDao()
         agenda = agendadao.getAgendaHorarioById(id_agenda_horario)
-        if not agenda:
+        if not agenda or (_soloAgendaPropia() and agenda['id_especialista'] != _especialistaPropio()):
             return jsonify({'success': False, 'error': 'No se encontró el horario con el ID proporcionado.'}), 404
         return jsonify({'success': True, 'data': agenda, 'error': None}), 200
     except Exception as e:
@@ -99,11 +118,12 @@ def getAgendaHorario(id_agenda_horario):
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>/slots', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required(*ROLES_GESTION_AGENDA, "CLINICO")
 def getSlotsAgendaHorario(id_agenda_horario):
     try:
         agendadao = AgendaHorariosDao()
-        if not agendadao.getAgendaHorarioById(id_agenda_horario):
+        agenda = agendadao.getAgendaHorarioById(id_agenda_horario)
+        if not agenda or (_soloAgendaPropia() and agenda['id_especialista'] != _especialistaPropio()):
             return jsonify({'success': False, 'error': 'No se encontró el horario con el ID proporcionado.'}), 404
         data = agendadao.getSlotsByAgendaHorario(id_agenda_horario)
         return jsonify({'success': True, 'data': data, 'error': None}), 200

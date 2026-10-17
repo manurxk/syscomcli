@@ -225,6 +225,12 @@ class NotaCreditoDao(BaseDAO):
             if not fila:
                 return False
             CuentaCobrarDao().ajustarPorNotaEnTransaccion(cur, fila[0], fila[1], usuario)
+            # En el libro de ventas la nota anulada sigue figurando, pero en 0
+            cur.execute("""
+                UPDATE libro_ventas
+                SET monto_gravado = 0, monto_exento = 0, monto_iva = 0, monto_total = 0
+                WHERE id_nota_credito = %s
+            """, (id_nota_credito,))
             return True
 
         return self.execute_transaction(_op)

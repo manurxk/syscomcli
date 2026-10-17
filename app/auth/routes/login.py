@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from flask import Blueprint, render_template, session, \
     request, redirect, url_for, flash, current_app as app
 from app.auth.services.auth_service import AuthService
@@ -9,6 +9,9 @@ from app.dao.agendamiento.recordatorio.RecordatorioDao import RecordatorioDao
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
 from app.dao.ventas.movimientos.cuenta_cobrar.CuentaCobrarDao import CuentaCobrarDao
 from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
+from app.dao.agendamiento.lista_espera.ListaEsperaDao import ListaEsperaDao
+from app.dao.reporte.ReporteDao import ReporteDao
+from app.core.moneda import get_moneda, formatear
 
 logmod = Blueprint('login', __name__, template_folder='../templates')
 
@@ -237,87 +240,153 @@ ROLES_DASHBOARD_META = [
 ]
 
 
-def _formato_guaranies(monto):
-    return f"Gs. {int(monto or 0):,}".replace(',', '.')
+def _moneda_local():
+    """Moneda local para formatear los totales del dashboard (mismo criterio que ReporteDao)."""
+    try:
+        return get_moneda()
+    except Exception:
+        return {'decimales_moneda': 0, 'es_moneda_local': True, 'simbolo_moneda': 'Gs.'}
+
+
+def _citas_por_estado(fecha, id_especialista=None):
+    """{cod_estado_cita: cantidad} del día, reusando la estadística de Reportes."""
+    filas = ReporteDao().getAgendamientoReport(fecha, fecha, id_especialista)
+    return {f['estado']: f['cantidad'] for f in filas}
+
+
+def _panel_administrador(hoy, moneda):
+    panel = {'citas': {}, 'citas_total': 0, 'ventas': {}, 'cajas_abiertas': 0, 'cajas_total': 0,
+             'cxc': {}, 'vencidas': [], 'seguridad': {}, 'recordatorios_pendientes': 0,
+             'lista_espera': 0, 'consultas_abiertas': 0}
+    try:
+        reporte_dao = ReporteDao()
+        panel['citas'] = _citas_por_estado(hoy)
+        panel['citas_total'] = sum(panel['citas'].values())
+
+        ventas = reporte_dao.getVentasDia(hoy)
+        ventas['facturado_fmt'] = formatear(ventas['facturado'], moneda)
+        panel['ventas'] = ventas
+
+        cajas = AperturaCierreCajaDao().getEstadoCajas()
+        panel['cajas_total'] = len(cajas)
+        panel['cajas_abiertas'] = sum(1 for c in cajas if c.get('id_apertura_cierre'))
+
+        cxc = reporte_dao.getResumenCuentasCobrar()
+        cxc['monto_pendiente_fmt'] = formatear(cxc['monto_pendiente'], moneda)
+        panel['cxc'] = cxc
+        panel['vencidas'] = CuentaCobrarDao().getCuentasVencidas(limite=5)
+        for v in panel['vencidas']:
+            v['monto_pendiente_fmt'] = formatear(v['monto_pendiente'], v)
+
+        panel['seguridad'] = reporte_dao.getResumenSeguridad(horas=24)
+        panel['recordatorios_pendientes'] = len(RecordatorioDao().getPendientesEnVentana(limite=100))
+        panel['lista_espera'] = len(ListaEsperaDao().getListaEspera())
+        panel['consultas_abiertas'] = reporte_dao.getResumenConsultas(hoy)['abiertas']
+    except Exception as e:
+        app.logger.error(f"Error al construir panel de administrador: {str(e)}")
+    return panel
+
+
+def _panel_clinico(hoy):
+    panel = {'sin_especialista': True, 'citas': [], 'proxima': None, 'atendidos': 0,
+             'pendientes': 0, 'hora_fin': None, 'consultas': {'consultas_dia': 0, 'abiertas': 0}}
+    try:
+        id_funcionario = session.get('id_funcionario')
+        if id_funcionario:
+            cita_dao = CitaDao()
+            id_especialista = cita_dao.getEspecialistaPorFuncionario(id_funcionario)
+            if id_especialista:
+                panel['sin_especialista'] = False
+                citas = cita_dao.getCitasHoyByEspecialista(id_especialista)
+                panel['citas'] = citas
+                panel['atendidos'] = sum(1 for c in citas if c['cod_estado_cita'] == 'COMPLETADA')
+                panel['pendientes'] = sum(1 for c in citas
+                                          if c['cod_estado_cita'] in ('AGENDADA', 'CONFIRMADA', 'EN_CONSULTA'))
+                panel['hora_fin'] = citas[-1]['cita_hora_fin'] if citas else None
+                # Próximo paciente: la consulta en curso o la primera cita por atender desde ahora
+                ahora = datetime.now().strftime('%H:%M')
+                panel['proxima'] = (
+                    next((c for c in citas if c['cod_estado_cita'] == 'EN_CONSULTA'), None)
+                    or next((c for c in citas if c['cod_estado_cita'] in ('AGENDADA', 'CONFIRMADA')
+                             and c['cita_hora_fin'] >= ahora), None))
+                panel['consultas'] = ReporteDao().getResumenConsultas(hoy, id_especialista)
+    except Exception as e:
+        app.logger.error(f"Error al construir panel clínico: {str(e)}")
+    return panel
+
+
+def _panel_recepcion(hoy):
+    panel = {'citas': [], 'por_estado': {}, 'especialistas': 0, 'recordatorios_pendientes': 0,
+             'lista_espera': []}
+    try:
+        # hasta = fin del día: cita_inicio es TIMESTAMP y la fecha sola cortaba a las 00:00
+        citas = CitaDao().getCitas(desde=hoy, hasta=f"{hoy} 23:59:59")
+        for c in citas:
+            c['hora'] = c['cita_inicio'].split(' ')[1] if c.get('cita_inicio') else ''
+            panel['por_estado'][c['cod_estado_cita']] = panel['por_estado'].get(c['cod_estado_cita'], 0) + 1
+        panel['citas'] = citas
+        panel['especialistas'] = len({c['id_especialista'] for c in citas})
+        panel['recordatorios_pendientes'] = len(RecordatorioDao().getPendientesEnVentana(limite=100))
+        panel['lista_espera'] = ListaEsperaDao().getListaEspera()
+    except Exception as e:
+        app.logger.error(f"Error al construir panel de recepción: {str(e)}")
+    return panel
+
+
+def _panel_ventas(hoy, moneda):
+    panel = {'caja_abierta': None, 'cajas_total': 0, 'ventas': {}, 'cxc': {}, 'vencidas': [],
+             'facturas': []}
+    try:
+        reporte_dao = ReporteDao()
+        cajas = AperturaCierreCajaDao().getEstadoCajas()
+        panel['cajas_total'] = len(cajas)
+        panel['caja_abierta'] = next((c for c in cajas if c.get('id_apertura_cierre')), None)
+
+        ventas = reporte_dao.getVentasDia(hoy)
+        ventas['facturado_fmt'] = formatear(ventas['facturado'], moneda)
+        ventas['cobrado_fmt'] = formatear(ventas['cobrado'], moneda)
+        ventas['porcentaje_cobrado'] = (round(ventas['cobrado'] * 100 / ventas['facturado'])
+                                        if ventas['facturado'] else 0)
+        panel['ventas'] = ventas
+
+        cxc = reporte_dao.getResumenCuentasCobrar()
+        cxc['monto_pendiente_fmt'] = formatear(cxc['monto_pendiente'], moneda)
+        cxc['monto_vencido_fmt'] = formatear(cxc['monto_vencido'], moneda)
+        panel['cxc'] = cxc
+
+        panel['vencidas'] = CuentaCobrarDao().getCuentasVencidas(limite=5)
+        for v in panel['vencidas']:
+            v['monto_pendiente_fmt'] = formatear(v['monto_pendiente'], v)
+        panel['facturas'] = FacturaDao().getUltimasFacturas(limite=5)
+        for f in panel['facturas']:
+            f['total_fmt'] = formatear(f['factura_total'], f)
+    except Exception as e:
+        app.logger.error(f"Error al construir panel de ventas: {str(e)}")
+    return panel
 
 
 def _construir_datos_dashboard(roles):
     """Arma las pestañas visibles y los datos de cada panel del dashboard de
-    inicio, reusando los DAOs de cada módulo (mismo patrón que reporteIndex()).
-    Cada bloque se protege individualmente para que un módulo caído no tumbe
-    el resto del dashboard."""
+    inicio. Las cifras salen de las estadísticas reutilizables de ReporteDao y
+    de los DAOs de cada módulo. Cada panel se protege individualmente para que
+    un módulo caído no tumbe el resto del dashboard."""
     es_admin = 'ADMINISTRADOR' in roles or 'SUPERADMIN' in roles
     codigos_visibles = {'ADMINISTRADOR'} if es_admin else set()
     codigos_visibles |= {r for r in roles if r in ('CLINICO', 'RECEPCION', 'VENTAS')}
 
     roles_visibles = [r for r in ROLES_DASHBOARD_META if r['cod'] in codigos_visibles]
+    hoy = date.today().isoformat()
+    moneda = _moneda_local()
     data_por_rol = {}
 
     if 'ADMINISTRADOR' in codigos_visibles:
-        panel = {'citas_hoy': 0, 'recordatorios_pendientes': 0, 'cajas_abiertas': '0/0',
-                 'facturado_hoy_monto': _formato_guaranies(0), 'facturado_hoy_count': 0,
-                 'cxc': [], 'intentos_fallidos': 0, 'eventos_auditoria': 0}
-        try:
-            hoy = date.today().isoformat()
-            panel['citas_hoy'] = len(CitaDao().getCitas(desde=hoy, hasta=hoy))
-            panel['recordatorios_pendientes'] = len(RecordatorioDao().getPendientesEnVentana(limite=100))
-
-            cajas = AperturaCierreCajaDao().getEstadoCajas()
-            abiertas = sum(1 for c in cajas if c.get('id_apertura_cierre'))
-            panel['cajas_abiertas'] = f"{abiertas}/{len(cajas)}"
-
-            facturas_hoy = FacturaDao().getFacturasHoy()
-            panel['facturado_hoy_count'] = len(facturas_hoy)
-            panel['facturado_hoy_monto'] = _formato_guaranies(sum(f['factura_total'] for f in facturas_hoy))
-
-            panel['cxc'] = CuentaCobrarDao().getCuentasCobrarPendientes()[:5]
-
-            panel['intentos_fallidos'] = AuthService.contar_intentos_fallidos_ip(request.remote_addr)
-            panel['eventos_auditoria'] = AuditoriaDao().getEventos(pagina=1, por_pagina=5)['total']
-        except Exception as e:
-            app.logger.error(f"Error al construir panel de administrador: {str(e)}")
-        data_por_rol['ADMINISTRADOR'] = panel
-
+        data_por_rol['ADMINISTRADOR'] = _panel_administrador(hoy, moneda)
     if 'CLINICO' in codigos_visibles:
-        panel = {'sin_especialista': True, 'citas': []}
-        try:
-            id_funcionario = session.get('id_funcionario')
-            if id_funcionario:
-                cita_dao = CitaDao()
-                id_especialista = cita_dao.getEspecialistaPorFuncionario(id_funcionario)
-                if id_especialista:
-                    panel['sin_especialista'] = False
-                    panel['citas'] = cita_dao.getCitasHoyByEspecialista(id_especialista)
-        except Exception as e:
-            app.logger.error(f"Error al construir panel clínico: {str(e)}")
-        data_por_rol['CLINICO'] = panel
-
+        data_por_rol['CLINICO'] = _panel_clinico(hoy)
     if 'RECEPCION' in codigos_visibles:
-        panel = {'citas': [], 'recordatorios_pendientes': 0}
-        try:
-            hoy = date.today().isoformat()
-            panel['citas'] = CitaDao().getCitas(desde=hoy, hasta=hoy)
-            panel['recordatorios_pendientes'] = len(RecordatorioDao().getPendientesEnVentana(limite=100))
-        except Exception as e:
-            app.logger.error(f"Error al construir panel de recepción: {str(e)}")
-        data_por_rol['RECEPCION'] = panel
-
+        data_por_rol['RECEPCION'] = _panel_recepcion(hoy)
     if 'VENTAS' in codigos_visibles:
-        panel = {'cajas_abiertas': '0/0', 'facturado_hoy_monto': _formato_guaranies(0),
-                 'facturado_hoy_count': 0, 'cxc': []}
-        try:
-            cajas = AperturaCierreCajaDao().getEstadoCajas()
-            abiertas = sum(1 for c in cajas if c.get('id_apertura_cierre'))
-            panel['cajas_abiertas'] = f"{abiertas}/{len(cajas)}"
-
-            facturas_hoy = FacturaDao().getFacturasHoy()
-            panel['facturado_hoy_count'] = len(facturas_hoy)
-            panel['facturado_hoy_monto'] = _formato_guaranies(sum(f['factura_total'] for f in facturas_hoy))
-
-            panel['cxc'] = CuentaCobrarDao().getCuentasCobrarPendientes()[:5]
-        except Exception as e:
-            app.logger.error(f"Error al construir panel de ventas: {str(e)}")
-        data_por_rol['VENTAS'] = panel
+        data_por_rol['VENTAS'] = _panel_ventas(hoy, moneda)
 
     return roles_visibles, data_por_rol
 

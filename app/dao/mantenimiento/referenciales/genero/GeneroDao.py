@@ -29,7 +29,3 @@ class GeneroDao(BaseDAO):
             WHERE id_genero = %s
         """
         return self.execute_query(sql, (descripcion, estado, genero_id), commit=True) > 0
-
-    def deleteGenero(self, genero_id):
-        sql = "DELETE FROM generos WHERE id_genero = %s"
-        return self.execute_query(sql, (genero_id,), commit=True) > 0

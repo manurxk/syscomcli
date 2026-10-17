@@ -90,14 +90,16 @@ class LibroVentasDao(BaseDAO):
 
         # Totales agrupados por moneda: sumar montos de monedas distintas sin
         # agrupar daria un numero sin sentido (ej. Gs. + USD mezclados).
+        # La nota de credito resta (en el libro se guarda en positivo).
+        signo = "CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO' THEN -1 ELSE 1 END"
         sql = f"""
             SELECT
                 lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
-                COUNT(*)              AS total_registros,
-                SUM(lv.monto_gravado) AS total_gravado,
-                SUM(lv.monto_exento)  AS total_exento,
-                SUM(lv.monto_iva)     AS total_iva,
-                SUM(lv.monto_total)   AS total_total
+                COUNT(*)                         AS total_registros,
+                SUM({signo} * lv.monto_gravado)  AS total_gravado,
+                SUM({signo} * lv.monto_exento)   AS total_exento,
+                SUM({signo} * lv.monto_iva)      AS total_iva,
+                SUM({signo} * lv.monto_total)    AS total_total
             FROM libro_ventas lv
             JOIN monedas m ON lv.id_moneda = m.id_moneda
             {where}

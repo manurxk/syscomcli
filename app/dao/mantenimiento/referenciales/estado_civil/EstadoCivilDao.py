@@ -29,7 +29,3 @@ class EstadoCivilDao(BaseDAO):
             WHERE id_estado_civil = %s
         """
         return self.execute_query(sql, (descripcion, estado, estado_civil_id), commit=True) > 0
-
-    def deleteEstadoCivil(self, estado_civil_id):
-        sql = "DELETE FROM estados_civiles WHERE id_estado_civil = %s"
-        return self.execute_query(sql, (estado_civil_id,), commit=True) > 0

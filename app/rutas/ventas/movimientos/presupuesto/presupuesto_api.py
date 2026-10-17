@@ -1,6 +1,9 @@
-from flask import Blueprint, request, jsonify, current_app as app, session
+from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.ventas.movimientos.presupuesto.PresupuestoDao import PresupuestoDao
+from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
+from app.dao.agendamiento.cita.CitaDao import CitaDao
+from app.services.documento_ventas_pdf_service import DocumentoVentasPdfService
 from app.auth.utils.decorators import role_required
 
 presupuestoapi = Blueprint('presupuestoapi', __name__)
@@ -30,6 +33,42 @@ def getPresupuesto(id_presupuesto):
         return jsonify({'success': True, 'data': registro, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener presupuesto: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@presupuestoapi.route('/presupuestos/pei-vigente/<int:id_paciente>', methods=['GET'])
+@role_required(*ROLES_PRES)
+def getPeiVigentePresupuesto(id_paciente):
+    """Referencia del PEI vigente para ligarlo al presupuesto (sin contenido clínico)."""
+    try:
+        return jsonify({'success': True, 'data': PresupuestoDao().getPeiReferencia(id_paciente), 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener PEI vigente (paciente {id_paciente}): {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@presupuestoapi.route('/presupuestos/<int:id_presupuesto>/pdf', methods=['GET'])
+@role_required(*ROLES_PRES)
+def getPresupuestoPdf(id_presupuesto):
+    """PDF imprimible (PRESUPUESTO.html). Si está ligado a un PEI lo firma el especialista del PEI;
+    si no, el profesional del presupuesto."""
+    try:
+        presupuesto = PresupuestoDao().getPresupuestoById(id_presupuesto)
+        if not presupuesto:
+            return jsonify({'success': False, 'error': 'No se encontró el presupuesto.'}), 404
+        ficha = FichaDao()
+        id_especialista = presupuesto.get('pei_id_especialista')
+        if not id_especialista and presupuesto.get('id_profesional'):
+            id_especialista = CitaDao().getEspecialistaPorFuncionario(presupuesto['id_profesional'])
+        firmante = (ficha.getDatosGenerador(id_especialista) if id_especialista else None) or {}
+        buffer = DocumentoVentasPdfService().generar_presupuesto_pdf(
+            presupuesto, ficha.getDatosPaciente(presupuesto['id_paciente']) or {}, firmante,
+            DocumentoVentasPdfService.config_empresa(),
+        )
+        return send_file(buffer, mimetype='application/pdf', as_attachment=False,
+                         download_name=f"presupuesto_{presupuesto['presupuesto_numero']}.pdf")
+    except Exception as e:
+        app.logger.error(f"Error al generar PDF del presupuesto {id_presupuesto}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 

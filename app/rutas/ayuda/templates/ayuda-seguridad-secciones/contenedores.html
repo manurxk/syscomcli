@@ -1,0 +1,112 @@
+<p>En el servidor, <strong>todos</strong> los comandos de <code>docker compose</code> llevan los dos archivos: <code>-f dock/docker-compose.yml -f dock/docker-compose.servidor.yml</code>. En este capítulo se muestra la forma de desarrollo, con un solo archivo.</p>
+
+<h4>Comandos de uso diario</h4>
+<table class="datos">
+    <tr><th>Tarea</th><th>Comando</th></tr>
+    <tr><td>Ver el estado</td><td><code>docker ps --filter name=syscomcli</code></td></tr>
+    <tr><td>Levantar todo</td><td><code>docker compose -f dock/docker-compose.yml up -d</code></td></tr>
+    <tr><td>Detener todo, sin borrar datos</td><td><code>docker compose -f dock/docker-compose.yml stop</code></td></tr>
+    <tr><td>Volver a arrancar lo detenido</td><td><code>docker compose -f dock/docker-compose.yml start</code></td></tr>
+    <tr><td>Reiniciar solo la app (sin cambios del <code>.env</code>)</td><td><code>docker restart syscomcli_app</code></td></tr>
+    <tr><td>Recrear un servicio (relee el <code>.env</code>)</td><td><code>docker compose -f dock/docker-compose.yml up -d &lt;servicio&gt;</code> (<code>app</code>, <code>db</code>, <code>backup</code>, <code>nginx</code>)</td></tr>
+    <tr><td>Ver los logs de la app</td><td><code>docker logs syscomcli_app --tail 50</code></td></tr>
+    <tr><td>Seguir los logs en vivo</td><td><code>docker logs -f syscomcli_app</code> (salir con Ctrl+C)</td></tr>
+    <tr><td>Logs de la última hora</td><td><code>docker logs syscomcli_app --since 1h</code></td></tr>
+    <tr><td>Comprobar que la app responde</td><td><code>curl.exe -sk -o NUL -w "%{http_code}" https://localhost/login</code> → <code>200</code></td></tr>
+    <tr><td>Abrir una terminal dentro de un contenedor</td><td><code>docker exec -it syscomcli_app sh</code> (salir con <code>exit</code>)</td></tr>
+    <tr><td>Uso de CPU y memoria</td><td><code>docker stats --no-stream --filter name=syscomcli</code></td></tr>
+    <tr><td>Espacio en disco de Docker</td><td><code>docker system df</code></td></tr>
+</table>
+
+<p><strong>Estado esperado</strong>: 4 contenedores <code>Up</code> (<code>syscomcli_nginx</code>, <code>syscomcli_app</code>, <code>syscomcli_bd</code>, <code>syscomcli_backup</code>); la base, además, <code>(healthy)</code>.</p>
+
+<h4>Qué comando usar según el cambio</h4>
+<table class="datos">
+    <tr><th>Se cambió…</th><th>Hay que…</th><th>Comando</th></tr>
+    <tr><td>Código Python o plantillas (desarrollo)</td><td>Nada: se recarga solo</td><td>—</td></tr>
+    <tr><td>Código Python o plantillas (servidor)</td><td>Reiniciar la app</td><td><code>docker restart syscomcli_app</code></td></tr>
+    <tr><td>El <code>.env</code></td><td>Recrear</td><td><code>docker compose -f dock/docker-compose.yml up -d</code></td></tr>
+    <tr><td><code>docker-compose.yml</code></td><td>Recrear</td><td><code>docker compose -f dock/docker-compose.yml up -d</code></td></tr>
+    <tr><td><code>requirements.txt</code> o <code>Dockerfile</code></td><td>Reconstruir la imagen y recrear</td><td><code>docker compose -f dock/docker-compose.yml build app</code> y luego <code>up -d app</code></td></tr>
+    <tr><td>Configuración de nginx</td><td>Validar y recargar</td><td><code>docker exec syscomcli_nginx nginx -t</code> y luego <code>docker exec syscomcli_nginx nginx -s reload</code></td></tr>
+    <tr><td>Scripts del backup</td><td>Reiniciar el backup</td><td><code>docker restart syscomcli_backup</code></td></tr>
+</table>
+<p class="importante">Recrear o reconstruir la app corta el servicio entre 30 y 60 segundos y <strong>cierra las sesiones</strong> de todos los usuarios. Avisar antes o hacerlo fuera del horario de atención.</p>
+
+<h4>Comandos peligrosos</h4>
+<table class="datos">
+    <tr><th>Comando</th><th>Qué hace</th></tr>
+    <tr><td><code>docker compose -f dock/docker-compose.yml down</code></td><td>Borra los contenedores y la red. Los datos <strong>no</strong> se pierden (están en el volumen); se recupera con <code>up -d</code></td></tr>
+    <tr><td><code>docker compose ... down -v</code></td><td><strong>Borra el volumen de la base: se pierden todos los datos.</strong> No usarlo nunca en producción</td></tr>
+    <tr><td><code>docker volume rm tesis_syscomcli_data</code></td><td><strong>Ídem: borra la base</strong></td></tr>
+    <tr><td><code>docker system prune -a --volumes</code></td><td><strong>Borra todo lo que no esté corriendo, incluidos volúmenes</strong></td></tr>
+</table>
+<p class="peligro">Antes de cualquiera de estos, hacer un backup manual (capítulo <a href="#backups">Backups</a>) y comprobar que el archivo se creó.</p>
+
+<h4>Reactivar el sistema</h4>
+
+<h5>A. Después de reiniciar o apagar la PC o el servidor</h5>
+<ol>
+    <li>Abrir <strong>Docker Desktop</strong> (en Windows) y esperar a que diga <em>Engine running</em>. En Linux, Docker arranca solo con el sistema.</li>
+    <li>Los contenedores vuelven a levantarse <strong>solos</strong> (<code>restart: always</code>). Comprobar con <code>docker ps --filter name=syscomcli</code>.</li>
+    <li>Si alguno no aparece, levantar todo: <code>docker compose -f dock/docker-compose.yml up -d</code>.</li>
+    <li>Entrar a <code>https://localhost</code> e iniciar sesión.</li>
+    <li>El backup hace una copia apenas arranca: confirmarlo con <code>docker logs syscomcli_backup --tail 5</code>.</li>
+</ol>
+
+<h5>B. La página no carga o muestra "502 Bad Gateway"</h5>
+<ol>
+    <li><code>docker ps -a --filter name=syscomcli</code>: ver qué contenedor no está <code>Up</code> o se reinicia una y otra vez (<code>Restarting</code>).</li>
+    <li>Leer su log: <code>docker logs &lt;contenedor&gt; --tail 50</code>. El error suele estar en las últimas líneas.</li>
+    <li>Si es la app y el error es de configuración (por ejemplo <code>SECRET_KEY ausente</code> o <code>password authentication failed</code>), corregir el <code>.env</code> y recrear (capítulo <a href="#problemas">Solución de problemas</a>).</li>
+    <li>Si no hay un error claro, reiniciar ese contenedor: <code>docker restart &lt;contenedor&gt;</code>.</li>
+    <li>Si sigue igual, recrearlo: <code>docker compose -f dock/docker-compose.yml up -d --force-recreate &lt;servicio&gt;</code>.</li>
+</ol>
+
+<h5>C. La base de datos no arranca</h5>
+<ol>
+    <li><code>docker logs syscomcli_bd --tail 50</code>.</li>
+    <li>Si dice <code>No space left on device</code>: liberar espacio en disco (<code>docker system df</code>; borrar imágenes viejas con <code>docker image prune</code>, <strong>nunca</strong> volúmenes).</li>
+    <li>Si el log indica datos dañados y no se recupera con un reinicio, hacer la <strong>restauración de emergencia</strong> (capítulo <a href="#backups">Backups</a>).</li>
+</ol>
+
+<h5>D. Las tareas automáticas no se ejecutan (recordatorios, turnos)</h5>
+<p>Ver el apartado "Tareas programadas" más abajo. En general alcanza con <code>docker restart syscomcli_app</code>.</p>
+
+<h5>E. Instalación nueva desde cero (otra PC u otro servidor)</h5>
+<ol>
+    <li>Instalar Docker (Docker Desktop en Windows; Docker Engine en Linux) y copiar el proyecto.</li>
+    <li>Crear el <code>.env</code> a partir de <code>.env.example</code> y generar <strong>todas</strong> las claves nuevas (capítulo <a href="#configuracion">Configuración</a>). En el servidor: <code>SESSION_COOKIE_SECURE=1</code> y <code>FLASK_DEBUG=0</code>.</li>
+    <li>Generar el certificado de HTTPS (capítulo <a href="#https">HTTPS</a>): autofirmado en desarrollo, Let's Encrypt en el servidor.</li>
+    <li>Comprobar que exista <code>dock/backup/keys/backup_pub.asc</code> (la clave pública del backup).</li>
+    <li>Levantar solo la base: <code>docker compose -f dock/docker-compose.yml up -d db</code>. Al ser un volumen nuevo, crea el usuario <code>postgres</code> con la contraseña del <code>.env</code>.</li>
+    <li>Crear la base de trabajo y el rol de la aplicación:
+<pre><code>docker exec syscomcli_bd psql -U postgres -c "CREATE DATABASE sysclin_bd"
+$appPwd = (Select-String -Path .env -Pattern '^DB_PASSWORD=(.*)$').Matches[0].Groups[1].Value
+Get-Content migrations\103_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 -v "app_password=$appPwd" -q</code></pre></li>
+    <li>Cargar los datos desde el último backup con la <strong>restauración de emergencia</strong> (capítulo <a href="#backups">Backups</a>, pasos 4 y siguientes).</li>
+    <li>Volver a ejecutar la migración 103 (mismo comando del paso 6), para que los permisos de <code>sysclin_app</code> queden completos.</li>
+    <li>Levantar todo: <code>docker compose -f dock/docker-compose.yml up -d</code> (en el servidor, con los dos archivos).</li>
+    <li>Hacer el <strong>chequeo periódico</strong> completo (capítulo <a href="#auditoria">Auditoría y chequeo</a>).</li>
+</ol>
+
+<h4>Modo de arranque de la aplicación</h4>
+<p>El contenedor <code>syscomcli_app</code> arranca de una de dos formas, según <code>FLASK_DEBUG</code> del <code>.env</code>:</p>
+<table class="datos">
+    <tr><th><code>FLASK_DEBUG</code></th><th>Arranca con</th><th>Para</th></tr>
+    <tr><td><code>1</code></td><td>Servidor de desarrollo de Flask + debugpy (puerto 5678), con recarga automática al guardar código</td><td>Desarrollo</td></tr>
+    <tr><td><code>0</code></td><td><strong>gunicorn</strong>: 1 proceso con 8 hilos y un límite de 120 s por petición</td><td>Servidor</td></tr>
+</table>
+<p>En el servidor se usa <strong>un solo proceso a propósito</strong>: las tareas programadas arrancan una vez por proceso y, con más procesos, los recordatorios se enviarían repetidos.</p>
+<p><strong>Ver en qué modo está corriendo:</strong></p>
+<pre><code>docker exec syscomcli_app sh -c "cat /proc/1/cmdline | tr '\0' ' '"</code></pre>
+<p>Se espera <code>python -m debugpy ... run.py</code> en desarrollo y <code>gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 8 ...</code> en el servidor.</p>
+
+<h4>Tareas programadas</h4>
+<p>Los recordatorios por WhatsApp, la extensión de turnos de agenda y la limpieza de sesiones corren dentro de la app, en <strong>un único proceso</strong>. Lo garantiza un candado en PostgreSQL (advisory lock <code>7420001</code>): el proceso que lo toma ejecuta las tareas; cualquier otro lo avisa en el log y no las arranca.</p>
+<p><strong>Ver quién ejecuta las tareas</strong> (debe haber exactamente <strong>una</strong> fila):</p>
+<pre><code>docker exec syscomcli_bd psql -U postgres -d sysclin_bd -Atc "SELECT l.pid, a.usename, host(a.client_addr) FROM pg_locks l JOIN pg_stat_activity a ON a.pid=l.pid WHERE l.locktype='advisory' AND l.objid=7420001"</code></pre>
+<ul>
+    <li><strong>Ninguna fila</strong>: ningún proceso ejecuta las tareas. Reiniciar la app: <code>docker restart syscomcli_app</code>.</li>
+    <li>Ver los arranques en el log: <code>docker logs syscomcli_app --since 1h 2&gt;&amp;1 | Select-String 'Scheduler iniciado|NO iniciadas'</code>.</li>
+</ul>

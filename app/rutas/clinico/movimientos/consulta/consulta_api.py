@@ -102,6 +102,11 @@ def iniciarConsultaDesdeCita(id_cita):
         if cod_estado in ('CANCELADA', 'AUSENTE'):
             return jsonify({'success': False, 'error': f'No se puede iniciar una consulta para una cita en estado "{cod_estado}".'}), 400
 
+        # Validar antes de crear la consulta (ej. cita de un día anterior): si no, quedaría
+        # una consulta creada para una cita que no puede pasar a EN_CONSULTA
+        if cod_estado not in ('EN_CONSULTA', 'COMPLETADA'):
+            CitaDao().validarCambioEstado(id_cita, 'EN_CONSULTA')
+
         usuario = session.get('id_usuario')
         id_consulta = ConsultaDao().getOrCrearDesdeCita(cita, usuario_creacion=usuario)
         if id_consulta is None:
@@ -111,6 +116,8 @@ def iniciarConsultaDesdeCita(id_cita):
             CitaDao().cambiarEstadoCita(id_cita, 'EN_CONSULTA', usuario_modificacion=usuario)
 
         return jsonify({'success': True, 'data': {'id_consulta': id_consulta}, 'error': None}), 200
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         app.logger.error(f"Error al iniciar consulta desde cita: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500

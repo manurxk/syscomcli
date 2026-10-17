@@ -29,7 +29,3 @@ class ProfesionDao(BaseDAO):
             WHERE id_profesion = %s
         """
         return self.execute_query(sql, (descripcion, estado, profesion_id), commit=True) > 0
-
-    def deleteProfesion(self, profesion_id):
-        sql = "DELETE FROM profesiones WHERE id_profesion = %s"
-        return self.execute_query(sql, (profesion_id,), commit=True) > 0

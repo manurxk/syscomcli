@@ -34,7 +34,7 @@ def obtener_id_especialista_usuario():
             FROM especialistas e
             JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
             JOIN usuarios u ON u.id_funcionario = f.id_funcionario
-            WHERE u.id_usuario = %s
+            WHERE u.id_usuario = %s AND e.est_especialista = TRUE
         """, (usuario_id,))
         
         resultado = cur.fetchone()

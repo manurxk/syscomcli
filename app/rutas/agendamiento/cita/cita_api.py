@@ -5,6 +5,9 @@ from app.dao.agendamiento.recordatorio.RecordatorioDao import RecordatorioDao
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.auth.utils.decorators import role_required
 from app.services.UltraMsgService import UltraMsgService
+from app.auth.services.auth_service import AuthService
+from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
+from app.utils.auditoria_constantes import AuditAccion
 
 citaapi = Blueprint('citaapi', __name__)
 
@@ -210,4 +213,45 @@ def cambiarEstadoCita(id_cita):
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         app.logger.error(f"Error al cambiar estado de cita: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+
+@citaapi.route('/citas/<int:id_cita>/correccion', methods=['POST'])
+@role_required(*ROLES_CITAS)
+def corregirCita(id_cita):
+    """Corrige una cita cerrada o de un día anterior (CitaDao.corregirCita). Si quien la pide
+    no es Administrador, un administrador presente escribe su usuario y contraseña
+    (AuthService.verificar_autorizacion_administrador). Queda en el historial y en Auditoría."""
+    data = request.get_json() or {}
+    cod_estado_nuevo = data.get('cod_estado_nuevo') or None
+    if cod_estado_nuevo and cod_estado_nuevo not in ESTADOS_VALIDOS:
+        return jsonify({'success': False, 'error': f'Estado inválido. Valores permitidos: {ESTADOS_VALIDOS}.'}), 400
+    if not (data.get('motivo_correccion') or '').strip():
+        return jsonify({'success': False, 'error': 'El motivo de la corrección es obligatorio.'}), 400
+
+    try:
+        roles = {(r or '').upper() for r in session.get('roles', [])}
+        if roles.intersection(AuthService.ROLES_AUTORIZAN_CORRECCION):
+            autorizador = {'id_usuario': session.get('id_usuario'), 'usu_nick': session.get('usu_nick')}
+        else:
+            autorizador = AuthService.verificar_autorizacion_administrador(
+                data.get('autorizador_usuario'), data.get('autorizador_clave')
+            )
+
+        resultado = CitaDao().corregirCita(
+            id_cita, cod_estado_nuevo, data.get('datos'), data['motivo_correccion'],
+            usuario_modificacion=session.get('id_usuario'), autorizador=autorizador,
+        )
+        AuditoriaDao().registrar_evento(
+            id_usuario=session.get('id_usuario'), accion=AuditAccion.RECORD_UPDATE,
+            detalle=(f"Corrección de cita #{id_cita} ({resultado['cod_estado_anterior']} -> "
+                     f"{resultado['cod_estado_nuevo']}) pedida por {session.get('usu_nick')}. {resultado['detalle']}"),
+            ip_origen=AuthService.obtener_ip_cliente(),
+        )
+        return jsonify({'success': True, 'mensaje': 'Cita corregida correctamente.', 'data': resultado, 'error': None}), 200
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error al corregir cita {id_cita}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500

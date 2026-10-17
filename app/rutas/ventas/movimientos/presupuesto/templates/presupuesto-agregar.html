@@ -107,6 +107,18 @@
             <input type="text" class="form-control" id="txtObservaciones">
           </div>
         </div>
+        <!-- Plan de tratamiento: solo si el paciente tiene PEI vigente (solo la referencia, sin contenido clínico) -->
+        <div class="row gx-3 mt-3" id="divPlanPei" style="display:none;">
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="chkPlanPei">
+              <label class="form-check-label fw-semibold" for="chkPlanPei">
+                Presupuesto de plan de tratamiento — <span id="lblPlanPei"></span>
+              </label>
+            </div>
+            <div class="small text-muted">El PDF sale como presupuesto de plan de tratamiento, con la referencia al PEI vigente del paciente.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -241,6 +253,19 @@
       $('#lblPacienteNombre').text(pacienteSeleccionado.nombre);
       $('#card-busqueda').hide();
       $('#contenedor-presupuesto').show();
+      cargarPeiVigente(idPac);
+    });
+  };
+
+  let peiVigente = null;
+  const cargarPeiVigente = (idPac) => {
+    peiVigente = null;
+    $('#chkPlanPei').prop('checked', false); $('#divPlanPei').hide();
+    fetch(`/api/v1/presupuestos/pei-vigente/${idPac}`).then(r=>r.json()).then(d=>{
+      if (!d.success || !d.data) return;
+      peiVigente = d.data;
+      $('#lblPlanPei').text(`PEI versión ${peiVigente.nro_version} · ${peiVigente.pei_estado} · ${peiVigente.especialista_nombre}`);
+      $('#divPlanPei').show();
     });
   };
 
@@ -354,6 +379,7 @@
         presupuesto_descuento: parseFloat($('#txtDescuento').val()||0),
         id_moneda: parseInt($('#selMoneda').val()),
         observaciones: $('#txtObservaciones').val()||null,
+        id_pei: peiVigente && $('#chkPlanPei').is(':checked') ? peiVigente.id_pei : null,
         detalles: lineasPresupuesto.map(l=>({
           id_item_servicio: l.id_item_servicio,
           item_descripcion: l.item_descripcion,

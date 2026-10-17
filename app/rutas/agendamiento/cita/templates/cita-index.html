@@ -142,13 +142,24 @@ Citas
   };
 
   const SIGUIENTES_ESTADOS = {
-    AGENDADA: [['CONFIRMADA', 'Confirmar', 'check', 'success'], ['CANCELADA', 'Cancelar', 'ban', 'danger']],
+    AGENDADA: [['CONFIRMADA', 'Confirmar', 'check', 'success'], ['AUSENTE', 'Marcar ausente', 'user-slash', 'secondary'], ['CANCELADA', 'Cancelar', 'ban', 'danger']],
     CONFIRMADA: [['EN_CONSULTA', 'Iniciar consulta', 'play', 'primary'], ['AUSENTE', 'Marcar ausente', 'user-slash', 'secondary'], ['CANCELADA', 'Cancelar', 'ban', 'danger']],
     EN_CONSULTA: [['COMPLETADA', 'Completar', 'check-circle', 'success']],
     COMPLETADA: [],
     AUSENTE: [],
     CANCELADA: []
   };
+  // Una cita de un día anterior solo se cierra (o se reprograma desde Editar); lo valida también CitaDao
+  const ESTADOS_FINALES = ['COMPLETADA', 'AUSENTE', 'CANCELADA'];
+  // La consulta y la ausencia se registran el día de la cita (a cualquier hora de ese día)
+  const SOLO_EL_DIA = ['EN_CONSULTA', 'AUSENTE'];
+  // Deshacer un cierre por error, solo el mismo día de la cita (lo valida CitaDao.TRANSICIONES_MISMO_DIA)
+  const CORRECCION_MISMO_DIA = {
+    AUSENTE: [['CONFIRMADA', 'Volver a confirmada', 'rotate-left', 'warning']],
+    CANCELADA: [['AGENDADA', 'Reactivar (si el turno sigue libre)', 'rotate-left', 'warning']]
+  };
+  // Corregir una cita cerrada o de un día anterior requiere autorización de un administrador
+  const ES_ADMIN = {{ 'true' if 'ADMINISTRADOR' in (session.get('roles') or []) else 'false' }};
 
   // ==========================================
   // DATATABLE PRINCIPAL
@@ -210,8 +221,11 @@ Citas
         },
         {
           data: function (row) {
-            const opciones = SIGUIENTES_ESTADOS[row.cod_estado_cita] || [];
-            const esFinal = opciones.length === 0;
+            const posibles = SIGUIENTES_ESTADOS[row.cod_estado_cita] || [];
+            const esFinal = posibles.length === 0;
+            const opciones = row.es_pasada ? posibles.filter(([cod]) => ESTADOS_FINALES.includes(cod))
+              : row.es_futura ? posibles.filter(([cod]) => !SOLO_EL_DIA.includes(cod))
+              : posibles.concat(CORRECCION_MISMO_DIA[row.cod_estado_cita] || []);
             let acciones = `<button class="btn btn-sm btn-outline-info me-1" type="button" name="btn_log" data-id="${row.id_cita}" title="Ver Historial"><i class="fas fa-history me-1"></i>Historial</button>`;
             if (!esFinal) {
               acciones += `<a class="btn btn-sm btn-outline-primary me-1" href="/agendamiento/citas/citas-agregar?id_cita=${row.id_cita}" title="Editar / Reprogramar"><i class="fas fa-edit me-1"></i>Editar</a>`;
@@ -224,6 +238,9 @@ Citas
                 acciones += `<button class="btn btn-sm btn-icon btn-outline-${color} me-1" type="button" name="${nombreBtn}" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i><span class="visually-hidden">${label}</span></button>`;
               }
             });
+            if (esFinal || row.es_pasada) {
+              acciones += `<button class="btn btn-sm btn-icon btn-outline-dark me-1" type="button" name="btn_corregir" data-id="${row.id_cita}" data-estado="${row.cod_estado_cita}" title="Corregir (requiere administrador)"><i class="fas fa-user-shield"></i><span class="visually-hidden">Corregir</span></button>`;
+            }
             return acciones;
           },
           className: 'text-center',
@@ -428,11 +445,76 @@ Citas
     });
   };
 
+  // ==========================================
+  // CORREGIR CITA CERRADA O DE UN DÍA ANTERIOR (autorización de administrador)
+  // ==========================================
+  const corregirCita = () => {
+    $('#tbl').on('click', 'button[name="btn_corregir"]', function () {
+      const idCita = $(this).data('id');
+      const codActual = $(this).data('estado');
+      const opcionesEstado = ['', 'AGENDADA', 'CONFIRMADA', 'COMPLETADA', 'AUSENTE', 'CANCELADA']
+        .map(c => `<option value="${c}">${c === '' ? 'Sin cambio de estado' : c}${c === codActual ? ' (actual)' : ''}</option>`).join('');
+      const credenciales = ES_ADMIN ? '' : `
+        <div class="alert alert-warning text-start small mb-2">Un administrador debe autorizar con su usuario y contraseña.</div>
+        <input id="corrUsuario" class="form-control mb-2" placeholder="Usuario del administrador" autocomplete="off">
+        <input id="corrClave" type="password" class="form-control mb-2" placeholder="Contraseña del administrador" autocomplete="new-password">`;
+
+      Swal.fire({
+        title: 'Corregir cita',
+        html: `
+          <div class="text-start">
+            <label class="form-label small fw-semibold">Nuevo estado</label>
+            <select id="corrEstado" class="form-select mb-2">${opcionesEstado}</select>
+            <label class="form-label small fw-semibold">Observaciones de la cita (opcional)</label>
+            <textarea id="corrObs" class="form-control mb-2" rows="2"></textarea>
+            <label class="form-label small fw-semibold">Motivo de la corrección *</label>
+            <textarea id="corrMotivo" class="form-control mb-2" rows="2"></textarea>
+            ${credenciales}
+            <div class="small text-muted">No modifica el contenido clínico de la consulta. Queda en el historial y en Auditoría.</div>
+          </div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar corrección',
+        cancelButtonText: 'Cancelar',
+        focusConfirm: false,
+        preConfirm: () => {
+          const motivo = document.getElementById('corrMotivo').value.trim();
+          if (!motivo) { Swal.showValidationMessage('El motivo de la corrección es obligatorio'); return false; }
+          return {
+            cod_estado_nuevo: document.getElementById('corrEstado').value || null,
+            datos: { observaciones: document.getElementById('corrObs').value.trim() || null },
+            motivo_correccion: motivo,
+            autorizador_usuario: ES_ADMIN ? null : document.getElementById('corrUsuario').value.trim(),
+            autorizador_clave: ES_ADMIN ? null : document.getElementById('corrClave').value
+          };
+        }
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        fetch(`/api/v1/citas/${idCita}/correccion`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+          body: JSON.stringify(result.value)
+        })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({ title: '¡Éxito!', text: data.mensaje, icon: 'success', timer: 2000, showConfirmButton: false });
+              $('#tbl').DataTable().ajax.reload();
+            } else {
+              Swal.fire('Error', data.error || 'No se pudo corregir la cita', 'error');
+            }
+          })
+          .catch(() => Swal.fire('Error', 'No se pudo corregir la cita', 'error'));
+      });
+    });
+  };
+
   $(document).ready(function () {
     initDatatable();
     verLogsCita();
     verRecordatoriosCita();
     cambiarEstado();
+    corregirCita();
     iniciarConsultaDesdeCita();
   });
 </script>

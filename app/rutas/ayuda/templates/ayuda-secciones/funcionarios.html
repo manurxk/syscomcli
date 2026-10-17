@@ -1,0 +1,39 @@
+<h3>Funcionarios</h3>
+<p>En esta pantalla se registra al personal de la clínica: recepción, caja, administración y los profesionales que atienden. Cada profesional que va a tener agenda tiene que estar cargado acá como especialista.</p>
+
+<h4>¿Cómo registro un funcionario?</h4>
+{{ figura('funcionarios/01_listado.jpg', 'Gestión de Funcionarios: ① Nuevo Funcionario') }}
+{{ figura('funcionarios/02_formulario.jpg', 'Registrar Funcionario: los números coinciden con los pasos') }}
+<ol>
+    <li>Presione <span class="btn-ref">Nuevo Funcionario</span>.</li>
+    <li>En <strong>Datos Personales</strong>, complete nombres, apellidos, cédula, fecha de nacimiento y teléfono (son obligatorios). El correo, la dirección y los demás datos son opcionales.</li>
+    <li>En <strong>Datos Laborales</strong>, elija el <strong>Cargo Asignado</strong>.</li>
+    <li>Si el cargo es de un profesional de la salud, aparece la sección <strong>Datos de Especialista</strong>: escriba la <strong>Matrícula Profesional</strong>, elija el color con que se verán sus citas y marque una o más <strong>Especialidades Médicas</strong>.</li>
+    <li>Presione <span class="btn-ref">Guardar</span>.</li>
+</ol>
+<p>No se puede repetir la cédula de una persona ya registrada ni la matrícula de otro especialista.</p>
+<p class="importante">Registrar al funcionario no le da acceso al sistema. Para que pueda iniciar sesión, un administrador le crea un usuario en la pantalla <strong>Usuarios</strong>.</p>
+
+<h4>¿Cómo corrijo sus datos?</h4>
+<ol>
+    <li>Presione el botón del lápiz en la fila del funcionario.</li>
+    <li>Corrija lo necesario.</li>
+    <li>Presione <span class="btn-ref">Actualizar</span>.</li>
+</ol>
+
+<h4>¿Qué pasa si un especialista deja de atender?</h4>
+<p>Cámbiele el cargo a uno que no sea de salud, o desactívelo (vea abajo). En los dos casos:</p>
+<ul>
+    <li>Deja de aparecer para agendar citas, en la agenda médica y en las consultas nuevas.</li>
+    <li>Sus horarios dejan de generar turnos y se quitan sus turnos libres a futuro.</li>
+    <li>Su historia no se pierde: las citas, consultas, recetas y certificados que hizo siguen mostrando su nombre.</li>
+</ul>
+<p>Si más adelante vuelve a atender, edítelo y asígnele de nuevo un cargo de salud: recupera su misma matrícula y sus especialidades, y sus horarios vuelven a generar turnos.</p>
+<p class="importante">Si el especialista todavía tiene citas pendientes (agendadas, confirmadas o en consulta) desde hoy en adelante, el sistema no deja darlo de baja y le avisa cuántas son y cuál es la próxima. Primero cancele esas citas o regístrelas de nuevo con otro especialista desde <strong>Citas</strong>.</p>
+
+<h4>¿Cómo desactivo a un funcionario?</h4>
+<ol>
+    <li>Presione el botón <span class="btn-ref">Desactivar</span> en la fila del funcionario. Solo lo ven los administradores.</li>
+    <li>Confirme con <span class="btn-ref">Sí, desactivar</span>.</li>
+</ol>
+<p>Los funcionarios no se borran: quedan desactivados y se conservan sus datos. También puede desactivarlo desde la edición, apagando <strong>Funcionario Activo</strong>.</p>

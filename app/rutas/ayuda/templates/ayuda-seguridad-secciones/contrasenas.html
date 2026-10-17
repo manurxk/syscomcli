@@ -1,0 +1,43 @@
+<h4>Usuarios del sistema</h4>
+<table class="datos">
+    <tr><th>Regla</th><th>Valor vigente</th></tr>
+    <tr><td>Longitud</td><td>Entre 8 y 16 caracteres</td></tr>
+    <tr><td>Complejidad</td><td>Al menos 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial (<code>!@#$%^&amp;*</code>)</td></tr>
+    <tr><td>Prohibido</td><td>Igual al nombre de usuario, contener el nombre o apellido, o estar en la lista de contraseñas comunes</td></tr>
+    <tr><td>Vencimiento</td><td>90 días. Al vencer, el sistema exige el cambio</td></tr>
+    <tr><td>Historial de contraseñas</td><td><strong>No se guarda, por decisión de diseño</strong> (ver más abajo)</td></tr>
+    <tr><td>Almacenamiento</td><td>Solo el hash (<code>pbkdf2:sha256</code>; algunas anteriores en <code>scrypt</code>, también seguro). <strong>Nunca</strong> la contraseña en texto, ni siquiera la de un intento fallido</td></tr>
+    <tr><td>Segundo factor (MFA)</td><td>Código por correo, válido 5 minutos, máximo 5 intentos por código. Opción de "dispositivo confiable" por 60 días</td></tr>
+    <tr><td>Bloqueo escalonado</td><td>5 fallos → 30 min; 3 más → 1 h; 3 más → bloqueo indefinido, que solo levanta un administrador</td></tr>
+    <tr><td>Límite por equipo</td><td>10 fallos desde una misma IP en 15 min frenan el login desde esa IP</td></tr>
+    <tr><td>Recuperación</td><td>Exige usuario <strong>y</strong> correo registrado; enlace válido 24 h y de un solo uso; máximo 3 solicitudes por cuenta por hora; mensaje genérico (no revela si la cuenta existe)</td></tr>
+    <tr><td>Sesión</td><td>Máximo 60 min; se cierra tras 20 min de inactividad; 1 sesión simultánea por usuario</td></tr>
+    <tr><td>Cookie de sesión</td><td><code>HttpOnly</code>, <code>SameSite=Lax</code>; en el servidor, además <code>Secure</code></td></tr>
+</table>
+<p>"<span class="btn-ref">Revocar MFA</span>" (en <strong>Seguridad → Accesos</strong>) anula los códigos pendientes, <strong>todos los dispositivos confiables</strong> de la cuenta y sus sesiones abiertas.</p>
+<p class="importante"><strong>Excepciones vigentes</strong>: las cuentas de prueba <code>lgonzalez</code>, <code>psicoadmin</code> y <code>recep</code> tienen "la contraseña nunca expira" y no usan MFA. Se aceptan solo en desarrollo. En producción, toda cuenta vence a los 90 días y las de Administrador usan MFA.</p>
+
+<h4>Credenciales de servicio</h4>
+<table class="datos">
+    <tr><th>Credencial</th><th>Dónde vive</th><th>Rotación</th></tr>
+    <tr><td>Usuario de la app en la base (<code>sysclin_app</code>)</td><td><code>.env</code> (<code>DB_PASSWORD</code>)</td><td>Cada 6 meses o ante sospecha</td></tr>
+    <tr><td>Administrador de la base (<code>postgres</code>)</td><td><code>.env</code> (<code>POSTGRES_PASSWORD</code>) y gestor de contraseñas del administrador</td><td>Cada 6 meses o ante sospecha</td></tr>
+    <tr><td><code>SECRET_KEY</code></td><td><code>.env</code>; mínimo 32 caracteres, distinta en desarrollo y en el servidor</td><td>Ante sospecha (cambiarla cierra todas las sesiones)</td></tr>
+    <tr><td>Correo saliente (SMTP) y WhatsApp (UltraMsg)</td><td><code>.env</code></td><td>Según el proveedor, o ante sospecha</td></tr>
+    <tr><td>Clave privada del backup</td><td><strong>Fuera del servidor</strong>: USB o gestor de contraseñas, con su contraseña guardada aparte</td><td>Solo si se pierde o se compromete</td></tr>
+</table>
+<ul>
+    <li>Ninguna contraseña se escribe en el código ni en las migraciones.</li>
+    <li>Las contraseñas de servicio se generan al azar, con 48 caracteres o más (capítulo <a href="#configuracion">Configuración</a>).</li>
+</ul>
+<p>Los procedimientos para cambiarlas están en el capítulo <a href="#base-datos">Base de datos</a>.</p>
+
+<h4>Por qué no se guarda historial de contraseñas</h4>
+<p>Muchos sistemas guardan las últimas contraseñas de cada usuario para impedir que las reutilice. Sysclin <strong>no lo hace</strong>; la tabla <code>password_history</code> se eliminó con la migración 105 (2026-10-11).</p>
+<table class="datos">
+    <tr><th>Motivo</th><th>Explicación</th></tr>
+    <tr><td>Es un depósito de contraseñas viejas</td><td>Si la base se filtrara, el atacante tendría varias contraseñas por persona. La gente suele reutilizar variantes en otros servicios (correo, banca). Para datos de salud, guardar menos es más seguro</td></tr>
+    <tr><td>No protegía nada</td><td>Cada hash lleva una sal aleatoria distinta, así que la comparación "no reutilizar las últimas 5" nunca coincidía</td></tr>
+    <tr><td>Hay controles mejores</td><td>Complejidad obligatoria, vencimiento a 90 días, MFA por correo y bloqueo escalonado</td></tr>
+    <tr><td>Coincide con las recomendaciones actuales</td><td>NIST SP 800-63B ya no recomienda reglas de "no reutilizar las últimas N"</td></tr>
+</table>

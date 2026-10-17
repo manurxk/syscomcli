@@ -65,7 +65,7 @@ class FichaDao(BaseDAO):
             LEFT JOIN ciudades cn ON per.id_ciudad_nacimiento = cn.id_ciudad
             LEFT JOIN niveles_instruccion ni ON per.id_nivel_instruccion = ni.id_nivel_instruccion
             LEFT JOIN profesiones pr ON per.id_profesion = pr.id_profesion
-            LEFT JOIN pacientes_menores pm ON pac.id_paciente = pm.id_paciente
+            LEFT JOIN pacientes_menores pm ON pac.id_paciente = pm.id_paciente AND pm.est_paciente_menor = TRUE
             WHERE pac.id_paciente = %s
         """
         f = self.execute_query_one(sql, (id_paciente,))
@@ -409,8 +409,9 @@ class FichaDao(BaseDAO):
         return fila['id_nota'] if fila else None
 
     def eliminarNota(self, id_nota, usuario_modificacion=None):
-        sql = "UPDATE notas_clinicas SET est_nota = FALSE WHERE id_nota = %s"
-        return self.execute_query(sql, (id_nota,), commit=True) > 0
+        """Baja lógica: queda quién la anuló; la fecha la pone trg_notas_clinicas_fecha_mod."""
+        sql = "UPDATE notas_clinicas SET est_nota = FALSE, usuario_modificacion = %s WHERE id_nota = %s"
+        return self.execute_query(sql, (usuario_modificacion, id_nota), commit=True) > 0
 
     # ----------------------------------------
     # DATOS DEL ESPECIALISTA QUE GENERA EL DOCUMENTO

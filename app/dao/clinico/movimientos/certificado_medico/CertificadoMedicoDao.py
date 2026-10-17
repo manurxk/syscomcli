@@ -56,6 +56,25 @@ class CertificadoMedicoDao(BaseDAO):
 
         return self.execute_transaction(_crear)
 
+    def getParaImprimir(self, id_certificado):
+        """Certificado con paciente/especialista, horario de la cita y la especialidad atendida (PDF)."""
+        cab = self.execute_query_one(
+            """
+            SELECT c.id_consulta, c.id_paciente, c.id_especialista,
+                   TO_CHAR(ci.cita_inicio, 'HH24:MI') AS hora_inicio, TO_CHAR(ci.cita_fin, 'HH24:MI') AS hora_fin,
+                   e.des_especialidad
+            FROM certificados_medicos c
+            JOIN consultas co ON c.id_consulta = co.id_consulta
+            LEFT JOIN citas ci ON co.id_cita = ci.id_cita
+            LEFT JOIN especialidades e ON ci.id_especialidad = e.id_especialidad
+            WHERE c.id_certificado = %s AND c.est_certificado = TRUE
+            """, (id_certificado,))
+        if not cab:
+            return None
+        cert = next((c for c in self.getPorConsulta(cab['id_consulta']) if c['id_certificado'] == id_certificado), None)
+        cert.update(cab)
+        return cert
+
     def desactivar(self, id_certificado, usuario_modificacion=None):
         sql = "UPDATE certificados_medicos SET est_certificado = FALSE, usuario_modificacion = %s WHERE id_certificado = %s"
         return self.execute_query(sql, (usuario_modificacion, id_certificado), commit=True) > 0

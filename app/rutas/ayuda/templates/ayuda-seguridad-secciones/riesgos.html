@@ -1,0 +1,18 @@
+<h4>Riesgos aceptados</h4>
+<table class="datos">
+    <tr><th>Riesgo</th><th>Por qué se acepta</th><th>Mitigación</th></tr>
+    <tr><td>En desarrollo, los puertos 5005, 5434 y 5680 están abiertos a la red local</td><td>Se trabaja con varios proyectos en paralelo</td><td>En el servidor se cierran; en desarrollo no hay datos reales de pacientes</td></tr>
+    <tr><td>Un tercero puede bloquear una cuenta ajena con intentos fallidos</td><td>Es el costo del bloqueo por cuenta</td><td>El bloqueo indefinido requiere un administrador; queda auditado con la IP de origen</td></tr>
+    <tr><td>Dentro del contenedor de la base, las conexiones locales no piden contraseña</td><td>Requiere acceso a Docker, que equivale a ser administrador del equipo</td><td>El acceso al servidor queda restringido al administrador</td></tr>
+    <tr><td>Los backups están en el mismo disco que la base</td><td>Infraestructura de un solo equipo</td><td>Están cifrados; se recomienda una copia semanal fuera del equipo</td></tr>
+    <tr><td>Sin Content-Security-Policy</td><td>Las plantillas usan scripts en línea y CDNs</td><td>Mejora futura</td></tr>
+</table>
+
+<h4>Pendiente de incorporar</h4>
+<ul>
+    <li>Auditoría de cambios en los datos con el valor anterior y el nuevo, y registros de auditoría que no se puedan modificar ni borrar.</li>
+    <li>Vistas y procedimientos almacenados: qué hay, cómo se usan y cómo probarlos.</li>
+</ul>
+
+<h4>Normativa de referencia</h4>
+<p>ISO/IEC 27001 (gestión de la seguridad de la información) y las buenas prácticas de OWASP se usan como <strong>referencia</strong>, no como certificación. El tratamiento de datos de salud se rige por la legislación paraguaya de protección de datos personales vigente.</p>

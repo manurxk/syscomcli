@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify, current_app as app, session
+from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.clinico.movimientos.receta.RecetaDao import RecetaDao
 from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.auth.utils.decorators import role_required
+from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
+from app.services.documento_clinico_pdf_service import DocumentoClinicoPdfService
 
 recetaapi = Blueprint('recetaapi', __name__)
 
@@ -64,4 +66,25 @@ def deleteReceta(id_receta):
         return jsonify({'success': False, 'error': 'No se encontró el registro con el ID proporcionado.'}), 404
     except Exception as e:
         app.logger.error(f"Error al eliminar receta de consulta: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@recetaapi.route('/recetas/<int:id_receta>/pdf', methods=['GET'])
+@role_required(*ROLES_RECETA)
+def getRecetaPdf(id_receta):
+    """PDF imprimible (RECETA.html). Lo firma el especialista de la consulta, que es quien lo emitió."""
+    try:
+        receta = RecetaDao().getParaImprimir(id_receta)
+        if not receta:
+            return jsonify({'success': False, 'error': 'No se encontró el documento.'}), 404
+        ficha = FichaDao()
+        buffer = DocumentoClinicoPdfService().generar_receta_pdf(
+            receta, ficha.getDatosPaciente(receta['id_paciente']) or {},
+            ficha.getDatosGenerador(receta['id_especialista']) or {},
+            DocumentoClinicoPdfService.config_empresa(),
+        )
+        return send_file(buffer, mimetype='application/pdf', as_attachment=False,
+                         download_name=f"receta_{receta['receta_numero']}.pdf")
+    except Exception as e:
+        app.logger.error(f"Error al generar PDF de receta {id_receta}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500

@@ -13,6 +13,7 @@
 </ul>
 
 <h4>¿Cómo registro lo que pasó en la consulta?</h4>
+{{ figura('consultas/01_atencion.jpg', 'Atender Consulta: ① Motivo de Consulta ② Guardar Cambios') }}
 <ol>
     <li>En <strong>Atención Clínica</strong>, revise el <strong>Motivo de Consulta</strong> (es obligatorio) y escriba las observaciones y la descripción de lo evaluado.</li>
     <li>Presione <span class="btn-ref">Guardar Cambios</span>.</li>
@@ -30,7 +31,7 @@
 <h4>¿Cómo agrego un diagnóstico, signo, síntoma o procedimiento?</h4>
 <ol>
     <li>Presione <span class="btn-ref">+ Agregar</span> en el bloque que corresponda.</li>
-    <li>Elija el elemento de la lista. Los diagnósticos aparecen con su código CIE-10.</li>
+    <li>Elija el elemento de la lista. Los diagnósticos aparecen con su código CIE-10. Las listas (diagnósticos, estudios, análisis, medicamentos, tratamientos, instrumentos) están orientadas a psicología y psiquiatría infantil; si falta algún elemento, pídale al administrador que lo agregue en su pantalla de referenciales.</li>
     <li>Complete los datos del registro:
         <ul>
             <li>En un diagnóstico: el tipo (Presuntivo, Definitivo o Diferencial) y la gravedad.</li>
@@ -49,7 +50,7 @@
 <h4>¿Cómo indico un tratamiento?</h4>
 <ol>
     <li>En <strong>Tratamientos</strong>, presione <span class="btn-ref">+ Agregar</span> y elija el tipo de tratamiento.</li>
-    <li>Escriba la descripción y la fecha de inicio (son obligatorias).</li>
+    <li>Escriba la descripción y revise la fecha de inicio (son obligatorias). La fecha viene cargada con la de la consulta.</li>
     <li>Si quiere, agregue los objetivos, la cantidad y frecuencia de sesiones y la duración de cada sesión.</li>
     <li>Presione <span class="btn-ref">Guardar</span>.</li>
 </ol>
@@ -57,27 +58,36 @@
 <h4>¿Cómo hago una orden de estudios o análisis?</h4>
 <ol>
     <li>En <strong>Órdenes</strong>, presione <span class="btn-ref">+ Agregar</span>.</li>
-    <li>Elija la fecha de la orden (es obligatoria) y, si hace falta, escriba indicaciones para el paciente.</li>
+    <li>Revise la fecha de la orden: viene cargada con la de la consulta y se puede cambiar. Si hace falta, escriba indicaciones para el paciente.</li>
     <li>En <strong>Ítems de la orden</strong>, elija si es un estudio o un análisis, elija cuál y presione <span class="btn-ref">+ Añadir ítem</span>. Repita por cada estudio o análisis que necesite.</li>
-    <li>Presione <span class="btn-ref">Guardar Orden</span>.</li>
+    <li>Presione <span class="btn-ref">Guardar Orden</span>. Aparece el botón <span class="btn-ref">Imprimir</span> para entregarle la orden al paciente.</li>
 </ol>
+{{ figura('consultas/03_imprimir_aviso.jpg', 'Al guardar: ① Imprimir') }}
+<p>La orden impresa incluye los datos del paciente, los diagnósticos cargados en la consulta (con su código CIE-10), los estudios y análisis pedidos, las indicaciones y la firma del especialista.</p>
 
 <h4>¿Cómo hago una receta?</h4>
 <ol>
     <li>En <strong>Recetas</strong>, presione <span class="btn-ref">+ Agregar</span>.</li>
-    <li>Elija la fecha de la receta (es obligatoria). La validez viene en 30 días; cámbiela si hace falta. Si quiere, escriba indicaciones generales.</li>
+    <li>Revise la fecha de la receta: viene cargada con la de la consulta. La validez viene en 30 días; cámbiela si hace falta. Si quiere, escriba indicaciones generales.</li>
     <li>En <strong>Medicamentos</strong>, elija el medicamento, escriba la dosis, la frecuencia y la duración, y presione <span class="btn-ref">+ Añadir</span>. Repita por cada medicamento.</li>
-    <li>Presione <span class="btn-ref">Guardar Receta</span>.</li>
+    <li>Presione <span class="btn-ref">Guardar Receta</span>. Aparece el botón <span class="btn-ref">Imprimir</span>.</li>
 </ol>
+<p>La receta impresa muestra cada medicamento con su dosis, frecuencia, duración, cantidad e indicaciones, y la fecha hasta la que es válida.</p>
 
 <h4>¿Cómo hago un certificado médico?</h4>
 <ol>
     <li>En <strong>Certificados Médicos</strong>, presione <span class="btn-ref">+ Agregar</span> y elija el tipo de certificado.</li>
-    <li>Escriba la fecha y el motivo (son obligatorios).</li>
+    <li>Escriba el motivo y revise la fecha, que viene cargada con la de la consulta (los dos son obligatorios).</li>
     <li>Si es un certificado de reposo, ponga los días de reposo y las fechas desde y hasta.</li>
     <li>Si quiere, agregue el diagnóstico y las recomendaciones.</li>
-    <li>Presione <span class="btn-ref">Guardar</span>. El sistema le asigna un número al certificado, por ejemplo CERT-2026-0001.</li>
+    <li>Presione <span class="btn-ref">Guardar</span>. El sistema le asigna un número al certificado, por ejemplo CERT-2026-0001, y aparece el botón <span class="btn-ref">Imprimir</span>.</li>
 </ol>
+<p>El certificado impreso dice que el paciente asistió a la consulta, con la fecha y el horario de la cita, y los días de reposo si los indicó. El diagnóstico solo aparece si lo escribió en el certificado: es un dato sensible, déjelo vacío si el certificado es para la escuela o el trabajo.</p>
+
+<h4>¿Cómo vuelvo a imprimir una orden, receta o certificado?</h4>
+{{ figura('consultas/02_imprimir_lista.jpg', 'Órdenes de la consulta: ① Imprimir') }}
+<p>En la lista de Órdenes, Recetas o Certificados Médicos de la consulta, presione el botón de la impresora <span class="btn-ref">Imprimir</span> en la fila del documento. Se abre el PDF en otra pestaña, listo para imprimir o guardar.</p>
+<p>El documento lo firma el especialista que atendió la consulta. Los datos de la clínica (nombre, dirección, teléfono, RUC) salen de la configuración de la empresa.</p>
 
 <h4>¿Cómo derivo al paciente a otro especialista?</h4>
 <ol>

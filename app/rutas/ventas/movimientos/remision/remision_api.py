@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, current_app as app, session
+from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.ventas.movimientos.remision.RemisionDao import RemisionDao
+from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
+from app.services.documento_ventas_pdf_service import DocumentoVentasPdfService
 from app.auth.utils.decorators import role_required
 
 remisionapi = Blueprint('remisionapi', __name__)
@@ -89,4 +91,25 @@ def anularRemision(id_remision):
         return jsonify({'success': True, 'mensaje': f'Remisión {id_remision} anulada.', 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al anular remisión: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@remisionapi.route('/remisiones/<int:id_remision>/pdf', methods=['GET'])
+@role_required(*ROLES_VENTAS)
+def getRemisionPdf(id_remision):
+    """PDF imprimible (REMISION.html), con firmas de quien entrega y quien recibe."""
+    try:
+        dao = RemisionDao()
+        remision = dao.getRemisionById(id_remision)
+        if not remision:
+            return jsonify({'success': False, 'error': 'No se encontró la remisión.'}), 404
+        buffer = DocumentoVentasPdfService().generar_remision_pdf(
+            remision, dao.getRemisionDetalle(id_remision),
+            FichaDao().getDatosPaciente(remision['id_paciente']) or {},
+            DocumentoVentasPdfService.config_empresa(),
+        )
+        return send_file(buffer, mimetype='application/pdf', as_attachment=False,
+                         download_name=f"remision_{remision['remision_numero']}.pdf")
+    except Exception as e:
+        app.logger.error(f"Error al generar PDF de remisión {id_remision}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
