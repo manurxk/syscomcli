@@ -19,6 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxslt1-dev \
     zlib1g-dev \
     gettext \
+    # Manuales: el PDF se exporta del Word estándar con LibreOffice (app/services/manual_word_service.py).
+    # fonts-liberation trae Liberation Serif, que ocupa lo mismo que Times New Roman letra por letra.
+    libreoffice-writer-nogui \
+    python3-uno \
+    fonts-liberation \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Crear y establecer el directorio de trabajo

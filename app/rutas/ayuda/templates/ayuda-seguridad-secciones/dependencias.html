@@ -4,15 +4,15 @@
     <li>Las imágenes base (<code>python:3.12-slim</code>, <code>postgres:17</code>, <code>nginx:1.27-alpine</code>) se actualizan junto con las dependencias.</li>
 </ul>
 
-<h4>1. Buscar vulnerabilidades conocidas</h4>
+<h4>Buscar vulnerabilidades conocidas</h4>
 <p>Corre en un contenedor temporal, sin tocar la app:</p>
 <pre><code>docker run --rm -v "${PWD}\requirements.txt:/r/requirements.txt:ro" python:3.12-slim sh -c "pip install -q --root-user-action=ignore --disable-pip-version-check pip-audit &amp;&amp; pip-audit -r /r/requirements.txt --progress-spinner off"</code></pre>
 <p>Esperado: <code>No known vulnerabilities found</code>. Si aparece alguna, la columna <code>Fix Versions</code> indica la versión que la corrige.</p>
 
-<h4>2. Ver qué versiones nuevas hay</h4>
+<h4>Ver qué versiones nuevas hay</h4>
 <pre><code>docker run --rm -v "${PWD}\requirements.txt:/r/requirements.txt:ro" python:3.12-slim sh -c "pip install -q --root-user-action=ignore --disable-pip-version-check -r /r/requirements.txt &amp;&amp; pip list --outdated"</code></pre>
 
-<h4>3. Actualizar</h4>
+<h4>Actualizar</h4>
 <ol>
     <li>Cambiar la versión en <code>requirements.txt</code>.</li>
     <li>Volver a correr el paso 1.</li>

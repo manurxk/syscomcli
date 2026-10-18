@@ -30,7 +30,7 @@ HOY = date.today().isoformat()
 # Referenciales existentes en sysclin_bd (verificados antes de escribir el script)
 ID_SEDE = 1
 ID_CONSULTORIO = 1
-ID_ESPECIALIDAD = 3            # PSICO (la única que tienen ambos especialistas)
+ID_ESPECIALIDAD = 3            # PSICOLOGÍA (la única que tienen ambos especialistas)
 ID_ESPECIALISTA_LAURA = 3      # Laura Gonzalez: agenda lunes y martes
 ID_ESPECIALISTA_ADMIN = 4      # psicoadmin: se le crea agenda mié/jue/vie
 ID_CARGO_RECEPCION = 11

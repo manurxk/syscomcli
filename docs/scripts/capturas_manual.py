@@ -1,347 +1,504 @@
 """
-Capturas de pantalla del manual de usuario (app/static/img/ayuda/<seccion>/NN_nombre.jpg).
+Capturas de pantalla para la Guía de uso (botón ? y su PDF).
 
-Abre Chrome sin interfaz (headless), inicia sesión en el sistema, marca los elementos con el
-estilo de la guía (borde violeta + círculo numerado, los números coinciden con los pasos del
-texto) y guarda un recorte JPG de 1116 px de ancho, el mismo formato que las capturas existentes.
+Entra a Sysclin con un navegador automatizado (Playwright), recorre las pantallas
+de la lista CAPTURAS, marca con ①②③ los botones y campos de cada paso y guarda la imagen en
+app/static/img/ayuda/<seccion>/<archivo>. Las secciones de la guía las muestran solas.
 
-Habla con Chrome por el protocolo DevTools con un cliente WebSocket mínimo escrito con la
-biblioteca estándar: no hay que instalar nada (ni Playwright ni Selenium).
+Se ejecuta en un contenedor temporal, dentro de la red de Sysclin (no toca la app):
+    docker run --rm --network dock_network-tesis -e CAPTURAS_PASS_LGONZALEZ -v "${PWD}:/repo" -w /repo `
+      mcr.microsoft.com/playwright/python:v1.49.0-noble sh -c `
+      "pip install -q --break-system-packages playwright==1.49.0 && python docs/scripts/capturas_manual.py [seccion]"
 
-Las contraseñas NUNCA se escriben en este archivo; se leen de variables de entorno:
-    CAPTURAS_RECEPCION_USER / CAPTURAS_RECEPCION_PASS   (por defecto recep2 / la de seed_prueba.py)
-    CAPTURAS_ADMIN_USER / CAPTURAS_ADMIN_PASS           (usuario ADMINISTRADOR + CLINICO sin MFA, ej. psicoadmin)
+Sin argumento regenera todas; con una sección (por ejemplo "citas"), solo esa.
 
-Uso (desde la raíz del repositorio, con el sistema corriendo en el puerto 5005):
-    python docs/scripts/capturas_manual.py citas
-    $env:CAPTURAS_ADMIN_PASS='...'; python docs/scripts/capturas_manual.py funcionarios consultas
-
-Cada inicio de sesión queda registrado en la auditoría como un login normal; al terminar se cierra la sesión.
+Notas:
+- Usa cuentas de PRUEBA sin MFA (el código llega por correo y el script no lo lee).
+  La contraseña sale de CAPTURAS_PASS_<USUARIO> o, solo para las cuentas del seed (recep2, cajero1),
+  de su valor conocido. Sin contraseña el rol se saltea: no se prueban claves, porque cada fallo
+  suma al bloqueo de la cuenta. Ej.: -e CAPTURAS_PASS_PSICOADMIN para las capturas de ADMIN.
+- Sysclin permite una sola sesión por usuario: no usar una cuenta que alguien tenga abierta.
+- Las capturas muestran lo que haya en la base: correrlo solo con datos de prueba.
+- El script solo navega y abre formularios o modales: nunca presiona Guardar.
 """
-import base64
-import json
 import os
-import re
-import shutil
-import socket
-import struct
-import subprocess
 import sys
-import tempfile
-import time
-import urllib.request
-from urllib.parse import urlparse
 
-import requests
+from playwright.sync_api import sync_playwright
 
-BASE = os.getenv('CAPTURAS_BASE_URL', 'http://localhost:5005')
-SALIDA = os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'static', 'img', 'ayuda')
-ANCHO = 1116          # ancho de las capturas existentes (sin el menú lateral)
-ALTO = 900
-PUERTO_DEVTOOLS = 9333
-CHROME = next((c for c in (
-    r'C:\Program Files\Google\Chrome\Application\chrome.exe',
-    r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
-    '/usr/bin/google-chrome', '/usr/bin/chromium',
-) if os.path.exists(c)), None)
+BASE = os.getenv('CAPTURAS_BASE_URL', 'https://nginx')
+SALIDA = os.path.join('app', 'static', 'img', 'ayuda')
+PASS_USUARIOS_PRUEBA = 'Prueba2026!'  # la del seed (docs/scripts/seed_prueba.py)
 
-# Estilo de la guía: borde violeta y círculo numerado a la izquierda del elemento
-JS_MARCADORES = r"""
-// Sin desplazamiento animado (Bootstrap usa scroll-behavior: smooth): las posiciones se miden ya quietas
-document.documentElement.style.scrollBehavior = 'auto';
-document.querySelectorAll('.table-responsive').forEach(t => t.style.scrollBehavior = 'auto');
-// Menú lateral escondido, como en las capturas de la guía
-document.body.classList.add('sidebar-collapse');
-window.__marcar = function (sel, n, idx) {
-  const els = document.querySelectorAll(sel);
-  const el = els[idx || 0];
-  if (!el) return false;
-  el.scrollIntoView({block: 'nearest', inline: 'nearest'});
-  el.style.outline = '3px solid #7c3aed';
-  el.style.outlineOffset = '2px';
-  el.style.borderRadius = el.style.borderRadius || '6px';
-  if (n) {
+# Cuenta de prueba por rol (sin MFA)
+USUARIOS = {
+    'RECEPCION': 'recep2',
+    'CLINICO': 'lgonzalez',
+    'VENTAS': 'cajero1',
+    'ADMIN': 'psicoadmin',     # ADMINISTRADOR + CLINICO, sin MFA (Funcionarios)
+}
+CUENTAS_SEED = ('recep2', 'cajero1')
+
+# Datos de prueba que usan algunas pantallas (paciente CI 9000009 y una consulta suya)
+ID_CONSULTA_PRUEBA = 27
+ID_CONSULTA_CON_ORDENES = 24   # consulta de lgonzalez con órdenes cargadas (impresión)
+
+
+def boton(texto):
+    """Botón o enlace visible por su texto."""
+    return f':is(a, button):visible:has-text("{texto}")'
+
+
+def campo(texto):
+    """Campo de formulario por el texto de su etiqueta (marca la etiqueta y el control)."""
+    return f'div:has(> label:has-text("{texto}")):visible'
+
+
+def titulo(texto):
+    """Título de un bloque del formulario."""
+    return f':is(h5, h6, .card-header, .card-title):visible:has-text("{texto}")'
+
+
+MODAL = '.modal.show .modal-content'
+
+# Cada captura: sección de la guía, archivo, rol, pantalla, acciones previas y marcas (selector, número de paso[, 'esquina']).
+# Acciones: ('click', selector), ('esperar', selector) o ('js', código que se ejecuta en la página).
+# Recorte opcional: 'hasta' corta debajo de ese elemento; 'desde' empieza arriba de ese elemento;
+# 'alto' limita la altura en píxeles; 'elemento' captura solo ese elemento (por ejemplo, un modal).
+CAPTURAS = [
+    # ---------------- Recepción ----------------
+    {
+        'seccion': 'pacientes', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
+        'url': '/mantenimiento/paciente/paciente-index',
+        'marcas': [(boton('Nuevo Paciente'), 1)], 'hasta': boton('Nuevo Paciente'),
+    },
+    {
+        'seccion': 'pacientes', 'archivo': '02_formulario.jpg', 'rol': 'RECEPCION',
+        'url': '/mantenimiento/paciente/paciente-agregar',
+        'marcas': [(titulo('Datos Personales'), 2), (titulo('Documento para Facturación'), 3),
+                   (titulo('Contacto'), 4), (titulo('Notas Clínicas'), 6), (boton('Registrar Paciente'), 7, 'esquina')],
+    },
+    {
+        'seccion': 'agenda_medica', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/agenda-horarios/agenda-horarios-index',
+        'marcas': [(boton('Nuevo Horario'), 1)], 'hasta': boton('Nuevo Horario'),
+    },
+    {
+        'seccion': 'agenda_medica', 'archivo': '02_nuevo_horario.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/agenda-horarios/agenda-horarios-index',
+        # "Nuevo Horario" pide elegir antes un especialista
+        'acciones': [('esperar', '#selectEspecialista option:nth-child(2)'),
+                     ('js', "const s = document.getElementById('selectEspecialista'); "
+                            "s.value = s.options[1].value; $(s).trigger('change');"),
+                     ('click', boton('Nuevo Horario')), ('esperar', MODAL)],
+        'elemento': MODAL,
+        'marcas': [(campo('Sede'), 2), (campo('Día'), 3), (campo('Hora inicio'), 4), (campo('Duración'), 5),
+                   (campo('Modalidad'), 6), (campo('Fecha desde'), 7), (boton('Guardar'), 8, 'esquina')],
+    },
+    {
+        'seccion': 'citas', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/citas/citas-index',
+        'marcas': [('a.btn[href$="citas-agregar"]', 1)],
+        'hasta': '.card-header',  # título + botón; la tabla no aporta a este paso
+    },
+    {
+        'seccion': 'citas', 'archivo': '02_nueva_cita.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/citas/citas-agregar',
+        'marcas': [
+            ('#btnBuscarPaciente', 2),
+            ('#selectEspecialista', 3),
+            ('#txtFechaCita', 4),
+            ('.tipo-cita-card[data-tipo="primera_vez"]', 5),
+            ('#selectModalidad', 6),
+            ('#btnGuardarCita', 7, 'esquina'),
+        ],
+    },
+    {
+        'seccion': 'citas', 'archivo': '03_corregir_boton.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/citas/citas-index',
+        'acciones': [('esperar', '#tbl tbody tr td'), ('js', "$('#tbl').DataTable().search('Completada').draw()"),
+                     ('esperar', '#tbl tbody tr button[name="btn_corregir"]')],
+        'marcas': [('#tbl tbody tr:first-child button[name="btn_corregir"]', 1, 'esquina')],
+        'desde': '#tbl', 'alto': 430,
+    },
+    {
+        'seccion': 'citas', 'archivo': '04_corregir.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/citas/citas-index',
+        'acciones': [('esperar', '#tbl tbody tr td'), ('js', "$('#tbl').DataTable().search('Completada').draw()"),
+                     ('click', '#tbl tbody tr:first-child button[name="btn_corregir"]'),
+                     ('esperar', '.swal2-popup #corrMotivo'),
+                     ('js', "document.getElementById('corrEstado').value = 'AUSENTE'; "
+                            "document.getElementById('corrMotivo').value = 'El paciente no vino; se marcó completada por error.'")],
+        'elemento': '.swal2-popup',
+        'marcas': [('#corrEstado', 2), ('#corrMotivo', 3), ('#corrUsuario', 4), ('.swal2-confirm', 5, 'esquina')],
+    },
+    {
+        'seccion': 'lista_espera', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/lista-espera/lista-espera-index',
+        'marcas': [(boton('Agregar'), 1)], 'hasta': boton('Agregar'),
+    },
+    {
+        'seccion': 'lista_espera', 'archivo': '02_agregar.jpg', 'rol': 'RECEPCION',
+        'url': '/agendamiento/lista-espera/lista-espera-index',
+        'acciones': [('click', boton('Agregar')), ('esperar', MODAL)],
+        'elemento': MODAL,
+        'marcas': [(campo('Agenda'), 2), (campo('Paciente'), 3), (campo('Prioridad'), 4),
+                   (campo('Motivo'), 5), (boton('Guardar'), 6, 'esquina')],
+    },
+    {
+        'seccion': 'reporte_agendamiento', 'archivo': '01_filtros.jpg', 'rol': 'RECEPCION',
+        'url': '/reporte/agendamiento',
+        'marcas': [(campo('Fecha Desde'), 1), (boton('Actualizar Reporte'), 2, 'esquina')],
+        'hasta': boton('Actualizar Reporte'),
+    },
+    # ---------------- Clínico ----------------
+    {
+        'seccion': 'mi_agenda', 'archivo': '01_citas_hoy.jpg', 'rol': 'CLINICO',
+        'url': '/agendamiento/mi-agenda',
+        'marcas': [(titulo('Citas de Hoy'), 1), (boton('Iniciar'), 2, 'esquina')],
+        'alto': 700,
+    },
+    {
+        'seccion': 'consultas', 'archivo': '01_atencion.jpg', 'rol': 'CLINICO',
+        'url': f'/clinico/consulta/consulta-editar/{ID_CONSULTA_PRUEBA}',
+        'marcas': [(campo('Motivo de Consulta'), 1), (boton('Guardar Cambios'), 2, 'esquina')],
+        'hasta': boton('Guardar Cambios'),
+    },
+    {
+        'seccion': 'consultas', 'archivo': '02_imprimir_lista.jpg', 'rol': 'CLINICO',
+        'url': f'/clinico/consulta/consulta-editar/{ID_CONSULTA_CON_ORDENES}',
+        'acciones': [('esperar', '#tbody-ordenes a[title="Imprimir"]')],
+        'marcas': [('#tbody-ordenes a[title="Imprimir"]', 1, 'esquina')],
+        'desde': titulo('Órdenes'), 'hasta': '#tbody-ordenes',
+    },
+    {
+        'seccion': 'consultas', 'archivo': '03_imprimir_aviso.jpg', 'rol': 'CLINICO',
+        'url': f'/clinico/consulta/consulta-editar/{ID_CONSULTA_CON_ORDENES}',
+        # El aviso que aparece al guardar, mostrado sin guardar nada (el script nunca guarda)
+        'acciones': [('esperar', '#tbody-ordenes'), ('js', "ofrecerImprimir('#', 'Orden guardada')"),
+                     ('esperar', '.swal2-popup a.btn-primary')],
+        'elemento': '.swal2-popup',
+        'marcas': [('.swal2-popup a.btn-primary', 1)],
+    },
+    {
+        'seccion': 'pei', 'archivo': '01_listado.jpg', 'rol': 'CLINICO',
+        'url': '/clinico/pei/pei-index',
+        'marcas': [(boton('Nuevo PEI'), 1)], 'hasta': boton('Nuevo PEI'),
+    },
+    {
+        'seccion': 'pei', 'archivo': '02_nuevo.jpg', 'rol': 'CLINICO',
+        'url': '/clinico/pei/pei-agregar',
+        'marcas': [(campo('Paciente'), 2), (boton('Seleccionar y continuar'), 3, 'esquina')],
+        'alto': 700,
+    },
+    {
+        'seccion': 'fichas_medicas', 'archivo': '01_listado.jpg', 'rol': 'CLINICO',
+        'url': '/clinico/ficha/ficha-index',
+        'marcas': [('input[type="search"]:visible', 1), (boton('Ver ficha'), 2, 'esquina')],
+        'alto': 620,
+    },
+    {
+        'seccion': 'reporte_consultorio', 'archivo': '01_filtros.jpg', 'rol': 'CLINICO',
+        'url': '/reporte/consultorio',
+        'marcas': [(campo('Fecha Desde'), 1), (boton('Actualizar Reporte'), 2, 'esquina')],
+        'hasta': boton('Actualizar Reporte'),
+    },
+    # ---------------- Administración ----------------
+    {
+        'seccion': 'funcionarios', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/funcionario/funcionario-index',
+        'marcas': [(boton('Nuevo Funcionario'), 1)], 'hasta': boton('Nuevo Funcionario'),
+    },
+    {
+        'seccion': 'funcionarios', 'archivo': '02_formulario.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/funcionario/funcionario-agregar',
+        # Cargo clínico para que aparezca "Datos de Especialista" (paso 4)
+        'acciones': [('esperar', '#id_cargo option:nth-child(2)'),
+                     ('js', "const s = document.getElementById('id_cargo'); "
+                            "const o = [...s.options].find(o => /^PSIC[OÓ]LOGO$/i.test(o.text.trim())); "
+                            "if (o) { s.value = o.value; $(s).trigger('change'); }"),
+                     ('esperar', '#collapseEspecialista.show')],
+        'marcas': [(titulo('Datos Personales'), 2), (campo('Cargo Asignado'), 3),
+                   (titulo('Datos de Especialista'), 4), ('#btnGuardar', 5, 'esquina')],
+    },
+    # ---------------- Ventas ----------------
+    {
+        'seccion': 'timbrados', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
+        'url': '/ventas/referenciales/timbrado/timbrado-index',
+        'marcas': [(boton('Agregar'), 1)], 'hasta': boton('Agregar'),
+    },
+    {
+        'seccion': 'timbrados', 'archivo': '02_agregar.jpg', 'rol': 'ADMIN',
+        'url': '/ventas/referenciales/timbrado/timbrado-index',
+        'acciones': [('click', boton('Agregar')), ('esperar', MODAL)],
+        'elemento': MODAL,
+        'marcas': [(campo('Timbrado'), 2), (campo('Fecha inicio'), 3), (boton('Guardar'), 4, 'esquina')],
+    },
+    {
+        'seccion': 'puntos_expedicion', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
+        'url': '/ventas/referenciales/punto-expedicion/punto-expedicion-index',
+        'marcas': [(boton('Agregar'), 1)], 'hasta': boton('Agregar'),
+    },
+    {
+        'seccion': 'puntos_expedicion', 'archivo': '02_agregar.jpg', 'rol': 'ADMIN',
+        'url': '/ventas/referenciales/punto-expedicion/punto-expedicion-index',
+        'acciones': [('click', boton('Agregar')), ('esperar', MODAL)],
+        'elemento': MODAL,
+        'marcas': [(campo('Timbrado'), 2), (campo('Código'), 3), (boton('Guardar'), 4, 'esquina')],
+    },
+    {
+        'seccion': 'pedidos', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/pedido/pedido-index',
+        'marcas': [(boton('Nuevo Pedido'), 1)], 'hasta': boton('Nuevo Pedido'),
+    },
+    {
+        'seccion': 'pedidos', 'archivo': '02_nuevo.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/pedido/pedido-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (boton('Guardar Pedido'), 6, 'esquina')],
+        'alto': 760,
+    },
+    {
+        'seccion': 'presupuestos', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/presupuesto/presupuesto-index',
+        'marcas': [(boton('Nuevo Presupuesto'), 1)], 'hasta': boton('Nuevo Presupuesto'),
+    },
+    {
+        'seccion': 'presupuestos', 'archivo': '02_nuevo.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/presupuesto/presupuesto-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (boton('Guardar Presupuesto'), 6, 'esquina')],
+        'alto': 760,
+    },
+    {
+        'seccion': 'caja_estado', 'archivo': '01_estado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/caja/caja-estado',
+        'marcas': [(boton('Abrir Caja'), 1, 'esquina')],
+        'alto': 620,
+    },
+    {
+        'seccion': 'caja_historial', 'archivo': '01_historial.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/caja/caja-historial',
+        'alto': 560,
+    },
+    {
+        'seccion': 'arqueos', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/arqueo-caja/arqueo-index',
+        'marcas': [(boton('Nuevo Arqueo'), 1)], 'hasta': boton('Nuevo Arqueo'),
+    },
+    {
+        'seccion': 'arqueos', 'archivo': '02_nuevo.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/arqueo-caja/arqueo-agregar',
+        'marcas': [(campo('Caja'), 2), (boton('Cargar apertura activa'), 2, 'esquina'), (campo('Monto real'), 4),
+                   (boton('Calcular diferencia'), 5, 'esquina'), (boton('Guardar Arqueo'), 6, 'esquina')],
+    },
+    {
+        'seccion': 'facturas', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/factura/factura-index',
+        'marcas': [(boton('Nueva Factura'), 1)], 'hasta': boton('Nueva Factura'),
+    },
+    {
+        'seccion': 'facturas', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/factura/factura-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (titulo('Datos de la Factura'), 4),
+                   (boton('Agregar Ítem'), 5, 'esquina'), (boton('Emitir Factura'), 7, 'esquina')],
+    },
+    {
+        'seccion': 'remisiones', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/remision/remision-index',
+        'marcas': [(boton('Nueva Remisión'), 1)], 'hasta': boton('Nueva Remisión'),
+    },
+    {
+        'seccion': 'remisiones', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/remision/remision-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (boton('Agregar Ítem'), 5, 'esquina'),
+                   (boton('Guardar Remisión'), 6, 'esquina')],
+    },
+    {
+        'seccion': 'notas_credito', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/nota-credito/nota-credito-index',
+        'marcas': [(boton('Nueva Nota de Crédito'), 1)], 'hasta': boton('Nueva Nota de Crédito'),
+    },
+    {
+        'seccion': 'notas_credito', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/nota-credito/nota-credito-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (campo('Motivo'), 3),
+                   (boton('Agregar Ítem'), 5, 'esquina'), (boton('Guardar Nota de Crédito'), 6, 'esquina')],
+    },
+    {
+        'seccion': 'notas_debito', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/nota-debito/nota-debito-index',
+        'marcas': [(boton('Nueva Nota de Débito'), 1)], 'hasta': boton('Nueva Nota de Débito'),
+    },
+    {
+        'seccion': 'notas_debito', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/nota-debito/nota-debito-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (campo('Motivo'), 3),
+                   (boton('Agregar Ítem'), 5, 'esquina'), (boton('Guardar Nota de Débito'), 6, 'esquina')],
+    },
+    {
+        'seccion': 'cuentas_cobrar', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/cuenta-cobrar/cuenta-cobrar-index',
+        'alto': 560,
+    },
+    {
+        'seccion': 'cobranzas', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/cobranza/cobranza-index',
+        'marcas': [(boton('Nueva Cobranza'), 1)], 'hasta': boton('Nueva Cobranza'),
+    },
+    {
+        'seccion': 'cobranzas', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/cobranza/cobranza-agregar',
+        'marcas': [(boton('Seleccionar y continuar'), 2, 'esquina'), (campo('Caja'), 3),
+                   (boton('Agregar forma de cobro'), 4, 'esquina'), (boton('Guardar Cobranza'), 8, 'esquina')],
+    },
+    {
+        'seccion': 'recaudaciones', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/recaudacion/recaudacion-index',
+        'marcas': [(boton('Nueva Recaudación'), 1)], 'hasta': boton('Nueva Recaudación'),
+    },
+    {
+        'seccion': 'recaudaciones', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/recaudacion/recaudacion-agregar',
+        'marcas': [(campo('Caja'), 2), (campo('Depósito'), 2), (titulo('Desglose de Montos'), 3),
+                   (boton('Guardar Recaudación'), 5, 'esquina')],
+    },
+    {
+        'seccion': 'libro_ventas', 'archivo': '01_libro.jpg', 'rol': 'VENTAS',
+        'url': '/ventas/movimientos/libro-ventas/libro-ventas-index',
+        'alto': 560,
+    },
+    {
+        'seccion': 'reporte_ventas', 'archivo': '01_filtros.jpg', 'rol': 'VENTAS',
+        'url': '/reporte/ventas',
+        'marcas': [(campo('Fecha Desde'), 1), (campo('Condición'), 2), (boton('Actualizar Reporte'), 3, 'esquina')],
+        'hasta': boton('Actualizar Reporte'),
+    },
+]
+
+# Marca circular violeta (paleta SYSCLIN) más un contorno. Por defecto va a la izquierda del elemento,
+# centrada (no tapa la etiqueta de arriba); 'esquina' la pone arriba a la izquierda (botones con vecino al lado).
+JS_MARCAR = """
+(el, [numero, posicion]) => {
+    el.scrollIntoView({block: 'center'});
     const r = el.getBoundingClientRect();
-    const b = document.createElement('div');
-    b.textContent = n;
-    b.className = '__marca';
-    Object.assign(b.style, {
-      position: 'fixed', left: (r.left - 30) + 'px', top: (r.top + r.height / 2 - 11) + 'px',
-      width: '22px', height: '22px', borderRadius: '50%', background: '#7c3aed', color: '#fff',
-      font: 'bold 12px Arial, sans-serif', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', zIndex: 2147483647, boxShadow: '0 0 0 2px #fff'
-    });
-    document.body.appendChild(b);
-  }
-  return true;
-};
-window.__rect = function (sel, idx) {
-  const el = document.querySelectorAll(sel)[idx || 0];
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  return {x: r.left, y: r.top, w: r.width, h: r.height};
-};
-true;
+    el.style.outline = '3px solid #7c3aed';
+    el.style.outlineOffset = '2px';
+    const m = document.createElement('div');
+    m.className = 'marca-captura';
+    m.textContent = numero;
+    m.style.cssText = 'position:absolute;z-index:99999;width:26px;height:26px;border-radius:50%;'
+        + 'background:#7c3aed;color:#fff;font:bold 14px Arial,sans-serif;display:flex;align-items:center;'
+        + 'justify-content:center;box-shadow:0 0 0 3px #fff;'
+        + (posicion === 'esquina'
+            ? 'left:' + (r.left + window.scrollX - 14) + 'px;top:' + (r.top + window.scrollY - 14) + 'px;'
+            : 'left:' + (r.left + window.scrollX - 34) + 'px;top:' + (r.top + window.scrollY + r.height / 2 - 13) + 'px;');
+    document.body.appendChild(m);
+}
 """
 
 
-class ChromeDevTools:
-    """Cliente mínimo del protocolo DevTools sobre WebSocket (RFC 6455), solo stdlib."""
+def clave_de(usuario):
+    """Contraseña de la cuenta, o None si no hay que intentar (un fallo suma al bloqueo)."""
+    return (os.getenv(f'CAPTURAS_PASS_{usuario.upper()}')
+            or (PASS_USUARIOS_PRUEBA if usuario in CUENTAS_SEED else None))
 
-    def __init__(self, ws_url):
-        u = urlparse(ws_url)
-        self.sock = socket.create_connection((u.hostname, u.port), timeout=60)
-        clave = base64.b64encode(os.urandom(16)).decode()
-        self.sock.sendall((f"GET {u.path} HTTP/1.1\r\nHost: {u.hostname}:{u.port}\r\nUpgrade: websocket\r\n"
-                           f"Connection: Upgrade\r\nSec-WebSocket-Key: {clave}\r\nSec-WebSocket-Version: 13\r\n\r\n").encode())
-        respuesta = b''
-        while b'\r\n\r\n' not in respuesta:
-            respuesta += self.sock.recv(4096)
-        if b' 101 ' not in respuesta.split(b'\r\n')[0]:
-            raise RuntimeError('Chrome rechazó la conexión DevTools: ' + respuesta.split(b'\r\n')[0].decode())
-        self.siguiente_id = 0
 
-    def _enviar(self, texto):
-        datos = texto.encode()
-        cabecera = bytearray([0x81])
-        n = len(datos)
-        if n < 126:
-            cabecera.append(0x80 | n)
-        elif n < 65536:
-            cabecera.append(0x80 | 126)
-            cabecera += struct.pack('>H', n)
+def iniciar_sesion(page, usuario):
+    page.goto(f'{BASE}/login')
+    page.fill('#inputUsuario', usuario)
+    page.fill('#usuario_clave', clave_de(usuario))
+    page.click('#btnLogin')
+    page.wait_for_url(lambda url: '/login' not in url, timeout=20000)
+
+
+def caja(page, selector):
+    """Caja del primer elemento visible, en coordenadas de la página."""
+    loc = page.locator(selector).first
+    return loc.bounding_box() if loc.count() else None
+
+
+def capturar(page, c):
+    page.goto(BASE + c['url'])
+    page.wait_for_load_state('networkidle')
+    for accion, selector in c.get('acciones', []):
+        if accion == 'click':
+            page.locator(selector).first.click()
+        elif accion == 'esperar':
+            # Las <option> nunca son "visibles": para esas alcanza con que existan
+            estado = 'attached' if 'option' in selector else 'visible'
+            page.locator(selector).first.wait_for(state=estado, timeout=8000)
+        elif accion == 'js':
+            page.evaluate(f'() => {{ {selector} }}')
+        page.wait_for_timeout(500)  # animación de modales
+
+    faltantes = []
+    for selector, numero, *posicion in c.get('marcas', []):
+        loc = page.locator(selector).first
+        if loc.count():
+            loc.evaluate(JS_MARCAR, [str(numero), posicion[0] if posicion else 'izquierda'])
         else:
-            cabecera.append(0x80 | 127)
-            cabecera += struct.pack('>Q', n)
-        mascara = os.urandom(4)
-        self.sock.sendall(bytes(cabecera) + mascara + bytes(b ^ mascara[i % 4] for i, b in enumerate(datos)))
+            faltantes.append(selector)
 
-    def _leer(self, n):
-        datos = b''
-        while len(datos) < n:
-            parte = self.sock.recv(n - len(datos))
-            if not parte:
-                raise RuntimeError('Chrome cerró la conexión')
-            datos += parte
-        return datos
+    destino = os.path.join(SALIDA, c['seccion'], c['archivo'])
+    os.makedirs(os.path.dirname(destino), exist_ok=True)
 
-    def _recibir(self):
-        mensaje = b''
-        while True:
-            b1, b2 = self._leer(2)
-            n = b2 & 0x7f
-            if n == 126:
-                n = struct.unpack('>H', self._leer(2))[0]
-            elif n == 127:
-                n = struct.unpack('>Q', self._leer(8))[0]
-            datos = self._leer(n)
-            codigo = b1 & 0x0f
-            if codigo == 0x8:
-                raise RuntimeError('Chrome cerró la conexión')
-            if codigo == 0x9:                       # ping -> pong
-                self.sock.sendall(bytes([0x8a, 0x80]) + os.urandom(4))
-                continue
-            mensaje += datos
-            if b1 & 0x80:
-                return json.loads(mensaje)
-
-    def llamar(self, metodo, **parametros):
-        self.siguiente_id += 1
-        self._enviar(json.dumps({'id': self.siguiente_id, 'method': metodo, 'params': parametros}))
-        while True:
-            msg = self._recibir()
-            if msg.get('id') == self.siguiente_id:
-                if 'error' in msg:
-                    raise RuntimeError(f"{metodo}: {msg['error']}")
-                return msg.get('result', {})
-
-    def js(self, expresion):
-        r = self.llamar('Runtime.evaluate', expression=expresion, returnByValue=True, awaitPromise=True)
-        if 'exceptionDetails' in r:
-            raise RuntimeError(f"JS: {r['exceptionDetails'].get('text')} en {expresion[:80]}")
-        return r.get('result', {}).get('value')
-
-    def esperar(self, expresion, segundos=15):
-        fin = time.time() + segundos
-        while time.time() < fin:
-            if self.js(expresion):
-                return True
-            time.sleep(0.3)
-        raise RuntimeError(f'No se cumplió: {expresion}')
-
-    def ir(self, ruta, listo='true'):
-        self.llamar('Page.navigate', url=BASE + ruta)
-        time.sleep(0.5)
-        self.esperar("document.readyState === 'complete'")
-        self.esperar(listo)
-        self.js(JS_MARCADORES)
-        time.sleep(1.0)                              # animaciones (menú lateral) y tablas
-        self.ajustar_alto()
-
-    def ajustar_alto(self):
-        """Ventana tan alta como la página: Chrome solo dibuja lo visible, así toda la página
-        queda dibujada, sin desplazamiento, y las coordenadas de los recortes son las de la página."""
-        alto = self.js("Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)")
-        self.llamar('Emulation.setDeviceMetricsOverride', width=ANCHO, height=max(ALTO, int(alto)),
-                    deviceScaleFactor=1, mobile=False)
-        time.sleep(0.5)
-        self.js("window.scrollTo(0, 0); true")
-
-    def capturar(self, archivo, x=0, y=0, ancho=ANCHO, alto=None):
-        alto = alto or ALTO
-        r = self.llamar('Page.captureScreenshot', format='jpeg', quality=88,
-                        clip={'x': max(0, x), 'y': max(0, y), 'width': ancho, 'height': alto, 'scale': 1})
-        destino = os.path.normpath(os.path.join(SALIDA, archivo))
-        os.makedirs(os.path.dirname(destino), exist_ok=True)
-        with open(destino, 'wb') as f:
-            f.write(base64.b64decode(r['data']))
-        print('  captura', archivo, f'{ancho}x{int(alto)}')
-
-
-def iniciar_sesion(usuario, clave):
-    s = requests.Session()
-    tok = re.search(r'name="csrf_token" value="([^"]+)"', s.get(BASE + '/login').text).group(1)
-    r = s.post(BASE + '/login', data={'usuario_nombre': usuario, 'usuario_clave': clave, 'csrf_token': tok},
-               allow_redirects=False)
-    if r.status_code != 302 or 'login' in (r.headers.get('Location') or '') or 'mfa' in (r.headers.get('Location') or ''):
-        raise RuntimeError(f'No se pudo iniciar sesión como {usuario} (¿contraseña o MFA?)')
-    return s
-
-
-def abrir_chrome(sesion_http, carpeta_perfil):
-    proceso = subprocess.Popen([CHROME, '--headless=new', f'--remote-debugging-port={PUERTO_DEVTOOLS}',
-                                f'--user-data-dir={carpeta_perfil}', f'--window-size={ANCHO},{ALTO}',
-                                '--hide-scrollbars', '--remote-allow-origins=*', 'about:blank'],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for _ in range(50):
-        try:
-            paginas = json.load(urllib.request.urlopen(f'http://127.0.0.1:{PUERTO_DEVTOOLS}/json/list'))
-            pagina = next(p for p in paginas if p['type'] == 'page')
-            break
-        except Exception:
-            time.sleep(0.2)
+    if c.get('elemento'):
+        # Solo el elemento (un modal), con margen para que se vean las marcas de la izquierda
+        page.evaluate('window.scrollTo(0, 0)')
+        b = caja(page, c['elemento'])
+        clip = {'x': max(b['x'] - 40, 0), 'y': max(b['y'] - 20, 0), 'width': b['width'] + 60, 'height': b['height'] + 40}
     else:
-        proceso.kill()
-        raise RuntimeError('Chrome no abrió el puerto DevTools')
-    cdp = ChromeDevTools(pagina['webSocketDebuggerUrl'])
-    cdp.llamar('Network.enable')
-    cdp.llamar('Emulation.setDeviceMetricsOverride', width=ANCHO, height=ALTO, deviceScaleFactor=1, mobile=False)
-    # Tema claro: el sistema sigue el tema del navegador si el usuario no eligió uno
-    cdp.llamar('Emulation.setEmulatedMedia', features=[{'name': 'prefers-color-scheme', 'value': 'light'}])
-    host = urlparse(BASE).hostname
-    for c in sesion_http.cookies:
-        cdp.llamar('Network.setCookie', name=c.name, value=c.value, domain=host, path='/')
-    return proceso, cdp
+        # Solo el contenido (sin sidebar ni barra superior): la guía explica la pantalla, no el menú
+        page.evaluate('window.scrollTo(0, 0)')
+        main = caja(page, 'main.app-main')
+        arriba, abajo = main['y'], main['y'] + main['height']
+        if c.get('desde') and caja(page, c['desde']):
+            arriba = max(arriba, caja(page, c['desde'])['y'] - 12)
+        if c.get('hasta') and caja(page, c['hasta']):
+            b = caja(page, c['hasta'])
+            abajo = min(abajo, b['y'] + b['height'] + 14)
+        if c.get('alto'):
+            abajo = min(abajo, arriba + c['alto'])
+        clip = {'x': main['x'], 'y': arriba, 'width': main['width'], 'height': abajo - arriba}
+
+    page.screenshot(path=destino, type='jpeg', quality=82, full_page=True, clip=clip)
+    aviso = f"  (sin marcar: {' | '.join(faltantes)})" if faltantes else ''
+    print(f'OK  {destino}{aviso}')
 
 
-def con_navegador(usuario, clave, tarea):
-    sesion = iniciar_sesion(usuario, clave)
-    perfil = tempfile.mkdtemp(prefix='capturas_chrome_')
-    proceso = None
-    try:
-        proceso, cdp = abrir_chrome(sesion, perfil)
-        tarea(cdp)
-    finally:
-        if proceso:
-            proceso.kill()
-            proceso.wait()
-        sesion.get(BASE + '/logout')
-        shutil.rmtree(perfil, ignore_errors=True)
+def main():
+    filtro = sys.argv[1] if len(sys.argv) > 1 else None
+    capturas = [c for c in CAPTURAS if not filtro or c['seccion'] == filtro]
+    if not capturas:
+        sys.exit(f'No hay capturas para la sección "{filtro}".')
 
-
-# ---------------------------------------------------------------- secciones
-
-def capturas_citas(cdp):
-    """Corregir una cita cerrada, vista de recepción (pide usuario y contraseña del administrador)."""
-    cdp.ir('/agendamiento/citas/citas-index',
-           "document.querySelector('#tbl tbody tr button[name=\"btn_corregir\"]') !== null")
-    cdp.js("$('#tbl').DataTable().search('Completada').draw(); true")
-    time.sleep(0.6)
-    cdp.js("const t = document.querySelector('#tbl').closest('.table-responsive') || document.querySelector('#tbl').parentElement; "
-           "t.scrollLeft = t.scrollWidth; window.scrollTo(0, 0); true")
-    time.sleep(0.3)
-    cdp.js("__marcar('#tbl tbody tr:first-child button[name=\"btn_corregir\"]', 1)")
-    tarjeta = cdp.js("__rect('#tbl')")
-    filas = cdp.js("__rect('#tbl tbody tr', 3)") or cdp.js("__rect('#tbl tbody tr:last-child')")
-    cdp.capturar('citas/03_corregir_boton.jpg', y=tarjeta['y'] - 70, alto=filas['y'] + filas['h'] - tarjeta['y'] + 85)
-
-    cdp.js("document.querySelectorAll('.__marca').forEach(m => m.remove()); "
-           "document.querySelector('#tbl tbody tr:first-child button[name=\"btn_corregir\"]').click(); true")
-    cdp.esperar("document.querySelector('.swal2-popup #corrMotivo') !== null")
-    time.sleep(0.6)
-    cdp.js("document.getElementById('corrEstado').value = 'AUSENTE'; "
-           "document.getElementById('corrMotivo').value = 'El paciente no vino; se marcó completada por error.'; true")
-    for sel, n in (('#corrEstado', 2), ('#corrMotivo', 3), ('#corrUsuario', 4), ('.swal2-confirm', 5)):
-        cdp.js(f"__marcar('{sel}', {n})")
-    cdp.js("__marcar('#corrClave', 0)")
-    popup = cdp.js("__rect('.swal2-popup')")
-    cdp.capturar('citas/04_corregir.jpg', x=popup['x'] - 50, y=popup['y'] - 15,
-                 ancho=popup['w'] + 70, alto=popup['h'] + 30)
-
-
-def capturas_funcionarios(cdp):
-    cdp.ir('/mantenimiento/funcionario/funcionario-index', "document.querySelector('#tbl tbody tr td') !== null")
-    cdp.js("__marcar('a[href$=\"funcionario-agregar\"]', 1)")
-    tabla = cdp.js("__rect('#tbl')")
-    cdp.capturar('funcionarios/01_listado.jpg', y=0, alto=tabla['y'] + 40)
-
-    cdp.ir('/mantenimiento/funcionario/funcionario-agregar', "document.querySelectorAll('#id_cargo option').length > 1")
-    # Cargo clínico para que aparezca la sección "Datos de Especialista"
-    cdp.js("const s = document.getElementById('id_cargo'); "
-           "const o = [...s.options].find(o => /PSICO/i.test(o.text)); if (o) { s.value = o.value; $(s).trigger('change'); } true")
-    cdp.esperar("document.getElementById('collapseEspecialista').classList.contains('show')")
-    time.sleep(0.8)
-    cdp.ajustar_alto()
-    for sel, n in (('#txtNombre', 2), ('#id_cargo', 3), ('#txtMatricula', 4), ('#contenedorEspecialidades', 0),
-                   ('#btnGuardar', 5)):
-        cdp.js(f"__marcar('{sel}', {n})")
-    alto = cdp.js("document.getElementById('btnGuardar').getBoundingClientRect().bottom + window.scrollY + 25")
-    cdp.capturar('funcionarios/02_formulario.jpg', y=0, alto=alto)
-
-
-def capturas_consultas(cdp):
-    id_consulta = os.getenv('CAPTURAS_ID_CONSULTA', '')
-    if not id_consulta:
-        raise RuntimeError('Indique CAPTURAS_ID_CONSULTA (una consulta con órdenes, recetas o certificados)')
-    cdp.ir(f'/clinico/consulta/consulta-editar/{id_consulta}',
-           "document.querySelector('#tbody-ordenes a[title=\"Imprimir\"]') !== null")
-    cdp.js("__marcar('#tbody-ordenes a[title=\"Imprimir\"]', 1)")
-    bloque = cdp.js("__rect('#tbody-ordenes')")
-    cdp.capturar('consultas/02_imprimir_lista.jpg', y=bloque['y'] - 80, alto=bloque['h'] + 110)
-
-    cdp.js("document.querySelectorAll('.__marca').forEach(m => m.remove()); "
-           f"ofrecerImprimir('/api/v1/ordenes/0/pdf', 'Orden guardada'); true")
-    cdp.esperar("document.querySelector('.swal2-popup a.btn-primary') !== null")
-    time.sleep(0.6)
-    cdp.js("__marcar('.swal2-popup a.btn-primary', 1)")
-    popup = cdp.js("__rect('.swal2-popup')")
-    cdp.capturar('consultas/03_imprimir_aviso.jpg', x=popup['x'] - 50, y=popup['y'] - 15,
-                 ancho=popup['w'] + 70, alto=popup['h'] + 30)
-
-
-SECCIONES = {
-    'citas': ('RECEPCION', capturas_citas),
-    'funcionarios': ('ADMIN', capturas_funcionarios),
-    'consultas': ('ADMIN', capturas_consultas),
-}
-
-
-def main(nombres):
-    if not CHROME:
-        raise SystemExit('No se encontró Chrome ni Edge.')
-    credenciales = {
-        'RECEPCION': (os.getenv('CAPTURAS_RECEPCION_USER', 'recep2'), os.getenv('CAPTURAS_RECEPCION_PASS', 'Prueba2026!')),
-        'ADMIN': (os.getenv('CAPTURAS_ADMIN_USER', 'psicoadmin'), os.getenv('CAPTURAS_ADMIN_PASS')),
-    }
-    for nombre in nombres or SECCIONES:
-        perfil, tarea = SECCIONES[nombre]
-        usuario, clave = credenciales[perfil]
-        if not clave:
-            print(f'[omitida] {nombre}: falta la contraseña (CAPTURAS_{perfil}_PASS)')
-            continue
-        print(f'[{nombre}] como {usuario}')
-        con_navegador(usuario, clave, tarea)
+    with sync_playwright() as p:
+        # --lang define el formato de los campos de fecha (dd/mm/aaaa)
+        navegador = p.chromium.launch(args=['--lang=es-ES'])
+        # Agrupado por rol: una sesión por usuario
+        for rol in dict.fromkeys(c['rol'] for c in capturas):
+            usuario = USUARIOS[rol]
+            if not clave_de(usuario):
+                print(f'OMITIDO {rol}: falta CAPTURAS_PASS_{usuario.upper()}')
+                continue
+            ctx = navegador.new_context(ignore_https_errors=True, viewport={'width': 1366, 'height': 900},
+                                        color_scheme='light', locale='es-ES')
+            page = ctx.new_page()
+            try:
+                iniciar_sesion(page, usuario)
+            except Exception as e:
+                print(f'ERROR no se pudo iniciar sesión como {usuario} ({rol}): {e}')
+                ctx.close()
+                continue
+            print(f'Sesión iniciada como {usuario} ({rol})')
+            for c in (c for c in capturas if c['rol'] == rol):
+                try:
+                    capturar(page, c)
+                except Exception as e:
+                    print(f'ERROR {c["seccion"]}/{c["archivo"]}: {str(e).splitlines()[0]}')
+            page.goto(f'{BASE}/logout')
+            ctx.close()
+        navegador.close()
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()

@@ -4,103 +4,120 @@
     <meta charset="UTF-8">
     <title>Manual de seguridad - {{ clinica.nombre if clinica else 'SYSCLIN' }}</title>
     <style>
-        /* Paleta SYSCLIN: la misma del panel de login (índigo → violeta) y del sidebar */
+        /* Formato de documento técnico (IEEE Std 1063-2001 / ISO/IEC 26514:2008), igual que la guía de uso:
+           blanco y negro, capítulos numerados 1, 1.1, 1.1.1, control del documento e índice con páginas. */
         :root {
-            --marca-oscuro: #1e1b4b;
-            --marca-medio: #3730a3;
-            --marca-claro: #6d28d9;
-            --primario: #5b21b6;
-            --acento: #7c3aed;
-            --lila-fondo: #f5f3ff;
-            --lila-suave: #ede9fe;
-            --lila-borde: #ddd6fe;
-            --texto: #1f1b2e;
-            --texto-suave: #6b6880;
+            --texto: #000;
+            --titulo: #1f3864;
+            --gris: #595959;
+            --linea: #000;
+            --linea-suave: #bfbfbf;
+            --fondo-tabla: #d9d9d9;
+            --fondo-codigo: #f2f2f2;
         }
         @page {
             size: A4 portrait;
-            margin: 2cm 1.6cm;
+            margin: 2.5cm 2cm 2cm 2.5cm;
+            @top-left {
+                content: "SYSCLIN — Manual de seguridad y operación";
+                font-family: "Times New Roman", Times, serif;
+                font-size: 12pt;
+                color: #595959;
+                border-bottom: 0.5pt solid #000;
+                vertical-align: bottom;
+                padding-bottom: 3pt;
+            }
             @top-right {
-                content: "SYSCLIN · Manual de seguridad y operación";
-                font-family: Arial, sans-serif;
-                font-size: 8px;
-                color: #6d28d9;
+                content: "Versión 1.0 · Uso interno";
+                font-family: "Times New Roman", Times, serif;
+                font-size: 12pt;
+                color: #595959;
+                border-bottom: 0.5pt solid #000;
+                vertical-align: bottom;
+                padding-bottom: 3pt;
             }
             @bottom-left {
-                content: "Uso interno · Confidencial";
-                font-family: Arial, sans-serif;
-                font-size: 8px;
-                color: #8b87a0;
+                content: "Confidencial";
+                font-family: "Times New Roman", Times, serif;
+                font-size: 12pt;
+                color: #595959;
             }
             @bottom-right {
                 content: "Página " counter(page) " de " counter(pages);
-                font-family: Arial, sans-serif;
-                font-size: 9px;
-                color: #5b21b6;
+                font-family: "Times New Roman", Times, serif;
+                font-size: 12pt;
             }
         }
         @page :first {
-            @top-right { content: none; }
+            @top-left { content: none; border: 0; }
+            @top-right { content: none; border: 0; }
+            @bottom-left { content: none; }
+            @bottom-right { content: none; }
         }
-        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 28px 40px; color: var(--texto); font-size: 15px; line-height: 1.6; background: #fff; max-width: 920px; }
-        body.pdf { padding: 0; font-size: 11px; max-width: none; line-height: 1.5; }
-        a { color: var(--acento); text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 28px 40px; color: var(--texto); font-size: 12pt; line-height: 1.5; background: #fff; max-width: 920px; counter-reset: capitulo; }
+        body.pdf { padding: 0; max-width: none; }
+        a { color: var(--texto); text-decoration: none; }
 
-        /* Portada: banda con el degradé de marca */
-        /* Color sólido (sin degradé) para que la vista previa y el PDF se vean iguales; el logo va suelto (es transparente) */
-        .portada { background-color: #1e1b4b; color: #fff; border-radius: 10px; padding: 22px 26px; margin-bottom: 24px; }
-        .portada .cabecera { display: flex; align-items: center; gap: 16px; }
-        .portada .logo { width: 60px; height: 60px; flex: 0 0 auto; }
+        /* Portada: hoja propia en el PDF */
+        .portada { text-align: center; padding: 30px 0 24px; border-bottom: 1px solid var(--linea); margin-bottom: 24px; }
+        .portada .logo { width: 70px; height: 70px; margin: 0 auto 14px; }
         .portada .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
-        .portada .marca { font-size: 12px; letter-spacing: 3px; font-weight: bold; color: #c4b5fd; }
-        .portada h1 { font-size: 25px; margin: 2px 0 0; color: #fff; line-height: 1.25; }
-        .portada .sub { margin: 4px 0 0; color: #ddd6fe; font-size: 13px; }
-        .ficha { border-collapse: collapse; margin: 16px 0 0; font-size: 12.5px; width: 100%; border-top: 1px solid #4c4a7a; }
-        .ficha td { padding: 4px 14px 2px 0; border: 0; vertical-align: top; color: #ffffff; }
-        .ficha td:first-child { font-weight: bold; color: #c4b5fd; white-space: nowrap; width: 1%; }
-        body.pdf .portada h1 { font-size: 22px; }
+        .portada .marca { font-size: 12pt; font-weight: bold; text-transform: uppercase; }
+        .portada h1 { font-size: 14pt; font-weight: bold; margin: 18px 0 6px; color: var(--titulo); }
+        .portada .sub { margin: 4px 0; }
+        .portada .datos-portada { margin-top: 18px; color: var(--gris); }
+        body.pdf .portada { border: 0; padding-top: 6cm; height: 18cm; page-break-after: always; margin: 0; }
+        body.pdf .portada .logo { width: 3cm; height: 3cm; }
+        body.pdf .portada h1 { margin-top: 1.5cm; }
+        body.pdf .portada .datos-portada { margin-top: 4cm; }
 
-        /* Índice */
-        .indice { margin-bottom: 30px; background: var(--lila-fondo); border: 1px solid var(--lila-borde); border-radius: 8px; padding: 14px 20px; }
-        .indice h2 { font-size: 15px; margin: 0 0 6px; color: var(--primario); }
-        .indice ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 28px; }
-        .indice li { break-inside: avoid; }
-        .indice li::marker { color: var(--acento); font-weight: bold; }
-        .indice a { color: var(--marca-medio); }
+        /* Control del documento e índice */
+        h2.titulo-bloque { font-size: 14pt; font-weight: bold; color: var(--titulo); margin: 0 0 8px; text-transform: uppercase; }
+        .control { margin-bottom: 26px; }
+        body.pdf .control { page-break-after: always; }
+        table.control-firmas td { height: 22px; }
+        .indice { margin-bottom: 30px; }
+        .indice ol { list-style: none; margin: 0; padding: 0; counter-reset: indice; }
+        .indice li { counter-increment: indice; margin-bottom: 3px; }
+        .indice li a::before { content: counter(indice) ". "; }
+        .indice li.anexo a::before { content: "Anexo A. "; }
+        body.pdf .indice li a::after { content: leader('.') target-counter(attr(href), page); }
+        body.pdf .indice { page-break-after: always; }
 
-        /* Capítulos */
-        section.seccion { margin-bottom: 34px; padding-top: 6px; }
-        section.seccion h3 { font-size: 20px; color: var(--primario); margin: 0 0 8px; border-bottom: 2px solid var(--lila-borde); padding-bottom: 6px; }
-        section.seccion h3 .num { color: var(--acento); margin-right: 10px; }
-        section.seccion h4 { font-size: 15px; margin: 20px 0 4px; color: var(--marca-oscuro); padding-left: 8px; border-left: 3px solid var(--acento); }
-        section.seccion h5 { font-size: 13px; margin: 14px 0 4px; color: var(--primario); }
-        body.pdf section.seccion h3 { font-size: 17px; }
-        body.pdf section.seccion h4 { font-size: 13px; }
-        body.pdf section.seccion h5 { font-size: 11.5px; }
-        p { margin: 6px 0; }
-        ol, ul { padding-left: 22px; margin: 6px 0; }
-        li { margin-bottom: 3px; }
-        li::marker { color: var(--acento); }
-        .btn-ref { font-weight: bold; color: var(--primario); }
-        .importante { margin: 10px 0; padding: 6px 10px; border-left: 3px solid #d9a400; background: #fffbeb; border-radius: 0 4px 4px 0; }
-        .peligro { margin: 10px 0; padding: 6px 10px; border-left: 3px solid #c0392b; background: #fef2f2; border-radius: 0 4px 4px 0; }
+        /* Capítulos (h3), subcapítulos (h4) y apartados (h5) numerados */
+        section.seccion { margin-bottom: 28px; counter-reset: subcapitulo; }
+        section.seccion h3 { font-size: 14pt; font-weight: bold; color: var(--titulo); margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--linea); }
+        section.seccion h3::before { counter-increment: capitulo; content: counter(capitulo) ". "; }
+        section.seccion h4 { font-size: 14pt; font-weight: bold; margin: 18px 0 4px; color: var(--titulo); counter-reset: apartado; }
+        section.seccion h4::before { counter-increment: subcapitulo; content: counter(capitulo) "." counter(subcapitulo) " "; }
+        section.seccion h5 { font-size: 14pt; font-weight: bold; margin: 14px 0 4px; }
+        section.seccion h5::before { counter-increment: apartado; content: counter(capitulo) "." counter(subcapitulo) "." counter(apartado) " "; }
+        section.anexo h3::before { counter-increment: none; content: "Anexo A. "; }
+        section.anexo h4::before { content: "A." counter(subcapitulo) " "; }
+        p { margin: 6px 0; text-align: justify; }
+        ol, ul { padding-left: 24px; margin: 6px 0; }
+        li { margin-bottom: 3px; text-align: justify; }
+        .btn-ref { font-weight: bold; }
+
+        /* Notas y advertencias (IEEE 1063: identificadas antes del texto) */
+        .importante { margin: 10px 0; padding: 6px 10px; border: 1px solid var(--linea); text-align: justify; }
+        .importante::before { content: "Nota: "; font-weight: bold; }
+        .peligro { margin: 10px 0; padding: 6px 10px; border: 2px solid var(--linea); text-align: justify; }
+        .peligro::before { content: "Advertencia: "; font-weight: bold; }
 
         /* Tablas y código */
-        table.datos { border-collapse: collapse; width: 100%; margin: 8px 0 12px; font-size: 13px; }
-        body.pdf table.datos { font-size: 10px; }
-        table.datos th, table.datos td { border: 1px solid var(--lila-borde); padding: 5px 8px; text-align: left; vertical-align: top; }
-        table.datos th { background: var(--lila-suave); color: var(--marca-oscuro); }
-        table.datos tr:nth-child(odd) td { background: #fcfbff; }
-        code { font-family: Consolas, "Courier New", monospace; font-size: 0.92em; background: var(--lila-suave); color: #4c1d95; padding: 0 3px; border-radius: 3px; }
-        pre { font-family: Consolas, "Courier New", monospace; font-size: 12px; background: var(--lila-fondo); border: 1px solid var(--lila-borde); border-left: 3px solid var(--acento); border-radius: 4px; padding: 8px 10px; margin: 6px 0 10px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; line-height: 1.4; color: var(--texto); }
-        body.pdf pre { font-size: 8.5px; }
-        pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+        table.datos { border-collapse: collapse; width: 100%; margin: 8px 0 14px; }
+        table.datos th, table.datos td { border: 1px solid var(--linea); padding: 4px 7px; text-align: left; vertical-align: top; }
+        table.datos th { background: var(--fondo-tabla); font-weight: bold; }
+        code { font-family: Consolas, "Courier New", monospace; font-size: 0.92em; }
+        pre { font-family: Consolas, "Courier New", monospace; font-size: 12px; background: var(--fondo-codigo); border: 1px solid var(--linea-suave); padding: 8px 10px; margin: 6px 0 10px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; line-height: 1.4; color: var(--texto); }
+        body.pdf pre { font-size: 8pt; }
+        pre code { font-size: inherit; }
         .script { margin-bottom: 18px; }
         .script .ruta { font-family: Consolas, "Courier New", monospace; font-weight: bold; }
-        .pendientes { color: var(--texto-suave); font-size: 13px; }
-        .pie { margin-top: 30px; padding-top: 10px; border-top: 2px solid var(--lila-borde); color: var(--texto-suave); font-size: 12px; display: flex; align-items: center; gap: 8px; }
-        .pie img { width: 18px; height: 18px; }
+        .pendientes { color: var(--gris); }
+        .pie { margin-top: 30px; padding-top: 8px; border-top: 1px solid var(--linea); color: var(--gris); }
+        body.pdf .pie { display: none; }
         body.pdf h3, body.pdf h4, body.pdf h5 { page-break-after: avoid; }
         body.pdf table.datos tr, body.pdf pre { page-break-inside: avoid; }
         body.pdf .script pre { page-break-inside: auto; }
@@ -108,41 +125,61 @@
 </head>
 <body class="{{ 'pdf' if es_pdf else '' }}">
     <div class="portada">
-        <div class="cabecera">
-            {% if logo_base64 %}<div class="logo"><img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo SYSCLIN"></div>{% endif %}
-            <div>
-                <div class="marca">{{ (clinica.nombre if clinica else 'SYSCLIN') | upper }}</div>
-                <h1>Manual de seguridad y operación del sistema</h1>
-                <p class="sub">Uso interno del administrador · {{ fecha }}</p>
-            </div>
+        {% if logo_base64 %}<div class="logo"><img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo SYSCLIN"></div>{% endif %}
+        <div class="marca">{{ clinica.nombre if clinica else 'SYSCLIN' }}</div>
+        <h1>Manual de seguridad y operación del sistema</h1>
+        <p class="sub">Uso interno del administrador</p>
+        <div class="datos-portada">
+            Sistema SYSCLIN de gestión clínica<br>
+            Versión 1.0 · {{ fecha }}<br>
+            Documento confidencial
         </div>
-        <table class="ficha">
-            <tr><td>Sistema</td><td>Sysclin, gestión clínica (agendamiento, consultorio, ventas)</td></tr>
-            <tr><td>Destinatario</td><td>Administrador y Superadministrador del sistema</td></tr>
-            <tr><td>Revisión</td><td>Cada 6 meses, o después de un incidente o un cambio de infraestructura</td></tr>
-            <tr><td>Confidencialidad</td><td>No contiene contraseñas, pero describe la infraestructura: no se publica ni se entrega a usuarios finales</td></tr>
+    </div>
+
+    <div class="control">
+        <h2 class="titulo-bloque">Control del documento</h2>
+        <table class="datos">
+            <tr><th style="width: 30%">Documento</th><td>Manual de seguridad y operación del sistema</td></tr>
+            <tr><th>Sistema</th><td>Sysclin, gestión clínica (agendamiento, consultorio, ventas)</td></tr>
+            <tr><th>Destinatario</th><td>Administrador y Superadministrador del sistema</td></tr>
+            <tr><th>Versión</th><td>1.0</td></tr>
+            <tr><th>Fecha de generación</th><td>{{ fecha }}</td></tr>
+            <tr><th>Revisión</th><td>Cada 6 meses, o después de un incidente o un cambio de infraestructura</td></tr>
+            <tr><th>Confidencialidad</th><td>No contiene contraseñas, pero describe la infraestructura: no se publica ni se entrega a usuarios finales</td></tr>
+            <tr><th>Referencias</th><td>ISO/IEC 27002:2013 (A.12.1.1, procedimientos de operación documentados); NIST SP 800-61 rev. 2 (respuesta a incidentes)</td></tr>
+        </table>
+        <table class="datos control-firmas">
+            <tr><th style="width: 30%"></th><th>Nombre</th><th style="width: 22%">Firma</th><th style="width: 16%">Fecha</th></tr>
+            <tr><th>Elaborado por</th><td></td><td></td><td></td></tr>
+            <tr><th>Revisado por</th><td></td><td></td><td></td></tr>
+            <tr><th>Aprobado por</th><td></td><td></td><td></td></tr>
+        </table>
+        <h2 class="titulo-bloque">Historial de revisiones</h2>
+        <table class="datos">
+            <tr><th style="width: 14%">Versión</th><th style="width: 20%">Fecha</th><th>Descripción del cambio</th></tr>
+            <tr><td>1.0</td><td>{{ fecha }}</td><td>Emisión inicial</td></tr>
         </table>
     </div>
 
     <div class="indice">
-        <h2>Contenido</h2>
+        <h2 class="titulo-bloque">Índice</h2>
         <ol>
             {% for s in secciones %}
             <li><a href="#{{ s.id }}">{{ s.titulo }}</a></li>
             {% endfor %}
-            <li><a href="#anexo-scripts">Anexo: scripts y archivos de configuración</a></li>
+            <li class="anexo"><a href="#anexo-scripts">Scripts y archivos de configuración</a></li>
         </ol>
     </div>
 
     {% for s in secciones %}
     <section class="seccion" id="{{ s.id }}">
-        <h3><span class="num">{{ loop.index }}</span>{{ s.titulo }}</h3>
+        <h3>{{ s.titulo }}</h3>
         {% include s.template %}
     </section>
     {% endfor %}
 
-    <section class="seccion" id="anexo-scripts">
-        <h3><span class="num">A</span>Anexo: scripts y archivos de configuración</h3>
+    <section class="seccion anexo" id="anexo-scripts">
+        <h3>Scripts y archivos de configuración</h3>
         <p>Contenido vigente de cada archivo al {{ fecha }}, tomado directamente del sistema. Las rutas son relativas a la carpeta raíz del proyecto (<code>syscomcli</code>). Las contraseñas no aparecen: viven en el <code>.env</code>, que no forma parte de este anexo.</p>
         <table class="datos">
             <tr><th>Archivo</th><th>Para qué sirve</th></tr>
@@ -164,8 +201,7 @@
     </section>
 
     <div class="pie">
-        {% if logo_base64 %}<img src="data:image/png;base64,{{ logo_base64 }}" alt="">{% endif %}
-        <span>SYSCLIN · Manual de seguridad y operación · Generado el {{ fecha }}</span>
+        SYSCLIN — Manual de seguridad y operación · Versión 1.0 · Generado el {{ fecha }}
     </div>
 </body>
 </html>

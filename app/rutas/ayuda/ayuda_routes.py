@@ -162,7 +162,7 @@ SCRIPTS_SEGURIDAD = (
     ('dock/nginx/conf.d/default.conf', 'Proxy HTTPS (nginx)'),
     ('dock/nginx/hsts.conf', 'HSTS (solo servidor)'),
     ('dock/nginx/generar_cert_local.sh', 'Certificado autofirmado de desarrollo'),
-    ('migrations/103_rol_sysclin_app.sql', 'Rol de la aplicación con permisos mínimos'),
+    ('migrations/17_rol_sysclin_app.sql', 'Rol de la aplicación con permisos mínimos'),
 )
 
 
@@ -295,14 +295,9 @@ def ayudaSeguridad():
 @ayudamod.route('/seguridad/pdf')
 @role_required(*ROLES_SEGURIDAD)
 def ayudaSeguridadPdf():
-    """Mismo manual de seguridad, descargado como PDF."""
-    html_renderizado = render_template('ayuda-seguridad.html',
-                                       secciones=SECCIONES_SEGURIDAD,
-                                       scripts=_leer_scripts(),
-                                       logo_base64=AyudaService().logo_base64(),
-                                       es_pdf=True,
-                                       fecha=date.today().strftime('%d/%m/%Y'))
-    pdf_bytes = AyudaService().generar_pdf_manual(html_renderizado)
+    """Manual de seguridad en PDF con el formato Word estándar (docs/estandar): se arma el Word y se exporta."""
+    pdf_bytes = AyudaService().manual_seguridad_pdf(SECCIONES_SEGURIDAD, SCRIPTS_SEGURIDAD,
+                                                    date.today().strftime('%d/%m/%Y'))
 
     return send_file(
         io.BytesIO(pdf_bytes),

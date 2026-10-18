@@ -1,11 +1,15 @@
--- 103_rol_sysclin_app.sql
--- PDF 8 (Seguridad): rol de aplicacion SIN superusuario y con permisos minimos (solo DML).
+-- 17_rol_sysclin_app.sql - Rol de la aplicacion y sus permisos
+-- (antes migracion 103; PDF 8, Seguridad). Se escribe a mano, no lo genera generar_esquema_base.py.
+-- Sin acentos a proposito: se puede aplicar con Get-Content de PowerShell 5.1 sin romper nada.
+-- Rol de aplicacion SIN superusuario y con permisos minimos (solo DML).
 -- La app (DB_USER en .env) se conecta con sysclin_app; postgres queda solo para
 -- administracion, migraciones y backup (POSTGRES_USER/POSTGRES_PASSWORD en .env).
 --
 -- La contrasena NO se escribe en este archivo (se versiona en git): se pasa como variable de psql.
---   docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 \
---     -v app_password='<la de DB_PASSWORD en .env>' < migrations/103_rol_sysclin_app.sql
+--   docker cp migrations\17_rol_sysclin_app.sql syscomcli_bd:/tmp/
+--   docker exec syscomcli_bd psql -U postgres -d <base> -v ON_ERROR_STOP=1 -v app_password='<DB_PASSWORD del .env>' -f /tmp/17_rol_sysclin_app.sql
+-- OJO: sysclin_app es un rol de TODO el servidor PostgreSQL. Si en el servidor hay otra base del sistema,
+-- usar la misma contrasena del .env (si no, esa base deja de poder conectarse).
 -- Idempotente: se puede volver a ejecutar (por ejemplo, para rotar la contrasena).
 
 \if :{?app_password}

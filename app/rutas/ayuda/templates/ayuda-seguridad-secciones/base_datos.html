@@ -1,6 +1,6 @@
 <h4>Ver los usuarios de la base</h4>
 <pre><code>docker exec syscomcli_bd psql -U postgres -d sysclin_bd -c "\du"</code></pre>
-<p>Esperado: <code>postgres</code> con <code>Superuser, Create role, Create DB, Replication, Bypass RLS</code>, y <code>sysclin_app</code> sin atributos. El rol y sus permisos los crea <code>migrations/103_rol_sysclin_app.sql</code>; las tablas, vistas y funciones que se creen después reciben los mismos permisos automáticamente.</p>
+<p>Esperado: <code>postgres</code> con <code>Superuser, Create role, Create DB, Replication, Bypass RLS</code>, y <code>sysclin_app</code> sin atributos. El rol y sus permisos los crea <code>migrations/17_rol_sysclin_app.sql</code>; las tablas, vistas y funciones que se creen después reciben los mismos permisos automáticamente.</p>
 
 <h4>Consola SQL</h4>
 <pre><code># Como administrador (todos los permisos)
@@ -30,7 +30,7 @@ docker exec -it syscomcli_bd psql -U sysclin_app -d sysclin_bd</code></pre>
     <li>Generar un valor nuevo (capítulo <a href="#configuracion">Configuración</a>) y ponerlo en <code>DB_PASSWORD</code> del <code>.env</code>.</li>
     <li>Aplicarlo en la base:
 <pre><code>$appPwd = (Select-String -Path .env -Pattern '^DB_PASSWORD=(.*)$').Matches[0].Groups[1].Value
-Get-Content migrations\103_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 -v "app_password=$appPwd" -q</code></pre></li>
+Get-Content migrations\17_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 -v "app_password=$appPwd" -q</code></pre></li>
     <li>Recrear la app: <code>docker compose -f dock/docker-compose.yml up -d app</code>.</li>
     <li>Comprobar que responde y que se puede iniciar sesión.</li>
 </ol>

@@ -83,9 +83,9 @@
     <li>Crear la base de trabajo y el rol de la aplicación:
 <pre><code>docker exec syscomcli_bd psql -U postgres -c "CREATE DATABASE sysclin_bd"
 $appPwd = (Select-String -Path .env -Pattern '^DB_PASSWORD=(.*)$').Matches[0].Groups[1].Value
-Get-Content migrations\103_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 -v "app_password=$appPwd" -q</code></pre></li>
+Get-Content migrations\17_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd psql -U postgres -d sysclin_bd -v ON_ERROR_STOP=1 -v "app_password=$appPwd" -q</code></pre></li>
     <li>Cargar los datos desde el último backup con la <strong>restauración de emergencia</strong> (capítulo <a href="#backups">Backups</a>, pasos 4 y siguientes).</li>
-    <li>Volver a ejecutar la migración 103 (mismo comando del paso 6), para que los permisos de <code>sysclin_app</code> queden completos.</li>
+    <li>Volver a ejecutar el script 17 de <code>migrations/</code> (mismo comando del paso 6), para que los permisos de <code>sysclin_app</code> queden completos.</li>
     <li>Levantar todo: <code>docker compose -f dock/docker-compose.yml up -d</code> (en el servidor, con los dos archivos).</li>
     <li>Hacer el <strong>chequeo periódico</strong> completo (capítulo <a href="#auditoria">Auditoría y chequeo</a>).</li>
 </ol>
