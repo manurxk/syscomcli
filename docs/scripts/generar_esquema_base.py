@@ -42,7 +42,7 @@ MODULOS = [
     ('03_personas', 'Personas, funcionarios, pacientes y especialistas',
      'personas funcionarios pacientes pacientes_menores especialidades especialistas especialista_especialidades'),
     ('04_roles_auditoria', 'Roles, permisos, accesos y auditoría',
-     'roles usuarios_roles acciones roles_permisos roles_paginas accesos_sistema auditoria_sistema'),
+     'roles usuarios_roles acciones roles_permisos roles_paginas accesos_sistema auditoria_sistema auditoria_transacciones'),
     ('05_sedes_clinica', 'Empresa, sedes y consultorios', 'empresa sedes consultorios'),
     ('06_referenciales_agendamiento_clinico', 'Referenciales de agendamiento y clínicos',
      'dias_semana estados_citas signos sintomas diagnosticos medicamentos tipos_analisis tipos_estudios '
@@ -238,8 +238,10 @@ UNION ALL SELECT 'funcion', proname || '(' || pg_get_function_identity_arguments
 UNION ALL SELECT 'trigger', pg_get_triggerdef(oid) FROM pg_trigger WHERE NOT tgisinternal
 UNION ALL SELECT 'vista', viewname || ' ' || md5(definition) FROM pg_views WHERE schemaname = 'public'
 UNION ALL SELECT 'secuencia', sequencename FROM pg_sequences WHERE schemaname = 'public'
-UNION ALL SELECT 'comentario', COALESCE(c.relname, '') || ' ' || d.objsubid || ' ' || md5(d.description) FROM pg_description d
+UNION ALL SELECT 'comentario', COALESCE(c.relname, '') || ' ' || COALESCE(a.attname, '') || ' ' || md5(d.description) FROM pg_description d
        LEFT JOIN pg_class c ON c.oid = d.objoid
+       -- por nombre de columna: objsubid es el attnum, que cambia si la base real tiene columnas eliminadas
+       LEFT JOIN pg_attribute a ON a.attrelid = d.objoid AND a.attnum = d.objsubid AND d.objsubid > 0
        WHERE d.objoid IN (SELECT oid FROM pg_class WHERE relnamespace = 'public'::regnamespace
                           UNION SELECT oid FROM pg_constraint WHERE connamespace = 'public'::regnamespace
                           UNION SELECT oid FROM pg_proc WHERE pronamespace = 'public'::regnamespace)

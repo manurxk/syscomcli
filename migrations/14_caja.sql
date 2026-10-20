@@ -1,5 +1,5 @@
 -- 14_caja.sql — Caja, depósitos y recaudaciones
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -327,10 +327,22 @@ ALTER TABLE ONLY public.depositos
 CREATE TRIGGER tg_recaudaciones_fmod BEFORE UPDATE ON public.recaudaciones FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: aperturas_cierre_caja trg_aperturas_cierre_caja_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_aperturas_cierre_caja_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.aperturas_cierre_caja FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_apertura_cierre');
+
+--
 -- Name: aperturas_cierre_caja trg_aperturas_cierre_caja_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_aperturas_cierre_caja_fecha_mod BEFORE UPDATE ON public.aperturas_cierre_caja FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: arqueos_caja trg_arqueos_caja_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_arqueos_caja_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.arqueos_caja FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_arqueo');
 
 --
 -- Name: arqueos_caja trg_arqueos_caja_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
@@ -349,6 +361,12 @@ CREATE TRIGGER trg_cajas_fecha_mod BEFORE UPDATE ON public.cajas FOR EACH ROW EX
 --
 
 CREATE TRIGGER trg_depositos_fecha_mod BEFORE UPDATE ON public.depositos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: recaudaciones trg_recaudaciones_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_recaudaciones_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.recaudaciones FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_recaudacion');
 
 --
 -- Name: aperturas_cierre_caja aperturas_cierre_caja_id_caja_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -

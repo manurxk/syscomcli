@@ -1,5 +1,5 @@
 -- 12_pedido_presupuesto.sql — Ítems de servicio, pedidos y presupuestos
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -370,6 +370,12 @@ CREATE TRIGGER trg_items_servicios_fecha_mod BEFORE UPDATE ON public.items_servi
 CREATE TRIGGER trg_pedido_detalle_fecha_mod BEFORE UPDATE ON public.pedido_detalle FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: pedidos trg_pedidos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_pedidos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.pedidos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_pedido');
+
+--
 -- Name: pedidos trg_pedidos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -380,6 +386,12 @@ CREATE TRIGGER trg_pedidos_fecha_mod BEFORE UPDATE ON public.pedidos FOR EACH RO
 --
 
 CREATE TRIGGER trg_presupuesto_detalle_fecha_mod BEFORE UPDATE ON public.presupuesto_detalle FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: presupuestos trg_presupuestos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_presupuestos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.presupuestos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_presupuesto');
 
 --
 -- Name: presupuestos trg_presupuestos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

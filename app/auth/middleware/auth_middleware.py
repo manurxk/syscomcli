@@ -135,7 +135,7 @@ def verificar_sesion_mejorada():
 
         # Verificar expiración por inactividad
         fecha_ultimo_ping = sesion_data['fecha_ultimo_ping']
-        if fecha_ultimo_ping and (datetime.utcnow() - fecha_ultimo_ping) > timedelta(minutes=TIMEOUT_INACTIVIDAD_MINUTOS):
+        if fecha_ultimo_ping and (datetime.now() - fecha_ultimo_ping) > timedelta(minutes=TIMEOUT_INACTIVIDAD_MINUTOS):
             AuthService.cerrar_sesion(session_token, tipo_cierre='TIMEOUT')
             session.clear()
             if request.path.startswith('/api/'):

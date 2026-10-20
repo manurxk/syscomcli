@@ -57,12 +57,16 @@ def _extraer_datos(data):
     elif not empresadao.validarEmail(email):
         errores.append('El email no tiene un formato válido.')
 
+    horario_atencion_tramos, errores_horario = empresadao.validarTramos(data.get('horario_atencion_tramos'))
+    errores.extend(errores_horario)
+
     datos = dict(
         ruc_nit=ruc_nit, digito_verificador=digito_verificador, razon_social=razon_social,
         nombre_comercial=nombre_comercial, tipo_contribuyente=tipo_contribuyente, id_ciudad=id_ciudad,
         direccion=direccion, numero_casa=numero_casa, codigo_postal=codigo_postal, telefono=telefono,
         celular=celular, email=email, sitio_web=sitio_web,
         actividad_economica_principal=actividad_economica_principal, horario_atencion=horario_atencion,
+        horario_atencion_tramos=horario_atencion_tramos,
     )
     return datos, errores
 
@@ -116,6 +120,9 @@ def updateEmpresa(id_empresa):
     datos, errores = _extraer_datos(data)
     if errores:
         return jsonify({'success': False, 'error': ' '.join(errores)}), 400
+    # Sin el campo en el pedido se conserva el horario guardado (solo se borra si llega vacío a propósito)
+    if 'horario_atencion_tramos' not in data:
+        datos['horario_atencion_tramos'] = actual.get('horario_atencion_tramos')
     if empresadao.rucExiste(datos['ruc_nit'], excluir_id=id_empresa):
         return jsonify({'success': False, 'error': f"Ya existe una empresa con el RUC/NIT \"{datos['ruc_nit']}\"."}), 400
 

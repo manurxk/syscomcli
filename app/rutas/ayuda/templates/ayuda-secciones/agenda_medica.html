@@ -25,11 +25,27 @@
     <li>Presione el botón del lápiz en la fila del horario.</li>
     <li>Haga los cambios y presione <span class="btn-ref">Guardar</span>.</li>
 </ol>
-<p class="importante">Las citas ya agendadas no cambian. Si mueve el horario de un día que tiene pacientes, avíseles y reprográmelos desde Citas.</p>
+<p class="importante">Las citas ya agendadas no cambian. Si al guardar quedan citas fuera del horario nuevo, el sistema las lista para que avise a los pacientes y las reprograme desde Citas. Si el horario queda fuera del horario de atención de la clínica, el sistema solo avisa: igual se puede guardar.</p>
 
 <h4>¿Cómo dejo de usar un horario?</h4>
-<p>Presione el botón del ojo y confirme. El horario queda inactivo y ya no se crean turnos nuevos, pero las citas que ya tenía se mantienen. Puede volver a activarlo con el mismo botón.</p>
+<p>Presione el botón del ojo y confirme. El horario queda inactivo, ya no se crean turnos nuevos y sus turnos libres dejan de ofrecerse al registrar una cita. Las citas que ya tenía se mantienen (el sistema las lista para reprogramarlas). Puede volver a activarlo con el mismo botón.</p>
 
 <h4>¿Hasta qué fecha se puede agendar?</h4>
 <p>Hasta 15 días hacia adelante. El sistema agrega los días nuevos solo, todos los días, así que no hace falta hacer nada.</p>
 <p>Para ver los turnos de un horario y si están libres o reservados, presione el botón del calendario.</p>
+
+<h4>¿Cómo bloqueo días en que el especialista no atiende?</h4>
+<p>Para una ausencia o un feriado:</p>
+<ol>
+    <li>Elija el especialista y presione <span class="btn-ref">Bloquear días</span>.</li>
+    <li>Indique desde cuándo y hasta cuándo, escriba el motivo y presione <span class="btn-ref">Bloquear</span>.</li>
+</ol>
+<p>El bloqueo vale para todos los horarios del especialista y sus turnos libres de ese rango dejan de ofrecerse. Si ya había citas reservadas, el sistema las lista para que las reprograme o cancele. Para quitarlo, presione <span class="btn-ref">Levantar</span> en la lista de bloqueos vigentes.</p>
+
+<h4>¿Cómo doy un sobreturno?</h4>
+<p>Un sobreturno es un turno extra para un caso urgente, en una hora que no está en el horario.</p>
+<ol>
+    <li>En el horario, ponga en <strong>% sobreturnos</strong> cuántos turnos extra se permiten por día (0 = no se permiten) y guarde.</li>
+    <li>En la fila del horario, presione el botón de sobreturno y elija la fecha y la hora.</li>
+    <li>El turno se reserva desde Citas como cualquier otro y aparece marcado como "sobreturno".</li>
+</ol>

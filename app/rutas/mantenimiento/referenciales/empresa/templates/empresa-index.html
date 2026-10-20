@@ -13,7 +13,8 @@ Empresa
           <h1 class="page-header-title">Datos de la Empresa</h1>
           <div class="page-header-subtitle">Información administrativa básica de la clínica</div>
         </div>
-        <div class="col-auto mt-4">
+        <div class="col-auto mt-4 d-flex gap-2">
+          <button type="button" class="btn btn-light btn-sm" id="btnEditar">Configurar</button>
           <a class="btn btn-outline-light btn-sm" href="{{ url_for('referenciales.referencialesIndex') }}">Volver al Listado</a>
         </div>
       </div>
@@ -23,44 +24,79 @@ Empresa
 
 <div class="container-fluid px-4 mt-n10">
 
-  <div class="card shadow-sm mb-4">
-    <div class="card-header py-3 d-flex align-items-center">
-      <h6 class="m-0 fw-bold">Ficha de la Empresa</h6>
-      <button type="button" class="btn btn-sm btn-primary ms-auto" id="btnEditar">Configurar</button>
+  <div id="sinDatos" class="card shadow-sm mb-4 d-none">
+    <div class="card-body text-muted">Datos de la clínica sin configurar todavía.</div>
+  </div>
+
+  <div class="row" id="ficha">
+    <!-- Identificación fiscal -->
+    <div class="col-xl-4 mb-4">
+      <div class="card shadow-sm h-100 border-start-primary">
+        <div class="card-header py-3">
+          <h6 class="m-0 fw-bold text-primary d-flex align-items-center gap-2"><i data-feather="file-text" class="icon-sm"></i> Identificación Fiscal</h6>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">RUC/NIT</dt>
+            <dd class="col-sm-7" id="fRuc"></dd>
+            <dt class="col-sm-5">Razón Social</dt>
+            <dd class="col-sm-7" id="fRazonSocial"></dd>
+            <dt class="col-sm-5">Nombre Comercial</dt>
+            <dd class="col-sm-7" id="fNombreComercial"></dd>
+            <dt class="col-sm-5">Tipo de Contribuyente</dt>
+            <dd class="col-sm-7" id="fTipoContribuyente"></dd>
+            <dt class="col-sm-5">Actividad Económica</dt>
+            <dd class="col-sm-7 mb-0" id="fActividadEconomica"></dd>
+          </dl>
+        </div>
+      </div>
     </div>
-    <div class="card-body">
-      <div id="sinDatos" class="text-muted d-none">Datos de la clínica sin configurar todavía.</div>
-      <dl class="row mb-0" id="ficha">
-        <dt class="col-sm-3">RUC/NIT</dt>
-        <dd class="col-sm-9" id="fRuc"></dd>
-        <dt class="col-sm-3">Razón Social</dt>
-        <dd class="col-sm-9" id="fRazonSocial"></dd>
-        <dt class="col-sm-3">Nombre Comercial</dt>
-        <dd class="col-sm-9" id="fNombreComercial"></dd>
-        <dt class="col-sm-3">Tipo de Contribuyente</dt>
-        <dd class="col-sm-9" id="fTipoContribuyente"></dd>
-        <dt class="col-sm-3">Ciudad</dt>
-        <dd class="col-sm-9" id="fCiudad"></dd>
-        <dt class="col-sm-3">Dirección</dt>
-        <dd class="col-sm-9" id="fDireccion"></dd>
-        <dt class="col-sm-3">Teléfono</dt>
-        <dd class="col-sm-9" id="fTelefono"></dd>
-        <dt class="col-sm-3">Celular</dt>
-        <dd class="col-sm-9" id="fCelular"></dd>
-        <dt class="col-sm-3">Email</dt>
-        <dd class="col-sm-9" id="fEmail"></dd>
-        <dt class="col-sm-3">Sitio Web</dt>
-        <dd class="col-sm-9" id="fSitioWeb"></dd>
-        <dt class="col-sm-3">Horario de Atención</dt>
-        <dd class="col-sm-9" id="fHorarioAtencion"></dd>
-      </dl>
+    <!-- Contacto y ubicación -->
+    <div class="col-xl-4 mb-4">
+      <div class="card shadow-sm h-100 border-start-success">
+        <div class="card-header py-3">
+          <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2"><i data-feather="map-pin" class="icon-sm"></i> Contacto y Ubicación</h6>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Ciudad</dt>
+            <dd class="col-sm-7" id="fCiudad"></dd>
+            <dt class="col-sm-5">Dirección</dt>
+            <dd class="col-sm-7" id="fDireccion"></dd>
+            <dt class="col-sm-5">Teléfono</dt>
+            <dd class="col-sm-7" id="fTelefono"></dd>
+            <dt class="col-sm-5">Celular</dt>
+            <dd class="col-sm-7" id="fCelular"></dd>
+            <dt class="col-sm-5">Email</dt>
+            <dd class="col-sm-7" id="fEmail"></dd>
+            <dt class="col-sm-5">Sitio Web</dt>
+            <dd class="col-sm-7 mb-0" id="fSitioWeb"></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <!-- Horario de atención -->
+    <div class="col-xl-4 mb-4">
+      <div class="card shadow-sm h-100 border-start-info">
+        <div class="card-header py-3">
+          <h6 class="m-0 fw-bold text-info d-flex align-items-center gap-2"><i data-feather="clock" class="icon-sm"></i> Horario de Atención</h6>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Texto publicado</dt>
+            <dd class="col-sm-7" id="fHorarioAtencion"></dd>
+            <dt class="col-sm-5">Tramos</dt>
+            <dd class="col-sm-7 mb-0" id="fHorarioTramos"></dd>
+          </dl>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Modal formulario -->
 <div class="modal fade" id="modalFormulario" tabindex="-1" data-bs-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content border-0 shadow">
       <div class="modal-header border-bottom">
         <h5 class="modal-title fw-bold">Datos de la Empresa</h5>
@@ -68,77 +104,120 @@ Empresa
       </div>
       <div class="modal-body">
         <input type="hidden" id="txtIdEmpresa">
-        <div class="row">
-          <div class="form-group col-sm-8">
-            <label class="fw-semibold">RUC/NIT <span class="text-danger">*</span></label>
+
+        <!-- Identificación fiscal -->
+        <h6 class="fw-bold text-primary d-flex align-items-center gap-2 mb-3"><i data-feather="file-text" class="icon-sm"></i> Identificación Fiscal</h6>
+        <div class="row gx-3">
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">RUC/NIT <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="txtRuc">
           </div>
-          <div class="form-group col-sm-4">
-            <label class="fw-semibold">Dígito Verificador <span class="text-danger">*</span></label>
+          <div class="col-md-1 mb-3">
+            <label class="small mb-1" title="Dígito verificador">DV <span class="text-danger">*</span></label>
             <input type="text" class="form-control" maxlength="1" id="txtDigitoVerificador">
           </div>
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Razón Social <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtRazonSocial">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Nombre Comercial</label>
+            <input type="text" class="form-control" id="txtNombreComercial">
+          </div>
         </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Razón Social <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="txtRazonSocial">
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Tipo de Contribuyente <span class="text-danger">*</span></label>
+            <select class="form-select" id="selTipoContribuyente">
+              <option value="PERSONA_FISICA">Persona Física</option>
+              <option value="PERSONA_JURIDICA" selected>Persona Jurídica</option>
+              <option value="EAS">EAS</option>
+            </select>
+          </div>
+          <div class="col-md-8 mb-3">
+            <label class="small mb-1">Actividad Económica Principal</label>
+            <input type="text" class="form-control" id="txtActividadEconomica">
+          </div>
         </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Nombre Comercial</label>
-          <input type="text" class="form-control" id="txtNombreComercial">
-        </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Tipo de Contribuyente <span class="text-danger">*</span></label>
-          <select class="form-select" id="selTipoContribuyente">
-            <option value="PERSONA_FISICA">Persona Física</option>
-            <option value="PERSONA_JURIDICA" selected>Persona Jurídica</option>
-            <option value="EAS">EAS</option>
-          </select>
-        </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Ciudad</label>
-          <select class="form-select" id="selCiudad">
-            <option value="">Seleccione una ciudad</option>
-          </select>
-        </div>
-        <div class="row mt-3">
-          <div class="form-group col-sm-8">
-            <label class="fw-semibold">Dirección <span class="text-danger">*</span></label>
+
+        <hr class="my-3">
+
+        <!-- Contacto y ubicación -->
+        <h6 class="fw-bold text-success d-flex align-items-center gap-2 mb-3"><i data-feather="map-pin" class="icon-sm"></i> Contacto y Ubicación</h6>
+        <div class="row gx-3">
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Ciudad</label>
+            <select class="form-select" id="selCiudad">
+              <option value="">Seleccione una ciudad</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="small mb-1">Dirección <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="txtDireccion">
           </div>
-          <div class="form-group col-sm-4">
-            <label class="fw-semibold">N° Casa</label>
+          <div class="col-md-2 mb-3">
+            <label class="small mb-1">N° Casa</label>
             <input type="text" class="form-control" id="txtNumeroCasa">
           </div>
+          <div class="col-md-2 mb-3">
+            <label class="small mb-1">Código Postal</label>
+            <input type="text" class="form-control" id="txtCodigoPostal">
+          </div>
         </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Código Postal</label>
-          <input type="text" class="form-control" id="txtCodigoPostal">
-        </div>
-        <div class="row mt-3">
-          <div class="form-group col-sm-6">
-            <label class="fw-semibold">Teléfono <span class="text-danger">*</span></label>
+        <div class="row gx-3">
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Teléfono <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="txtTelefono">
           </div>
-          <div class="form-group col-sm-6">
-            <label class="fw-semibold">Celular <span class="text-danger">*</span></label>
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Celular <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="txtCelular">
           </div>
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Email <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="txtEmail">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="small mb-1">Sitio Web</label>
+            <input type="text" class="form-control" id="txtSitioWeb">
+          </div>
         </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Email <span class="text-danger">*</span></label>
-          <input type="email" class="form-control" id="txtEmail">
-        </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Sitio Web</label>
-          <input type="text" class="form-control" id="txtSitioWeb">
-        </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Actividad Económica Principal</label>
-          <input type="text" class="form-control" id="txtActividadEconomica">
-        </div>
-        <div class="form-group mt-3">
-          <label class="fw-semibold">Horario de Atención</label>
-          <textarea class="form-control" id="txtHorarioAtencion" rows="2"></textarea>
+
+        <hr class="my-3">
+
+        <!-- Horario de atención -->
+        <h6 class="fw-bold text-info d-flex align-items-center gap-2 mb-3"><i data-feather="clock" class="icon-sm"></i> Horario de Atención</h6>
+        <div class="row gx-4">
+          <div class="col-lg-4 mb-3">
+            <label class="small mb-1">Texto publicado</label>
+            <textarea class="form-control" id="txtHorarioAtencion" rows="3"></textarea>
+            <small class="text-muted">Se muestra en pantallas y documentos.</small>
+          </div>
+          <div class="col-lg-8 mb-3">
+            <label class="small mb-1">Tramos del horario</label>
+            <div class="row g-2 align-items-end">
+              <div class="col-sm-4">
+                <label class="small text-muted mb-1" for="selHorarioDia">Día</label>
+                <select class="form-select" id="selHorarioDia"></select>
+              </div>
+              <div class="col-sm-3">
+                <label class="small text-muted mb-1" for="txtHorarioDesde">Desde</label>
+                <input type="time" class="form-control" id="txtHorarioDesde">
+              </div>
+              <div class="col-sm-3">
+                <label class="small text-muted mb-1" for="txtHorarioHasta">Hasta</label>
+                <input type="time" class="form-control" id="txtHorarioHasta">
+              </div>
+              <div class="col-sm-2">
+                <button type="button" class="btn btn-outline-primary w-100" id="btnAgregarTramo">+ Añadir</button>
+              </div>
+            </div>
+            <table class="table table-sm table-bordered mt-2 mb-1">
+              <thead><tr><th>Día</th><th>Desde</th><th>Hasta</th><th class="text-center"></th></tr></thead>
+              <tbody id="tbodyHorarioTramos"></tbody>
+            </table>
+            <small class="text-muted">Uno o varios tramos por día (ej. 07:00-12:00 y 13:00-19:00). Un día sin tramos = cerrado. Se usa para avisar de cambios fuera de horario.</small>
+          </div>
         </div>
       </div>
       <div class="modal-footer bg-light">
@@ -178,6 +257,80 @@ Empresa
       });
   }
 
+  const DIAS_SEMANA = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo' };
+  let lineasHorario = [];
+
+  // {"1": [["07:00","12:00"], ...]} -> [{dia: 1, desde: '07:00', hasta: '12:00'}, ...], ordenado por día y hora
+  const tramosALineas = (tramos) => {
+    const lineas = [];
+    Object.entries(tramos || {}).forEach(([dia, lista]) => {
+      lista.forEach(([desde, hasta]) => lineas.push({ dia: parseInt(dia), desde, hasta }));
+    });
+    return lineas.sort((a, b) => a.dia - b.dia || a.desde.localeCompare(b.desde));
+  }
+
+  const lineasATramos = () => {
+    const tramos = {};
+    lineasHorario.forEach(l => {
+      (tramos[l.dia] = tramos[l.dia] || []).push([l.desde, l.hasta]);
+    });
+    return Object.keys(tramos).length ? tramos : null;
+  }
+
+  const renderTramos = () => {
+    const tbody = $('#tbodyHorarioTramos');
+    if (lineasHorario.length === 0) {
+      tbody.html('<tr><td colspan="4" class="text-muted text-center">Sin tramos cargados</td></tr>');
+      return;
+    }
+    tbody.html(lineasHorario.map((l, idx) => `
+      <tr><td>${DIAS_SEMANA[l.dia]}</td><td>${l.desde}</td><td>${l.hasta}</td>
+      <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-quitar-tramo" data-idx="${idx}">&times;</button></td></tr>
+    `).join(''));
+  }
+
+  // Pasa a la lista el tramo escrito en día/desde/hasta. Devuelve false si hay un tramo a medio
+  // escribir o inválido (ya avisado). Sin nada escrito: con el botón avisa, al guardar no hace nada.
+  const agregarTramoPendiente = (desdeBoton) => {
+    const desde = $('#txtHorarioDesde').val();
+    const hasta = $('#txtHorarioHasta').val();
+    if (!desde && !hasta && !desdeBoton) return true;
+    if (!desde || !hasta) {
+      Swal.fire('Atención', 'Indique la hora de inicio y de fin del tramo.', 'warning');
+      return false;
+    }
+    if (desde >= hasta) {
+      Swal.fire('Atención', 'El tramo debe empezar antes de terminar.', 'warning');
+      return false;
+    }
+    lineasHorario.push({ dia: parseInt($('#selHorarioDia').val()), desde, hasta });
+    lineasHorario.sort((a, b) => a.dia - b.dia || a.desde.localeCompare(b.desde));
+    renderTramos();
+    $('#txtHorarioDesde, #txtHorarioHasta').val('');
+    return true;
+  }
+
+  const agregarTramo = () => {
+    const sel = $('#selHorarioDia');
+    Object.entries(DIAS_SEMANA).forEach(([id, nombre]) => sel.append(`<option value="${id}">${nombre}</option>`));
+    $('#btnAgregarTramo').on('click', function () {
+      agregarTramoPendiente(true);
+    });
+    $(document).on('click', '.btn-quitar-tramo', function () {
+      lineasHorario.splice($(this).data('idx'), 1);
+      renderTramos();
+    });
+  }
+
+  // Texto de la ficha: un renglón por día, con sus tramos
+  const textoTramos = (tramos) => {
+    const lineas = tramosALineas(tramos);
+    if (lineas.length === 0) return '-';
+    const porDia = {};
+    lineas.forEach(l => (porDia[l.dia] = porDia[l.dia] || []).push(`${l.desde}-${l.hasta}`));
+    return Object.entries(porDia).map(([dia, t]) => `${DIAS_SEMANA[dia]}: ${t.join(', ')}`).join('<br>');
+  }
+
   const nombreCiudad = (id_ciudad) => {
     const ciudad = ciudadesCache.find(c => c.id === id_ciudad);
     return ciudad ? ciudad.descripcion : '-';
@@ -204,7 +357,9 @@ Empresa
     $('#fCelular').text(data.celular);
     $('#fEmail').text(data.email);
     $('#fSitioWeb').text(data.sitio_web || '-');
+    $('#fActividadEconomica').text(data.actividad_economica_principal || '-');
     $('#fHorarioAtencion').text(data.horario_atencion || '-');
+    $('#fHorarioTramos').html(textoTramos(data.horario_atencion_tramos));
   }
 
   const cargarFicha = () => {
@@ -236,12 +391,16 @@ Empresa
       $('#txtSitioWeb').val(d ? d.sitio_web : '');
       $('#txtActividadEconomica').val(d ? d.actividad_economica_principal : '');
       $('#txtHorarioAtencion').val(d ? d.horario_atencion : '');
+      lineasHorario = tramosALineas(d ? d.horario_atencion_tramos : null);
+      renderTramos();
       new bootstrap.Modal(document.getElementById('modalFormulario')).show();
     });
   }
 
   const guardar = () => {
     $('#btnGuardar').on('click', function () {
+      // Un tramo escrito pero sin "+ Añadir" se añade antes de guardar (antes se perdía sin aviso)
+      if (!agregarTramoPendiente(false)) return;
       const idEmpresa = $('#txtIdEmpresa').val();
       const payload = {
         ruc_nit: $('#txtRuc').val().trim(),
@@ -258,7 +417,8 @@ Empresa
         email: $('#txtEmail').val().trim(),
         sitio_web: $('#txtSitioWeb').val().trim(),
         actividad_economica_principal: $('#txtActividadEconomica').val().trim(),
-        horario_atencion: $('#txtHorarioAtencion').val().trim()
+        horario_atencion: $('#txtHorarioAtencion').val().trim(),
+        horario_atencion_tramos: lineasATramos()
       };
 
       const url = idEmpresa ? `/api/v1/empresa/${idEmpresa}` : '/api/v1/empresa';
@@ -286,6 +446,7 @@ Empresa
   $(function () {
     cargarCiudades().then(cargarFicha);
     abrirModal();
+    agregarTramo();
     guardar();
   });
 </script>

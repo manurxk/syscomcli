@@ -1,5 +1,5 @@
 -- 03_personas.sql — Personas, funcionarios, pacientes y especialistas
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -478,16 +478,34 @@ CREATE TRIGGER trg_especialistas_fecha_mod BEFORE UPDATE ON public.especialistas
 CREATE TRIGGER trg_funcionarios_fecha_mod BEFORE UPDATE ON public.funcionarios FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: pacientes trg_pacientes_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_pacientes_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.pacientes FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('AGENDAMIENTO', 'id_paciente');
+
+--
 -- Name: pacientes trg_pacientes_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_pacientes_fecha_mod BEFORE UPDATE ON public.pacientes FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: pacientes_menores trg_pacientes_menores_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_pacientes_menores_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.pacientes_menores FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('AGENDAMIENTO', 'id_paciente_menor');
+
+--
 -- Name: pacientes_menores trg_pacientes_menores_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_pacientes_menores_fecha_mod BEFORE UPDATE ON public.pacientes_menores FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: personas trg_personas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_personas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.personas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('AGENDAMIENTO', 'id_persona');
 
 --
 -- Name: personas trg_personas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

@@ -1,6 +1,23 @@
 import os
 import psycopg2
-from flask import current_app as app
+from flask import current_app as app, has_request_context, request, session
+
+
+def aplicar_contexto_auditoria(con):
+    """Pasa a la conexión quién hace la operación (usuario, roles e IP de la sesión), para que el trigger
+    de auditoría fn_auditar_cambios lo guarde en auditoria_transacciones. Fuera de una petición web
+    (tareas programadas) queda con rol SISTEMA. Se confirma enseguida para que un ROLLBACK posterior del
+    DAO no lo borre."""
+    id_usuario, roles, ip = '', 'SISTEMA', ''
+    if has_request_context():
+        id_usuario = str(session.get('id_usuario') or '')
+        roles = ','.join(session.get('roles') or []) or 'SIN_SESION'
+        ip = request.remote_addr or ''
+    cur = con.cursor()
+    cur.execute("SELECT set_config('app.id_usuario', %s, false), set_config('app.roles', %s, false), "
+                "set_config('app.ip', %s, false)", (id_usuario, roles[:200], ip))
+    cur.close()
+    con.commit()
 
 
 class BaseDAO:
@@ -8,13 +25,15 @@ class BaseDAO:
         self._db_name_env = db_name_env
 
     def _get_conexion(self):
-        return psycopg2.connect(
+        con = psycopg2.connect(
             dbname=os.getenv(self._db_name_env, "clinicain"),
             user=os.getenv("DB_USER", "postgres"),
             password=os.getenv("DB_PASSWORD", "postgres"),
             host=os.getenv("DB_HOST", "127.0.0.1"),
             port=os.getenv("DB_PORT", "5432"),
         )
+        aplicar_contexto_auditoria(con)
+        return con
 
     def execute_query(self, sql, params=None, commit=False):
         con = self._get_conexion()

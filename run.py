@@ -6,6 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.auth.tasks.auth_tasks import configurar_tareas_programadas
 from app.tasks.recordatorio_tasks import configurar_tarea_recordatorios
 from app.tasks.agenda_tasks import configurar_tarea_agenda
+from app.tasks.auditoria_tasks import configurar_tarea_auditoria
 from app.tasks.scheduler_lock import adquirir_lock_scheduler
 import logging
 import os
@@ -56,6 +57,11 @@ if debe_iniciar_scheduler():
         configurar_tarea_agenda(scheduler)
     except Exception as e:
         app.logger.warning(f"No se pudo configurar la tarea de turnos de agenda: {str(e)}")
+
+    try:
+        configurar_tarea_auditoria(scheduler)
+    except Exception as e:
+        app.logger.warning(f"No se pudieron configurar las tareas de auditoría: {str(e)}")
 
     # Iniciar scheduler
     try:

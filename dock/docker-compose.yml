@@ -10,6 +10,8 @@ services:
     # Solo se usan al crear un volumen nuevo; con el volumen existente la clave se cambia con ALTER ROLE.
     env_file:
       - ../.env
+    environment:
+      - TZ=America/Asuncion # hora de Paraguay en el sistema operativo y en los logs (la base: ALTER DATABASE ... SET timezone)
     ports:
       - "5434:5432" # Expuesto en el puerto 5434 (ya que 5432 y 5433 están en uso)
     volumes:
@@ -32,6 +34,7 @@ services:
       - ../.env
     environment:
       - DB_HOST=db
+      - TZ=America/Asuncion # hora de Paraguay en los nombres de los backups y en el log
       - BACKUP_INTERVAL_SECONDS=86400 # cada 24h
       - BACKUP_RETENTION_DAYS=14 # se conservan los ultimos 14 dias
     entrypoint: [ "sh", "/scripts/entrypoint.sh" ]
@@ -54,6 +57,7 @@ services:
       - ../.env
     environment:
       - DB_HOST=db
+      - TZ=America/Asuncion # hora de Paraguay para datetime.now(), las tareas programadas y el log
     ports:
       - "5005:5000" # Flask HTTP Expuesto en el puerto 5005 (evitando 5000 y 5001)
       - "5680:5678" # debugpy (debug remoto, puerto alternativo)
@@ -71,6 +75,8 @@ services:
     container_name: syscomcli_nginx # Proxy HTTPS (termina TLS y reenvia a app:5000)
     restart: always
     # Sin env_file: nginx no necesita (ni debe ver) los secretos del .env
+    environment:
+      - TZ=America/Asuncion # hora de Paraguay en el log de accesos
     ports:
       - "80:80" # HTTP: redirige a HTTPS (y valida Let's Encrypt en el servidor)
       - "443:443" # HTTPS: entrada oficial al sistema

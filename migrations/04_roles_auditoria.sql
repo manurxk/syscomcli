@@ -1,9 +1,9 @@
 -- 04_roles_auditoria.sql — Roles, permisos, accesos y auditoría
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
--- Tablas: roles, usuarios_roles, acciones, roles_permisos, roles_paginas, accesos_sistema, auditoria_sistema.
+-- Tablas: roles, usuarios_roles, acciones, roles_permisos, roles_paginas, accesos_sistema, auditoria_sistema, auditoria_transacciones.
 -- Incluye también las claves foráneas de módulos anteriores que apuntan a estas tablas.
 -- Orden: 00 a 18, uno por uno (manual del administrador, "Crear la base desde cero"):
 --   docker exec syscomcli_bd psql -U postgres -d <base_nueva> -q -v ON_ERROR_STOP=1 -f /tmp/04_roles_auditoria.sql
@@ -115,7 +115,7 @@ CREATE TABLE public.auditoria_sistema (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_auditoria_accion CHECK (((accion)::text = ANY ((ARRAY['LOGIN'::character varying, 'LOGOUT'::character varying, 'LOGIN_FAILED'::character varying, 'PROFILE_UPDATE'::character varying, 'RECORD_CREATE'::character varying, 'RECORD_UPDATE'::character varying, 'RECORD_DELETE'::character varying, 'PASSWORD_CHANGE'::character varying, 'REPORT_VIEW'::character varying, 'RATE_LIMIT'::character varying, 'ACCOUNT_LOCKED'::character varying, 'ACCOUNT_UNLOCKED'::character varying])::text[])))
+    CONSTRAINT chk_auditoria_accion CHECK (((accion)::text = ANY ((ARRAY['LOGIN'::character varying, 'LOGOUT'::character varying, 'LOGIN_FAILED'::character varying, 'PROFILE_UPDATE'::character varying, 'RECORD_CREATE'::character varying, 'RECORD_UPDATE'::character varying, 'RECORD_DELETE'::character varying, 'PASSWORD_CHANGE'::character varying, 'REPORT_VIEW'::character varying, 'REPORT_EXPORT'::character varying, 'RATE_LIMIT'::character varying, 'ACCOUNT_LOCKED'::character varying, 'ACCOUNT_UNLOCKED'::character varying, 'ALERTA_ENVIADA'::character varying, 'INFORME_SEMANAL'::character varying])::text[])))
 );
 
 --
@@ -141,6 +141,98 @@ CREATE SEQUENCE public.auditoria_sistema_id_auditoria_seq
 --
 
 ALTER SEQUENCE public.auditoria_sistema_id_auditoria_seq OWNED BY public.auditoria_sistema.id_auditoria;
+
+--
+-- Name: auditoria_transacciones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.auditoria_transacciones (
+    id_auditoria_transaccion bigint NOT NULL,
+    tabla character varying(63) NOT NULL,
+    modulo character varying(20) NOT NULL,
+    operacion character varying(6) NOT NULL,
+    id_registro character varying(50),
+    datos_anteriores jsonb,
+    datos_nuevos jsonb,
+    campos_modificados text[],
+    id_usuario integer,
+    roles character varying(200),
+    ip_origen inet,
+    fecha_cambio timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_auditoria_trans_modulo CHECK (((modulo)::text = ANY ((ARRAY['CLINICO'::character varying, 'AGENDAMIENTO'::character varying, 'VENTAS'::character varying, 'SEGURIDAD'::character varying])::text[]))),
+    CONSTRAINT chk_auditoria_trans_operacion CHECK (((operacion)::text = ANY ((ARRAY['INSERT'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying])::text[])))
+);
+
+--
+-- Name: TABLE auditoria_transacciones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.auditoria_transacciones IS 'Auditoria de cambios en datos: un registro por INSERT/UPDATE/DELETE en las tablas criticas, con el dato anterior y el nuevo. La escribe solo el trigger fn_auditar_cambios; la app solo la lee. No se borra nunca (datos de salud). Sin FK a usuarios a proposito: el registro de auditoria no debe depender de otras tablas.';
+
+--
+-- Name: COLUMN auditoria_transacciones.modulo; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.modulo IS 'Modulo de la tabla (CLINICO, AGENDAMIENTO, VENTAS, SEGURIDAD): define que roles pueden ver el cambio en la pantalla de Auditoria.';
+
+--
+-- Name: COLUMN auditoria_transacciones.id_registro; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.id_registro IS 'Valor de la clave primaria del registro cambiado.';
+
+--
+-- Name: COLUMN auditoria_transacciones.datos_anteriores; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.datos_anteriores IS 'Fila completa antes del cambio (UPDATE, DELETE). Columnas secretas como "***".';
+
+--
+-- Name: COLUMN auditoria_transacciones.datos_nuevos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.datos_nuevos IS 'Fila completa despues del cambio (INSERT, UPDATE). Columnas secretas como "***".';
+
+--
+-- Name: COLUMN auditoria_transacciones.campos_modificados; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.campos_modificados IS 'En un UPDATE, las columnas que cambiaron (sin las de control: fecha_modificacion, usuario_modificacion, sesiones_activas, fecha_ultimo_login, ip_ultimo_login, user_agent_ultimo_login).';
+
+--
+-- Name: COLUMN auditoria_transacciones.id_usuario; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.id_usuario IS 'Usuario de la sesion (app.id_usuario). Vacio = proceso automatico o cambio hecho fuera de la app.';
+
+--
+-- Name: COLUMN auditoria_transacciones.roles; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.roles IS 'Roles de la sesion separados por coma (app.roles); SISTEMA = tarea programada.';
+
+--
+-- Name: COLUMN auditoria_transacciones.ip_origen; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auditoria_transacciones.ip_origen IS 'IP del cliente (app.ip).';
+
+--
+-- Name: auditoria_transacciones_id_auditoria_transaccion_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.auditoria_transacciones_id_auditoria_transaccion_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: auditoria_transacciones_id_auditoria_transaccion_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.auditoria_transacciones_id_auditoria_transaccion_seq OWNED BY public.auditoria_transacciones.id_auditoria_transaccion;
 
 --
 -- Name: roles; Type: TABLE; Schema: public; Owner: -
@@ -347,6 +439,12 @@ ALTER TABLE ONLY public.acciones ALTER COLUMN id_accion SET DEFAULT nextval('pub
 ALTER TABLE ONLY public.auditoria_sistema ALTER COLUMN id_auditoria SET DEFAULT nextval('public.auditoria_sistema_id_auditoria_seq'::regclass);
 
 --
+-- Name: auditoria_transacciones id_auditoria_transaccion; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.auditoria_transacciones ALTER COLUMN id_auditoria_transaccion SET DEFAULT nextval('public.auditoria_transacciones_id_auditoria_transaccion_seq'::regclass);
+
+--
 -- Name: roles id_rol; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -390,6 +488,13 @@ ALTER TABLE ONLY public.acciones
 
 ALTER TABLE ONLY public.auditoria_sistema
     ADD CONSTRAINT auditoria_sistema_pkey PRIMARY KEY (id_auditoria);
+
+--
+-- Name: auditoria_transacciones auditoria_transacciones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.auditoria_transacciones
+    ADD CONSTRAINT auditoria_transacciones_pkey PRIMARY KEY (id_auditoria_transaccion);
 
 --
 -- Name: roles_paginas roles_paginas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -485,6 +590,30 @@ CREATE INDEX idx_auditoria_sistema_fecha ON public.auditoria_sistema USING btree
 CREATE INDEX idx_auditoria_sistema_usuario ON public.auditoria_sistema USING btree (id_usuario);
 
 --
+-- Name: idx_auditoria_trans_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_trans_fecha ON public.auditoria_transacciones USING btree (fecha_cambio);
+
+--
+-- Name: idx_auditoria_trans_modulo_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_trans_modulo_fecha ON public.auditoria_transacciones USING btree (modulo, fecha_cambio);
+
+--
+-- Name: idx_auditoria_trans_tabla_registro; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_trans_tabla_registro ON public.auditoria_transacciones USING btree (tabla, id_registro);
+
+--
+-- Name: idx_auditoria_trans_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auditoria_trans_usuario ON public.auditoria_transacciones USING btree (id_usuario);
+
+--
 -- Name: idx_roles_paginas_rol; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -537,6 +666,24 @@ CREATE TRIGGER trg_auditoria_sistema_fecha_mod BEFORE UPDATE ON public.auditoria
 --
 
 CREATE TRIGGER trg_roles_fecha_mod BEFORE UPDATE ON public.roles FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: roles_paginas trg_roles_paginas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_roles_paginas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.roles_paginas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('SEGURIDAD', 'id_rol_pagina');
+
+--
+-- Name: roles_permisos trg_roles_permisos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_roles_permisos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.roles_permisos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('SEGURIDAD', 'id_rol_permiso');
+
+--
+-- Name: usuarios_roles trg_usuarios_roles_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_usuarios_roles_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.usuarios_roles FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('SEGURIDAD', 'id_usuario_rol');
 
 --
 -- Name: usuarios_roles trg_usuarios_roles_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

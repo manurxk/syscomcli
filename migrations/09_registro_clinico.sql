@@ -1,5 +1,5 @@
 -- 09_registro_clinico.sql — Registro clínico
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -317,6 +317,40 @@ CREATE SEQUENCE public.tratamientos_id_tratamiento_seq
 ALTER SEQUENCE public.tratamientos_id_tratamiento_seq OWNED BY public.tratamientos.id_tratamiento;
 
 --
+-- Name: v_consultas_resumen; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_consultas_resumen AS
+ SELECT c.id_consulta,
+    (c.consulta_fecha)::date AS fecha,
+    c.consulta_fecha,
+    c.consulta_estado,
+    c.id_paciente,
+    c.id_especialista,
+    concat(pe.per_nombre, ' ', pe.per_apellido) AS especialista_nombre,
+    COALESCE(cit.id_especialidad, ( SELECT min(ee.id_especialidad) AS min
+           FROM public.especialista_especialidades ee
+          WHERE ((ee.id_especialista = c.id_especialista) AND (ee.est_especialista_especialidad = true)))) AS id_especialidad,
+    cit.cita_es_primera_vez,
+    rd.id_diagnostico,
+    d.cod_cie10,
+    d.des_diagnostico
+   FROM ((((((public.consultas c
+     JOIN public.especialistas e ON ((e.id_especialista = c.id_especialista)))
+     JOIN public.funcionarios f ON ((f.id_funcionario = e.id_funcionario)))
+     JOIN public.personas pe ON ((pe.id_persona = f.id_persona)))
+     LEFT JOIN public.citas cit ON ((cit.id_cita = c.id_cita)))
+     LEFT JOIN public.registro_diagnosticos rd ON (((rd.id_consulta = c.id_consulta) AND (rd.est_registro_diagnostico = true))))
+     LEFT JOIN public.diagnosticos d ON ((d.id_diagnostico = rd.id_diagnostico)))
+  WHERE (c.est_consulta = true);
+
+--
+-- Name: VIEW v_consultas_resumen; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.v_consultas_resumen IS 'Una fila por consulta activa y por diagnóstico registrado (una consulta sin diagnóstico aparece una vez, con diagnóstico nulo). Para contar consultas usar COUNT(DISTINCT id_consulta). Filtrar por fecha y, según el rol, por id_especialista. Fuente de la pestaña Consultorio. No expone nombres de pacientes.';
+
+--
 -- Name: insumos id_insumo; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -457,10 +491,22 @@ CREATE INDEX idx_tratamientos_consulta ON public.tratamientos USING btree (id_co
 CREATE TRIGGER trg_insumos_fecha_mod BEFORE UPDATE ON public.insumos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: registro_diagnosticos trg_registro_diagnosticos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_registro_diagnosticos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.registro_diagnosticos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_registro_diagnostico');
+
+--
 -- Name: registro_diagnosticos trg_registro_diagnosticos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_registro_diagnosticos_fecha_mod BEFORE UPDATE ON public.registro_diagnosticos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: registro_insumos trg_registro_insumos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_registro_insumos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.registro_insumos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_registro_insumo');
 
 --
 -- Name: registro_insumos trg_registro_insumos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
@@ -469,10 +515,22 @@ CREATE TRIGGER trg_registro_diagnosticos_fecha_mod BEFORE UPDATE ON public.regis
 CREATE TRIGGER trg_registro_insumos_fecha_mod BEFORE UPDATE ON public.registro_insumos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: registro_procedimientos trg_registro_procedimientos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_registro_procedimientos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.registro_procedimientos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_registro_procedimiento');
+
+--
 -- Name: registro_procedimientos trg_registro_procedimientos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_registro_procedimientos_fecha_mod BEFORE UPDATE ON public.registro_procedimientos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: registro_signos trg_registro_signos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_registro_signos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.registro_signos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_registro_signo');
 
 --
 -- Name: registro_signos trg_registro_signos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
@@ -481,10 +539,22 @@ CREATE TRIGGER trg_registro_procedimientos_fecha_mod BEFORE UPDATE ON public.reg
 CREATE TRIGGER trg_registro_signos_fecha_mod BEFORE UPDATE ON public.registro_signos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: registro_sintomas trg_registro_sintomas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_registro_sintomas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.registro_sintomas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_registro_sintoma');
+
+--
 -- Name: registro_sintomas trg_registro_sintomas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_registro_sintomas_fecha_mod BEFORE UPDATE ON public.registro_sintomas FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: tratamientos trg_tratamientos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_tratamientos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.tratamientos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_tratamiento');
 
 --
 -- Name: tratamientos trg_tratamientos_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

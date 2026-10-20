@@ -24,6 +24,8 @@ class Conexion:
         except Exception as e:
             print(f"Error al conectar a la base de datos: {e}")
             raise e
+        from app.core.base_dao import aplicar_contexto_auditoria
+        aplicar_contexto_auditoria(self.con)
 
     """getConexion
 

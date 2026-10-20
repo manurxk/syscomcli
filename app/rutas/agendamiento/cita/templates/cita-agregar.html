@@ -553,7 +553,7 @@ Registrar Nueva Cita
     const horaInicio = slot.slot_inicio.split(' ')[1];
     const horaFin = slot.slot_fin.split(' ')[1];
     const esActual = turnoActualEdit && slot.id_slot_agenda === turnoActualEdit.id_slot_agenda;
-    return `<button type="button" class="chip-turno" data-id="${slot.id_slot_agenda}">${horaInicio} - ${horaFin}${esActual ? ' (actual)' : ''}</button>`;
+    return `<button type="button" class="chip-turno" data-id="${slot.id_slot_agenda}">${horaInicio} - ${horaFin}${slot.es_sobreturno ? ' (sobreturno)' : ''}${esActual ? ' (actual)' : ''}</button>`;
   };
 
   const seleccionarTurno = () => {

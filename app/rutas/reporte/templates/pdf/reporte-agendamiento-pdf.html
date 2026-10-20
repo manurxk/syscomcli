@@ -1,100 +1,94 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reporte de Agendamiento PDF</title>
-    <style>
-        @page {
-            size: A4 portrait;
-            margin: 1.5cm;
-            @bottom-right {
-                content: "Página " counter(page) " de " counter(pages);
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-                color: #555;
-            }
-        }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; color: #333; }
-        .header { border-bottom: 2px solid #198754; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { color: #198754; margin: 0; font-size: 24px; text-transform: uppercase; }
-        .header p { margin: 5px 0 0; font-size: 13px; color: #555; }
-        .kpi-section { width: 100%; margin-bottom: 20px; border-collapse: separate; border-spacing: 10px 0; }
-        .kpi-box { background-color: #f8f9fa; border-left: 4px solid #198754; padding: 10px; border-radius: 4px; width: 25%; }
-        .kpi-title { font-size: 10px; text-transform: uppercase; color: #777; margin: 0 0 5px; }
-        .kpi-value { font-size: 16px; font-weight: bold; color: #222; margin: 0; }
-        table.data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
-        table.data-table th, table.data-table td { border: 1px solid #ddd; padding: 8px; }
-        table.data-table th { background-color: #f1f5f9; color: #333; font-weight: bold; text-transform: uppercase; text-align: left; }
-        .align-right { text-align: right !important; }
-        .align-center { text-align: center !important; }
-        .text-success { color: #1cc88a; }
-        .text-danger { color: #e74a3b; }
-        .text-warning { color: #f6c23e; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Reporte de Agendamiento</h1>
-        <p><strong>Periodo:</strong> {{ fecha_desde }} al {{ fecha_hasta }}</p>
-    </div>
+{% extends 'pdf/base-reporte-pdf.html' %}
+{% block cuerpo %}
+  <div class="seccion">Resumen del período</div>
+  <table class="resumen"><tr>
+    {% for etiqueta, valor in [('Agendadas', n(totales.total)), ('Atendidas', n(totales.atendidas)), ('Canceladas', n(totales.canceladas)), ('Ausentes', n(totales.ausentes)), ('Asistencia', pct(totales.tasa_asistencia)), ('Ausencia', pct(totales.tasa_ausencia)), ('Pacientes distintos', n(pacientes.pacientes_distintos)), ('Pacientes nuevos', n(pacientes.pacientes_nuevos))] %}
+    <td style="width: 12.5%;"><span class="lbl">{{ etiqueta }}</span><span class="numero">{{ valor }}</span></td>
+    {% endfor %}
+  </tr></table>
 
-    <table class="kpi-section">
-        <tr>
-            <td class="kpi-box" style="border-color: #198754;">
-                <p class="kpi-title">Total Programadas</p>
-                <p class="kpi-value">{{ totales.total }}</p>
-            </td>
-            <td class="kpi-box" style="border-color: #1cc88a;">
-                <p class="kpi-title">Atendidas</p>
-                <p class="kpi-value text-success">{{ totales.atendidas }}</p>
-            </td>
-            <td class="kpi-box" style="border-color: #e74a3b;">
-                <p class="kpi-title">Canceladas</p>
-                <p class="kpi-value text-danger">{{ totales.canceladas }}</p>
-            </td>
-            <td class="kpi-box" style="border-color: #f6c23e;">
-                <p class="kpi-title">Ausencias</p>
-                <p class="kpi-value text-warning">{{ totales.ausentes }}</p>
-            </td>
-        </tr>
-    </table>
+  {% if por_especialista %}
+  <div class="seccion">Por especialista</div>
+  <table class="detalle">
+    <thead><tr><th style="width:27%;">Especialista</th><th style="width:22%;">Especialidad</th><th style="width:10%;">Agend.</th><th style="width:10%;">Atend.</th><th style="width:10%;">Canc.</th><th style="width:10%;">Aus.</th><th style="width:11%;">Asistencia</th></tr></thead>
+    <tbody>
+      {% for e in por_especialista %}
+      <tr><td>{{ e.especialista_nombre }}</td><td>{{ e.especialidades }}</td><td class="centro">{{ n(e.agendadas) }}</td><td class="centro">{{ n(e.atendidas) }}</td><td class="centro">{{ n(e.canceladas) }}</td><td class="centro">{{ n(e.ausentes) }}</td><td class="der">{{ pct(e.agendadas and e.atendidas * 100 / e.agendadas) }}</td></tr>
+      {% endfor %}
+      <tr class="tot"><td>TOTALES</td><td></td><td class="centro">{{ n(totales.total) }}</td><td class="centro">{{ n(totales.atendidas) }}</td><td class="centro">{{ n(totales.canceladas) }}</td><td class="centro">{{ n(totales.ausentes) }}</td><td class="der">{{ pct(totales.tasa_asistencia) }}</td></tr>
+    </tbody>
+  </table>
+  {% endif %}
 
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th class="align-center">Atendidas</th>
-                <th class="align-center">Canceladas</th>
-                <th class="align-center">Ausencias</th>
-                <th class="align-right">Total del Día</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in datos %}
-            <tr>
-                <td style="font-weight: bold;">{{ item.fecha }}</td>
-                <td class="align-center text-success">{{ item.cant_atendidas }}</td>
-                <td class="align-center text-danger">{{ item.cant_canceladas }}</td>
-                <td class="align-center text-warning">{{ item.cant_ausencias }}</td>
-                <td class="align-right" style="background-color: #f8f9fa; font-weight: bold;">
-                    {{ item.cant_atendidas + item.cant_canceladas + item.cant_ausencias }}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5" class="align-center">No hay datos en el rango seleccionado.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr style="background-color: #e2e8f0; font-weight: bold;">
-                <td>TOTALES</td>
-                <td class="align-center">{{ totales.atendidas }}</td>
-                <td class="align-center">{{ totales.canceladas }}</td>
-                <td class="align-center">{{ totales.ausentes }}</td>
-                <td class="align-right">{{ totales.total }}</td>
-            </tr>
-        </tfoot>
-    </table>
-</body>
-</html>
+  <div class="seccion">Citas por estado</div>
+  <table class="detalle">
+    <thead><tr><th style="width:50%;">Estado</th><th style="width:25%;">Cantidad</th><th style="width:25%;">% del total</th></tr></thead>
+    <tbody>
+      {% for etiqueta, cantidad in [('Completada', totales.atendidas), ('Cancelada', totales.canceladas), ('Ausente', totales.ausentes)] %}
+      <tr><td>{{ etiqueta }}</td><td class="centro">{{ n(cantidad) }}</td><td class="der">{{ pct(totales.total and cantidad * 100 / totales.total) }}</td></tr>
+      {% endfor %}
+      <tr class="tot"><td>TOTAL</td><td class="centro">{{ n(totales.total) }}</td><td class="der">{{ pct(100 if totales.total else 0) }}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="seccion">Evolución diaria</div>
+  <table class="detalle">
+    <thead><tr><th style="width:24%;">Fecha</th><th style="width:15%;">Agend.</th><th style="width:15%;">Atend.</th><th style="width:15%;">Canc.</th><th style="width:15%;">Aus.</th><th style="width:16%;">Asistencia</th></tr></thead>
+    <tbody>
+      {% for d in diarios %}
+      <tr><td>{{ fecha(d.fecha) }}</td><td class="centro">{{ n(d.cant_total) }}</td><td class="centro">{{ n(d.cant_atendidas) }}</td><td class="centro">{{ n(d.cant_canceladas) }}</td><td class="centro">{{ n(d.cant_ausencias) }}</td><td class="der">{{ pct(d.cant_total and d.cant_atendidas * 100 / d.cant_total) }}</td></tr>
+      {% else %}
+      <tr><td colspan="6" class="vacio">Sin citas en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="seccion">Pacientes ausentes</div>
+  <table class="detalle">
+    <thead><tr><th style="width:11%;">Fecha</th><th style="width:7%;">Hora</th><th style="width:22%;">Paciente</th><th style="width:12%;">Cédula</th><th style="width:14%;">Teléfono</th><th style="width:22%;">Especialista</th><th style="width:12%;">Ausencias previas</th></tr></thead>
+    <tbody>
+      {% for a in ausentes %}
+      <tr><td>{{ fecha(a.fecha) }}</td><td class="centro">{{ a.hora }}</td><td>{{ a.paciente_nombre }}</td><td>{{ a.paciente_cedula or '—' }}</td><td>{{ a.paciente_telefono or '—' }}</td><td>{{ a.especialista_nombre }}</td><td class="centro">{{ a.ausencias_previas }}</td></tr>
+      {% else %}
+      <tr><td colspan="7" class="vacio">Sin ausencias en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="seccion">Pacientes con ausencias reiteradas</div>
+  <table class="detalle">
+    <thead><tr><th style="width:38%;">Paciente</th><th style="width:18%;">Cédula</th><th style="width:12%;">Citas</th><th style="width:14%;">Ausencias</th><th style="width:18%;">Última ausencia</th></tr></thead>
+    <tbody>
+      {% for r in reiteradas %}
+      <tr><td>{{ r.paciente_nombre }}</td><td>{{ r.paciente_cedula or '—' }}</td><td class="centro">{{ r.citas }}</td><td class="centro">{{ r.ausencias }}</td><td>{{ fecha(r.ultima_ausencia) }}</td></tr>
+      {% else %}
+      <tr><td colspan="5" class="vacio">Ningún paciente con ausencias reiteradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="seccion">Citas canceladas</div>
+  <table class="detalle">
+    <thead><tr><th style="width:10%;">Fecha</th><th style="width:7%;">Hora</th><th style="width:21%;">Paciente</th><th style="width:20%;">Especialista</th><th style="width:28%;">Motivo de cancelación</th><th style="width:14%;">Cancelada por</th></tr></thead>
+    <tbody>
+      {% for c in canceladas %}
+      <tr><td>{{ fecha(c.fecha) }}</td><td class="centro">{{ c.hora }}</td><td>{{ c.paciente_nombre }}</td><td>{{ c.especialista_nombre }}</td><td>{{ c.motivo_cancelacion or '—' }}</td><td>{{ c.cancelada_por or '—' }}</td></tr>
+      {% else %}
+      <tr><td colspan="6" class="vacio">Sin cancelaciones en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="seccion">Detalle de citas{% if detalle|length >= limite_detalle %} (primeras {{ n(limite_detalle) }} filas del período){% endif %}</div>
+  <table class="detalle">
+    <thead><tr><th style="width:11%;">Fecha</th><th style="width:7%;">Hora</th><th style="width:25%;">Paciente</th><th style="width:22%;">Especialista</th><th style="width:20%;">Especialidad</th><th style="width:15%;">Estado</th></tr></thead>
+    <tbody>
+      {% for c in detalle %}
+      <tr><td>{{ fecha(c.fecha) }}</td><td class="centro">{{ c.hora }}</td><td>{{ c.paciente_nombre }}</td><td>{{ c.especialista_nombre }}</td><td>{{ c.des_especialidad or '—' }}</td><td>{{ c.des_estado_cita }}</td></tr>
+      {% else %}
+      <tr><td colspan="6" class="vacio">Sin citas en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="nota">Atendida = cita en estado COMPLETADA. Asistencia = atendidas ÷ agendadas. Pacientes nuevos = primera cita en el período.</div>
+{% endblock %}

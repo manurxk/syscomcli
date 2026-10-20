@@ -36,10 +36,6 @@ SECCIONES_MANUAL = {
         'template': 'ayuda-secciones/lista_espera.html',
         'endpoints': ('lista_espera.listaEsperaIndex',),
     },
-    'reporte.reporteAgendamiento': {
-        'template': 'ayuda-secciones/reporte_agendamiento.html',
-        'endpoints': ('reporte.reporteAgendamiento',),
-    },
     'mi_agenda.miAgendaIndex': {
         'template': 'ayuda-secciones/mi_agenda.html',
         'endpoints': ('mi_agenda.miAgendaIndex',),
@@ -55,10 +51,6 @@ SECCIONES_MANUAL = {
     'ficha.fichaIndex': {
         'template': 'ayuda-secciones/fichas_medicas.html',
         'endpoints': ('ficha.fichaIndex', 'ficha.fichaPaciente'),
-    },
-    'reporte.reporteConsultorio': {
-        'template': 'ayuda-secciones/reporte_consultorio.html',
-        'endpoints': ('reporte.reporteConsultorio',),
     },
     'timbrado.timbradoIndex': {
         'template': 'ayuda-secciones/timbrados.html',
@@ -120,9 +112,43 @@ SECCIONES_MANUAL = {
         'template': 'ayuda-secciones/libro_ventas.html',
         'endpoints': ('libro_ventas.libroVentasIndex',),
     },
-    'reporte.reporteVentas': {
-        'template': 'ayuda-secciones/reporte_ventas.html',
-        'endpoints': ('reporte.reporteVentas',),
+    'reporte.reporteIndex': {
+        'template': 'ayuda-secciones/reportes.html',
+        'endpoints': ('reporte.reporteIndex',),
+    },
+    'usuario.usuarioIndex': {
+        'template': 'ayuda-secciones/usuarios.html',
+        'endpoints': ('usuario.usuarioIndex', 'usuario.usuarioAgregar', 'usuario.usuarioDetalle'),
+    },
+    # Cada catálogo abre la misma sección: todos funcionan igual (Agregar / Editar / Activo)
+    'referenciales.referencialesIndex': {
+        'template': 'ayuda-secciones/referenciales.html',
+        'endpoints': ('referenciales.referencialesIndex',
+                      'cargo.cargoIndex', 'especialidad.especialidadIndex', 'empresa.empresaIndex',
+                      'sede.sedeIndex', 'consultorio.consultorioIndex', 'signo.signoIndex',
+                      'sintoma.sintomaIndex', 'diagnostico.diagnosticoIndex', 'medicamento.medicamentoIndex',
+                      'tipo_analisis.tipoAnalisisIndex', 'tipo_estudio.tipoEstudioIndex',
+                      'tipo_procedimiento.tipoProcedimientoIndex', 'tipo_tratamiento.tipoTratamientoIndex',
+                      'tipo_certificado_medico.tipoCertificadoMedicoIndex', 'instrumento.instrumentoIndex',
+                      'insumo.insumoIndex', 'item_servicio.itemServicioIndex', 'moneda.monedaIndex',
+                      'forma_cobro.formaCobroIndex', 'condicion_venta.condicionVentaIndex',
+                      'tipo_comprobante.tipoComprobanteIndex', 'tipo_impuesto.tipoImpuestoIndex',
+                      'tipo_item.tipoItemIndex', 'marca_tarjeta.marcaTarjetaIndex',
+                      'entidad_adherida.entidadAdheridaIndex', 'entidad_emisora.entidadEmisoraIndex',
+                      'estado_factura.estadoFacturaIndex', 'caja.cajaIndex', 'deposito.depositoIndex'),
+    },
+    'permisos.permisosIndex': {
+        'template': 'ayuda-secciones/permisos.html',
+        'endpoints': ('permisos.permisosIndex',),
+    },
+    'menu.menuIndex': {
+        'template': 'ayuda-secciones/menu.html',
+        'endpoints': ('menu.menuIndex',),
+    },
+    # Accesos pasó a ser la pestaña "Sesiones y usuarios" de Auditoría (PDF 9 + 6, paso 5): su ayuda está ahí
+    'auditoria.auditoriaIndex': {
+        'template': 'ayuda-secciones/auditoria.html',
+        'endpoints': ('auditoria.auditoriaIndex', 'acceso.accesoIndex'),
     },
 }
 

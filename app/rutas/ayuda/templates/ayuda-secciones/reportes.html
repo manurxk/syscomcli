@@ -1,0 +1,33 @@
+<h3>Reportes</h3>
+<p>Una sola pantalla con los reportes de la clínica. Arriba hay pestañas; <strong>cada persona ve solo las que le corresponden según su rol</strong>, y dentro de cada pestaña solo los datos que puede consultar.</p>
+
+<h4>¿Qué pestañas veo?</h4>
+<table class="datos">
+    <tr><th>Rol</th><th>Pestañas</th><th>Qué datos ve</th></tr>
+    <tr><td><strong>Administrador</strong></td><td>Resumen, Agendamiento, Consultorio y Ventas</td><td>Toda la clínica; puede filtrar por especialista</td></tr>
+    <tr><td><strong>Superadministrador</strong></td><td>Resumen, Agendamiento y Ventas</td><td>Toda la clínica, sin los datos clínicos de Consultorio</td></tr>
+    <tr><td><strong>Recepción</strong></td><td>Agendamiento</td><td>Las citas de todos los especialistas; puede filtrar por especialista</td></tr>
+    <tr><td><strong>Ventas</strong></td><td>Ventas</td><td>Facturación y cobranzas</td></tr>
+    <tr><td><strong>Clínico</strong></td><td>Agendamiento y Consultorio</td><td><strong>Solo lo suyo</strong>: sus citas, sus consultas, sus pacientes y sus derivaciones</td></tr>
+</table>
+
+<h4>¿Cómo veo otras fechas o un especialista?</h4>
+{{ figura('reportes/01_filtros.jpg', 'Reportes: ① fechas ② Aplicar ③ Exportar PDF') }}
+<ol>
+    <li>Elija <strong>Desde</strong> y <strong>Hasta</strong>. Al abrir se muestra el mes actual, desde el día 1 hasta hoy.</li>
+    <li>Si tiene el filtro <strong>Especialista</strong>, elija uno o deje <em>Todos</em>. En Ventas se puede elegir la <strong>Condición</strong> (contado o crédito).</li>
+    <li>Presione <span class="btn-ref">Aplicar</span>.</li>
+</ol>
+
+<h4>¿Qué muestra cada pestaña?</h4>
+<ul>
+    <li><strong>Resumen:</strong> total facturado, saldo por cobrar, citas del período, tasa de asistencia y, para el Administrador, la actividad clínica.</li>
+    <li><strong>Agendamiento:</strong> citas agendadas, atendidas, canceladas y ausentes; evolución diaria; pacientes ausentes con sus ausencias anteriores (para llamarlos); pacientes con ausencias reiteradas; y citas canceladas con el motivo y quién las canceló. <em>Atendida</em> es la cita completada.</li>
+    <li><strong>Consultorio:</strong> consultas realizadas, pacientes distintos y nuevos, promedio diario, diagnósticos más frecuentes, consultas por especialidad y derivaciones hechas y recibidas. No muestra nombres de pacientes ni el contenido de las historias clínicas.</li>
+    <li><strong>Ventas:</strong> comprobantes, gravado, IVA y total por moneda (las monedas no se suman entre sí y las notas de crédito restan), ventas por día, contado y crédito, y el detalle de cada comprobante. El registro contable completo está en el <strong>Libro de Ventas</strong>.</li>
+</ul>
+<p>Las tablas largas muestran de a 10 filas: use las páginas de abajo o el buscador de arriba a la derecha de cada tabla.</p>
+
+<h4>¿Cómo lo descargo o imprimo?</h4>
+<p>Presione <span class="btn-ref">Exportar PDF</span>. El PDF sale con las mismas fechas, el mismo especialista y la misma condición que tiene elegidos en pantalla, con todas las filas. El Resumen no tiene PDF: se exporta cada pestaña con detalle.</p>
+<p>Cada visita a Reportes y cada exportación a PDF quedan registradas en la Auditoría; la exportación guarda también el reporte y los filtros usados.</p>

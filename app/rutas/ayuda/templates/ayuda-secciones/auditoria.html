@@ -1,0 +1,55 @@
+<h3>Auditoría</h3>
+<p>Muestra el registro de lo que pasa en el sistema: qué datos se crearon, modificaron, anularon o borraron (con cómo estaban antes y cómo quedaron), quién entró, los intentos de ingreso y las sesiones abiertas. Los registros son solo de consulta: nadie puede modificarlos ni borrarlos, tampoco desde esta pantalla.</p>
+
+<h4>¿Qué veo según mi rol?</h4>
+<table class="datos">
+    <tr><th>Rol</th><th>Qué ve</th></tr>
+    <tr><td>Administrador</td><td>Las 4 pestañas y los cambios de todos los módulos</td></tr>
+    <tr><td>Superadministrador</td><td>Las 4 pestañas, sin los cambios del módulo clínico</td></tr>
+    <tr><td>Recepción</td><td>Solo <strong>Cambios en datos</strong>: los de agendamiento (citas, pacientes, lista de espera, horarios)</td></tr>
+    <tr><td>Clínico</td><td>Solo <strong>Cambios en datos</strong>: los cambios clínicos que hizo usted</td></tr>
+    <tr><td>Ventas</td><td>Solo <strong>Cambios en datos</strong>, en cantidades: cuántas altas, modificaciones y anulaciones hubo en ventas, sin el detalle de cada registro</td></tr>
+</table>
+
+<h4>¿Cómo veo qué se cambió en un dato?</h4>
+{{ figura('auditoria/01_cambios.jpg', 'Cambios en datos: ① fechas, ② módulo, ③ Filtrar, ④ Ver') }}
+<ol>
+    <li>En la pestaña <strong>Cambios en datos</strong>, ponga el rango de fechas en <strong>Desde</strong> y <strong>Hasta</strong>.</li>
+    <li>Si busca algo puntual, elija el <strong>Módulo</strong>, la <strong>Tabla</strong> (por ejemplo, facturas o citas) o la <strong>Operación</strong> (alta, modificación o baja). Si conoce el número del registro, escríbalo en <strong>ID registro</strong>.</li>
+    <li>Presione <span class="btn-ref">Filtrar</span>. Para volver a ver todo, presione <span class="btn-ref">Limpiar</span>.</li>
+    <li>Presione <span class="btn-ref">Ver</span> en la fila del cambio.</li>
+</ol>
+<p>Arriba se ven las cantidades del período (altas, modificaciones, bajas y anulaciones) y la tabla <strong>Cambios por tabla</strong>. Las anulaciones aparecen marcadas en rojo en el listado.</p>
+{{ figura('auditoria/02_detalle_cambio.jpg', 'Detalle de un cambio: ① mostrar todos los campos') }}
+<p>La ventana del cambio muestra la fecha, el usuario, su rol y la IP, y una tabla con cada campo <strong>antes</strong> y <strong>después</strong>. En una modificación se ven solo los campos que cambiaron, resaltados; active <strong>Mostrar todos los campos</strong> para ver el registro completo. Las contraseñas y claves secretas aparecen como <code>***</code>.</p>
+
+<h4>¿Cómo busco un evento del sistema?</h4>
+{{ figura('auditoria/03_eventos.jpg', 'Eventos del sistema: ① Acción, ② Filtrar') }}
+<p>En la pestaña <strong>Eventos del sistema</strong> están los ingresos y salidas del sistema, los bloqueos de cuentas, los cambios de contraseña, los reportes consultados y las alertas enviadas. Filtre por fechas, <strong>Acción</strong> o <strong>ID usuario</strong> y presione <span class="btn-ref">Filtrar</span>.</p>
+
+<h4>¿Cómo detecto intentos de entrar sin permiso?</h4>
+{{ figura('auditoria/04_accesos.jpg', 'Accesos y seguridad: ① Solo fallidos') }}
+<p>La pestaña <strong>Accesos y seguridad</strong> tiene tres listas:</p>
+<ul>
+    <li><strong>IPs con intentos fallidos en varias cuentas</strong>: una misma IP que falló la contraseña en varios usuarios distintos. Puede ser alguien probando contraseñas (fuerza bruta).</li>
+    <li><strong>Intentos de acceso (login)</strong>: cada intento de ingreso con el usuario que se escribió, si salió bien o mal, la IP y el navegador. Marque <strong>Solo fallidos</strong> o escriba una <strong>IP</strong> para acotar.</li>
+    <li><strong>Solicitudes de recuperación de contraseña</strong>: quién pidió recuperar la contraseña, a qué correo se envió, desde qué IP y si se usó el enlace.</li>
+</ul>
+<p class="importante">Si ve muchos fallos desde una misma IP en varias cuentas, avise al responsable técnico y revise en <strong>Sesiones y usuarios</strong> si alguna de esas cuentas quedó bloqueada.</p>
+
+<h4>¿Cómo desbloqueo a un usuario, quito su MFA o cierro una sesión?</h4>
+{{ figura('auditoria/05_sesiones.jpg', 'Sesiones y usuarios: ① cantidad de sesiones activas (abre la lista de sesiones)') }}
+<p>La pestaña <strong>Sesiones y usuarios</strong> muestra, por usuario, si usa verificación en dos pasos (MFA), si está bloqueado, cuántas sesiones tiene abiertas y su último ingreso.</p>
+<ul>
+    <li><strong>Desbloquear:</strong> presione <span class="btn-ref">Desbloquear</span> en su fila (aparece solo si está bloqueado) y confirme con <span class="btn-ref">Sí, desbloquear</span>.</li>
+    <li><strong>Quitar la verificación en dos pasos:</strong> presione <span class="btn-ref">Revocar MFA</span> y confirme con <span class="btn-ref">Sí, revocar</span>. Para volver a usarla, el usuario tiene que vincularla de nuevo.</li>
+    <li><strong>Cerrar una sesión:</strong> presione el número de sesiones activas, luego <span class="btn-ref">Cerrar</span> en la sesión y confirme con <span class="btn-ref">Sí, cerrar</span>.</li>
+</ul>
+<p class="importante">Si un usuario dejó la sesión abierta en un equipo compartido, ciérrela desde acá: así nadie más puede seguir usándola.</p>
+
+<h4>¿Qué son las alertas y el informe semanal?</h4>
+<ul>
+    <li><strong>Alertas por correo:</strong> el sistema avisa a los administradores, en pocos minutos, cuando se anula una factura, una nota de crédito o de débito o una cobranza, y cuando alguien modifica datos fuera del horario de atención de la clínica (el que está cargado en <strong>Referenciales → Empresa</strong>).</li>
+    <li><strong>Informe semanal:</strong> cada lunes a la mañana llega por correo un PDF con el resumen de la semana anterior. El Administrador y el Superadministrador también pueden descargarlo cuando quieran con el botón <span class="btn-ref">Informe semanal (PDF)</span>, arriba a la derecha.</li>
+</ul>
+<p>Para recibir las alertas, el administrador tiene que tener su correo cargado en su usuario.</p>

@@ -1,4 +1,5 @@
 from app.core.base_dao import BaseDAO
+from app.dao.agendamiento.agenda_horarios.AgendaHorariosDao import AgendaHorariosDao
 
 
 class CitaDao(BaseDAO):
@@ -144,11 +145,14 @@ class CitaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getSlotsDisponibles(self, id_especialista=None, id_especialidad=None, desde=None, hasta=None):
-        sql = """
+        # Solo turnos de agendas activas (una agenda desactivada no ofrece turnos) y marca de sobreturno
+        sql = f"""
             SELECT sa.id_slot_agenda, sa.id_especialista, sa.id_sede, sa.id_consultorio,
                    TO_CHAR(sa.slot_inicio, 'YYYY-MM-DD HH24:MI') AS slot_inicio,
-                   TO_CHAR(sa.slot_fin, 'YYYY-MM-DD HH24:MI') AS slot_fin
+                   TO_CHAR(sa.slot_fin, 'YYYY-MM-DD HH24:MI') AS slot_fin,
+                   {AgendaHorariosDao.SQL_ES_SOBRETURNO} AS es_sobreturno
             FROM slots_agenda sa
+            JOIN agenda_horarios ah ON ah.id_agenda_horario = sa.id_agenda_horario AND ah.est_agenda_horario = TRUE
             WHERE sa.estado_slot = 'DISPONIBLE'
               AND sa.slot_inicio >= (now() AT TIME ZONE 'America/Asuncion') - INTERVAL '10 minutes'
               AND (%(id_especialista)s IS NULL OR sa.id_especialista = %(id_especialista)s)

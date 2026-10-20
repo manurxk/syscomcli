@@ -33,6 +33,9 @@ Agenda Médica
             <button type="button" class="btn btn-sm btn-primary ms-2" id="btnNuevoHorario">
                 <i class="fas fa-plus fa-sm me-1"></i> Nuevo Horario
             </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="btnBloqueos">
+                <i class="fas fa-ban fa-sm me-1"></i> Bloquear días
+            </button>
             {% endif %}
         </div>
 
@@ -56,6 +59,35 @@ Agenda Médica
                     </thead>
                     <tbody id="tbodyAgendaHorarios"></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Bloquear días (ausencias, feriados) -->
+<div class="modal fade" id="modalBloqueos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="fas fa-ban"></i> Bloquear días de un especialista</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-3">Los turnos libres del rango dejan de ofrecerse, en todas las agendas del especialista. Las citas ya reservadas no se modifican: se listan para reprogramarlas o cancelarlas.</div>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3"><label class="small mb-1" for="blqDesde">Desde</label><input type="datetime-local" class="form-control" id="blqDesde"></div>
+                    <div class="col-md-3"><label class="small mb-1" for="blqHasta">Hasta</label><input type="datetime-local" class="form-control" id="blqHasta"></div>
+                    <div class="col-md-4"><label class="small mb-1" for="blqMotivo">Motivo</label><input type="text" class="form-control" id="blqMotivo" maxlength="200" placeholder="Ej. Congreso, feriado, enfermedad"></div>
+                    <div class="col-md-2"><button type="button" class="btn btn-primary w-100" id="btnAgregarBloqueo">Bloquear</button></div>
+                </div>
+                <div class="small text-muted mt-1">Para un día completo: 00:00 a 23:59.</div>
+                <h6 class="fw-bold mt-4 mb-2">Bloqueos vigentes</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-0">
+                        <thead class="table-light"><tr><th>Especialista</th><th>Desde</th><th>Hasta</th><th>Motivo</th><th></th></tr></thead>
+                        <tbody id="tbodyBloqueos"><tr><td colspan="5" class="text-center text-muted">Sin bloqueos</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -164,7 +196,13 @@ Agenda Médica
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="txtSobreturnos" title="Cupo de sobreturnos por día, en % de los turnos de la agenda (0 = no se permiten)">% sobreturnos:</label>
+                                <input type="number" class="form-control" id="txtSobreturnos" min="0" max="100" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="form-check form-switch mt-4">
                                 <input class="form-check-input" type="checkbox" id="chkEstado" name="chkEstado" checked>
                                 <label class="form-check-label" for="chkEstado">Activo</label>
@@ -442,6 +480,9 @@ Agenda Médica
                         ${SOLO_AGENDA_PROPIA ? '' : `<button type="button" class="btn btn-outline-primary btn-sm" onclick="editarHorario(${row.id_agenda_horario})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
+                        ${row.est_agenda_horario && row.porcentaje_overbooking > 0 ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="nuevoSobreturno(${row.id_agenda_horario})" title="Crear sobreturno">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>` : ''}
                         <button type="button" class="btn btn-outline-${row.est_agenda_horario ? 'warning' : 'success'} btn-sm"
                                 onclick="toggleEstado(${row.id_agenda_horario}, ${!row.est_agenda_horario})"
                                 title="${row.est_agenda_horario ? 'Desactivar' : 'Activar'}">
@@ -508,7 +549,7 @@ Agenda Médica
                             <tr>
                                 <td>${slot.slot_inicio}</td>
                                 <td>${slot.slot_fin}</td>
-                                <td>${slot.estado_slot}</td>
+                                <td>${slot.estado_slot}${slot.es_sobreturno ? ' <span class="badge bg-danger">sobreturno</span>' : ''}</td>
                             </tr>
                         `);
                     });
@@ -530,6 +571,7 @@ Agenda Médica
         $('#divErrorMensaje').hide();
         $('#alertaCupos').hide();
         $('#chkEstado').prop('checked', true);
+        $('#txtSobreturnos').val(0);
         $('#chkVigenciaIndefinida').prop('checked', false);
         $('#txtFechaHasta').prop('disabled', false);
         $('#selectConsultorioModal').empty().append('<option value="">-- Seleccione una sede primero --</option>');
@@ -564,6 +606,7 @@ Agenda Médica
         $('#txtHoraFin').val(fila.hora_fin);
         $('#selectDuracionTurno').val(fila.duracion_turno_min);
         $('#selectModalidad').val(fila.modalidad_default);
+        $('#txtSobreturnos').val(fila.porcentaje_overbooking || 0);
         $('#chkEstado').prop('checked', fila.est_agenda_horario);
 
         $('#txtFechaDesde').val(fila.fec_desde);
@@ -613,6 +656,7 @@ Agenda Médica
             hora_fin: horaFin,
             duracion_turno_min: parseInt($('#selectDuracionTurno').val()) || null,
             modalidad_default: $('#selectModalidad').val(),
+            porcentaje_overbooking: parseInt($('#txtSobreturnos').val()) || 0,
             fec_desde: $('#txtFechaDesde').val(),
             fec_hasta: $('#chkVigenciaIndefinida').is(':checked') ? null : $('#txtFechaHasta').val(),
             est_agenda_horario: $('#chkEstado').is(':checked')
@@ -631,9 +675,9 @@ Agenda Médica
             headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
             success: (response) => {
                 if (response.success) {
-                    Swal.fire({ title: '¡Éxito!', text: 'Horario guardado correctamente', icon: 'success', timer: 2000, showConfirmButton: false });
                     bootstrap.Modal.getInstance(document.getElementById('modalAgendaHorario')).hide();
                     cargarAgendaHorarios(especialistaSeleccionado);
+                    avisarResultado('Horario guardado correctamente', response);
                 } else {
                     mostrarError(response.error || 'Error al guardar el horario');
                 }
@@ -664,13 +708,104 @@ Agenda Médica
                 headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
                 success: (response) => {
                     if (response.success) {
-                        Swal.fire({ title: '¡Éxito!', text: response.mensaje, icon: 'success', timer: 2000, showConfirmButton: false });
                         cargarAgendaHorarios(especialistaSeleccionado);
+                        avisarResultado(response.mensaje, response, 'Estas citas siguen reservadas en la agenda desactivada: reprográmelas o cancélelas desde Citas.');
                     } else {
                         Swal.fire('Error', response.error || 'Error al cambiar el estado', 'error');
                     }
                 },
                 error: (xhr) => Swal.fire('Error', xhr.responseJSON?.error || 'Error al cambiar el estado', 'error')
+            });
+        });
+    };
+
+    // ==========================================
+    // AVISOS: citas afectadas y horario de la clínica
+    // ==========================================
+    const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const listaCitas = (citas) => `<ul class="text-start small mb-0">${citas.map(c =>
+        `<li><b>${esc(c.cita_inicio)}</b> · ${esc(c.paciente)} · ${esc(c.des_estado_cita)}</li>`).join('')}</ul>`;
+
+    // Muestra el resultado de guardar/desactivar/bloquear: éxito simple, o con la lista de citas que hay que
+    // reprogramar y/o la advertencia de horario de la clínica (no bloquea, solo avisa)
+    const avisarResultado = (titulo, response, textoCitas) => {
+        const citas = response.citas_afectadas || [];
+        const partes = [];
+        if (citas.length) {
+            partes.push(`<p class="mb-1">${esc(textoCitas || 'Estas citas reservadas quedaron fuera del horario nuevo: reprográmelas o cancélelas desde Citas.')}</p>${listaCitas(citas)}`);
+        }
+        if (response.advertencia) partes.push(`<p class="mt-2 mb-0 text-warning-emphasis small"><i class="fas fa-exclamation-triangle"></i> ${esc(response.advertencia)}</p>`);
+        if (!partes.length) {
+            Swal.fire({ title: '¡Éxito!', text: titulo, icon: 'success', timer: 2000, showConfirmButton: false });
+            return;
+        }
+        Swal.fire({ title: titulo, html: partes.join(''), icon: citas.length ? 'warning' : 'info', width: 640 });
+    };
+
+    // ==========================================
+    // SOBRETURNO
+    // ==========================================
+    const nuevoSobreturno = (idAgendaHorario) => {
+        Swal.fire({
+            title: 'Crear sobreturno',
+            html: '<p class="small text-muted text-start">Un turno extra fuera de la grilla de esta agenda, para un caso urgente. Después se reserva como cualquier turno, desde Citas.</p>' +
+                  '<input type="datetime-local" id="swSobreturno" class="swal2-input">',
+            showCancelButton: true, confirmButtonText: 'Crear', cancelButtonText: 'Cancelar',
+            preConfirm: () => document.getElementById('swSobreturno').value || Swal.showValidationMessage('Indique la fecha y la hora')
+        }).then((r) => {
+            if (!r.isConfirmed) return;
+            $.ajax({
+                url: `/api/v1/agenda-horarios/${idAgendaHorario}/sobreturnos`, type: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ inicio: r.value }), headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
+                success: () => { cargarAgendaHorarios(especialistaSeleccionado); Swal.fire('Listo', 'Sobreturno creado. Ya se puede reservar desde Citas.', 'success'); },
+                error: (xhr) => Swal.fire('No se pudo crear', xhr.responseJSON?.error || 'Error al crear el sobreturno', 'warning')
+            });
+        });
+    };
+
+    // ==========================================
+    // BLOQUEOS (ausencias, feriados)
+    // ==========================================
+    const cargarBloqueos = () => {
+        $.get('/api/v1/agenda-horarios/bloqueos', (response) => {
+            const tbody = $('#tbodyBloqueos').empty();
+            const filas = response.success ? response.data : [];
+            if (!filas.length) { tbody.html('<tr><td colspan="5" class="text-center text-muted">Sin bloqueos</td></tr>'); return; }
+            filas.forEach(b => tbody.append(`<tr><td>${esc(b.especialista)}</td><td>${esc(b.desde)}</td><td>${esc(b.hasta)}</td><td>${esc(b.motivo)}</td>
+                <td class="text-end"><button type="button" class="btn btn-sm btn-outline-success btn-levantar" data-id="${esc(b.id_bloqueo)}">Levantar</button></td></tr>`));
+        });
+    };
+
+    const abrirBloqueos = () => {
+        $('#blqDesde, #blqHasta, #blqMotivo').val('');
+        cargarBloqueos();
+        new bootstrap.Modal(document.getElementById('modalBloqueos')).show();
+    };
+
+    const agregarBloqueo = () => {
+        if (!especialistaSeleccionado) { Swal.fire('Atención', 'Seleccione un especialista primero', 'warning'); return; }
+        $.ajax({
+            url: '/api/v1/agenda-horarios/bloqueos', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ id_especialista: especialistaSeleccionado, desde: $('#blqDesde').val(), hasta: $('#blqHasta').val(), motivo: $('#blqMotivo').val() }),
+            headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
+            success: (response) => {
+                $('#blqDesde, #blqHasta, #blqMotivo').val('');
+                cargarBloqueos();
+                cargarAgendaHorarios(especialistaSeleccionado);
+                avisarResultado('Bloqueo creado', response, 'Estas citas reservadas caen en el rango bloqueado: reprográmelas o cancélelas desde Citas.');
+            },
+            error: (xhr) => Swal.fire('No se pudo bloquear', xhr.responseJSON?.error || 'Error al crear el bloqueo', 'warning')
+        });
+    };
+
+    const levantarBloqueo = (idBloqueo) => {
+        Swal.fire({ title: '¿Levantar el bloqueo?', text: 'Los turnos del rango vuelven a estar disponibles.', icon: 'question',
+                    showCancelButton: true, confirmButtonText: 'Sí, levantar', cancelButtonText: 'Cancelar' }).then((r) => {
+            if (!r.isConfirmed) return;
+            $.ajax({
+                url: `/api/v1/agenda-horarios/bloqueos/${idBloqueo}`, type: 'DELETE', headers: CSRFToken ? { 'X-CSRFToken': CSRFToken } : {},
+                success: (response) => { cargarBloqueos(); cargarAgendaHorarios(especialistaSeleccionado); Swal.fire('Listo', response.mensaje, 'success'); },
+                error: (xhr) => Swal.fire('Error', xhr.responseJSON?.error || 'No se pudo levantar el bloqueo', 'error')
             });
         });
     };
@@ -698,6 +833,9 @@ Agenda Médica
         });
 
         $('#btnNuevoHorario').on('click', nuevoHorario);
+        $('#btnBloqueos').on('click', abrirBloqueos);
+        $('#btnAgregarBloqueo').on('click', agregarBloqueo);
+        $(document).on('click', '.btn-levantar', function () { levantarBloqueo($(this).data('id')); });
         $('#btnGuardarHorario').on('click', guardarHorario);
 
         $('#txtHoraInicio, #txtHoraFin, #selectDuracionTurno').on('change', calcularYMostrarCupos);

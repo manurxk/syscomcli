@@ -345,7 +345,7 @@ class AuthService:
         el login de un usuario con MFA se salta el paso del código. Se emite tras
         validar el código MFA con éxito (ver login.py, verificar_mfa)."""
         token = secrets.token_urlsafe(32)
-        fecha_expiracion = datetime.utcnow() + timedelta(days=AuthService.DISPOSITIVO_CONFIABLE_DIAS)
+        fecha_expiracion = datetime.now() + timedelta(days=AuthService.DISPOSITIVO_CONFIABLE_DIAS)
         _dao.execute_query(
             """
             INSERT INTO mfa_dispositivos_confiables (id_usuario, token, fecha_expiracion, ip_creacion, user_agent)
@@ -603,7 +603,7 @@ class AuthService:
             csrf_token = generate_csrf()
 
         # Fecha de expiración (60 minutos por defecto, en UTC para coincidir con CURRENT_TIMESTAMP de PostgreSQL)
-        fecha_expiracion = datetime.utcnow() + timedelta(minutes=60)
+        fecha_expiracion = datetime.now() + timedelta(minutes=60)
 
         # Crear sesión en BD
         sesion_id = AuthService.crear_sesion(
@@ -687,7 +687,7 @@ class AuthService:
 
         ttl_minutos = int(app.config.get('MFA_CODE_TTL_MINUTES', 5))
         codigo = f"{secrets.randbelow(1_000_000):06d}"
-        fecha_expiracion = datetime.utcnow() + timedelta(minutes=ttl_minutos)
+        fecha_expiracion = datetime.now() + timedelta(minutes=ttl_minutos)
 
         exito, error, _tipo_error = EmailService().enviar_codigo_mfa(correo, codigo, ttl_minutos)
         if not exito:
@@ -720,7 +720,7 @@ class AuthService:
         if fila['intentos_validacion'] >= MFA_MAX_INTENTOS_VALIDACION:
             return False, "Demasiados intentos fallidos. Solicite un nuevo código."
 
-        if datetime.utcnow() > fila['fecha_expiracion']:
+        if datetime.now() > fila['fecha_expiracion']:
             return False, "El código expiró. Solicite uno nuevo."
 
         if fila['codigo'] != (codigo or '').strip():

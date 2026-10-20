@@ -1,5 +1,5 @@
 -- 10_ordenes_recetas_certificados.sql — Órdenes, recetas y certificados
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -387,10 +387,28 @@ CREATE INDEX idx_recetas_paciente ON public.recetas USING btree (id_paciente);
 CREATE TRIGGER trg_certificados_fecha_mod BEFORE UPDATE ON public.certificados_medicos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: certificados_medicos trg_certificados_medicos_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_certificados_medicos_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.certificados_medicos FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_certificado');
+
+--
+-- Name: orden_detalle trg_orden_detalle_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_orden_detalle_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.orden_detalle FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_orden_detalle');
+
+--
 -- Name: orden_detalle trg_orden_detalle_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_orden_detalle_fecha_mod BEFORE UPDATE ON public.orden_detalle FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: ordenes trg_ordenes_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_ordenes_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.ordenes FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_orden');
 
 --
 -- Name: ordenes trg_ordenes_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
@@ -399,10 +417,22 @@ CREATE TRIGGER trg_orden_detalle_fecha_mod BEFORE UPDATE ON public.orden_detalle
 CREATE TRIGGER trg_ordenes_fecha_mod BEFORE UPDATE ON public.ordenes FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: receta_detalle trg_receta_detalle_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_receta_detalle_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.receta_detalle FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_receta_detalle');
+
+--
 -- Name: receta_detalle trg_receta_detalle_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_receta_detalle_fecha_mod BEFORE UPDATE ON public.receta_detalle FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: recetas trg_recetas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_recetas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.recetas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_receta');
 
 --
 -- Name: recetas trg_recetas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

@@ -1,62 +1,42 @@
 from flask import Blueprint, render_template, session, request
 from datetime import date
 from app.auth.utils.decorators import role_required
-from app.dao.reporte.ReporteDao import ReporteDao
+from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
+from app.utils.reportes_alcance import (PESTANAS, ROLES_PANTALLA_REPORTES, alcance_de_sesion,
+                                        pestanas_permitidas)
 
 reportemod = Blueprint('reporte', __name__, template_folder='templates')
 
-# Roles autorizados por reporte (ver docs_reestructuracion/sql_nueva_bd/seeds/04_seed_roles.sql)
-ROLES_DASHBOARD = ('ADMINISTRADOR', 'SUPERADMIN')
-ROLES_VENTAS = ('ADMINISTRADOR', 'SUPERADMIN', 'VENTAS')
-ROLES_AGENDAMIENTO = ('ADMINISTRADOR', 'SUPERADMIN', 'RECEPCION')
-ROLES_CONSULTORIO = ('ADMINISTRADOR', 'SUPERADMIN', 'CLINICO')
 
 @reportemod.route('/index')
-@role_required(*ROLES_DASHBOARD)
+@role_required(*ROLES_PANTALLA_REPORTES)
 def reporteIndex():
-    """Ruta index del módulo de reportes."""
-    reporte_dao = ReporteDao()
-    metricas = reporte_dao.getMetricasDashboard()
+    """Pantalla única de Reportes (PDF 4, paso 4). Las pestañas, el filtro de especialista y el alcance
+    (todos los especialistas o solo lo propio) los fija el servidor según los roles de la sesión;
+    la API vuelve a aplicarlos en cada consulta."""
+    roles = session.get('roles', [])
+    permitidas = pestanas_permitidas(roles)
+    pestana = request.args.get('tab') if request.args.get('tab') in permitidas else permitidas[0]
+    alcances = {p: alcance_de_sesion(p) for p in permitidas}
 
-    # Registro de auditoría
+    especialistas = []
+    if any(a['puede_filtrar'] for a in alcances.values()):
+        especialistas = FuncionarioDao().getEspecialistasActivos()
+
+    hoy = date.today()
     AuditoriaDao().registrar_evento(
         id_usuario=session.get('id_usuario'),
         accion=AuditAccion.REPORT_VIEW,
-        detalle='Visita al dashboard central de reportes',
+        detalle=f'Visita a Reportes ({pestana})',
         ip_origen=request.remote_addr
     )
 
-    return render_template('reportes-index.html', metricas=metricas)
-
-@reportemod.route('/ventas')
-@role_required(*ROLES_VENTAS)
-def reporteVentas():
-    """Ruta de vista del reporte de ventas."""
-    hoy = date.today()
-    primer_dia = hoy.replace(day=1).strftime('%Y-%m-%d')
-
-    return render_template('reporte-ventas.html',
-                         fecha_desde=primer_dia,
-                         fecha_hasta=hoy.strftime('%Y-%m-%d'))
-
-@reportemod.route('/agendamiento')
-@role_required(*ROLES_AGENDAMIENTO)
-def reporteAgendamiento():
-    """Vista de reporte de Agendamiento."""
-    hoy = date.today()
-    primer_dia = hoy.replace(day=1).strftime('%Y-%m-%d')
-    return render_template('reporte-agendamiento.html',
-                           fecha_desde=primer_dia,
-                           fecha_hasta=hoy.strftime('%Y-%m-%d'))
-
-@reportemod.route('/consultorio')
-@role_required(*ROLES_CONSULTORIO)
-def reporteConsultorio():
-    """Vista de reporte de Consultorio."""
-    hoy = date.today()
-    primer_dia = hoy.replace(day=1).strftime('%Y-%m-%d')
-    return render_template('reporte-consultorio.html',
-                           fecha_desde=primer_dia,
+    return render_template('reportes-index.html',
+                           pestanas=[p for p in PESTANAS if p in permitidas],
+                           pestana=pestana,
+                           alcances=alcances,
+                           especialistas=especialistas,
+                           fecha_desde=hoy.replace(day=1).strftime('%Y-%m-%d'),
                            fecha_hasta=hoy.strftime('%Y-%m-%d'))

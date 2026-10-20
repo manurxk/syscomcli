@@ -1,5 +1,5 @@
 -- 05_sedes_clinica.sql — Empresa, sedes y consultorios
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -95,8 +95,10 @@ CREATE TABLE public.empresa (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
+    horario_atencion_tramos jsonb,
     CONSTRAINT chk_empresa_ambiente_sifen CHECK (((ambiente_sifen)::text = ANY ((ARRAY['PRUEBA'::character varying, 'PRODUCCION'::character varying])::text[]))),
     CONSTRAINT chk_empresa_email CHECK (((email)::text ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'::text)),
+    CONSTRAINT chk_empresa_horario_tramos CHECK (((horario_atencion_tramos IS NULL) OR (jsonb_typeof(horario_atencion_tramos) = 'object'::text))),
     CONSTRAINT chk_empresa_ruc_len CHECK (((length((ruc_nit)::text) >= 6) AND (length((ruc_nit)::text) <= 20))),
     CONSTRAINT chk_empresa_tipo_contribuyente CHECK (((tipo_contribuyente)::text = ANY ((ARRAY['PERSONA_FISICA'::character varying, 'PERSONA_JURIDICA'::character varying, 'EAS'::character varying])::text[])))
 );
@@ -142,6 +144,12 @@ COMMENT ON COLUMN public.empresa.certificado_firma_digital_fecha_vencimiento IS 
 --
 
 COMMENT ON COLUMN public.empresa.codigo_seguridad_contribuyente IS 'Código de seguridad del contribuyente (CSC) que entrega la SET para SIFEN.';
+
+--
+-- Name: COLUMN empresa.horario_atencion_tramos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.empresa.horario_atencion_tramos IS 'Horario de atencion en tramos por dia: {"<id_dia_semana>": [["HH:MM","HH:MM"], ...]}; dia sin clave = cerrado. Lo usan las alertas de auditoria (fuera de horario). Lo valida EmpresaDao al guardar.';
 
 --
 -- Name: empresa_id_empresa_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -291,6 +299,12 @@ CREATE INDEX idx_sedes_empresa ON public.sedes USING btree (id_empresa);
 --
 
 CREATE TRIGGER trg_consultorios_fecha_mod BEFORE UPDATE ON public.consultorios FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: empresa trg_empresa_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_empresa_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.empresa FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('SEGURIDAD', 'id_empresa');
 
 --
 -- Name: empresa trg_empresa_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

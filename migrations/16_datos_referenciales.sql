@@ -1,5 +1,5 @@
 -- 16_datos_referenciales.sql — Datos referenciales
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -281,11 +281,8 @@ COPY public.paginas (id_pagina, id_modulo, des_pagina, pag_direccion, est_pagina
 27	1	Roles y Permisos	permisos.permisosIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	shield	40	Configuracion
 28	1	Auditoria	auditoria.auditoriaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	eye	50	Configuracion
 29	1	Menu	menu.menuIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	list	60	Configuracion
-30	1	Accesos	acceso.accesoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	key	70	Configuracion
-31	5	Dashboard de Reportes	reporte.reporteIndex	t	2026-08-12 16:37:36.952627	\N	\N	\N	bar-chart-2	10	Reportes
-32	5	Reporte de Ventas	reporte.reporteVentas	t	2026-08-12 16:37:36.952627	\N	\N	\N	trending-up	20	Reportes
-33	5	Reporte de Agendamiento	reporte.reporteAgendamiento	t	2026-08-12 16:37:36.952627	\N	\N	\N	calendar	30	Reportes
-34	5	Reporte de Consultorio	reporte.reporteConsultorio	t	2026-08-12 16:37:36.952627	\N	\N	\N	activity	40	Reportes
+30	1	Accesos	acceso.accesoIndex	f	2026-07-22 11:06:11.239235	\N	2026-10-19 09:36:15.167869	\N	key	70	Configuracion
+31	5	Reportes	reporte.reporteIndex	t	2026-08-12 16:37:36.952627	\N	2026-10-19 17:37:07.970538	\N	bar-chart-2	10	Reportes
 \.
 
 COPY public.roles_permisos (id_rol_permiso, id_rol, id_modulo, id_accion, permitido, fecha_creacion, usuario_creacion, fecha_modificacion, usuario_modificacion) FROM stdin;
@@ -459,18 +456,15 @@ COPY public.roles_paginas (id_rol_pagina, id_rol, id_pagina, visible, fecha_crea
 82	2	30	t	2026-07-22 11:06:11.245656	\N	\N	\N
 83	4	24	f	2026-07-22 11:19:40.186591	\N	2026-07-22 11:19:55.940008	\N
 85	1	31	t	2026-08-12 16:37:36.958498	\N	\N	\N
-86	1	32	t	2026-08-12 16:37:36.958498	\N	\N	\N
-87	1	33	t	2026-08-12 16:37:36.958498	\N	\N	\N
-88	1	34	t	2026-08-12 16:37:36.958498	\N	\N	\N
 89	2	31	t	2026-08-12 16:37:36.958498	\N	\N	\N
-90	2	32	t	2026-08-12 16:37:36.958498	\N	\N	\N
-91	2	33	t	2026-08-12 16:37:36.958498	\N	\N	\N
-92	2	34	t	2026-08-12 16:37:36.958498	\N	\N	\N
-93	3	33	t	2026-08-12 16:37:36.958498	\N	\N	\N
-94	4	34	t	2026-08-12 16:37:36.958498	\N	\N	\N
-95	5	32	t	2026-08-12 16:37:36.958498	\N	\N	\N
 96	3	4	t	2026-09-29 13:15:48.500746	\N	\N	\N
 97	4	4	t	2026-10-13 19:23:39.470492	\N	\N	\N
+98	3	28	t	2026-10-19 09:36:15.167869	\N	\N	\N
+99	4	28	t	2026-10-19 09:36:15.167869	\N	\N	\N
+100	5	28	t	2026-10-19 09:36:15.167869	\N	\N	\N
+101	3	31	t	2026-10-19 17:37:07.970538	\N	\N	\N
+102	4	31	t	2026-10-19 17:37:07.970538	\N	\N	\N
+103	5	31	t	2026-10-19 17:37:07.970538	\N	\N	\N
 \.
 
 COPY public.ciudades (id_ciudad, id_departamento, des_ciudad, est_ciudad, fecha_creacion, usuario_creacion, fecha_modificacion, usuario_modificacion) FROM stdin;
@@ -543,7 +537,7 @@ SELECT pg_catalog.setval('public.profesiones_id_profesion_seq', 2, true);
 
 SELECT pg_catalog.setval('public.roles_id_rol_seq', 6, true);
 
-SELECT pg_catalog.setval('public.roles_paginas_id_rol_pagina_seq', 97, true);
+SELECT pg_catalog.setval('public.roles_paginas_id_rol_pagina_seq', 103, true);
 
 SELECT pg_catalog.setval('public.roles_permisos_id_rol_permiso_seq', 90, true);
 

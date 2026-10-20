@@ -1,172 +1,71 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reporte de Ventas PDF</title>
-    <style>
-        /* WeasyPrint y CSS Basico */
-        @page {
-            size: A4 landscape;
-            margin: 1.5cm;
-            @bottom-right {
-                content: "Página " counter(page) " de " counter(pages);
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-                color: #555;
-            }
-            @bottom-left {
-                content: "Generado el {{ range(1, 1000) | random }}"; /* Timestamp fallback */
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-            }
-        }
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        .header {
-            border-bottom: 2px solid #dc3545;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            color: #dc3545;
-            margin: 0;
-            font-size: 24px;
-            text-transform: uppercase;
-        }
-        .header p {
-            margin: 5px 0 0;
-            font-size: 13px;
-            color: #555;
-        }
-        .kpi-section {
-            width: 100%;
-            margin-bottom: 20px;
-            border-collapse: separate;
-            border-spacing: 15px 0;
-        }
-        .kpi-box {
-            background-color: #f8f9fa;
-            border-left: 4px solid #dc3545;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        .kpi-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #777;
-            margin: 0 0 5px;
-        }
-        .kpi-value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #222;
-            margin: 0;
-        }
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin-bottom: 20px;
-        }
-        table.data-table th, table.data-table td {
-            border: 1px solid #ddd;
-            padding: 8px 10px;
-        }
-        table.data-table th {
-            background-color: #f1f5f9;
-            color: #333;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 11px;
-            text-align: left;
-        }
-        .align-right { text-align: right !important; }
-        .align-center { text-align: center !important; }
-        .row-total {
-            background-color: #e2e8f0;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Reporte Detallado de Ventas</h1>
-        <p><strong>Periodo:</strong> {{ fecha_desde }} al {{ fecha_hasta }} &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; <strong>Condición de Venta:</strong> {{ metodo_pago }}</p>
-    </div>
+{% extends 'pdf/base-reporte-pdf.html' %}
+{% block orientacion %} landscape{% endblock %}
+{% block cuerpo %}
+  <div class="seccion">Resumen por moneda{% if condicion != 'Todos' %} · condición: {{ condicion }}{% endif %}</div>
+  <table class="detalle">
+    <thead><tr><th style="width:15%;">Moneda</th><th style="width:11%;">Comprobantes</th><th style="width:13%;">Gravado</th><th style="width:12%;">IVA</th><th style="width:13%;">Notas de crédito</th><th style="width:13%;">Total neto</th><th style="width:11%;">Cobrado</th><th style="width:12%;">Saldo por cobrar</th></tr></thead>
+    <tbody>
+      {% for m in monedas %}
+      <tr><td>{{ m.cod_moneda }} ({{ m.simbolo_moneda }})</td><td class="centro">{{ n(m.comprobantes) }}</td><td class="der">{{ m.gravado }}</td><td class="der">{{ m.iva }}</td><td class="der">{{ m.notas_credito }}</td><td class="der">{{ m.neto }}</td><td class="der">{{ m.cobrado }}</td><td class="der">{{ m.saldo }}</td></tr>
+      {% else %}
+      <tr><td colspan="8" class="vacio">Sin comprobantes en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="nota">Cada moneda se muestra por separado; no se suman entre sí. Las notas de crédito restan del total. «Cobrado» es lo cobrado en el período; «Saldo por cobrar» es el saldo pendiente al generar el reporte.</div>
 
-    <!-- KPIs Rápidos: un grupo de 4 por cada moneda presente en el periodo
-         (nunca se suman montos de monedas distintas) -->
-    {% for t in totales %}
-    <p style="font-size: 9px; font-weight: bold; margin: 4px 0 2px;">{{ t.cod_moneda }}</p>
-    <table class="kpi-section">
-        <tr>
-            <td class="kpi-box" style="border-color: #0d6efd;">
-                <p class="kpi-title">Total Comprobantes</p>
-                <p class="kpi-value">{{ t.cantidad_comprobantes }}</p>
-            </td>
-            <td class="kpi-box" style="border-color: #0dcaf0;">
-                <p class="kpi-title">Monto Gravado ({{ t.simbolo_moneda }})</p>
-                <p class="kpi-value">{{ t.total_gravado_formateado }}</p>
-            </td>
-            <td class="kpi-box" style="border-color: #ffc107;">
-                <p class="kpi-title">Total IVA ({{ t.simbolo_moneda }})</p>
-                <p class="kpi-value">{{ t.total_iva_formateado }}</p>
-            </td>
-            <td class="kpi-box" style="border-color: #198754;">
-                <p class="kpi-title">Venta Total ({{ t.simbolo_moneda }})</p>
-                <p class="kpi-value">{{ t.total_general_formateado }}</p>
-            </td>
-        </tr>
-    </table>
-    {% endfor %}
+  {% for m in monedas %}
+  <div class="seccion">Por condición de venta ({{ m.cod_moneda }})</div>
+  <table class="detalle">
+    <thead><tr><th style="width:40%;">Condición</th><th style="width:20%;">Comprobantes</th><th style="width:22%;">Total</th><th style="width:18%;">% del total</th></tr></thead>
+    <tbody>
+      {% for c in m.condiciones %}
+      <tr><td>{{ c.metodo_pago }}</td><td class="centro">{{ n(c.cantidad) }}</td><td class="der">{{ c.total_fmt }}</td><td class="der">{{ pct(m.total_condiciones and c.total * 100 / m.total_condiciones) }}</td></tr>
+      {% endfor %}
+      <tr class="tot"><td>TOTAL</td><td class="centro">{{ n(m.condiciones|sum(attribute='cantidad')) }}</td><td class="der">{{ m.total_condiciones_fmt }}</td><td class="der">{{ pct(100 if m.total_condiciones else 0) }}</td></tr>
+    </tbody>
+  </table>
+  {% endfor %}
 
-    <!-- Tabla Detalle -->
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th class="align-center" style="width: 10%;">Fecha</th>
-                <th class="align-center" style="width: 12%;">Nro Comprobante</th>
-                <th style="width: 25%;">Cliente</th>
-                <th class="align-center" style="width: 10%;">RUC/CI</th>
-                <th class="align-center" style="width: 10%;">Condición</th>
-                <th class="align-right" style="width: 11%;">Gravado</th>
-                <th class="align-right" style="width: 11%;">IVA</th>
-                <th class="align-right" style="width: 11%;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for fila in datos %}
-            <tr>
-                <td class="align-center">{{ fila.fecha }}</td>
-                <td class="align-center">{{ fila.numero_comprobante }}</td>
-                <td>{{ fila.nombre_cliente }}</td>
-                <td class="align-center">{{ fila.ruc_cliente }}</td>
-                <td class="align-center">{{ fila.metodo_pago }}</td>
-                <td class="align-right">{{ fila.simbolo_moneda }} {{ fila.gravado_formateado }}</td>
-                <td class="align-right">{{ fila.simbolo_moneda }} {{ fila.iva_formateado }}</td>
-                <td class="align-right" style="font-weight: bold;">{{ fila.simbolo_moneda }} {{ fila.total_formateado }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="8" class="align-center">No existen comprobantes generados en este periodo.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            {% for t in totales %}
-            <tr class="row-total">
-                <td colspan="5" class="align-right">TOTALES ACUMULADOS ({{ t.cod_moneda }})</td>
-                <td class="align-right">{{ t.simbolo_moneda }} {{ t.total_gravado_formateado }}</td>
-                <td class="align-right">{{ t.simbolo_moneda }} {{ t.total_iva_formateado }}</td>
-                <td class="align-right">{{ t.simbolo_moneda }} {{ t.total_general_formateado }}</td>
-            </tr>
-            {% endfor %}
-        </tfoot>
-    </table>
+  {% if saldos %}
+  <div class="seccion">Cuentas por cobrar al generar el reporte</div>
+  <table class="detalle">
+    <thead><tr><th style="width:20%;">Moneda</th><th style="width:25%;">Estado</th><th style="width:15%;">Cuentas</th><th style="width:25%;">Monto pendiente</th><th style="width:15%;">Atraso máximo</th></tr></thead>
+    <tbody>
+      {% for s in saldos %}
+      <tr><td rowspan="3">{{ s.cod_moneda }}</td><td>Al día</td><td class="centro">{{ n(s.cuentas - s.vencidas) }}</td><td class="der">{{ s.al_dia_fmt }}</td><td class="centro">—</td></tr>
+      <tr><td>Vencida</td><td class="centro">{{ n(s.vencidas) }}</td><td class="der">{{ s.vencido_fmt }}</td><td class="centro">{{ s.max_dias_atraso }} días</td></tr>
+      <tr class="tot"><td>TOTAL</td><td class="centro">{{ n(s.cuentas) }}</td><td class="der">{{ s.pendiente_fmt }}</td><td></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 
-</body>
-</html>
+  {% for m in monedas %}
+  <div class="seccion">Ventas por día ({{ m.cod_moneda }})</div>
+  <table class="detalle">
+    <thead><tr><th style="width:22%;">Fecha</th><th style="width:16%;">Comprobantes</th><th style="width:22%;">Gravado</th><th style="width:20%;">IVA</th><th style="width:20%;">Total</th></tr></thead>
+    <tbody>
+      {% for d in m.dias %}
+      <tr><td>{{ fecha(d.fecha) }}</td><td class="centro">{{ n(d.cantidad_comprobantes) }}</td><td class="der">{{ d.gravado_fmt }}</td><td class="der">{{ d.iva_fmt }}</td><td class="der">{{ d.total_fmt }}</td></tr>
+      {% endfor %}
+      <tr class="tot"><td>TOTALES</td><td class="centro">{{ n(m.comprobantes) }}</td><td class="der">{{ m.gravado_neto }}</td><td class="der">{{ m.iva_neto }}</td><td class="der">{{ m.neto }}</td></tr>
+    </tbody>
+  </table>
+  {% endfor %}
+
+  <div class="seccion">Detalle de comprobantes</div>
+  <table class="detalle">
+    <thead><tr><th style="width:8%;">Fecha</th><th style="width:13%;">Comprobante</th><th style="width:9%;">Tipo</th><th style="width:20%;">Cliente</th><th style="width:10%;">RUC / CI</th><th style="width:8%;">Condición</th><th style="width:5%;">Mon.</th><th style="width:9%;">Gravado</th><th style="width:8%;">IVA</th><th style="width:10%;">Total</th></tr></thead>
+    <tbody>
+      {% for d in detalle %}
+      {% set signo = '- ' if d.tipo_comprobante == 'NOTA_CREDITO' else '' %}
+      <tr><td>{{ fecha(d.fecha) }}</td><td>{{ d.numero_comprobante }}</td><td>{{ 'Nota de crédito' if d.tipo_comprobante == 'NOTA_CREDITO' else 'Factura' }}</td><td>{{ d.nombre_cliente }}</td><td>{{ d.ruc_cliente }}</td><td>{{ d.metodo_pago }}</td><td class="centro">{{ d.cod_moneda }}</td>
+          <td class="der">{{ signo }}{{ d.gravado_formateado }}</td><td class="der">{{ signo }}{{ d.iva_formateado }}</td><td class="der">{{ signo }}{{ d.total_formateado }}</td></tr>
+      {% else %}
+      <tr><td colspan="10" class="vacio">Sin comprobantes en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="nota">Este reporte no incluye contenido clínico: del paciente solo figura la referencia de facturación. El registro contable completo está en el Libro de Ventas.</div>
+{% endblock %}

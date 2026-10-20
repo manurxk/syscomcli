@@ -1,5 +1,5 @@
 -- 15_cobranza_cxc.sql — Cuentas a cobrar, cobranzas y libro de ventas
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -189,6 +189,132 @@ CREATE SEQUENCE public.libro_ventas_id_libro_ventas_seq
 ALTER SEQUENCE public.libro_ventas_id_libro_ventas_seq OWNED BY public.libro_ventas.id_libro_ventas;
 
 --
+-- Name: v_caja_movimientos; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_caja_movimientos AS
+ SELECT ac.fecha_operacion AS fecha_movimiento,
+    ac.id_caja,
+    ca.cod_caja,
+    ca.des_caja,
+    ac.id_moneda,
+    m.cod_moneda,
+    m.simbolo_moneda,
+    m.decimales_moneda,
+    ac.tipo_operacion AS tipo_movimiento,
+    NULL::character varying AS referencia,
+        CASE ac.tipo_operacion
+            WHEN 'APERTURA'::text THEN ac.saldo_inicial
+            ELSE ac.saldo_final
+        END AS monto,
+    ac.est_apertura_cierre AS estado
+   FROM ((public.aperturas_cierre_caja ac
+     JOIN public.cajas ca ON ((ca.id_caja = ac.id_caja)))
+     JOIN public.monedas m ON ((m.id_moneda = ac.id_moneda)))
+UNION ALL
+ SELECT co.fecha_cobranza AS fecha_movimiento,
+    co.id_caja,
+    ca.cod_caja,
+    ca.des_caja,
+    co.id_moneda,
+    m.cod_moneda,
+    m.simbolo_moneda,
+    m.decimales_moneda,
+    'COBRANZA'::character varying AS tipo_movimiento,
+    co.cobranza_numero AS referencia,
+    co.monto_cobrado AS monto,
+    co.est_cobranza AS estado
+   FROM ((public.cobranzas co
+     JOIN public.cajas ca ON ((ca.id_caja = co.id_caja)))
+     JOIN public.monedas m ON ((m.id_moneda = co.id_moneda)));
+
+--
+-- Name: VIEW v_caja_movimientos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.v_caja_movimientos IS 'Línea de tiempo de cada caja: APERTURA (saldo inicial), COBRANZA (monto cobrado; excluir estado ANULADA) y CIERRE (saldo final). La moneda es la de la apertura de la caja; no sumar monedas distintas.';
+
+--
+-- Name: v_facturacion_mensual; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_facturacion_mensual AS
+ SELECT (date_trunc('month'::text, (lv.libro_fecha)::timestamp with time zone))::date AS mes,
+    lv.id_moneda,
+    m.cod_moneda,
+    m.simbolo_moneda,
+    m.decimales_moneda,
+    m.es_moneda_local,
+    count(*) FILTER (WHERE ((lv.tipo_comprobante)::text = 'FACTURA'::text)) AS cantidad_facturas,
+    count(*) FILTER (WHERE ((lv.tipo_comprobante)::text = 'NOTA_CREDITO'::text)) AS cantidad_notas_credito,
+    count(*) AS cantidad_comprobantes,
+    sum(
+        CASE
+            WHEN ((lv.tipo_comprobante)::text = 'NOTA_CREDITO'::text) THEN (- lv.monto_gravado)
+            ELSE lv.monto_gravado
+        END) AS total_gravado,
+    sum(
+        CASE
+            WHEN ((lv.tipo_comprobante)::text = 'NOTA_CREDITO'::text) THEN (- lv.monto_iva)
+            ELSE lv.monto_iva
+        END) AS total_iva,
+    sum(
+        CASE
+            WHEN ((lv.tipo_comprobante)::text = 'NOTA_CREDITO'::text) THEN (- lv.monto_total)
+            ELSE lv.monto_total
+        END) AS total_neto,
+    COALESCE(sum(lv.monto_total) FILTER (WHERE ((lv.tipo_comprobante)::text = 'NOTA_CREDITO'::text)), (0)::numeric) AS total_notas_credito
+   FROM (public.libro_ventas lv
+     JOIN public.monedas m ON ((m.id_moneda = lv.id_moneda)))
+  GROUP BY (date_trunc('month'::text, (lv.libro_fecha)::timestamp with time zone)), lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda, m.es_moneda_local;
+
+--
+-- Name: VIEW v_facturacion_mensual; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.v_facturacion_mensual IS 'Totales del libro de ventas por mes y moneda. En el libro la nota de crédito se guarda en positivo: aquí resta de gravado, IVA y total_neto, y total_notas_credito la muestra aparte. No sumar monedas distintas.';
+
+--
+-- Name: v_saldo_cuentas_cobrar; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_saldo_cuentas_cobrar AS
+ SELECT cc.id_cuenta_cobrar,
+    cc.cuenta_numero,
+    cc.id_factura,
+    f.factura_numero,
+    cc.id_paciente,
+    concat(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
+    cc.fecha_emision,
+    cc.fecha_vencimiento,
+    cc.id_moneda,
+    m.cod_moneda,
+    m.simbolo_moneda,
+    m.decimales_moneda,
+    m.es_moneda_local,
+    cc.monto_total,
+    cc.monto_pagado,
+    cc.monto_pendiente,
+    cc.est_cuenta_cobrar,
+    ((((cc.est_cuenta_cobrar)::text = 'PENDIENTE'::text) OR ((cc.est_cuenta_cobrar)::text = 'PARCIAL'::text)) AND (cc.fecha_vencimiento < CURRENT_DATE)) AS esta_vencida,
+        CASE
+            WHEN ((((cc.est_cuenta_cobrar)::text = 'PENDIENTE'::text) OR ((cc.est_cuenta_cobrar)::text = 'PARCIAL'::text)) AND (cc.fecha_vencimiento < CURRENT_DATE)) THEN (CURRENT_DATE - cc.fecha_vencimiento)
+            ELSE 0
+        END AS dias_atraso
+   FROM ((((public.cuentas_cobrar cc
+     JOIN public.facturas f ON ((f.id_factura = cc.id_factura)))
+     JOIN public.monedas m ON ((m.id_moneda = cc.id_moneda)))
+     LEFT JOIN public.pacientes pa ON ((pa.id_paciente = cc.id_paciente)))
+     LEFT JOIN public.personas pp ON ((pp.id_persona = pa.id_persona)))
+  WHERE (f.fecha_anulacion IS NULL);
+
+--
+-- Name: VIEW v_saldo_cuentas_cobrar; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.v_saldo_cuentas_cobrar IS 'Cuentas por cobrar de facturas no anuladas, con moneda, saldo pendiente y días de atraso. Para el saldo por cobrar filtrar est_cuenta_cobrar IN (PENDIENTE, PARCIAL); no sumar monedas distintas. Fuente de Resumen y Ventas en Reportes.';
+
+--
 -- Name: cobranza_detalle id_cobranza_detalle; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -255,16 +381,40 @@ ALTER TABLE ONLY public.libro_ventas
     ADD CONSTRAINT libro_ventas_pkey PRIMARY KEY (id_libro_ventas);
 
 --
+-- Name: idx_cobranzas_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_cobranzas_fecha ON public.cobranzas USING btree (((fecha_cobranza)::date));
+
+--
+-- Name: idx_libro_ventas_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_libro_ventas_fecha ON public.libro_ventas USING btree (libro_fecha);
+
+--
 -- Name: cuentas_cobrar tg_cuentas_cobrar_fmod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER tg_cuentas_cobrar_fmod BEFORE UPDATE ON public.cuentas_cobrar FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: cobranzas trg_cobranzas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_cobranzas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.cobranzas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_cobranza');
+
+--
 -- Name: cobranzas trg_cobranzas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_cobranzas_fecha_mod BEFORE UPDATE ON public.cobranzas FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: cuentas_cobrar trg_cuentas_cobrar_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_cuentas_cobrar_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.cuentas_cobrar FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_cuenta_cobrar');
 
 --
 -- Name: cobranza_detalle cobranza_detalle_id_cobranza_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -

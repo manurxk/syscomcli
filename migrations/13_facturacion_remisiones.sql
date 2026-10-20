@@ -1,5 +1,5 @@
 -- 13_facturacion_remisiones.sql — Facturación, notas de crédito/débito y remisiones
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -650,10 +650,58 @@ CREATE TRIGGER tg_puntos_expedicion_fmod BEFORE UPDATE ON public.puntos_expedici
 CREATE TRIGGER tg_timbrados_fmod BEFORE UPDATE ON public.timbrados FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: facturas trg_facturas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_facturas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_factura');
+
+--
+-- Name: facturas trg_facturas_proteger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_facturas_proteger BEFORE DELETE OR UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_factura();
+
+--
+-- Name: TRIGGER trg_facturas_proteger ON facturas; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TRIGGER trg_facturas_proteger ON public.facturas IS 'Protege la factura emitida: solo se puede anular; no se edita ni se borra (fn_proteger_factura).';
+
+--
+-- Name: notas_credito trg_notas_credito_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_notas_credito_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.notas_credito FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_nota_credito');
+
+--
+-- Name: notas_debito trg_notas_debito_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_notas_debito_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.notas_debito FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_nota_debito');
+
+--
+-- Name: puntos_expedicion trg_puntos_expedicion_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_puntos_expedicion_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.puntos_expedicion FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('SEGURIDAD', 'id_punto_expedicion');
+
+--
+-- Name: remisiones trg_remisiones_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_remisiones_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.remisiones FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('VENTAS', 'id_remision');
+
+--
 -- Name: remisiones trg_remisiones_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_remisiones_fecha_mod BEFORE UPDATE ON public.remisiones FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: timbrados trg_timbrados_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_timbrados_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.timbrados FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('SEGURIDAD', 'id_timbrado');
 
 --
 -- Name: factura_detalle factura_detalle_id_consulta_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -

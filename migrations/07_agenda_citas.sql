@@ -1,5 +1,5 @@
 -- 07_agenda_citas.sql — Agenda y citas
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -43,6 +43,8 @@ CREATE TABLE public.agenda_horarios (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
+    bloqueos jsonb DEFAULT '[]'::jsonb NOT NULL,
+    CONSTRAINT chk_agenda_horarios_bloqueos CHECK ((jsonb_typeof(bloqueos) = 'array'::text)),
     CONSTRAINT chk_agenda_horarios_duracion CHECK ((duracion_turno_min = ANY (ARRAY[10, 15, 20, 30, 45, 60, 90]))),
     CONSTRAINT chk_agenda_horarios_modalidad CHECK (((modalidad_default)::text = ANY ((ARRAY['PRESENCIAL'::character varying, 'TELEMEDICINA'::character varying, 'DOMICILIO'::character varying])::text[]))),
     CONSTRAINT chk_agenda_horarios_overbooking CHECK (((porcentaje_overbooking >= 0) AND (porcentaje_overbooking <= 100))),
@@ -55,6 +57,18 @@ CREATE TABLE public.agenda_horarios (
 --
 
 COMMENT ON TABLE public.agenda_horarios IS 'Configuración semanal recurrente de atención. No se valida solapamiento de (id_consultorio, id_dia_semana) con un EXCLUDE de BD: se valida en el DAO al guardar/editar (validarConflictoHorario), igual criterio que el resto del sistema.';
+
+--
+-- Name: COLUMN agenda_horarios.porcentaje_overbooking; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.agenda_horarios.porcentaje_overbooking IS 'Cupo de sobreturnos por dia, en % de los turnos de la agenda (0 = no se permiten). Un sobreturno es un turno extra creado a mano en una fecha puntual (AgendaHorariosDao.crearSobreturno; se reconoce porque slots_agenda.usuario_creacion no es nulo: los turnos que genera el sistema lo tienen vacio).';
+
+--
+-- Name: COLUMN agenda_horarios.bloqueos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.agenda_horarios.bloqueos IS 'Rangos bloqueados del especialista (ausencia, feriado): [{"id", "desde", "hasta", "motivo", "usuario", "fecha"}], desde/hasta en hora local. Se graba en todas las agendas del especialista; la generacion de turnos crea BLOQUEADO lo que cae en un rango.';
 
 --
 -- Name: agenda_horarios_id_agenda_horario_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -298,6 +312,54 @@ CREATE SEQUENCE public.slots_agenda_id_slot_agenda_seq
 ALTER SEQUENCE public.slots_agenda_id_slot_agenda_seq OWNED BY public.slots_agenda.id_slot_agenda;
 
 --
+-- Name: v_agenda_dia; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_agenda_dia AS
+ SELECT c.id_cita,
+    (c.cita_inicio)::date AS fecha,
+    c.cita_inicio,
+    c.cita_fin,
+    c.id_paciente,
+    concat(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
+    pp.per_cedula AS paciente_cedula,
+    pp.per_telefono AS paciente_telefono,
+    c.id_especialista,
+    concat(pe.per_nombre, ' ', pe.per_apellido) AS especialista_nombre,
+    c.id_especialidad,
+    esp.des_especialidad,
+    c.id_estado_cita,
+    ec.cod_estado_cita,
+    ec.des_estado_cita,
+    c.modalidad,
+    c.cita_es_primera_vez,
+    c.motivo_cancelacion,
+    cn.usu_nick AS cancelada_por,
+    cn.fecha_cambio AS fecha_cancelacion
+   FROM ((((((((public.citas c
+     JOIN public.estados_citas ec ON ((ec.id_estado_cita = c.id_estado_cita)))
+     JOIN public.pacientes pa ON ((pa.id_paciente = c.id_paciente)))
+     JOIN public.personas pp ON ((pp.id_persona = pa.id_persona)))
+     JOIN public.especialistas e ON ((e.id_especialista = c.id_especialista)))
+     JOIN public.funcionarios f ON ((f.id_funcionario = e.id_funcionario)))
+     JOIN public.personas pe ON ((pe.id_persona = f.id_persona)))
+     LEFT JOIN public.especialidades esp ON ((esp.id_especialidad = c.id_especialidad)))
+     LEFT JOIN LATERAL ( SELECT u.usu_nick,
+            l.fecha_cambio
+           FROM (public.citas_log_estados l
+             LEFT JOIN public.usuarios u ON ((u.id_usuario = l.usuario_cambio)))
+          WHERE ((l.id_cita = c.id_cita) AND (l.id_estado_nuevo = c.id_estado_cita) AND ((ec.cod_estado_cita)::text = 'CANCELADA'::text))
+          ORDER BY l.fecha_cambio DESC
+         LIMIT 1) cn ON (true))
+  WHERE (c.est_cita = true);
+
+--
+-- Name: VIEW v_agenda_dia; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.v_agenda_dia IS 'Una fila por cita activa (est_cita = true) con paciente, especialista, especialidad y estado. Si la cita está CANCELADA, trae el motivo, quién la canceló (usu_nick) y cuándo, del log de estados. Filtrar por fecha (cita_inicio::date) y, según el rol, por id_especialista. Fuente de la pestaña Agendamiento de Reportes.';
+
+--
 -- Name: agenda_horarios id_agenda_horario; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -421,10 +483,16 @@ CREATE INDEX idx_citas_especialista_inicio ON public.citas USING btree (id_espec
 CREATE INDEX idx_citas_estado ON public.citas USING btree (id_estado_cita);
 
 --
--- Name: idx_citas_log_estados_cita; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_citas_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_citas_log_estados_cita ON public.citas_log_estados USING btree (id_cita);
+CREATE INDEX idx_citas_fecha ON public.citas USING btree (((cita_inicio)::date)) WHERE (est_cita = true);
+
+--
+-- Name: idx_citas_log_estados_cita_estado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_citas_log_estados_cita_estado ON public.citas_log_estados USING btree (id_cita, id_estado_nuevo, fecha_cambio DESC);
 
 --
 -- Name: idx_citas_paciente; Type: INDEX; Schema: public; Owner: -
@@ -481,16 +549,34 @@ CREATE UNIQUE INDEX uq_citas_especialista_inicio ON public.citas USING btree (id
 COMMENT ON INDEX public.uq_citas_especialista_inicio IS 'Un especialista no puede tener dos citas a la misma hora. Solo cuenta las citas con turno (id_slot_agenda no nulo): una cita cancelada libera su turno y no impide reservarlo de nuevo (migración 110).';
 
 --
+-- Name: agenda_horarios trg_agenda_horarios_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_agenda_horarios_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.agenda_horarios FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('AGENDAMIENTO', 'id_agenda_horario');
+
+--
 -- Name: agenda_horarios trg_agenda_horarios_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_agenda_horarios_fecha_mod BEFORE UPDATE ON public.agenda_horarios FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: citas trg_citas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_citas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.citas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('AGENDAMIENTO', 'id_cita');
+
+--
 -- Name: citas trg_citas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_citas_fecha_mod BEFORE UPDATE ON public.citas FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: lista_espera trg_lista_espera_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_lista_espera_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.lista_espera FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('AGENDAMIENTO', 'id_lista_espera');
 
 --
 -- Name: lista_espera trg_lista_espera_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

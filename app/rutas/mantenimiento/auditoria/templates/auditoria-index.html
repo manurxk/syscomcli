@@ -1,352 +1,648 @@
 {% extends 'base.html' %}
 
+{# Auditoría — pantalla única (PDF 9 + 6, paso 5). Pestañas según el rol de la sesión:
+   1 Cambios en datos (auditoria_transacciones): todos los roles de la pantalla; cada uno ve sus módulos,
+     en detalle (listado + antes/después), solo sus propios cambios (Clínico) o solo en cantidades (Ventas).
+     Lo vuelve a filtrar la API.
+   2 Eventos del sistema, 3 Accesos y seguridad, 4 Sesiones y usuarios (antes la página Accesos):
+     solo Administrador y Superadministrador. #}
+
 {% block titulo %}
-Auditoría del Sistema
+Auditoría
 {% endblock %}
 
 {% block contenido %}
+{% set ETIQUETA_MODULO = {'CLINICO': 'Clínico', 'AGENDAMIENTO': 'Agendamiento', 'VENTAS': 'Ventas', 'SEGURIDAD': 'Seguridad'} %}
+<style>
+  #audTabs .nav-link { font-size: .82rem; padding: .3rem .85rem; color: rgba(255,255,255,.7); }
+  #audTabs .nav-link:hover { color: #fff; background: rgba(255,255,255,.15); }
+  #audTabs .nav-link.active { color: #fff; background: rgba(255,255,255,.25); }
+  .kpi-icon { width: 2.4rem; height: 2.4rem; display: inline-grid; place-items: center; border-radius: var(--bs-border-radius-lg); flex-shrink: 0; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #tblDiff td { word-break: break-word; }
+</style>
+
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
   <div class="container-fluid px-4">
     <div class="page-header-content pt-4">
-      <div class="row align-items-center justify-content-between">
-        <div class="col-auto mt-4">
-          <h1 class="page-header-title">Auditoría del Sistema</h1>
-          <div class="page-header-subtitle">Registro de eventos de acceso y modificación de datos</div>
+      <div class="row align-items-center justify-content-between flex-wrap g-3">
+        <div class="col-auto mt-3">
+          <h1 class="page-header-title"><i class="fas fa-shield-halved me-2"></i>Auditoría</h1>
+          <div class="page-header-subtitle">
+            {% if completa %}Cambios en datos, eventos del sistema, accesos y sesiones{% else %}Cambios en datos de su módulo{% endif %}
+          </div>
         </div>
+        {% if completa %}
+        <div class="col-auto mt-3 d-flex flex-wrap align-items-center gap-2">
+          <a class="btn btn-light btn-sm" href="/api/v1/auditoria/informe-semanal/pdf" title="Informe de la semana anterior (el mismo que llega por correo los lunes)">
+            <i class="fas fa-file-pdf me-1"></i>Informe semanal (PDF)
+          </a>
+          <ul class="nav nav-pills" id="audTabs" role="tablist">
+            {% for cod, icono, etiqueta in [('cambios', 'fa-pen-to-square', 'Cambios en datos'), ('eventos', 'fa-list-check', 'Eventos del sistema'), ('accesos', 'fa-right-to-bracket', 'Accesos y seguridad'), ('sesiones', 'fa-users-gear', 'Sesiones y usuarios')] %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {{ 'active' if pestana == cod else '' }} d-flex align-items-center gap-1" id="tab-{{ cod }}"
+                      data-bs-toggle="pill" data-bs-target="#panel-{{ cod }}" data-pestana="{{ cod }}" type="button" role="tab"
+                      aria-controls="panel-{{ cod }}" aria-selected="{{ 'true' if pestana == cod else 'false' }}">
+                <i class="fas {{ icono }}"></i> {{ etiqueta }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </header>
 
 <div class="container-fluid px-4 mt-n10">
+  <div class="tab-content">
 
-  <div class="card shadow-sm mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 fw-bold">Filtros</h6>
-    </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Desde</label>
-          <input type="date" class="form-control" id="fltFechaDesde">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Hasta</label>
-          <input type="date" class="form-control" id="fltFechaHasta">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Acción</label>
-          <select class="form-select" id="fltAccion">
-            <option value="">Todas</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">ID Usuario</label>
-          <input type="number" class="form-control" id="fltIdUsuario" placeholder="Ej. 12">
+    {# ═══════════════════════ 1. CAMBIOS EN DATOS ═══════════════════════ #}
+    <div class="tab-pane fade {{ 'show active' if pestana == 'cambios' else '' }}" id="panel-cambios" role="tabpanel">
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Filtros</h6></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="cFechaDesde">Desde</label>
+              <input type="date" class="form-control form-control-sm" id="cFechaDesde">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="cFechaHasta">Hasta</label>
+              <input type="date" class="form-control form-control-sm" id="cFechaHasta">
+            </div>
+            {% if con_detalle %}
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="cModulo">Módulo</label>
+              <select class="form-select form-select-sm" id="cModulo">
+                <option value="">Todos</option>
+                {% for modulo, nivel in alcance.items() if nivel in ('detalle', 'propios') %}
+                <option value="{{ modulo }}">{{ ETIQUETA_MODULO[modulo] }}{{ ' (solo los suyos)' if nivel == 'propios' }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="cTabla">Tabla</label>
+              <select class="form-select form-select-sm" id="cTabla"><option value="">Todas</option></select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="cOperacion">Operación</label>
+              <select class="form-select form-select-sm" id="cOperacion">
+                <option value="">Todas</option>
+                <option value="INSERT">Alta</option>
+                <option value="UPDATE">Modificación</option>
+                <option value="DELETE">Baja</option>
+              </select>
+            </div>
+            <div class="col-md-1">
+              <label class="form-label small fw-semibold" for="cIdUsuario">ID usuario</label>
+              <input type="number" class="form-control form-control-sm" id="cIdUsuario" value="{{ id_usuario_filtro }}">
+            </div>
+            <div class="col-md-1">
+              <label class="form-label small fw-semibold" for="cIdRegistro">ID registro</label>
+              <input type="text" class="form-control form-control-sm" id="cIdRegistro">
+            </div>
+            {% endif %}
+          </div>
+          <div class="mt-3">
+            <button type="button" class="btn btn-primary btn-sm" id="cFiltrar">Filtrar</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cLimpiar">Limpiar</button>
+          </div>
         </div>
       </div>
-      <div class="mt-3">
-        <button type="button" class="btn btn-primary btn-sm" id="btnFiltrar">Filtrar</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimpiar">Limpiar</button>
+
+      {% set propios = alcance|dictsort|selectattr('1', 'equalto', 'propios')|map(attribute='0')|list %}
+      {% if propios %}
+      <div class="callout callout-info mb-4">
+        En el módulo {% for m in propios %}{{ ETIQUETA_MODULO[m] }}{{ ', ' if not loop.last }}{% endfor %} usted ve <b>solo los cambios que hizo usted</b>, con el dato anterior y el nuevo.
+      </div>
+      {% endif %}
+      {% set solo_resumen = alcance and not con_detalle %}
+      {% if solo_resumen %}
+      <div class="callout callout-info mb-4">
+        Su rol ve <b>solo las cantidades</b> de cambios del módulo {% for m in alcance %}{{ ETIQUETA_MODULO[m] }}{{ ', ' if not loop.last }}{% endfor %}: cuántas altas, modificaciones y anulaciones hubo, sin el detalle de cada registro ni quién lo hizo.
+      </div>
+      {% endif %}
+
+      <div class="row g-3 mb-4">
+        {% for cod, icono, color, etiqueta in [('INSERT', 'fa-plus', 'success', 'Altas'), ('UPDATE', 'fa-pen', 'primary', 'Modificaciones'), ('DELETE', 'fa-trash', 'secondary', 'Bajas'), ('anulaciones', 'fa-ban', 'danger', 'Anulaciones')] %}
+        <div class="col-6 col-xl-3">
+          <div class="card card-body h-100">
+            <div class="mb-3"><span class="kpi-icon bg-{{ color }}-subtle text-{{ color }}-emphasis"><i class="fas {{ icono }}"></i></span></div>
+            <div class="small fw-semibold text-body-secondary">{{ etiqueta }}</div>
+            <div class="fs-3 fw-bold text-body-emphasis num" id="kpi-{{ cod }}">—</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Cambios por tabla</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0">
+              <thead class="table-light">
+                <tr><th>Módulo</th><th>Tabla</th><th class="text-end">Altas</th><th class="text-end">Modificaciones</th><th class="text-end">Bajas</th><th class="text-end">Anulaciones</th><th class="text-end">Total</th></tr>
+              </thead>
+              <tbody id="tbodyPorTabla"><tr><td colspan="7" class="text-center text-muted py-3">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {% if con_detalle %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Cambios registrados</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle w-100" id="tblCambios">
+              <thead class="table-light">
+                <tr><th>Fecha/Hora</th><th>Módulo</th><th>Tabla</th><th>Operación</th><th>Registro</th><th>Campos modificados</th><th>Usuario</th><th>IP</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if completa %}
+    {# ═══════════════════════ 2. EVENTOS DEL SISTEMA ═══════════════════════ #}
+    <div class="tab-pane fade {{ 'show active' if pestana == 'eventos' else '' }}" id="panel-eventos" role="tabpanel">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Filtros</h6></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" for="eFechaDesde">Desde</label>
+              <input type="date" class="form-control form-control-sm" id="eFechaDesde">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" for="eFechaHasta">Hasta</label>
+              <input type="date" class="form-control form-control-sm" id="eFechaHasta">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" for="eAccion">Acción</label>
+              <select class="form-select form-select-sm" id="eAccion"><option value="">Todas</option></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" for="eIdUsuario">ID usuario</label>
+              <input type="number" class="form-control form-control-sm" id="eIdUsuario" value="{{ id_usuario_filtro }}">
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="button" class="btn btn-primary btn-sm" id="eFiltrar">Filtrar</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="eLimpiar">Limpiar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Eventos del sistema</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle w-100" id="tblEventos">
+              <thead class="table-light"><tr><th>Fecha/Hora</th><th>Usuario</th><th>Acción</th><th>Detalle</th><th>IP</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
+
+    {# ═══════════════════════ 3. ACCESOS Y SEGURIDAD ═══════════════════════ #}
+    <div class="tab-pane fade {{ 'show active' if pestana == 'accesos' else '' }}" id="panel-accesos" role="tabpanel">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Filtros</h6></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" for="aFechaDesde">Desde</label>
+              <input type="date" class="form-control form-control-sm" id="aFechaDesde">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" for="aFechaHasta">Hasta</label>
+              <input type="date" class="form-control form-control-sm" id="aFechaHasta">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="aIp">IP</label>
+              <input type="text" class="form-control form-control-sm" id="aIp" placeholder="Ej. 192.168.1.10">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" for="aIdUsuario">ID usuario</label>
+              <input type="number" class="form-control form-control-sm" id="aIdUsuario" value="{{ id_usuario_filtro }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="aSoloFallidos">
+                <label class="form-check-label small" for="aSoloFallidos">Solo fallidos</label>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="button" class="btn btn-primary btn-sm" id="aFiltrar">Filtrar</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="aLimpiar">Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">IPs con intentos fallidos en varias cuentas (posible fuerza bruta)</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+              <thead class="table-light"><tr><th>IP</th><th>Cuentas distintas afectadas</th><th>Total de fallos</th><th>Primer intento</th><th>Último intento</th></tr></thead>
+              <tbody id="tbodySospechosas"><tr><td colspan="5" class="text-center text-muted py-3">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Intentos de acceso (login)</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle w-100" id="tblIntentos">
+              <thead class="table-light"><tr><th>Fecha/Hora</th><th>Usuario intentado</th><th>Resultado</th><th>IP</th><th>User Agent</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Solicitudes de recuperación de contraseña</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle w-100" id="tblRecuperaciones">
+              <thead class="table-light"><tr><th>Fecha</th><th>Usuario</th><th>Correo destino</th><th>IP</th><th>Vence</th><th>Usado</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ═══════════════════════ 4. SESIONES Y USUARIOS (antes: página Accesos) ═══════════════════════ #}
+    <div class="tab-pane fade {{ 'show active' if pestana == 'sesiones' else '' }}" id="panel-sesiones" role="tabpanel">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header py-3"><h6 class="m-0 fw-bold">Identidad, MFA y sesiones activas por usuario</h6></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th class="text-center">MFA</th><th class="text-center">Bloqueado</th><th class="text-center">Sesiones activas</th><th>Último login</th><th class="text-end">Acciones</th></tr>
+              </thead>
+              <tbody id="tbodyAccesos"><tr><td colspan="8" class="text-center text-muted py-4">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
+</div>
 
-  <div class="card shadow-sm mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 fw-bold">Eventos de Auditoría</h6>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-hover table-bordered align-middle w-100" id="tbl">
-          <thead class="table-light">
-            <tr>
-              <th>Fecha/Hora</th>
-              <th>Usuario</th>
-              <th>Acción</th>
-              <th>Detalle</th>
-              <th>IP</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+{% if con_detalle %}
+<!-- Modal: un cambio con el dato anterior y el nuevo -->
+<div class="modal fade" id="modalCambio" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="cambioTitulo">Cambio</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-    </div>
-  </div>
-
-  <!-- Intentos masivos / fuerza bruta -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 fw-bold">IPs con intentos fallidos en varias cuentas (posible fuerza bruta)</h6>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-sm table-bordered" id="tblSospechosas">
-          <thead class="table-light">
-            <tr>
-              <th>IP</th>
-              <th>Cuentas distintas afectadas</th>
-              <th>Total de fallos</th>
-              <th>Primer intento</th>
-              <th>Último intento</th>
-            </tr>
-          </thead>
-          <tbody id="tbodySospechosas"><tr><td colspan="5" class="text-center text-muted py-3">Sin patrones sospechosos en el rango filtrado.</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Intentos de acceso -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header py-3 d-flex align-items-center justify-content-between">
-      <h6 class="m-0 fw-bold">Intentos de acceso (login)</h6>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="fltSoloFallidos">
-        <label class="form-check-label small" for="fltSoloFallidos">Solo fallidos</label>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="row g-3 mb-3">
-        <div class="col-md-3">
-          <label class="form-label fw-semibold small">IP</label>
-          <input type="text" class="form-control form-control-sm" id="fltIp" placeholder="Ej. 192.168.1.10">
+      <div class="modal-body">
+        <div class="small text-body-secondary mb-3" id="cambioInfo"></div>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="cambioTodos">
+          <label class="form-check-label small" for="cambioTodos">Mostrar todos los campos (no solo los modificados)</label>
         </div>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-hover table-bordered align-middle w-100" id="tblIntentos">
-          <thead class="table-light">
-            <tr>
-              <th>Fecha/Hora</th>
-              <th>Usuario intentado</th>
-              <th>Resultado</th>
-              <th>IP</th>
-              <th>User Agent</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Solicitudes de recuperación de contraseña -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 fw-bold">Solicitudes de recuperación de contraseña</h6>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-hover table-bordered align-middle w-100" id="tblRecuperaciones">
-          <thead class="table-light">
-            <tr>
-              <th>Fecha</th>
-              <th>Usuario</th>
-              <th>Correo destino</th>
-              <th>IP</th>
-              <th>Vence</th>
-              <th>Usado</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle" id="tblDiff">
+            <thead class="table-light"><tr><th style="width:22%">Campo</th><th style="width:39%">Antes</th><th style="width:39%">Después</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 </div>
+{% endif %}
+
+{% if completa %}
+<!-- Modal: sesiones activas de un usuario -->
+<div class="modal fade" id="modalSesiones" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sesiones activas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>IP</th><th>User Agent</th><th>Última actividad</th><th class="text-end">Acción</th></tr></thead>
+            <tbody id="tbodySesiones"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block js %}
 <script>
-  let tabla;
+  const CSRFToken = "{{ csrf_token() }}";
+  const CON_DETALLE = {{ 'true' if con_detalle else 'false' }};
+  const COMPLETA = {{ 'true' if completa else 'false' }};
+  const IDIOMA_DT = { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" };
+  const ETIQUETA_MODULO = { CLINICO: 'Clínico', AGENDAMIENTO: 'Agendamiento', VENTAS: 'Ventas', SEGURIDAD: 'Seguridad' };
+  const OPERACION = {
+    INSERT: '<span class="badge bg-success-subtle text-success-emphasis">Alta</span>',
+    UPDATE: '<span class="badge bg-primary-subtle text-primary-emphasis">Modificación</span>',
+    DELETE: '<span class="badge bg-secondary-subtle text-secondary-emphasis">Baja</span>'
+  };
 
-  const construirUrl = () => {
-    const params = new URLSearchParams();
-    const fechaDesde = $('#fltFechaDesde').val();
-    const fechaHasta = $('#fltFechaHasta').val();
-    const accion = $('#fltAccion').val();
-    const idUsuario = $('#fltIdUsuario').val();
+  // Todo texto que viene de los datos se escapa: notas, observaciones o nombres pueden traer cualquier cosa
+  const esc = (v) => (v === null || v === undefined ? '' : String(v))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const nombreTabla = (t) => esc((t || '').replace(/_/g, ' '));
+  // Flask manda las fechas como "Mon, 19 Oct 2026 10:26:21 GMT", pero la hora es la de Paraguay (la base guarda la
+  // hora local): se muestra como 19/10/2026 10:26 y se ordena por fecha real (con tipo 'sort' de DataTables).
+  const MESES = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+  const fecha = (v, tipo) => {
+    const m = String(v || '').match(/(\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2})/);
+    if (!m) return tipo === 'sort' || tipo === 'type' ? '' : (v ? esc(v) : '-');
+    const [, d, mes, a, h, mi, s] = m, dd = d.padStart(2, '0');
+    return tipo === 'sort' || tipo === 'type' ? `${a}${MESES[mes]}${dd}${h}${mi}${s}` : `${dd}/${MESES[mes]}/${a} ${h}:${mi}`;
+  };
+  const parametros = (pares) => {
+    const p = new URLSearchParams();
+    Object.entries(pares).forEach(([k, v]) => { if (v !== '' && v !== null && v !== undefined && v !== false) p.append(k, v); });
+    return p.toString();
+  };
 
-    if (fechaDesde) params.append('fecha_desde', fechaDesde);
-    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-    if (accion) params.append('accion', accion);
-    if (idUsuario) params.append('id_usuario', idUsuario);
-    params.append('pagina', 1);
-    params.append('por_pagina', 200);
+  // ════════════ 1. CAMBIOS EN DATOS ════════════
+  let tablaCambios = null;
+  const filtrosCambios = () => ({
+    fecha_desde: $('#cFechaDesde').val(), fecha_hasta: $('#cFechaHasta').val(),
+    modulo: $('#cModulo').val() || '', tabla: $('#cTabla').val() || '', operacion: $('#cOperacion').val() || '',
+    id_usuario: $('#cIdUsuario').val() || '', id_registro: $('#cIdRegistro').val() || ''
+  });
 
-    return `/api/v1/auditoria?${params.toString()}`;
-  }
-
-  const cargarAcciones = () => {
-    fetch('/api/v1/auditoria/acciones')
-      .then(resp => resp.json())
-      .then(data => {
-        if (!data.success) return;
-        data.data.forEach(item => {
-          $('#fltAccion').append(`<option value="${item.accion}">${item.label}</option>`);
-        });
-      });
-  }
-
-  const initDatatable = () => {
-    tabla = $('#tbl').DataTable({
-      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax: {
-        url: construirUrl(),
-        dataSrc: 'data.datos'
-      },
-      columns: [
-        { data: 'fecha_evento' },
-        {
-          data: function (row) {
-            return row.usu_nick
-              ? `${row.usu_nick} — ${row.funcionario}`
-              : 'Sistema';
-          }
-        },
-        { data: 'accion_label' },
-        { data: 'detalle', defaultContent: '' },
-        { data: 'ip_origen', defaultContent: '' }
-      ],
-      order: [[0, 'desc']]
-    });
-  }
-
-  // ==========================================
-  // INTENTOS DE ACCESO
-  // ==========================================
-  let tablaIntentos;
-
-  const construirUrlIntentos = () => {
-    const params = new URLSearchParams();
-    const fechaDesde = $('#fltFechaDesde').val();
-    const fechaHasta = $('#fltFechaHasta').val();
-    const ip = $('#fltIp').val();
-    const soloFallidos = $('#fltSoloFallidos').is(':checked');
-
-    if (fechaDesde) params.append('fecha_desde', fechaDesde);
-    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-    if (ip) params.append('ip', ip);
-    if (soloFallidos) params.append('solo_fallidos', 'true');
-    params.append('pagina', 1);
-    params.append('por_pagina', 200);
-
-    return `/api/v1/auditoria/intentos?${params.toString()}`;
-  }
-
-  const initTablaIntentos = () => {
-    tablaIntentos = $('#tblIntentos').DataTable({
-      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax: { url: construirUrlIntentos(), dataSrc: 'data.datos' },
-      columns: [
-        { data: 'fecha_intento' },
-        { data: 'usuario_intentado', defaultContent: '-' },
-        {
-          data: function (row) {
-            const cls = row.resultado === 'EXITOSO' ? 'text-success' : 'text-danger';
-            return `<span class="${cls}">${row.resultado}</span>`;
-          }
-        },
-        { data: 'ip_origen', defaultContent: '-' },
-        { data: 'user_agent', defaultContent: '-' }
-      ],
-      order: [[0, 'desc']]
-    });
-  }
-
-  // ==========================================
-  // IPs SOSPECHOSAS
-  // ==========================================
-  const cargarSospechosas = () => {
-    const params = new URLSearchParams();
-    const fechaDesde = $('#fltFechaDesde').val();
-    const fechaHasta = $('#fltFechaHasta').val();
-    if (fechaDesde) params.append('fecha_desde', fechaDesde);
-    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-
-    fetch(`/api/v1/auditoria/intentos/sospechosos?${params.toString()}`)
-      .then(resp => resp.json())
+  const cargarResumen = () => {
+    const f = filtrosCambios();
+    fetch(`/api/v1/auditoria/cambios/resumen?${parametros({ fecha_desde: f.fecha_desde, fecha_hasta: f.fecha_hasta })}`)
+      .then(r => r.json())
       .then(res => {
+        const $tbody = $('#tbodyPorTabla').empty();
+        if (!res.success) {
+          $tbody.append(`<tr><td colspan="7" class="text-center text-danger py-3">${esc(res.error || 'No se pudo cargar el resumen.')}</td></tr>`);
+          return;
+        }
+        const t = res.data.totales;
+        ['INSERT', 'UPDATE', 'DELETE', 'anulaciones'].forEach(k => $(`#kpi-${k}`).text((t[k] || 0).toLocaleString('es-PY')));
+        if (!res.data.por_tabla.length) {
+          $tbody.append('<tr><td colspan="7" class="text-center text-muted py-3">Sin cambios en el período.</td></tr>');
+          return;
+        }
+        res.data.por_tabla.forEach(f => $tbody.append(`<tr>
+          <td>${esc(ETIQUETA_MODULO[f.modulo] || f.modulo)}</td><td>${nombreTabla(f.tabla)}</td>
+          <td class="text-end num">${f.altas}</td><td class="text-end num">${f.modificaciones}</td><td class="text-end num">${f.bajas}</td>
+          <td class="text-end num">${f.anulaciones ? `<span class="text-danger fw-semibold">${f.anulaciones}</span>` : 0}</td>
+          <td class="text-end num fw-semibold">${f.total}</td></tr>`));
+      });
+  };
+
+  const urlCambios = () => `/api/v1/auditoria/cambios?${parametros({ ...filtrosCambios(), pagina: 1, por_pagina: 500 })}`;
+
+  const cargarTablasFiltro = () => {
+    fetch('/api/v1/auditoria/cambios/tablas').then(r => r.json()).then(res => {
+      if (!res.success) return;
+      res.data.forEach(t => $('#cTabla').append(`<option value="${esc(t.tabla)}">${esc(ETIQUETA_MODULO[t.modulo] || t.modulo)} · ${nombreTabla(t.tabla)}</option>`));
+    });
+  };
+
+  const iniciarCambios = () => {
+    cargarResumen();
+    if (!CON_DETALLE) return;
+    cargarTablasFiltro();
+    tablaCambios = $('#tblCambios').DataTable({
+      language: IDIOMA_DT,
+      ajax: { url: urlCambios(), dataSrc: 'data.datos' },
+      order: [[0, 'desc']],
+      columns: [
+        { data: 'fecha_cambio', render: (v, t) => fecha(v, t) },
+        { data: 'modulo', render: v => esc(ETIQUETA_MODULO[v] || v) },
+        { data: 'tabla', render: v => nombreTabla(v) },
+        { data: null, render: r => (OPERACION[r.operacion] || esc(r.operacion)) + (r.es_anulacion ? ' <span class="badge bg-danger">Anulación</span>' : '') },
+        { data: 'id_registro', render: v => esc(v) },
+        { data: 'campos_modificados', render: v => v ? esc(v.join(', ')) : '' },
+        { data: null, render: r => r.usu_nick ? esc(r.usu_nick) : `<span class="text-muted">${esc(r.roles || 'Sistema')}</span>` },
+        { data: 'ip_origen', render: v => esc(v) },
+        { data: 'id_auditoria_transaccion', orderable: false, className: 'text-end',
+          render: v => `<button class="btn btn-sm btn-outline-primary btn-ver-cambio" data-id="${v}">Ver</button>` }
+      ]
+    });
+  };
+
+  const verCambio = (id) => {
+    fetch(`/api/v1/auditoria/cambios/${id}`).then(r => r.json()).then(res => {
+      if (!res.success) { Swal.fire('Error', res.error || 'No se pudo cargar el cambio.', 'error'); return; }
+      const c = res.data;
+      const antes = c.datos_anteriores || {}, despues = c.datos_nuevos || {};
+      const modificados = new Set(c.campos_modificados || []);
+      const campos = Array.from(new Set([...Object.keys(antes), ...Object.keys(despues)]));
+      $('#cambioTitulo').html(`${OPERACION[c.operacion] || ''} ${nombreTabla(c.tabla)} · registro ${esc(c.id_registro)}`);
+      $('#cambioInfo').html(`${fecha(c.fecha_cambio)} · ${esc(ETIQUETA_MODULO[c.modulo] || c.modulo)} · usuario <b>${esc(c.usu_nick || '—')}</b> (${esc(c.roles || 'Sistema')}) · IP ${esc(c.ip_origen || '—')}`);
+      const valor = (v) => v === null || v === undefined ? '<span class="text-muted">—</span>' : esc(typeof v === 'object' ? JSON.stringify(v) : v);
+      const filas = campos.map(k => {
+        const cambio = c.operacion === 'UPDATE' ? modificados.has(k) : true;
+        return `<tr class="${cambio && c.operacion === 'UPDATE' ? 'table-warning' : ''} ${cambio ? 'fila-cambio' : 'fila-igual d-none'}">
+          <td class="fw-semibold small">${esc(k)}</td><td class="small">${valor(antes[k])}</td><td class="small">${valor(despues[k])}</td></tr>`;
+      });
+      $('#tblDiff tbody').html(filas.join(''));
+      $('#cambioTodos').prop('checked', false).toggleClass('d-none', c.operacion !== 'UPDATE');
+      $('label[for="cambioTodos"]').toggleClass('d-none', c.operacion !== 'UPDATE');
+      new bootstrap.Modal('#modalCambio').show();
+    });
+  };
+
+  // ════════════ 2. EVENTOS DEL SISTEMA ════════════
+  let tablaEventos = null;
+  const urlEventos = () => `/api/v1/auditoria?${parametros({ fecha_desde: $('#eFechaDesde').val(), fecha_hasta: $('#eFechaHasta').val(), accion: $('#eAccion').val(), id_usuario: $('#eIdUsuario').val(), pagina: 1, por_pagina: 200 })}`;
+  const iniciarEventos = () => {
+    fetch('/api/v1/auditoria/acciones').then(r => r.json()).then(res => {
+      if (res.success) res.data.forEach(a => $('#eAccion').append(`<option value="${esc(a.accion)}">${esc(a.label)}</option>`));
+    });
+    tablaEventos = $('#tblEventos').DataTable({
+      language: IDIOMA_DT,
+      ajax: { url: urlEventos(), dataSrc: 'data.datos' },
+      order: [[0, 'desc']],
+      columns: [
+        { data: 'fecha_evento', render: (v, t) => fecha(v, t) },
+        { data: null, render: r => r.usu_nick ? `${esc(r.usu_nick)} — ${esc(r.funcionario)}` : 'Sistema' },
+        { data: 'accion_label', render: v => esc(v) },
+        { data: 'detalle', defaultContent: '', render: v => esc(v) },
+        { data: 'ip_origen', defaultContent: '', render: v => esc(v) }
+      ]
+    });
+  };
+
+  // ════════════ 3. ACCESOS Y SEGURIDAD ════════════
+  let tablaIntentos = null, tablaRecuperaciones = null;
+  const filtrosAccesos = () => ({ fecha_desde: $('#aFechaDesde').val(), fecha_hasta: $('#aFechaHasta').val(), id_usuario: $('#aIdUsuario').val() });
+  const urlIntentos = () => `/api/v1/auditoria/intentos?${parametros({ ...filtrosAccesos(), ip: $('#aIp').val(), solo_fallidos: $('#aSoloFallidos').is(':checked') ? 'true' : '', pagina: 1, por_pagina: 200 })}`;
+  const urlRecuperaciones = () => `/api/v1/auditoria/recuperaciones?${parametros({ ...filtrosAccesos(), pagina: 1, por_pagina: 200 })}`;
+  const cargarSospechosas = () => {
+    const f = filtrosAccesos();
+    fetch(`/api/v1/auditoria/intentos/sospechosos?${parametros({ fecha_desde: f.fecha_desde, fecha_hasta: f.fecha_hasta })}`)
+      .then(r => r.json()).then(res => {
         const $tbody = $('#tbodySospechosas').empty();
         if (!res.success || !res.data.length) {
           $tbody.append('<tr><td colspan="5" class="text-center text-muted py-3">Sin patrones sospechosos en el rango filtrado.</td></tr>');
           return;
         }
-        res.data.forEach(row => {
-          $tbody.append(`<tr>
-            <td>${row.ip_origen}</td>
-            <td><span class="badge bg-danger">${row.cuentas_distintas}</span></td>
-            <td>${row.total_fallos}</td>
-            <td>${row.primer_intento}</td>
-            <td>${row.ultimo_intento}</td>
-          </tr>`);
+        res.data.forEach(r => $tbody.append(`<tr><td>${esc(r.ip_origen)}</td><td><span class="badge bg-danger">${r.cuentas_distintas}</span></td>
+          <td>${r.total_fallos}</td><td>${fecha(r.primer_intento)}</td><td>${fecha(r.ultimo_intento)}</td></tr>`));
+      });
+  };
+  const iniciarAccesos = () => {
+    cargarSospechosas();
+    tablaIntentos = $('#tblIntentos').DataTable({
+      language: IDIOMA_DT,
+      ajax: { url: urlIntentos(), dataSrc: 'data.datos' },
+      order: [[0, 'desc']],
+      columns: [
+        { data: 'fecha_intento', render: (v, t) => fecha(v, t) },
+        { data: 'usuario_intentado', defaultContent: '-', render: v => esc(v) },
+        { data: 'resultado', render: v => `<span class="${v === 'EXITOSO' ? 'text-success' : 'text-danger'}">${esc(v)}</span>` },
+        { data: 'ip_origen', defaultContent: '-', render: v => esc(v) },
+        { data: 'user_agent', defaultContent: '-', render: v => esc(v) }
+      ]
+    });
+    tablaRecuperaciones = $('#tblRecuperaciones').DataTable({
+      language: IDIOMA_DT,
+      ajax: { url: urlRecuperaciones(), dataSrc: 'data.datos' },
+      order: [[0, 'desc']],
+      columns: [
+        { data: 'fecha_creacion', render: (v, t) => fecha(v, t) },
+        { data: 'usu_nick', defaultContent: '-', render: v => esc(v) },
+        { data: 'email_destino', defaultContent: '-', render: v => esc(v) },
+        { data: 'ip_solicitud', defaultContent: '-', render: v => esc(v) },
+        { data: 'fecha_expiracion', render: (v, t) => fecha(v, t) },
+        { data: 'usado', render: v => v ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>' }
+      ]
+    });
+  };
+
+  // ════════════ 4. SESIONES Y USUARIOS (antes: página Accesos) ════════════
+  const cargarUsuariosAcceso = () => {
+    fetch('/api/v1/acceso/usuarios').then(r => r.json()).then(data => {
+      const $tbody = $('#tbodyAccesos').empty();
+      if (!data.success) { Swal.fire('Error', data.error || 'No se pudo cargar el estado de acceso.', 'error'); return; }
+      if (!data.data.length) {
+        $tbody.append('<tr><td colspan="8" class="text-center text-muted py-4">Sin usuarios registrados.</td></tr>');
+        return;
+      }
+      data.data.forEach(u => {
+        const mfa = u.mfa_habilitado ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
+        const bloqueado = u.esta_bloqueado ? '<span class="badge bg-danger">Sí</span>' : '<span class="badge bg-light text-dark">No</span>';
+        const btnRevocar = u.mfa_habilitado
+          ? `<button class="btn btn-sm btn-outline-warning btn-revocar-mfa" data-id-usuario="${u.id_usuario}"><i data-feather="shield-off" class="icon-xs"></i> Revocar MFA</button>` : '';
+        const btnDesbloquear = u.esta_bloqueado
+          ? `<button class="btn btn-sm btn-outline-success btn-desbloquear" data-id-usuario="${u.id_usuario}"><i data-feather="unlock" class="icon-xs"></i> Desbloquear</button>` : '';
+        $tbody.append(`<tr>
+          <td>${esc(u.usu_nick)}</td><td>${esc(u.nombre_completo)}</td><td>${esc(u.grupo_nombre)}</td>
+          <td class="text-center">${mfa}</td><td class="text-center">${bloqueado}</td>
+          <td class="text-center"><button class="btn btn-sm btn-outline-primary btn-ver-sesiones" data-id-usuario="${u.id_usuario}" data-nick="${esc(u.usu_nick)}">${u.sesiones_activas} <i data-feather="monitor" class="icon-xs"></i></button></td>
+          <td>${fecha(u.fecha_ultimo_login)}</td><td class="text-end">${btnDesbloquear} ${btnRevocar}</td></tr>`);
+      });
+      if (window.feather) feather.replace();
+    });
+  };
+  const verSesiones = (idUsuario, nick) => {
+    fetch(`/api/v1/acceso/usuarios/${idUsuario}/sesiones`).then(r => r.json()).then(data => {
+      if (!data.success) { Swal.fire('Error', data.error || 'No se pudieron cargar las sesiones.', 'error'); return; }
+      $('#modalSesiones .modal-title').text(`Sesiones activas de ${nick}`);
+      const $tbody = $('#tbodySesiones').empty();
+      if (!data.data.length) $tbody.append('<tr><td colspan="4" class="text-center text-muted py-3">Sin sesiones activas.</td></tr>');
+      data.data.forEach(s => $tbody.append(`<tr><td>${esc(s.ip_address || '-')}</td>
+        <td class="text-truncate" style="max-width:220px" title="${esc(s.user_agent)}">${esc(s.user_agent || '-')}</td>
+        <td>${fecha(s.fecha_ultimo_ping)}</td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-danger btn-cerrar-sesion" data-id-sesion="${s.id_sesion}" data-id-usuario="${idUsuario}" data-nick="${esc(nick)}">Cerrar</button></td></tr>`));
+      bootstrap.Modal.getOrCreateInstance('#modalSesiones').show();
+    });
+  };
+  const accionAcceso = (titulo, texto, confirmar, url, metodo, alTerminar) => {
+    Swal.fire({ title: titulo, text: texto || undefined, icon: 'warning', showCancelButton: true, confirmButtonText: confirmar })
+      .then(r => {
+        if (!r.isConfirmed) return;
+        fetch(url, { method: metodo, headers: { 'X-CSRFToken': CSRFToken } }).then(resp => resp.json()).then(data => {
+          if (data.success) { Swal.fire('Listo', data.mensaje || 'Hecho.', 'success'); alTerminar(); }
+          else Swal.fire('Error', data.error || 'No se pudo completar la acción.', 'error');
         });
       });
-  }
-
-  // ==========================================
-  // SOLICITUDES DE RECUPERACIÓN
-  // ==========================================
-  let tablaRecuperaciones;
-
-  const construirUrlRecuperaciones = () => {
-    const params = new URLSearchParams();
-    const fechaDesde = $('#fltFechaDesde').val();
-    const fechaHasta = $('#fltFechaHasta').val();
-    if (fechaDesde) params.append('fecha_desde', fechaDesde);
-    if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-    params.append('pagina', 1);
-    params.append('por_pagina', 200);
-    return `/api/v1/auditoria/recuperaciones?${params.toString()}`;
-  }
-
-  const initTablaRecuperaciones = () => {
-    tablaRecuperaciones = $('#tblRecuperaciones').DataTable({
-      language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" },
-      ajax: { url: construirUrlRecuperaciones(), dataSrc: 'data.datos' },
-      columns: [
-        { data: 'fecha_creacion' },
-        { data: 'usu_nick', defaultContent: '-' },
-        { data: 'email_destino', defaultContent: '-' },
-        { data: 'ip_solicitud', defaultContent: '-' },
-        { data: 'fecha_expiracion' },
-        {
-          data: function (row) {
-            return row.usado
-              ? '<span class="badge bg-success">Sí</span>'
-              : '<span class="badge bg-secondary">No</span>';
-          }
-        }
-      ],
-      order: [[0, 'desc']]
+  };
+  const iniciarSesiones = () => {
+    cargarUsuariosAcceso();
+    $(document).on('click', '.btn-ver-sesiones', function () { verSesiones($(this).data('id-usuario'), $(this).data('nick')); });
+    $(document).on('click', '.btn-cerrar-sesion', function () {
+      const idUsuario = $(this).data('id-usuario'), nick = $(this).data('nick');
+      accionAcceso('¿Cerrar esta sesión?', '', 'Sí, cerrar', `/api/v1/acceso/sesiones/${$(this).data('id-sesion')}`, 'DELETE',
+        () => { verSesiones(idUsuario, nick); cargarUsuariosAcceso(); });
     });
-  }
-
-  const recargarTodo = () => {
-    tabla.ajax.url(construirUrl()).load();
-    tablaIntentos.ajax.url(construirUrlIntentos()).load();
-    tablaRecuperaciones.ajax.url(construirUrlRecuperaciones()).load();
-    cargarSospechosas();
-  }
-
-  const filtrar = () => {
-    $('#btnFiltrar').on('click', recargarTodo);
-    $('#btnLimpiar').on('click', function () {
-      $('#fltFechaDesde, #fltFechaHasta, #fltIdUsuario, #fltIp').val('');
-      $('#fltAccion').val('');
-      $('#fltSoloFallidos').prop('checked', false);
-      recargarTodo();
+    $(document).on('click', '.btn-desbloquear', function () {
+      accionAcceso('¿Desbloquear este usuario?', '', 'Sí, desbloquear', `/api/v1/acceso/usuarios/${$(this).data('id-usuario')}/desbloquear`, 'POST', cargarUsuariosAcceso);
     });
-    $('#fltSoloFallidos').on('change', () => tablaIntentos.ajax.url(construirUrlIntentos()).load());
-  }
+    $(document).on('click', '.btn-revocar-mfa', function () {
+      accionAcceso('¿Revocar MFA de este usuario?', 'Deberá vincularlo nuevamente para volver a usarlo.', 'Sí, revocar',
+        `/api/v1/acceso/usuarios/${$(this).data('id-usuario')}/mfa/revocar`, 'POST', cargarUsuariosAcceso);
+    });
+  };
+
+  // ════════════ Arranque: cada pestaña se carga la primera vez que se abre ════════════
+  const iniciadas = {};
+  const INICIAR = { cambios: iniciarCambios, eventos: iniciarEventos, accesos: iniciarAccesos, sesiones: iniciarSesiones };
+  const abrirPestana = (cod) => {
+    if (!iniciadas[cod] && INICIAR[cod]) { iniciadas[cod] = true; INICIAR[cod](); }
+    $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+  };
 
   $(function () {
-    cargarAcciones();
-    initDatatable();
-    initTablaIntentos();
-    initTablaRecuperaciones();
-    cargarSospechosas();
-    filtrar();
+    abrirPestana('{{ pestana }}');
+    $('#audTabs button[data-bs-toggle="pill"]').on('shown.bs.tab', e => {
+      const cod = $(e.target).data('pestana');
+      abrirPestana(cod);
+      history.replaceState(null, '', `?tab=${cod}`);
+    });
+
+    $('#cFiltrar').on('click', () => { cargarResumen(); if (tablaCambios) tablaCambios.ajax.url(urlCambios()).load(); });
+    $('#cLimpiar').on('click', () => {
+      $('#cFechaDesde, #cFechaHasta, #cIdUsuario, #cIdRegistro').val('');
+      $('#cModulo, #cTabla, #cOperacion').val('');
+      $('#cFiltrar').click();
+    });
+    $(document).on('click', '.btn-ver-cambio', function () { verCambio($(this).data('id')); });
+    $('#cambioTodos').on('change', function () { $('#tblDiff .fila-igual').toggleClass('d-none', !this.checked); });
+
+    $('#eFiltrar').on('click', () => tablaEventos && tablaEventos.ajax.url(urlEventos()).load());
+    $('#eLimpiar').on('click', () => { $('#eFechaDesde, #eFechaHasta, #eIdUsuario, #eAccion').val(''); $('#eFiltrar').click(); });
+
+    const recargarAccesos = () => {
+      if (!tablaIntentos) return;
+      tablaIntentos.ajax.url(urlIntentos()).load();
+      tablaRecuperaciones.ajax.url(urlRecuperaciones()).load();
+      cargarSospechosas();
+    };
+    $('#aFiltrar').on('click', recargarAccesos);
+    $('#aSoloFallidos').on('change', recargarAccesos);
+    $('#aLimpiar').on('click', () => { $('#aFechaDesde, #aFechaHasta, #aIp, #aIdUsuario').val(''); $('#aSoloFallidos').prop('checked', false); recargarAccesos(); });
   });
 </script>
 {% endblock %}

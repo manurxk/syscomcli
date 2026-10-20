@@ -1,5 +1,5 @@
 -- 08_consulta_anamnesis.sql — Consulta, anamnesis, PEI, notas clínicas y derivaciones
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -383,6 +383,12 @@ CREATE INDEX idx_consultas_cita ON public.consultas USING btree (id_cita);
 CREATE INDEX idx_consultas_especialista_fecha ON public.consultas USING btree (id_especialista, consulta_fecha);
 
 --
+-- Name: idx_consultas_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_consultas_fecha ON public.consultas USING btree (((consulta_fecha)::date)) WHERE (est_consulta = true);
+
+--
 -- Name: idx_consultas_paciente; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -425,10 +431,22 @@ CREATE UNIQUE INDEX uq_anamnesis_paciente_version_actual ON public.anamnesis USI
 CREATE UNIQUE INDEX uq_pei_paciente_version_actual ON public.pei USING btree (id_paciente) WHERE es_version_actual;
 
 --
+-- Name: anamnesis trg_anamnesis_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_anamnesis_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.anamnesis FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_anamnesis');
+
+--
 -- Name: anamnesis trg_anamnesis_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_anamnesis_fecha_mod BEFORE UPDATE ON public.anamnesis FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: consultas trg_consultas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_consultas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.consultas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_consulta');
 
 --
 -- Name: consultas trg_consultas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
@@ -437,16 +455,34 @@ CREATE TRIGGER trg_anamnesis_fecha_mod BEFORE UPDATE ON public.anamnesis FOR EAC
 CREATE TRIGGER trg_consultas_fecha_mod BEFORE UPDATE ON public.consultas FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: derivaciones trg_derivaciones_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_derivaciones_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.derivaciones FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_derivacion');
+
+--
 -- Name: derivaciones trg_derivaciones_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_derivaciones_fecha_mod BEFORE UPDATE ON public.derivaciones FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: notas_clinicas trg_notas_clinicas_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_notas_clinicas_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.notas_clinicas FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_nota');
+
+--
 -- Name: notas_clinicas trg_notas_clinicas_fecha_mod; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_notas_clinicas_fecha_mod BEFORE UPDATE ON public.notas_clinicas FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
+
+--
+-- Name: pei trg_pei_auditoria; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_pei_auditoria AFTER INSERT OR DELETE OR UPDATE ON public.pei FOR EACH ROW EXECUTE FUNCTION public.fn_auditar_cambios('CLINICO', 'id_pei');
 
 --
 -- Name: pei trg_pei_fecha_mod; Type: TRIGGER; Schema: public; Owner: -

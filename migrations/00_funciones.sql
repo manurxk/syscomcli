@@ -1,5 +1,5 @@
 -- 00_funciones.sql — Funciones generales
--- Generado el 2026-10-18 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -172,6 +172,108 @@ $$;
 COMMENT ON FUNCTION public.esta_usuario_bloqueado(p_id_usuario integer) IS 'Verifica si un usuario está bloqueado y si el bloqueo sigue vigente';
 
 --
+-- Name: fn_auditar_cambios(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fn_auditar_cambios() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+    v_anterior jsonb;
+    v_nuevo    jsonb;
+    v_campos   text[];
+    v_secreta  text;
+BEGIN
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN v_anterior := to_jsonb(OLD); END IF;
+    IF TG_OP IN ('INSERT', 'UPDATE') THEN v_nuevo := to_jsonb(NEW); END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+        -- Columnas de control que no cuentan como cambio: la fecha/usuario de modificación y los datos de
+        -- sesión de usuarios (ya quedan en auditoria_sistema y accesos_sistema en cada login/logout).
+        SELECT array_agg(n.key ORDER BY n.key) INTO v_campos
+          FROM jsonb_each(v_nuevo) n
+         WHERE n.value IS DISTINCT FROM v_anterior -> n.key
+           AND n.key NOT IN ('fecha_modificacion', 'usuario_modificacion',
+                             'sesiones_activas', 'fecha_ultimo_login', 'ip_ultimo_login',
+                             'user_agent_ultimo_login');
+        IF v_campos IS NULL THEN
+            RETURN NULL;  -- nada relevante cambio
+        END IF;
+    END IF;
+
+    FOREACH v_secreta IN ARRAY ARRAY['usu_clave', 'certificado_firma_digital_password_encrypted', 'codigo_seguridad_contribuyente'] LOOP
+        IF v_anterior ? v_secreta THEN v_anterior := jsonb_set(v_anterior, ARRAY[v_secreta], '"***"'); END IF;
+        IF v_nuevo ? v_secreta THEN v_nuevo := jsonb_set(v_nuevo, ARRAY[v_secreta], '"***"'); END IF;
+    END LOOP;
+
+    INSERT INTO auditoria_transacciones (tabla, modulo, operacion, id_registro, datos_anteriores, datos_nuevos,
+                                         campos_modificados, id_usuario, roles, ip_origen)
+    VALUES (TG_TABLE_NAME, TG_ARGV[0], TG_OP, COALESCE(v_nuevo, v_anterior) ->> TG_ARGV[1], v_anterior, v_nuevo,
+            v_campos, NULLIF(current_setting('app.id_usuario', true), '')::integer,
+            NULLIF(current_setting('app.roles', true), ''), NULLIF(current_setting('app.ip', true), '')::inet);
+    RETURN NULL;
+EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'fn_auditar_cambios: no se audito % en % (%)', TG_OP, TG_TABLE_NAME, SQLERRM;
+    RETURN NULL;
+END;
+$$;
+
+--
+-- Name: FUNCTION fn_auditar_cambios(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.fn_auditar_cambios() IS 'Trigger AFTER INSERT/UPDATE/DELETE de auditoria. Argumentos: modulo y columna de la clave primaria. Guarda antes/despues en auditoria_transacciones con el usuario, roles e IP que la app pasa por set_config (app.id_usuario, app.roles, app.ip). Ignora UPDATE sin cambios reales, enmascara columnas secretas y nunca frena la operacion (EXCEPTION con WARNING).';
+
+--
+-- Name: fn_proteger_factura(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fn_proteger_factura() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_estado_anterior varchar;
+    v_estado_nuevo    varchar;
+    v_cambiados       text[];
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'La factura % no se puede borrar: es un documento fiscal. Para dejarla sin efecto, anularla.', OLD.factura_numero
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    SELECT UPPER(des_estado_factura) INTO v_estado_anterior FROM estados_factura WHERE id_estado_factura = OLD.id_estado_factura;
+    SELECT UPPER(des_estado_factura) INTO v_estado_nuevo FROM estados_factura WHERE id_estado_factura = NEW.id_estado_factura;
+
+    IF v_estado_anterior = 'ANULADA' THEN
+        RAISE EXCEPTION 'La factura % esta anulada y no se puede modificar.', OLD.factura_numero
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    -- Emitida: solo se acepta la anulación, que cambia el estado y los datos de anulación/modificación
+    SELECT array_agg(n.key ORDER BY n.key) INTO v_cambiados
+      FROM jsonb_each(to_jsonb(NEW)) n
+     WHERE n.value IS DISTINCT FROM to_jsonb(OLD) -> n.key
+       AND n.key NOT IN ('id_estado_factura', 'fecha_anulacion', 'usuario_anulacion',
+                         'fecha_modificacion', 'usuario_modificacion');
+
+    IF v_cambiados IS NOT NULL OR (NEW.id_estado_factura IS DISTINCT FROM OLD.id_estado_factura AND v_estado_nuevo <> 'ANULADA') THEN
+        RAISE EXCEPTION 'La factura % ya fue emitida y no se puede modificar (%). Solo se puede anular.',
+            OLD.factura_numero, COALESCE(array_to_string(v_cambiados, ', '), 'estado ' || COALESCE(v_estado_nuevo, '?'))
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+--
+-- Name: FUNCTION fn_proteger_factura(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.fn_proteger_factura() IS 'Trigger de negocio BEFORE UPDATE OR DELETE en facturas: una factura emitida es un documento fiscal. Solo permite anularla (EMITIDA -> ANULADA, cambiando id_estado_factura, fecha_anulacion, usuario_anulacion y los datos de modificacion). Rechaza otros cambios sobre una emitida, todo cambio sobre una anulada y todo borrado. Cuando se implemente SIFEN (codigo_sifen), agregar esa columna a las permitidas.';
+
+--
 -- Name: fn_set_fecha_modificacion(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -181,8 +283,17 @@ CREATE FUNCTION public.fn_set_fecha_modificacion() RETURNS trigger
 BEGIN
     NEW.fecha_modificacion := now();
     RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'fn_set_fecha_modificacion: no se actualizo fecha_modificacion en % (%)', TG_TABLE_NAME, SQLERRM;
+    RETURN NEW;
 END;
 $$;
+
+--
+-- Name: FUNCTION fn_set_fecha_modificacion(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.fn_set_fecha_modificacion() IS 'Trigger BEFORE UPDATE compartido por las tablas con columnas de auditoria: pone fecha_modificacion = now() en cada modificacion (el usuario_modificacion lo pone la app). Si falla, avisa con WARNING y deja seguir el cambio.';
 
 --
 -- Name: limpiar_sesiones_expiradas(); Type: FUNCTION; Schema: public; Owner: -

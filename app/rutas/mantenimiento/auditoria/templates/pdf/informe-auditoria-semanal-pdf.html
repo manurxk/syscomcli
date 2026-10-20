@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe de auditoría</title>
+    {# Informe semanal de auditoría (PDF 9 + 6, paso 6). Estilo del PDF de reportes (reporte-ventas-pdf.html).
+       Lo arma app/services/informe_auditoria_service.py; solo incluye los módulos que ve el destinatario. #}
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+            @bottom-right { content: "Página " counter(page) " de " counter(pages); font-family: Arial, sans-serif; font-size: 10px; color: #555; }
+            @bottom-left { content: "Generado el {{ generado }}"; font-family: Arial, sans-serif; font-size: 10px; color: #555; }
+        }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 12px; }
+        .header { border-bottom: 2px solid #6d28d9; padding-bottom: 12px; margin-bottom: 18px; }
+        .header h1 { color: #6d28d9; margin: 0; font-size: 22px; text-transform: uppercase; }
+        .header p { margin: 4px 0 0; font-size: 12px; color: #555; }
+        h2 { font-size: 14px; color: #6d28d9; margin: 18px 0 6px; }
+        .kpi-section { width: 100%; margin-bottom: 10px; border-collapse: separate; border-spacing: 10px 0; }
+        .kpi-box { background-color: #f8f9fa; border-left: 4px solid #6d28d9; padding: 10px; border-radius: 4px; }
+        .kpi-title { font-size: 10px; text-transform: uppercase; color: #777; margin: 0 0 4px; }
+        .kpi-value { font-size: 18px; font-weight: bold; color: #222; margin: 0; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        table.data-table th, table.data-table td { border: 1px solid #ddd; padding: 5px 6px; text-align: left; font-size: 11px; }
+        table.data-table th { background-color: #f3f0fa; color: #444; }
+        .num { text-align: right !important; }
+        .vacio { color: #888; font-style: italic; }
+        .nota { font-size: 10px; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Informe de auditoría</h1>
+        <p><b>{{ empresa }}</b> · del {{ fecha_desde.strftime('%d/%m/%Y') }} al {{ fecha_hasta.strftime('%d/%m/%Y') }}</p>
+        <p>Módulos incluidos: {{ modulos|join(', ') }}</p>
+    </div>
+
+    {% set t = resumen.totales %}
+    <table class="kpi-section">
+        <tr>
+            <td class="kpi-box" style="border-color: #198754;"><p class="kpi-title">Altas</p><p class="kpi-value">{{ t['INSERT'] }}</p></td>
+            <td class="kpi-box" style="border-color: #0d6efd;"><p class="kpi-title">Modificaciones</p><p class="kpi-value">{{ t['UPDATE'] }}</p></td>
+            <td class="kpi-box" style="border-color: #6c757d;"><p class="kpi-title">Bajas</p><p class="kpi-value">{{ t['DELETE'] }}</p></td>
+            <td class="kpi-box" style="border-color: #dc3545;"><p class="kpi-title">Anulaciones</p><p class="kpi-value">{{ t['anulaciones'] }}</p></td>
+            <td class="kpi-box" style="border-color: #fd7e14;"><p class="kpi-title">Fuera de horario</p><p class="kpi-value">{{ fuera_horario|length }}</p></td>
+        </tr>
+    </table>
+
+    <h2>Cambios por tabla</h2>
+    <table class="data-table">
+        <tr><th>Módulo</th><th>Tabla</th><th class="num">Altas</th><th class="num">Modificaciones</th><th class="num">Bajas</th><th class="num">Anulaciones</th><th class="num">Total</th></tr>
+        {% for f in resumen.por_tabla %}
+        <tr><td>{{ etiqueta_modulo[f.modulo] }}</td><td>{{ f.tabla|replace('_', ' ') }}</td><td class="num">{{ f.altas }}</td><td class="num">{{ f.modificaciones }}</td>
+            <td class="num">{{ f.bajas }}</td><td class="num">{{ f.anulaciones }}</td><td class="num"><b>{{ f.total }}</b></td></tr>
+        {% else %}
+        <tr><td colspan="7" class="vacio">Sin cambios en el período.</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>Anulaciones</h2>
+    <table class="data-table">
+        <tr><th>Fecha</th><th>Documento</th><th>Usuario</th><th>IP</th></tr>
+        {% for a in anulaciones %}
+        <tr><td>{{ a.fecha_cambio.strftime('%d/%m/%Y %H:%M') }}</td><td>{{ a.tabla|replace('_', ' ') }} #{{ a.id_registro }}</td>
+            <td>{{ a.usu_nick or a.roles or 'sin usuario' }}</td><td>{{ a.ip_origen or '-' }}</td></tr>
+        {% else %}
+        <tr><td colspan="4" class="vacio">Sin anulaciones en el período.</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>Cambios fuera del horario de atención</h2>
+    <table class="data-table">
+        <tr><th>Fecha</th><th>Módulo</th><th>Registro</th><th>Operación</th><th>Usuario</th><th>IP</th></tr>
+        {% for c in fuera_horario[:100] %}
+        <tr><td>{{ c.fecha_cambio.strftime('%d/%m/%Y %H:%M') }}</td><td>{{ etiqueta_modulo[c.modulo] }}</td><td>{{ c.tabla|replace('_', ' ') }} #{{ c.id_registro }}</td>
+            <td>{{ etiqueta_operacion[c.operacion] }}</td><td>{{ c.usu_nick or c.roles or 'sin usuario' }}</td><td>{{ c.ip_origen or '-' }}</td></tr>
+        {% else %}
+        <tr><td colspan="6" class="vacio">Sin cambios fuera de horario en el período.</td></tr>
+        {% endfor %}
+    </table>
+    {% if fuera_horario|length > 100 %}<p class="nota">Se muestran los primeros 100 de {{ fuera_horario|length }}. El resto, en Auditoría → Cambios en datos.</p>{% endif %}
+
+    <h2>Eventos de seguridad</h2>
+    <table class="data-table">
+        <tr><th>Evento</th><th class="num">Cantidad</th></tr>
+        {% for e in seguridad %}
+        <tr><td>{{ e.etiqueta }}</td><td class="num">{{ e.cantidad }}</td></tr>
+        {% else %}
+        <tr><td colspan="2" class="vacio">Sin eventos de seguridad en el período.</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>IPs con intentos fallidos en varias cuentas</h2>
+    <table class="data-table">
+        <tr><th>IP</th><th class="num">Cuentas distintas</th><th class="num">Fallos</th><th>Último intento</th></tr>
+        {% for ip in ips_sospechosas %}
+        <tr><td>{{ ip.ip_origen }}</td><td class="num">{{ ip.cuentas_distintas }}</td><td class="num">{{ ip.total_fallos }}</td><td>{{ ip.ultimo_intento.strftime('%d/%m/%Y %H:%M') }}</td></tr>
+        {% else %}
+        <tr><td colspan="4" class="vacio">Sin patrones sospechosos.</td></tr>
+        {% endfor %}
+    </table>
+
+    <p class="nota">Horario de atención según la configuración de la empresa. Los cambios hechos por tareas automáticas no cuentan como fuera de horario. El detalle de cada cambio (dato anterior y nuevo) está en Sysclin, Auditoría → Cambios en datos.</p>
+</body>
+</html>

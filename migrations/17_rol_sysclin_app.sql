@@ -44,3 +44,15 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
     GRANT USAGE, SELECT ON SEQUENCES TO sysclin_app;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
     GRANT EXECUTE ON ROUTINES TO sysclin_app;
+
+-- 5. Hora de Paraguay en la base (PDF 9 + 6, paso 1b). pg_dump no guarda esta configuracion, por eso va aca.
+--    Sin esto la base trabaja en UTC y now() / CURRENT_TIMESTAMP guardan la hora 3 h adelantada.
+--    Vale para todas las conexiones nuevas a esta base (sysclin_app y postgres).
+SELECT format('ALTER DATABASE %I SET timezone = %L', current_database(), 'America/Asuncion') \gexec
+
+-- 6. Auditoria inmutable (PDF 9 + 6, paso 2). Va despues del punto 3 porque ese da UPDATE/DELETE en todas las tablas.
+--    auditoria_transacciones: la app solo LEE; la escribe el trigger fn_auditar_cambios (SECURITY DEFINER).
+--    auditoria_sistema: la app inserta eventos, pero no puede modificarlos ni borrarlos.
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON auditoria_transacciones FROM sysclin_app;
+REVOKE UPDATE, DELETE, TRUNCATE ON auditoria_sistema FROM sysclin_app;
+REVOKE ALL ON FUNCTION fn_auditar_cambios() FROM PUBLIC, sysclin_app;

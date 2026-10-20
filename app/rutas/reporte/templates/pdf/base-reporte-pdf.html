@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!-- Base común de los PDF de Reportes (PDF 4, paso 5; ver app/services/reporte_service.py).
+     Mismo diseño que el presupuesto y la ficha (negro y gris, encabezado de 2 columnas, sin gráficos).
+     Diseño aprobado sobre docs/prototipos/reporte_{agendamiento,consultorio,ventas}_ejemplo.pdf.
+     Cada reporte llena los bloques «orientacion» y «cuerpo». -->
+<html>
+<head>
+  <title>{{ titulo }} {{ fecha_desde }} al {{ fecha_hasta }}</title>
+  <meta charset="UTF-8" />
+  <style type="text/css">
+    @page {
+      size: A4{% block orientacion %}{% endblock %};
+      margin: 10mm 9mm 14mm 9mm;
+      @bottom-center {
+        content: "{{ titulo }} · Generado por {{ generado_por }} el {{ generado_en }} · Página " counter(page) " de " counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 6.5pt;
+        color: #555555;
+      }
+    }
+    body { font-family: Arial, sans-serif; font-size: 8pt; color: #000000; margin: 0; padding: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    .encabezado td { vertical-align: top; }
+    .encabezado img { width: 80px; height: auto; margin-bottom: 6px; }
+    .titulo-doc { font-size: 13pt; font-weight: bold; text-align: center; margin-top: 6px; }
+    .seccion {
+      background-color: #c9c9c9; border: 1px solid #040303; font-size: 8pt; font-weight: bold;
+      text-transform: uppercase; padding: 3px 6px; margin-top: 8px; page-break-after: avoid;
+    }
+    .lbl { display: block; font-size: 6.5pt; color: #555555; text-transform: uppercase; }
+    .resumen td { border: 1px solid #040303; text-align: center; padding: 4px; }
+    .resumen .numero { display: block; font-size: 13pt; font-weight: bold; }
+    .detalle th { background: #dcdcdc; border: 1px solid #040303; padding: 3px; font-weight: normal; text-align: center; }
+    .detalle td { border: 1px solid #040303; padding: 3px 5px; vertical-align: top; }
+    .detalle thead { display: table-header-group; }
+    .detalle tr { page-break-inside: avoid; }
+    .detalle tr.tot td { font-weight: bold; background: #f0f0f0; }
+    .centro { text-align: center; }
+    .der { text-align: right; }
+    .vacio { text-align: center; font-style: italic; color: #555555; }
+    .nota { font-size: 6.5pt; color: #333333; margin-top: 4px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <table class="encabezado" style="border: 1px solid #040303;">
+    <tr style="background-color: #dcdcdc;">
+      <td colspan="2" style="text-align: center; font-size: 7pt; padding: 3px; border-bottom: 1px solid #040303;">
+        Reporte de gestión · Documento interno sin valor fiscal
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 60%; padding: 10px 12px; line-height: 1.5;">
+        {% if logo %}<img src="data:image/png;base64,{{ logo }}" alt="Logo">{% endif %}
+        <div style="font-size: 10pt; font-weight: bold;">{{ empresa.nombre or 'SYSCLIN' }}</div>
+        {% if empresa.direccion %}<div>{{ empresa.direccion }}</div>{% endif %}
+        {% if empresa.telefono %}<div>Teléfono: {{ empresa.telefono }}</div>{% endif %}
+        {% if empresa.ruc %}<div>RUC: {{ empresa.ruc }}</div>{% endif %}
+      </td>
+      <td style="width: 40%; padding: 10px 12px; border-left: 1px solid #040303; line-height: 1.6;">
+        <div class="titulo-doc">{{ titulo|upper }}</div>
+        <div style="text-align:center; margin-top:8px;">Período: <b>{{ fecha(fecha_desde) }} al {{ fecha(fecha_hasta) }}</b></div>
+        <div style="text-align:center;">Alcance: <b>{{ alcance }}</b></div>
+      </td>
+    </tr>
+  </table>
+
+  {% block cuerpo %}{% endblock %}
+</body>
+</html>

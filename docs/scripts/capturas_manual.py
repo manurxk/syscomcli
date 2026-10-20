@@ -145,12 +145,6 @@ CAPTURAS = [
         'marcas': [(campo('Agenda'), 2), (campo('Paciente'), 3), (campo('Prioridad'), 4),
                    (campo('Motivo'), 5), (boton('Guardar'), 6, 'esquina')],
     },
-    {
-        'seccion': 'reporte_agendamiento', 'archivo': '01_filtros.jpg', 'rol': 'RECEPCION',
-        'url': '/reporte/agendamiento',
-        'marcas': [(campo('Fecha Desde'), 1), (boton('Actualizar Reporte'), 2, 'esquina')],
-        'hasta': boton('Actualizar Reporte'),
-    },
     # ---------------- Clínico ----------------
     {
         'seccion': 'mi_agenda', 'archivo': '01_citas_hoy.jpg', 'rol': 'CLINICO',
@@ -197,12 +191,6 @@ CAPTURAS = [
         'marcas': [('input[type="search"]:visible', 1), (boton('Ver ficha'), 2, 'esquina')],
         'alto': 620,
     },
-    {
-        'seccion': 'reporte_consultorio', 'archivo': '01_filtros.jpg', 'rol': 'CLINICO',
-        'url': '/reporte/consultorio',
-        'marcas': [(campo('Fecha Desde'), 1), (boton('Actualizar Reporte'), 2, 'esquina')],
-        'hasta': boton('Actualizar Reporte'),
-    },
     # ---------------- Administración ----------------
     {
         'seccion': 'funcionarios', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
@@ -220,6 +208,102 @@ CAPTURAS = [
                      ('esperar', '#collapseEspecialista.show')],
         'marcas': [(titulo('Datos Personales'), 2), (campo('Cargo Asignado'), 3),
                    (titulo('Datos de Especialista'), 4), ('#btnGuardar', 5, 'esquina')],
+    },
+    {
+        'seccion': 'usuarios', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/usuario/usuario-index',
+        'marcas': [(boton('Nuevo Usuario'), 1)], 'hasta': boton('Nuevo Usuario'),
+    },
+    {
+        'seccion': 'usuarios', 'archivo': '02_formulario.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/usuario/usuario-agregar',
+        'acciones': [('esperar', '#id_rol option:nth-child(2)')],
+        'marcas': [(titulo('Funcionario Asociado'), 2), (campo('Username'), 3), (campo('Rol Principal'), 4),
+                   (titulo('Contraseña'), 6), ('#btnGuardar', 7, 'esquina')],
+    },
+    {
+        # Detalle de recep2 (id 5, cuenta del seed): datos y acciones (los registros de acceso están en Auditoría)
+        'seccion': 'usuarios', 'archivo': '03_detalle.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/usuario/usuario-detalle/5',
+        'marcas': [('a.btn[href*="auditoria-index"]', 1, 'esquina'), ('#btnResetear', 2, 'esquina'), (titulo('Sesiones activas'), 3)],
+        'hasta': titulo('Sesiones activas'),
+    },
+    {
+        'seccion': 'permisos', 'archivo': '01_matriz.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/referenciales/permisos/permisos-index',
+        'acciones': [('esperar', '#selRol option:nth-child(2)'),
+                     ('js', "const s = document.getElementById('selRol'); "
+                            "const o = [...s.options].find(o => /RECEP/i.test(o.text)); "
+                            "if (o) { s.value = o.value; $(s).trigger('change'); }"),
+                     ('esperar', '#tblMatriz .chk-permiso')],
+        'marcas': [('#selRol', 1, 'esquina'), ('#tblMatriz thead', 2), (boton('Guardar cambios'), 3, 'esquina')],
+        'alto': 900,
+    },
+    {
+        'seccion': 'menu', 'archivo': '01_menu.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/seguridad/menu/menu-index',
+        'acciones': [('esperar', '#selRol option:nth-child(2)'),
+                     ('js', "const s = document.getElementById('selRol'); "
+                            "const o = [...s.options].find(o => /RECEP/i.test(o.text)); "
+                            "if (o) { s.value = o.value; $(s).trigger('change'); }"),
+                     ('esperar', '#tblMatriz .chk-visible')],
+        'marcas': [('#selRol', 1, 'esquina'), ('#tblMatriz thead', 2), (boton('Guardar cambios'), 3, 'esquina')],
+        'alto': 900,
+    },
+    # Auditoría: pantalla única con pestañas (PDF 9 + 6, paso 5); Accesos es la pestaña "Sesiones y usuarios"
+    {
+        'seccion': 'auditoria', 'archivo': '01_cambios.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/auditoria/auditoria-index?tab=cambios',
+        'acciones': [('esperar', '#tblCambios tbody tr .btn-ver-cambio')],
+        'marcas': [('#cFechaDesde', 1), ('#cModulo', 2), ('#cFiltrar', 3, 'esquina'),
+                   ('#tblCambios tbody tr:first-child .btn-ver-cambio', 4, 'esquina')],
+        'alto': 1100,
+    },
+    {
+        'seccion': 'auditoria', 'archivo': '02_detalle_cambio.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/auditoria/auditoria-index?tab=cambios',
+        'acciones': [('esperar', '#tblCambios tbody tr .btn-ver-cambio'),
+                     ('click', '#tblCambios tbody tr:first-child .btn-ver-cambio'), ('esperar', MODAL)],
+        'elemento': MODAL,
+        'marcas': [('#cambioTodos', 1)],
+    },
+    {
+        'seccion': 'auditoria', 'archivo': '03_eventos.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/auditoria/auditoria-index?tab=eventos',
+        'acciones': [('esperar', '#tblEventos tbody tr')],
+        'marcas': [('#eAccion', 1), ('#eFiltrar', 2, 'esquina')],
+        'alto': 900,
+    },
+    {
+        'seccion': 'auditoria', 'archivo': '04_accesos.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/auditoria/auditoria-index?tab=accesos',
+        'acciones': [('esperar', '#tblIntentos tbody tr')],
+        'marcas': [('#aSoloFallidos', 1)],
+        'alto': 900,
+    },
+    {
+        'seccion': 'auditoria', 'archivo': '05_sesiones.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/auditoria/auditoria-index?tab=sesiones',
+        'acciones': [('esperar', '#tbodyAccesos .btn-ver-sesiones')],
+        'marcas': [('#tbodyAccesos .btn-ver-sesiones', 1)],
+        'alto': 700,
+    },
+    {
+        'seccion': 'referenciales', 'archivo': '01_indice.jpg', 'rol': 'ADMIN',
+        # Sin recorte de alto: tiene que verse también el grupo Ventas
+        'url': '/mantenimiento/referenciales/referenciales-index',
+    },
+    {
+        'seccion': 'referenciales', 'archivo': '02_cargos.jpg', 'rol': 'ADMIN',
+        'url': '/mantenimiento/referenciales/cargo/cargo-index',
+        'acciones': [('click', boton('Agregar')), ('esperar', MODAL)],
+        'elemento': MODAL,
+        'marcas': [(campo('Descripción'), 3), (boton('Guardar'), 4, 'esquina')],
+    },
+    {
+        'seccion': 'reportes', 'archivo': '01_filtros.jpg', 'rol': 'ADMIN',
+        'url': '/reporte/index',
+        'marcas': [(campo('Desde'), 1), (boton('Aplicar'), 2, 'esquina'), (boton('Exportar PDF'), 3, 'esquina')],
     },
     # ---------------- Ventas ----------------
     {
@@ -366,12 +450,6 @@ CAPTURAS = [
         'url': '/ventas/movimientos/libro-ventas/libro-ventas-index',
         'alto': 560,
     },
-    {
-        'seccion': 'reporte_ventas', 'archivo': '01_filtros.jpg', 'rol': 'VENTAS',
-        'url': '/reporte/ventas',
-        'marcas': [(campo('Fecha Desde'), 1), (campo('Condición'), 2), (boton('Actualizar Reporte'), 3, 'esquina')],
-        'hasta': boton('Actualizar Reporte'),
-    },
 ]
 
 # Marca circular violeta (paleta SYSCLIN) más un contorno. Por defecto va a la izquierda del elemento,
@@ -460,7 +538,9 @@ def capturar(page, c):
             abajo = min(abajo, arriba + c['alto'])
         clip = {'x': main['x'], 'y': arriba, 'width': main['width'], 'height': abajo - arriba}
 
-    page.screenshot(path=destino, type='jpeg', quality=82, full_page=True, clip=clip)
+    # Un modal se fotografía en la ventana visible: con full_page el navegador se agranda al alto de toda la
+    # página, el modal se reubica y el recorte (calculado antes) ya no coincide (pasaba en páginas largas, como Auditoría)
+    page.screenshot(path=destino, type='jpeg', quality=82, full_page=not c.get('elemento'), clip=clip)
     aviso = f"  (sin marcar: {' | '.join(faltantes)})" if faltantes else ''
     print(f'OK  {destino}{aviso}')
 

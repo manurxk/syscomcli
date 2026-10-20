@@ -11,7 +11,7 @@ Detalle de Usuario
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
           <h1 class="page-header-title" id="hdrUsuNick">Cargando...</h1>
-          <div class="page-header-subtitle">Identidad, bloqueo, MFA e historial de accesos</div>
+          <div class="page-header-subtitle">Identidad, bloqueo, MFA y sesiones</div>
         </div>
         <div class="col-auto mt-4">
           <a href="{{ url_for('usuario.usuarioIndex') }}" class="btn btn-light btn-sm">Volver al listado</a>
@@ -49,6 +49,7 @@ Detalle de Usuario
             {% if 'SUPERADMIN' in roles_usuario %}
             <a href="{{ url_for('usuario.usuarioAgregar', id_usuario=id_usuario) }}" class="btn btn-outline-secondary btn-sm">Editar</a>
             {% endif %}
+            <a href="{{ url_for('auditoria.auditoriaIndex', tab='accesos', usuario=id_usuario) }}" class="btn btn-outline-primary btn-sm">Ver en Auditoría</a>
             <button type="button" id="btnResetear" class="btn btn-outline-success btn-sm">Resetear intentos y desbloquear</button>
             <button type="button" id="btnRevocarMfa" class="btn btn-outline-warning btn-sm d-none">Revocar MFA</button>
             {% if 'SUPERADMIN' in roles_usuario %}
@@ -91,31 +92,8 @@ Detalle de Usuario
     </div>
   </div>
 
-  <!-- Historial de accesos -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header fw-bold">Historial de accesos (últimos 50)</div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-sm" id="tblAccesos">
-          <thead class="table-light"><tr><th>Fecha</th><th>Resultado</th><th>IP</th><th>User Agent</th></tr></thead>
-          <tbody id="tbodyAccesos"><tr><td colspan="4" class="text-center text-muted py-3">Sin registros.</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Solicitudes de recuperación -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header fw-bold">Solicitudes de recuperación de contraseña</div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-sm" id="tblRecuperaciones">
-          <thead class="table-light"><tr><th>Fecha</th><th>Correo destino</th><th>IP</th><th>Vence</th><th>Usado</th></tr></thead>
-          <tbody id="tbodyRecuperaciones"><tr><td colspan="5" class="text-center text-muted py-3">Sin solicitudes.</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  <!-- El historial de accesos, las recuperaciones de contraseña y los cambios hechos por el usuario
+       están en Auditoría (botón "Ver en Auditoría"), filtrados por este usuario -->
 
 </div>
 {% endblock %}
@@ -197,37 +175,6 @@ Detalle de Usuario
           });
         }
 
-        // Historial de accesos
-        const $tbodyAcc = $('#tbodyAccesos').empty();
-        if (!d.historial_accesos || d.historial_accesos.length === 0) {
-          $tbodyAcc.append('<tr><td colspan="4" class="text-center text-muted py-3">Sin registros.</td></tr>');
-        } else {
-          d.historial_accesos.forEach(a => {
-            const cls = a.resultado === 'EXITOSO' ? 'text-success' : 'text-danger';
-            $tbodyAcc.append(`<tr>
-              <td>${a.fecha_intento || '-'}</td>
-              <td class="${cls}">${a.resultado}</td>
-              <td>${a.ip_origen || '-'}</td>
-              <td class="text-truncate" style="max-width:260px" title="${a.user_agent || ''}">${a.user_agent || '-'}</td>
-            </tr>`);
-          });
-        }
-
-        // Solicitudes de recuperación
-        const $tbodyRec = $('#tbodyRecuperaciones').empty();
-        if (!d.solicitudes_recuperacion || d.solicitudes_recuperacion.length === 0) {
-          $tbodyRec.append('<tr><td colspan="5" class="text-center text-muted py-3">Sin solicitudes.</td></tr>');
-        } else {
-          d.solicitudes_recuperacion.forEach(r => {
-            $tbodyRec.append(`<tr>
-              <td>${r.fecha_creacion || '-'}</td>
-              <td>${r.email_destino || '-'}</td>
-              <td>${r.ip_solicitud || '-'}</td>
-              <td>${r.fecha_expiracion || '-'}</td>
-              <td>${r.usado ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
-            </tr>`);
-          });
-        }
       })
       .catch(() => Swal.fire('Error', 'Error al cargar el detalle del usuario.', 'error'));
   };

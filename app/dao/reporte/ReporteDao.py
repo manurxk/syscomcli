@@ -1,6 +1,7 @@
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
 
 class ReporteDao:
     """
@@ -13,235 +14,6 @@ class ReporteDao:
     def __init__(self):
         # La conexión se instancia por método según el patrón del proyecto
         pass
-
-    def getMetricasDashboard(self):
-        """
-        Obtiene métricas rápidas para el dashboard central de reportes.
-        Incluye KPIs de ventas, agenda y consultorio.
-        """
-        metricas = {
-            'ventas_mes': 0,
-            'citas_mes': 0,
-            'pacientes_activos': 0,
-            'recaudado_hoy': 0,
-            # KPIs Ventas
-            'porcentaje_cobrado': 0,
-            'cuentas_pendientes': 0,
-            # KPIs Agenda
-            'porcentaje_asistencia': 0,
-            'citas_canceladas': 0,
-            # KPIs Clínico
-            'diagnosticos_frecuentes': 0,
-            'satisfaccion_paciente': 0,
-        }
-        
-        # 1. Ventas del mes (libro_ventas)
-        sql_ventas = """
-            SELECT COALESCE(SUM(monto_total), 0) 
-            FROM libro_ventas 
-            WHERE DATE_TRUNC('month', libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-        """
-        
-        # 2. Citas del mes
-        sql_citas = """
-            SELECT COUNT(*)
-            FROM citas
-            WHERE DATE_TRUNC('month', cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
-              AND est_cita = TRUE
-        """
-        
-        # 3. Pacientes activos
-        sql_pacientes = """
-            SELECT COUNT(*) FROM pacientes
-        """
-        
-        # 4. Recaudado hoy (cobranzas)
-        sql_recaudacion = """
-            SELECT COALESCE(SUM(monto_cobrado), 0) 
-            FROM cobranzas 
-            WHERE DATE_TRUNC('day', fecha_cobranza) = DATE_TRUNC('day', CURRENT_DATE)
-              AND est_cobranza != 'ANULADA'
-        """
-        
-        # 5. Porcentaje cobrado este mes (cobranzas vs ventas)
-        sql_porcentaje_cobrado = """
-            SELECT
-                CASE WHEN COALESCE(SUM(lv.monto_total), 0) = 0 THEN 0
-                     ELSE ROUND(
-                         (COALESCE(SUM(co.monto_cobrado), 0) * 100.0) / COALESCE(SUM(lv.monto_total), 1)
-                     )
-                END
-            FROM libro_ventas lv
-            LEFT JOIN cobranzas co ON co.id_factura = lv.id_factura
-                AND co.est_cobranza != 'ANULADA'
-            WHERE DATE_TRUNC('month', lv.libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-        """
-        
-        # 6. Cuentas pendientes de cobro
-        sql_pendientes = """
-            SELECT COUNT(*)
-            FROM cuentas_cobrar
-            WHERE est_cuenta_cobrar = 'PENDIENTE'
-        """
-        
-        # 7. Citas atendidas vs total este mes (para asistencia y canceladas)
-        sql_agenda_mes = """
-            SELECT
-                COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'COMPLETADA') AS atendidas,
-                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'CANCELADA') AS canceladas
-            FROM citas c
-            JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE DATE_TRUNC('month', c.cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
-              AND c.est_cita = TRUE
-        """
-
-        # 8. Diagnósticos únicos usados este mes
-        sql_diagnosticos = """
-            SELECT COUNT(DISTINCT rd.id_diagnostico)
-            FROM registro_diagnosticos rd
-            JOIN consultas c ON rd.id_consulta = c.id_consulta
-            WHERE DATE_TRUNC('month', c.consulta_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-              AND c.est_consulta = TRUE
-              AND rd.est_registro_diagnostico = TRUE
-        """
-        
-        conexion = Conexion()
-        con = conexion.getConexion()
-        
-        if not con:
-            app.logger.error("No se pudo conectar a la base de datos en getMetricasDashboard")
-            return metricas
-            
-        cur = con.cursor()
-        
-        try:
-            # 1. Ventas del Mes
-            try:
-                # Limitado a la moneda local: el dashboard muestra una sola cifra por KPI,
-                # sumar monedas distintas (Gs. + USD) daria un numero sin sentido.
-                # La nota de credito resta (en el libro se guarda en positivo).
-                cur.execute("""
-                    SELECT COALESCE(SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO'
-                                             THEN -lv.monto_total ELSE lv.monto_total END), 0)
-                    FROM libro_ventas lv
-                    JOIN monedas m ON lv.id_moneda = m.id_moneda AND m.es_moneda_local
-                    WHERE DATE_TRUNC('month', lv.libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-                """)
-                metricas['ventas_mes'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query ventas_mes: {e}")
-
-            # 2. Citas del Mes
-            try:
-                cur.execute("""
-                    SELECT COUNT(*)
-                    FROM citas
-                    WHERE DATE_TRUNC('month', cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
-                      AND est_cita = TRUE
-                """)
-                metricas['citas_mes'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query citas_mes: {e}")
-
-            # 3. Pacientes Activos
-            try:
-                cur.execute("SELECT COUNT(*) FROM pacientes")
-                metricas['pacientes_activos'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query pacientes_activos: {e}")
-
-            # 4. Recaudado Hoy
-            try:
-                # Limitado a la moneda local, mismo motivo que ventas_mes. De paso se excluyen
-                # las cobranzas ANULADAS, que antes se sumaban igual (bug preexistente).
-                cur.execute("""
-                    SELECT COALESCE(SUM(co.monto_cobrado), 0)
-                    FROM cobranzas co
-                    JOIN monedas m ON co.id_moneda = m.id_moneda AND m.es_moneda_local
-                    WHERE DATE_TRUNC('day', co.fecha_cobranza) = DATE_TRUNC('day', CURRENT_DATE)
-                      AND co.est_cobranza != 'ANULADA'
-                """)
-                metricas['recaudado_hoy'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query recaudado_hoy: {e}")
-
-            # 5. Porcentaje Cobrado
-            try:
-                # Limitado a la moneda local, mismo motivo que ventas_mes.
-                cur.execute("""
-                    SELECT
-                        CASE WHEN COALESCE(SUM(monto_total), 0) = 0 THEN 0
-                             ELSE ROUND((COALESCE(SUM(monto_cobrado), 0) * 100.0) / COALESCE(SUM(monto_total), 1))
-                        END
-                    FROM (
-                        SELECT COALESCE(SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO'
-                                                 THEN -lv.monto_total ELSE lv.monto_total END), 0) as monto_total,
-                               (SELECT COALESCE(SUM(co.monto_cobrado), 0)
-                                FROM cobranzas co
-                                JOIN monedas mc ON co.id_moneda = mc.id_moneda AND mc.es_moneda_local
-                                WHERE DATE_TRUNC('month', co.fecha_cobranza) = DATE_TRUNC('month', CURRENT_DATE)
-                                  AND co.est_cobranza != 'ANULADA') as monto_cobrado
-                        FROM libro_ventas lv
-                        JOIN monedas ml ON lv.id_moneda = ml.id_moneda AND ml.es_moneda_local
-                        WHERE DATE_TRUNC('month', lv.libro_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-                    ) sub
-                """)
-                metricas['porcentaje_cobrado'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query porcentaje_cobrado: {e}")
-
-            # 6. Cuentas Pendientes
-            try:
-                cur.execute("SELECT COUNT(*) FROM cuentas_cobrar WHERE est_cuenta_cobrar = 'PENDIENTE'")
-                metricas['cuentas_pendientes'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query cuentas_pendientes: {e}")
-
-            # 7. Agenda
-            try:
-                cur.execute("""
-                    SELECT
-                        COUNT(*) as total,
-                        COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'COMPLETADA') as atendidas,
-                        COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'CANCELADA') as canceladas
-                    FROM citas c
-                    JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-                    WHERE DATE_TRUNC('month', c.cita_inicio) = DATE_TRUNC('month', CURRENT_DATE)
-                      AND c.est_cita = TRUE
-                """)
-                fila = cur.fetchone()
-                if fila:
-                    total = int(fila[0] or 0)
-                    atendidas = int(fila[1] or 0)
-                    metricas['citas_canceladas'] = int(fila[2] or 0)
-                    if total > 0:
-                        metricas['porcentaje_asistencia'] = round((atendidas * 100.0) / total)
-                        metricas['satisfaccion_paciente'] = metricas['porcentaje_asistencia']
-            except Exception as e:
-                app.logger.warning(f"Error query agenda: {e}")
-
-            # 8. Diagnósticos
-            try:
-                cur.execute("""
-                    SELECT COUNT(DISTINCT rd.id_diagnostico)
-                    FROM registro_diagnosticos rd
-                    JOIN consultas c ON rd.id_consulta = c.id_consulta
-                    WHERE DATE_TRUNC('month', c.consulta_fecha) = DATE_TRUNC('month', CURRENT_DATE)
-                      AND c.est_consulta = TRUE
-                      AND rd.est_registro_diagnostico = TRUE
-                """)
-                metricas['diagnosticos_frecuentes'] = int(cur.fetchone()[0] or 0)
-            except Exception as e:
-                app.logger.warning(f"Error query diagnosticos: {e}")
-                
-        except Exception as e:
-            app.logger.error(f"Error general en getMetricasDashboard: {str(e)}")
-        finally:
-            cur.close()
-            con.close()
-            
-        return metricas
 
     def getVentasReport(self, fecha_desde, fecha_hasta, metodo_pago=None):
         """
@@ -322,7 +94,8 @@ class ReporteDao:
                 lv.monto_gravado AS gravado, -- simplificado para ReporteDao
                 lv.monto_iva AS iva,
                 lv.monto_total AS total,
-                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda
+                lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
+                lv.tipo_comprobante
             FROM libro_ventas lv
             JOIN monedas m ON lv.id_moneda = m.id_moneda
             LEFT JOIN pacientes pac ON lv.id_paciente = pac.id_paciente
@@ -358,7 +131,8 @@ class ReporteDao:
                     'gravado': round(float(f[5] or 0), dec),
                     'iva': round(float(f[6] or 0), dec),
                     'total': round(float(f[7] or 0), dec),
-                    'id_moneda': f[8], 'cod_moneda': f[9], 'simbolo_moneda': f[10], 'decimales_moneda': dec
+                    'id_moneda': f[8], 'cod_moneda': f[9], 'simbolo_moneda': f[10], 'decimales_moneda': dec,
+                    'tipo_comprobante': f[12]
                 })
         except Exception as e:
             app.logger.error(f"Error en getVentasDetalle: {str(e)}")
@@ -377,7 +151,7 @@ class ReporteDao:
                 COALESCE(cv.des_condicion_venta, 'Contado') AS metodo_pago,
                 lv.id_moneda, m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 COUNT(*) AS cantidad,
-                SUM(lv.monto_total) AS total
+                SUM(CASE WHEN lv.tipo_comprobante = 'NOTA_CREDITO' THEN -lv.monto_total ELSE lv.monto_total END) AS total
             FROM libro_ventas lv
             JOIN monedas m ON lv.id_moneda = m.id_moneda
             LEFT JOIN facturas f ON lv.id_factura = f.id_factura
@@ -409,168 +183,291 @@ class ReporteDao:
             con.close()
         return resultados
 
-    def getAgendamientoReport(self, fecha_desde, fecha_hasta, id_especialista=None):
-        """Métricas agrupadas por estado de cita para Agendamiento"""
-        sql = """
-            SELECT
-                ec.cod_estado_cita AS estado,
-                COUNT(*) AS cantidad
-            FROM citas c
-            JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE c.cita_inicio::DATE >= %s AND c.cita_inicio::DATE <= %s AND c.est_cita = TRUE
-        """
-        parametros = [fecha_desde, fecha_hasta]
+    # ------------------------------------------------------------------
+    # Reportes unificados (PDF 4). Agendamiento lee de v_agenda_dia y Consultorio de v_consultas_resumen.
+    # id_especialista: cuando el usuario es Clínico lo fija el servidor desde la sesión (nunca un parámetro);
+    # None o 0 significa «todos los especialistas».
+    # ------------------------------------------------------------------
 
+    def _filtro_especialista(self, id_especialista, columna='id_especialista'):
+        """Fragmento « AND columna = %s» y su parámetro, o vacío si no hay filtro por especialista."""
         if id_especialista and str(id_especialista) != '0':
-            sql += " AND c.id_especialista = %s"
-            parametros.append(id_especialista)
+            return f" AND {columna} = %s", [id_especialista]
+        return "", []
 
-        sql += " GROUP BY ec.cod_estado_cita"
-        
+    def _consultar(self, sql, parametros=()):
+        """SELECT que devuelve una lista de dicts (fechas como texto, Decimal como float). Ante un error lo
+        registra y devuelve [], igual que el resto de los métodos de este DAO."""
         conexion = Conexion()
         con = conexion.getConexion()
         if not con: return []
         cur = con.cursor()
-        resultados = []
         try:
             cur.execute(sql, tuple(parametros))
+            columnas = [c[0] for c in cur.description]
+            filas = []
             for f in cur.fetchall():
-                resultados.append({'estado': f[0], 'cantidad': int(f[1] or 0)})
+                fila = {}
+                for columna, valor in zip(columnas, f):
+                    if isinstance(valor, datetime):
+                        valor = valor.strftime('%Y-%m-%d %H:%M')
+                    elif isinstance(valor, date):
+                        valor = valor.strftime('%Y-%m-%d')
+                    elif isinstance(valor, Decimal):
+                        valor = float(valor)
+                    fila[columna] = valor
+                filas.append(fila)
+            return filas
         except Exception as e:
-            app.logger.error(f"Error en getAgendamientoReport: {str(e)}")
+            app.logger.error(f"Error en ReporteDao._consultar: {str(e)}")
+            return []
         finally:
             cur.close()
             con.close()
-        return resultados
+
+    # ---------------------------- Agendamiento ----------------------------
+    # «Atendida» = estado COMPLETADA (criterio unificado del PDF 4).
+
+    def getAgendamientoReport(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Cantidad de citas por estado."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT cod_estado_cita AS estado, COUNT(*) AS cantidad
+            FROM v_agenda_dia
+            WHERE fecha BETWEEN %s AND %s{filtro}
+            GROUP BY cod_estado_cita
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
 
     def getAgendamientoPorDia(self, fecha_desde, fecha_hasta, id_especialista=None):
-        """Evolución diaria de citas por estado clave (Atendidas, Canceladas, Ausentes)"""
-        sql = """
-            SELECT
-                c.cita_inicio::DATE AS fecha,
-                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'COMPLETADA') AS cant_atendidas,
-                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'CANCELADA') AS cant_canceladas,
-                COUNT(*) FILTER (WHERE ec.cod_estado_cita = 'AUSENTE') AS cant_ausencias
-            FROM citas c
-            JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE c.cita_inicio::DATE >= %s AND c.cita_inicio::DATE <= %s AND c.est_cita = TRUE
+        """Evolución diaria: atendidas, canceladas, ausentes y total de citas del día."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT fecha,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'COMPLETADA') AS cant_atendidas,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'CANCELADA') AS cant_canceladas,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'AUSENTE') AS cant_ausencias,
+                   COUNT(*) AS cant_total
+            FROM v_agenda_dia
+            WHERE fecha BETWEEN %s AND %s{filtro}
+            GROUP BY fecha
+            ORDER BY fecha
         """
-        parametros = [fecha_desde, fecha_hasta]
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
 
-        if id_especialista and str(id_especialista) != '0':
-            sql += " AND c.id_especialista = %s"
-            parametros.append(id_especialista)
+    def getAgendamientoPorEspecialista(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Una fila por especialista: citas agendadas, atendidas, canceladas y ausentes."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT id_especialista, especialista_nombre,
+                   string_agg(DISTINCT des_especialidad, ', ' ORDER BY des_especialidad) AS especialidades,
+                   COUNT(*) AS agendadas,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'COMPLETADA') AS atendidas,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'CANCELADA') AS canceladas,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'AUSENTE') AS ausentes
+            FROM v_agenda_dia
+            WHERE fecha BETWEEN %s AND %s{filtro}
+            GROUP BY id_especialista, especialista_nombre
+            ORDER BY agendadas DESC, especialista_nombre
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
 
-        sql += " GROUP BY c.cita_inicio::DATE ORDER BY c.cita_inicio::DATE ASC"
-        
-        conexion = Conexion()
-        con = conexion.getConexion()
-        if not con: return []
-        cur = con.cursor()
-        resultados = []
-        try:
-            cur.execute(sql, tuple(parametros))
-            for f in cur.fetchall():
-                resultados.append({
-                    'fecha': f[0].strftime('%Y-%m-%d') if f[0] else '',
-                    'cant_atendidas': int(f[1] or 0),
-                    'cant_canceladas': int(f[2] or 0),
-                    'cant_ausencias': int(f[3] or 0)
-                })
-        except Exception as e:
-            app.logger.error(f"Error en getAgendamientoPorDia: {str(e)}")
-        finally:
-            cur.close()
-            con.close()
-        return resultados
+    def getAgendamientoPacientes(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Pacientes distintos con cita y pacientes nuevos (cita de primera vez) del período."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT COUNT(DISTINCT id_paciente) AS pacientes_distintos,
+                   COUNT(DISTINCT id_paciente) FILTER (WHERE cita_es_primera_vez) AS pacientes_nuevos
+            FROM v_agenda_dia
+            WHERE fecha BETWEEN %s AND %s{filtro}
+        """
+        filas = self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
+        return filas[0] if filas else {'pacientes_distintos': 0, 'pacientes_nuevos': 0}
 
-    def getConsultasPorEspecialidad(self, fecha_desde, fecha_hasta):
-        """Cantidad de consultas agrupadas por especialidad médica"""
-        sql = """
-            WITH consultas_reales AS (
-                SELECT
-                    COALESCE(e1.des_especialidad, e2.des_especialidad, 'Sin Especialidad') AS especialidad
-                FROM consultas c
-                INNER JOIN especialistas ee ON c.id_especialista = ee.id_especialista
-                LEFT JOIN citas cit ON c.id_cita = cit.id_cita
-                LEFT JOIN especialidades e1 ON cit.id_especialidad = e1.id_especialidad
-                LEFT JOIN (
-                    SELECT DISTINCT ON (id_especialista) id_especialista, id_especialidad
-                    FROM especialista_especialidades
-                ) ese ON ee.id_especialista = ese.id_especialista
-                LEFT JOIN especialidades e2 ON ese.id_especialidad = e2.id_especialidad
-                WHERE c.consulta_fecha::DATE >= %s AND c.consulta_fecha::DATE <= %s AND c.est_consulta = TRUE
-            ),
-            citas_atendidas AS (
-                SELECT
-                    esp.des_especialidad AS especialidad
-                FROM citas cit
-                INNER JOIN estados_citas ec ON cit.id_estado_cita = ec.id_estado_cita
-                INNER JOIN especialidades esp ON cit.id_especialidad = esp.id_especialidad
-                WHERE cit.cita_inicio::DATE >= %s AND cit.cita_inicio::DATE <= %s
-                  AND ec.cod_estado_cita IN ('COMPLETADA', 'CONFIRMADA')
-                  AND cit.est_cita = TRUE
-                  AND NOT EXISTS (SELECT 1 FROM consultas c2 WHERE c2.id_cita = cit.id_cita)
-            )
-            SELECT especialidad, COUNT(*) AS cantidad
-            FROM (
-                SELECT especialidad FROM consultas_reales
-                UNION ALL
-                SELECT especialidad FROM citas_atendidas
-            ) combined
+    def getPacientesAusentes(self, fecha_desde, fecha_hasta, id_especialista=None, limite=500):
+        """Citas AUSENTE con los datos para llamar al paciente y sus ausencias anteriores (con el mismo
+        especialista si hay filtro)."""
+        filtro_a, extra_a = self._filtro_especialista(id_especialista, 'a.id_especialista')
+        filtro_p, extra_p = self._filtro_especialista(id_especialista, 'p.id_especialista')
+        sql = f"""
+            SELECT a.fecha, to_char(a.cita_inicio, 'HH24:MI') AS hora,
+                   a.id_paciente, a.paciente_nombre, a.paciente_cedula, a.paciente_telefono,
+                   a.id_especialista, a.especialista_nombre,
+                   (SELECT COUNT(*) FROM v_agenda_dia p
+                     WHERE p.id_paciente = a.id_paciente AND p.cod_estado_cita = 'AUSENTE'
+                       AND p.cita_inicio < a.cita_inicio{filtro_p}) AS ausencias_previas
+            FROM v_agenda_dia a
+            WHERE a.cod_estado_cita = 'AUSENTE' AND a.fecha BETWEEN %s AND %s{filtro_a}
+            ORDER BY a.cita_inicio DESC
+            LIMIT %s
+        """
+        return self._consultar(sql, extra_p + [fecha_desde, fecha_hasta] + extra_a + [limite])
+
+    def getAusenciasReiteradas(self, fecha_desde, fecha_hasta, id_especialista=None, minimo=2, limite=50):
+        """Pacientes con al menos `minimo` ausencias en el período."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT id_paciente, paciente_nombre, paciente_cedula,
+                   COUNT(*) AS citas,
+                   COUNT(*) FILTER (WHERE cod_estado_cita = 'AUSENTE') AS ausencias,
+                   MAX(fecha) FILTER (WHERE cod_estado_cita = 'AUSENTE') AS ultima_ausencia
+            FROM v_agenda_dia
+            WHERE fecha BETWEEN %s AND %s{filtro}
+            GROUP BY id_paciente, paciente_nombre, paciente_cedula
+            HAVING COUNT(*) FILTER (WHERE cod_estado_cita = 'AUSENTE') >= %s
+            ORDER BY ausencias DESC, ultima_ausencia DESC
+            LIMIT %s
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra + [minimo, limite])
+
+    def getCitasCanceladas(self, fecha_desde, fecha_hasta, id_especialista=None, limite=500):
+        """Citas CANCELADA con el motivo y quién las canceló."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT fecha, to_char(cita_inicio, 'HH24:MI') AS hora, paciente_nombre, especialista_nombre,
+                   motivo_cancelacion, cancelada_por, fecha_cancelacion
+            FROM v_agenda_dia
+            WHERE cod_estado_cita = 'CANCELADA' AND fecha BETWEEN %s AND %s{filtro}
+            ORDER BY cita_inicio DESC
+            LIMIT %s
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra + [limite])
+
+    def getDetalleCitas(self, fecha_desde, fecha_hasta, id_especialista=None, limite=1000):
+        """Listado de citas del período (para el detalle del PDF)."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT fecha, to_char(cita_inicio, 'HH24:MI') AS hora, paciente_nombre, especialista_nombre,
+                   des_especialidad, des_estado_cita
+            FROM v_agenda_dia
+            WHERE fecha BETWEEN %s AND %s{filtro}
+            ORDER BY cita_inicio
+            LIMIT %s
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra + [limite])
+
+    # ----------------------------- Consultorio ----------------------------
+    # v_consultas_resumen trae una fila por consulta y por diagnóstico: las consultas se cuentan con
+    # COUNT(DISTINCT id_consulta). Solo cuenta filas de `consultas` (no citas atendidas sin consulta).
+
+    def getConsultasPorEspecialidad(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Cantidad de consultas por especialidad."""
+        filtro, extra = self._filtro_especialista(id_especialista, 'v.id_especialista')
+        sql = f"""
+            SELECT COALESCE(e.des_especialidad, 'Sin especialidad') AS especialidad,
+                   COUNT(DISTINCT v.id_consulta) AS cantidad
+            FROM v_consultas_resumen v
+            LEFT JOIN especialidades e ON e.id_especialidad = v.id_especialidad
+            WHERE v.fecha BETWEEN %s AND %s{filtro}
             GROUP BY 1
-            ORDER BY cantidad DESC
+            ORDER BY cantidad DESC, 1
         """
-        conexion = Conexion()
-        con = conexion.getConexion()
-        if not con: return []
-        cur = con.cursor()
-        resultados = []
-        try:
-            # Pasamos los parámetros 2 veces (una para cada CTE)
-            cur.execute(sql, (fecha_desde, fecha_hasta, fecha_desde, fecha_hasta))
-            for f in cur.fetchall():
-                resultados.append({'especialidad': f[0], 'cantidad': int(f[1] or 0)})
-        except Exception as e:
-            app.logger.error(f"Error en getConsultasPorEspecialidad: {str(e)}")
-        finally:
-            cur.close()
-            con.close()
-        return resultados
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
 
-    def getTopDiagnosticos(self, fecha_desde, fecha_hasta):
-        """Top 5 de diagnósticos más frecuentes en el rango de fechas"""
-        sql = """
-            SELECT d.des_diagnostico, COUNT(*) AS cantidad
-            FROM registro_diagnosticos rd
-            JOIN diagnosticos d ON rd.id_diagnostico = d.id_diagnostico
-            JOIN consultas c ON rd.id_consulta = c.id_consulta
-            WHERE c.consulta_fecha::DATE >= %s AND c.consulta_fecha::DATE <= %s
-              AND c.est_consulta = TRUE AND rd.est_registro_diagnostico = TRUE
-            GROUP BY d.des_diagnostico
-            ORDER BY cantidad DESC
-            LIMIT 5
+    def getConsultasPorEspecialista(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Una fila por especialista con su especialidad y la cantidad de consultas."""
+        filtro, extra = self._filtro_especialista(id_especialista, 'v.id_especialista')
+        sql = f"""
+            SELECT v.id_especialista, v.especialista_nombre,
+                   string_agg(DISTINCT e.des_especialidad, ', ' ORDER BY e.des_especialidad) AS especialidades,
+                   COUNT(DISTINCT v.id_consulta) AS consultas
+            FROM v_consultas_resumen v
+            LEFT JOIN especialidades e ON e.id_especialidad = v.id_especialidad
+            WHERE v.fecha BETWEEN %s AND %s{filtro}
+            GROUP BY v.id_especialista, v.especialista_nombre
+            ORDER BY consultas DESC, v.especialista_nombre
         """
-        conexion = Conexion()
-        con = conexion.getConexion()
-        if not con: return []
-        cur = con.cursor()
-        resultados = []
-        try:
-            cur.execute(sql, (fecha_desde, fecha_hasta))
-            for f in cur.fetchall():
-                resultados.append({'diagnostico': f[0], 'cantidad': int(f[1] or 0)})
-        except Exception as e:
-            app.logger.error(f"Error en getTopDiagnosticos: {str(e)}")
-        finally:
-            cur.close()
-            con.close()
-        return resultados
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
+
+    def getResumenConsultorio(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Consultas, pacientes distintos, pacientes nuevos y consultas abiertas (EN_ATENCION) del período."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT COUNT(DISTINCT id_consulta) AS consultas,
+                   COUNT(DISTINCT id_paciente) AS pacientes_distintos,
+                   COUNT(DISTINCT id_paciente) FILTER (WHERE cita_es_primera_vez) AS pacientes_nuevos,
+                   COUNT(DISTINCT id_consulta) FILTER (WHERE consulta_estado = 'EN_ATENCION') AS consultas_abiertas
+            FROM v_consultas_resumen
+            WHERE fecha BETWEEN %s AND %s{filtro}
+        """
+        filas = self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
+        return filas[0] if filas else {'consultas': 0, 'pacientes_distintos': 0,
+                                       'pacientes_nuevos': 0, 'consultas_abiertas': 0}
+
+    def getTopDiagnosticos(self, fecha_desde, fecha_hasta, id_especialista=None, limite=5):
+        """Diagnósticos más frecuentes (con código CIE-10) en el período."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            SELECT cod_cie10, des_diagnostico AS diagnostico, COUNT(DISTINCT id_consulta) AS cantidad
+            FROM v_consultas_resumen
+            WHERE id_diagnostico IS NOT NULL AND fecha BETWEEN %s AND %s{filtro}
+            GROUP BY cod_cie10, des_diagnostico
+            ORDER BY cantidad DESC, des_diagnostico
+            LIMIT %s
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra + [limite])
+
+    def getConsultasPorDia(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Consultas por día, las de pacientes nuevos y las derivaciones hechas."""
+        filtro, extra = self._filtro_especialista(id_especialista)
+        sql = f"""
+            WITH c AS (
+                SELECT DISTINCT id_consulta, fecha, cita_es_primera_vez
+                FROM v_consultas_resumen
+                WHERE fecha BETWEEN %s AND %s{filtro}
+            )
+            SELECT c.fecha,
+                   COUNT(*) AS consultas,
+                   COUNT(*) FILTER (WHERE c.cita_es_primera_vez) AS pacientes_nuevos,
+                   COALESCE(SUM(d.n), 0)::int AS derivaciones_hechas
+            FROM c
+            LEFT JOIN (SELECT id_consulta, COUNT(*) AS n FROM derivaciones
+                        WHERE est_derivacion = TRUE GROUP BY id_consulta) d ON d.id_consulta = c.id_consulta
+            GROUP BY c.fecha
+            ORDER BY c.fecha
+        """
+        return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
+
+    def getDerivaciones(self, fecha_desde, fecha_hasta, id_especialista=None):
+        """Derivaciones hechas (por especialidad destino) y, con un especialista, las recibidas.
+        `derivaciones` no guarda quién recibe: una derivación se cuenta como recibida por el especialista
+        cuando su especialidad destino es una de las suyas y la consulta es de otro especialista."""
+        filtro, extra = self._filtro_especialista(id_especialista, 'c.id_especialista')
+        hechas = self._consultar(f"""
+            WITH c AS (SELECT DISTINCT id_consulta, id_especialista FROM v_consultas_resumen
+                        WHERE fecha BETWEEN %s AND %s)
+            SELECT e.des_especialidad AS especialidad, COUNT(*) AS cantidad
+            FROM derivaciones d
+            JOIN c ON c.id_consulta = d.id_consulta
+            JOIN especialidades e ON e.id_especialidad = d.id_especialidad_destino
+            WHERE d.est_derivacion = TRUE{filtro}
+            GROUP BY e.des_especialidad
+            ORDER BY cantidad DESC, e.des_especialidad
+        """, [fecha_desde, fecha_hasta] + extra)
+        recibidas = []
+        if id_especialista and str(id_especialista) != '0':
+            recibidas = self._consultar("""
+                WITH c AS (SELECT DISTINCT id_consulta, id_especialista, id_especialidad FROM v_consultas_resumen
+                            WHERE fecha BETWEEN %s AND %s)
+                SELECT COALESCE(eo.des_especialidad, 'Sin especialidad') AS especialidad, COUNT(*) AS cantidad
+                FROM derivaciones d
+                JOIN c ON c.id_consulta = d.id_consulta
+                LEFT JOIN especialidades eo ON eo.id_especialidad = c.id_especialidad
+                WHERE d.est_derivacion = TRUE AND c.id_especialista <> %s
+                  AND d.id_especialidad_destino IN (
+                      SELECT id_especialidad FROM especialista_especialidades
+                       WHERE id_especialista = %s AND est_especialista_especialidad = TRUE)
+                GROUP BY 1
+                ORDER BY cantidad DESC, 1
+            """, [fecha_desde, fecha_hasta, id_especialista, id_especialista])
+        return {'hechas': hechas, 'recibidas': recibidas,
+                'total_hechas': sum(h['cantidad'] for h in hechas),
+                'total_recibidas': sum(r['cantidad'] for r in recibidas)}
 
     # ------------------------------------------------------------------
     # Estadísticas reutilizables (inicio por rol, reportes y otras pantallas).
     # Los montos que se muestran como una sola cifra se limitan a la moneda
-    # local, mismo criterio que getMetricasDashboard.
+    # local, mismo criterio en todos los métodos de este bloque.
     # Para citas por estado de un día usar getAgendamientoReport(fecha, fecha).
     # ------------------------------------------------------------------
 
@@ -581,17 +478,12 @@ class ReporteDao:
         sql = """
             SELECT
                 COUNT(*),
-                COUNT(*) FILTER (WHERE cc.fecha_vencimiento < CURRENT_DATE),
-                COALESCE(SUM(cc.monto_pendiente) FILTER (WHERE m.es_moneda_local), 0),
-                COALESCE(SUM(cc.monto_pendiente) FILTER (WHERE m.es_moneda_local
-                                                          AND cc.fecha_vencimiento < CURRENT_DATE), 0),
-                COALESCE(MAX(CURRENT_DATE - cc.fecha_vencimiento)
-                         FILTER (WHERE cc.fecha_vencimiento < CURRENT_DATE), 0)
-            FROM cuentas_cobrar cc
-            JOIN facturas f ON cc.id_factura = f.id_factura
-            JOIN monedas m ON cc.id_moneda = m.id_moneda
-            WHERE cc.est_cuenta_cobrar IN ('PENDIENTE', 'PARCIAL')
-              AND f.fecha_anulacion IS NULL
+                COUNT(*) FILTER (WHERE esta_vencida),
+                COALESCE(SUM(monto_pendiente) FILTER (WHERE es_moneda_local), 0),
+                COALESCE(SUM(monto_pendiente) FILTER (WHERE es_moneda_local AND esta_vencida), 0),
+                COALESCE(MAX(dias_atraso), 0)
+            FROM v_saldo_cuentas_cobrar
+            WHERE est_cuenta_cobrar = 'PENDIENTE' OR est_cuenta_cobrar = 'PARCIAL'
         """
         conexion = Conexion()
         con = conexion.getConexion()
@@ -610,6 +502,57 @@ class ReporteDao:
             cur.close()
             con.close()
         return resumen
+
+    def _redondear_monedas(self, filas, campos):
+        """Redondea los montos de cada fila a los decimales de su moneda (decimales_moneda)."""
+        for f in filas:
+            dec = int(f.get('decimales_moneda') or 0)
+            f['decimales_moneda'] = dec
+            for campo in campos:
+                f[campo] = round(float(f.get(campo) or 0), dec)
+        return filas
+
+    def getSaldoCuentasPorMoneda(self):
+        """Saldo por cobrar (cuentas PENDIENTE/PARCIAL de facturas no anuladas) y vencido, una fila por moneda."""
+        filas = self._consultar("""
+            SELECT id_moneda, cod_moneda, simbolo_moneda, decimales_moneda,
+                   COUNT(*) AS cuentas,
+                   COUNT(*) FILTER (WHERE esta_vencida) AS vencidas,
+                   COALESCE(SUM(monto_pendiente), 0) AS monto_pendiente,
+                   COALESCE(SUM(monto_pendiente) FILTER (WHERE esta_vencida), 0) AS monto_vencido,
+                   COALESCE(MAX(dias_atraso), 0) AS max_dias_atraso
+            FROM v_saldo_cuentas_cobrar
+            WHERE est_cuenta_cobrar = 'PENDIENTE' OR est_cuenta_cobrar = 'PARCIAL'
+            GROUP BY id_moneda, cod_moneda, simbolo_moneda, decimales_moneda
+            ORDER BY id_moneda
+        """)
+        return self._redondear_monedas(filas, ('monto_pendiente', 'monto_vencido'))
+
+    def getCobradoPorMoneda(self, fecha_desde, fecha_hasta):
+        """Cobranzas no anuladas del período, una fila por moneda (de v_caja_movimientos)."""
+        filas = self._consultar("""
+            SELECT id_moneda, cod_moneda, simbolo_moneda, decimales_moneda,
+                   COUNT(*) AS cobranzas, COALESCE(SUM(monto), 0) AS cobrado
+            FROM v_caja_movimientos
+            WHERE tipo_movimiento = 'COBRANZA' AND estado <> 'ANULADA'
+              AND fecha_movimiento::date BETWEEN %s AND %s
+            GROUP BY id_moneda, cod_moneda, simbolo_moneda, decimales_moneda
+            ORDER BY id_moneda
+        """, [fecha_desde, fecha_hasta])
+        return self._redondear_monedas(filas, ('cobrado',))
+
+    def getFacturacionMensual(self, meses=6):
+        """Facturación de los últimos `meses` meses (incluido el actual), por mes y moneda, con las notas de
+        crédito restando (de v_facturacion_mensual)."""
+        filas = self._consultar("""
+            SELECT mes, id_moneda, cod_moneda, simbolo_moneda, decimales_moneda,
+                   cantidad_facturas, cantidad_notas_credito, cantidad_comprobantes,
+                   total_gravado, total_iva, total_neto, total_notas_credito
+            FROM v_facturacion_mensual
+            WHERE mes > date_trunc('month', CURRENT_DATE)::date - (%s * INTERVAL '1 month')
+            ORDER BY mes, id_moneda
+        """, [meses])
+        return self._redondear_monedas(filas, ('total_gravado', 'total_iva', 'total_neto', 'total_notas_credito'))
 
     def getVentasDia(self, fecha):
         """Facturas no anuladas y cobranzas no anuladas de un día (montos en moneda local)."""
