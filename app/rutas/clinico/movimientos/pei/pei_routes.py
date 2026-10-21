@@ -9,6 +9,7 @@ ROLES_PEI = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @peimod.route('/pei-index')
 @role_required(*ROLES_PEI)
 def peiIndex():
+    """Página principal del Plan de Intervención Individual (PEI)."""
     return render_template('pei-index.html')
 
 

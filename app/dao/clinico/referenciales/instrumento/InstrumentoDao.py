@@ -4,14 +4,18 @@ from app.core.base_dao import BaseDAO
 
 
 class InstrumentoDao(BaseDAO):
+    """Acceso a datos de instrumento (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getInstrumentos(self):
+        """Lista los registros de instrumento."""
         sql = "SELECT id_instrumento, des_instrumento, est_instrumento FROM instrumentos ORDER BY id_instrumento"
         return self.execute_query(sql)
 
     def getInstrumentoById(self, instrumento_id):
+        """Devuelve el registro de instrumento por su id, o None si no existe."""
         sql = "SELECT id_instrumento, des_instrumento, est_instrumento FROM instrumentos WHERE id_instrumento = %s"
         return self.execute_query_one(sql, (instrumento_id,))
 
@@ -21,6 +25,7 @@ class InstrumentoDao(BaseDAO):
         return bool(re.match(patron, descripcion))
 
     def instrumentoExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de instrumento con esa descripción; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM instrumentos WHERE LOWER(des_instrumento) = LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -29,6 +34,7 @@ class InstrumentoDao(BaseDAO):
         return self.execute_query_one(sql, tuple(params)) is not None
 
     def guardarInstrumento(self, descripcion, estado, usuario_creacion=None):
+        """Inserta un registro de instrumento y devuelve el id generado."""
         sql = """
             INSERT INTO instrumentos (des_instrumento, est_instrumento, usuario_creacion)
             VALUES (%s, %s, %s)
@@ -38,6 +44,7 @@ class InstrumentoDao(BaseDAO):
         return fila["id_instrumento"] if fila else None
 
     def updateInstrumento(self, instrumento_id, descripcion, estado, usuario_modificacion=None):
+        """Actualiza los datos de instrumento; devuelve True si modificó una fila."""
         sql = """
             UPDATE instrumentos
             SET des_instrumento = %s, est_instrumento = %s, usuario_modificacion = %s
@@ -46,6 +53,7 @@ class InstrumentoDao(BaseDAO):
         return self.execute_query(sql, (descripcion, estado, usuario_modificacion, instrumento_id), commit=True) > 0
 
     def desactivarInstrumento(self, instrumento_id, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de instrumento; devuelve True si modificó una fila."""
         sql = """
             UPDATE instrumentos
             SET est_instrumento = FALSE, usuario_modificacion = %s

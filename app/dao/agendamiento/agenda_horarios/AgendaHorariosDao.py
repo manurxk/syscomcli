@@ -7,6 +7,7 @@ from app.core.base_dao import BaseDAO
 
 
 class AgendaHorariosDao(BaseDAO):
+    """Acceso a datos de los horarios de agenda de los especialistas, sus turnos (slots) y bloqueos."""
 
     HORIZONTE_DIAS_DEFAULT = 15
 
@@ -21,6 +22,7 @@ class AgendaHorariosDao(BaseDAO):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getAgendaHorarios(self, id_especialista=None):
+        """Lista los horarios de agenda del especialista."""
         sql = """
             SELECT
                 ah.id_agenda_horario,
@@ -58,6 +60,7 @@ class AgendaHorariosDao(BaseDAO):
         return self.execute_query(sql, {"id_especialista": id_especialista})
 
     def getAgendaHorarioById(self, id_agenda_horario):
+        """Devuelve el horario de agenda por su id, o None si no existe."""
         sql = """
             SELECT id_agenda_horario, id_especialista, id_sede, id_consultorio,
                    id_dia_semana,
@@ -226,6 +229,7 @@ class AgendaHorariosDao(BaseDAO):
         """, (id_agenda_horario,))
 
     def getSlotsByAgendaHorario(self, id_agenda_horario):
+        """Lista los turnos (slots) generados para el horario de agenda."""
         sql = f"""
             SELECT sa.id_slot_agenda,
                    TO_CHAR(sa.slot_inicio, 'YYYY-MM-DD HH24:MI') AS slot_inicio,

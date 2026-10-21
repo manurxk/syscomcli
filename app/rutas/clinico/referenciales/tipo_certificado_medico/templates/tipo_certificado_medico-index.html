@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Tipos de Certificado Médico (listado y gestión). Ruta: /tipo-certificado-medico-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/tipos-certificados-medicos. #}
 
 {% block titulo %}
 Tipos de Certificado Médico
@@ -132,7 +133,7 @@ Tipos de Certificado Médico
       const descripcion = $('#txtDescripcion').val().trim();
 
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: {% if id_usuario %}Editar Usuario{% else %}Registrar Usuario{% endif %} (formulario de alta). Ruta: /usuario-editar/<int:id_usuario>. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/funcionarios, /api/v1/roles, /api/v1/usuarios. #}
 
 {% block titulo %}
 {% if id_usuario %}Editar Usuario{% else %}Registrar Usuario{% endif %}

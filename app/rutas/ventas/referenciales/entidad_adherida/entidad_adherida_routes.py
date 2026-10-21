@@ -7,4 +7,5 @@ entidadadheridamod = Blueprint('entidad_adherida', __name__, template_folder='te
 @entidadadheridamod.route('/entidad-adherida-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def entidadAdheridaIndex():
+    """Página principal de entidad adherida (listado y acciones)."""
     return render_template('entidad-adherida-index.html')

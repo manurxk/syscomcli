@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Insumos (listado y gestión). Ruta: /insumo-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/insumos. #}
 
 {% block titulo %}
 Insumos
@@ -172,7 +173,7 @@ Insumos
       const descripcion = $('#txtDescripcion').val().trim();
 
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

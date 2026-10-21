@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.marca_tarjeta.MarcaTarjetaDao import MarcaTarjetaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 marcatarjetaapi = Blueprint('marcatarjetaapi', __name__)
 
@@ -9,6 +10,7 @@ marcatarjetaapi = Blueprint('marcatarjetaapi', __name__)
 @marcatarjetaapi.route('/marcas-tarjeta', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getMarcasTarjeta():
+    """GET: lista los registros de marca de tarjeta."""
     try:
         return jsonify({'success': True, 'data': MarcaTarjetaDao().getMarcasTarjeta(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getMarcasTarjeta():
 @marcatarjetaapi.route('/marcas-tarjeta/<int:id_marca_tarjeta>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getMarcaTarjeta(id_marca_tarjeta):
+    """GET: devuelve marca de tarjeta por su id; 404 si no existe."""
     try:
         registro = MarcaTarjetaDao().getMarcaTarjetaById(id_marca_tarjeta)
         if not registro:
@@ -32,17 +35,18 @@ def getMarcaTarjeta(id_marca_tarjeta):
 @marcatarjetaapi.route('/marcas-tarjeta', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addMarcaTarjeta():
+    """POST: valida los datos y registra marca de tarjeta; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = MarcaTarjetaDao()
 
     descripcion = (data.get('des_marca_tarjeta') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.marcaTarjetaExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe una marca de tarjeta "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una marca de tarjeta', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarMarcaTarjeta(
@@ -60,6 +64,7 @@ def addMarcaTarjeta():
 @marcatarjetaapi.route('/marcas-tarjeta/<int:id_marca_tarjeta>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateMarcaTarjeta(id_marca_tarjeta):
+    """PUT: valida y actualiza marca de tarjeta; 404 si no existe."""
     data = request.get_json() or {}
     dao = MarcaTarjetaDao()
 
@@ -69,11 +74,11 @@ def updateMarcaTarjeta(id_marca_tarjeta):
     descripcion = (data.get('des_marca_tarjeta') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.marcaTarjetaExiste(descripcion, excluir_id=id_marca_tarjeta):
-        return jsonify({'success': False, 'error': f'Ya existe una marca de tarjeta "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una marca de tarjeta', descripcion)}), 400
 
     try:
         dao.updateMarcaTarjeta(
@@ -92,6 +97,7 @@ def updateMarcaTarjeta(id_marca_tarjeta):
 @marcatarjetaapi.route('/marcas-tarjeta/<int:id_marca_tarjeta>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarMarcaTarjeta(id_marca_tarjeta):
+    """DELETE: da de baja (lógica) marca de tarjeta; 404 si no existe."""
     dao = MarcaTarjetaDao()
     if not dao.getMarcaTarjetaById(id_marca_tarjeta):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

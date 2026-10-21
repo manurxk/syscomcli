@@ -5,6 +5,8 @@ from app.core.base_dao import BaseDAO
 
 
 class TimbradoDao(BaseDAO):
+    """Acceso a datos de timbrado (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
@@ -17,6 +19,7 @@ class TimbradoDao(BaseDAO):
         return bool(re.match(r"^[0-9]{3}$", codigo))
 
     def getTimbrados(self):
+        """Lista los registros de timbrado."""
         sql = """
             SELECT id_timbrado, numero_timbrado, codigo_establecimiento,
                    fecha_inicio, fecha_vencimiento, observaciones, est_timbrado
@@ -26,6 +29,7 @@ class TimbradoDao(BaseDAO):
         return self.execute_query(sql)
 
     def getTimbradoById(self, id_timbrado):
+        """Devuelve el registro de timbrado por su id, o None si no existe."""
         sql = """
             SELECT id_timbrado, numero_timbrado, codigo_establecimiento,
                    fecha_inicio, fecha_vencimiento, observaciones, est_timbrado
@@ -35,6 +39,7 @@ class TimbradoDao(BaseDAO):
         return self.execute_query_one(sql, (id_timbrado,))
 
     def getTimbradosVigentes(self):
+        """Lista los timbrados activos y dentro de su período de vigencia."""
         sql = """
             SELECT id_timbrado, numero_timbrado, codigo_establecimiento,
                    fecha_inicio, fecha_vencimiento
@@ -47,6 +52,7 @@ class TimbradoDao(BaseDAO):
         return self.execute_query(sql)
 
     def timbradoExiste(self, numero_timbrado, excluir_id=None):
+        """Indica si ya existe un registro de timbrado con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM timbrados WHERE numero_timbrado = %s"
         params = [numero_timbrado]
         if excluir_id:
@@ -57,6 +63,7 @@ class TimbradoDao(BaseDAO):
     def guardar(self, numero_timbrado, codigo_establecimiento, fecha_inicio,
                 fecha_vencimiento, observaciones=None, est_timbrado=True,
                 usuario_creacion=None):
+        """Registra el documento con su cabecera y detalle en una sola transacción; devuelve el id."""
         sql = """
             INSERT INTO timbrados(
                 numero_timbrado, codigo_establecimiento,
@@ -77,6 +84,7 @@ class TimbradoDao(BaseDAO):
     def update(self, id_timbrado, numero_timbrado, codigo_establecimiento,
                fecha_inicio, fecha_vencimiento, observaciones=None,
                est_timbrado=True, usuario_modificacion=None):
+        """Actualiza los datos de timbrado; devuelve True si modificó una fila."""
         sql = """
             UPDATE timbrados
             SET numero_timbrado=%s, codigo_establecimiento=%s,
@@ -93,6 +101,7 @@ class TimbradoDao(BaseDAO):
         ) > 0
 
     def desactivar(self, id_timbrado, usuario_modificacion=None):
+        """Da de baja (lógica) el documento."""
         sql = """
             UPDATE timbrados SET est_timbrado=FALSE, usuario_modificacion=%s
             WHERE id_timbrado=%s
@@ -100,5 +109,6 @@ class TimbradoDao(BaseDAO):
         return self.execute_query(sql, (usuario_modificacion, id_timbrado), commit=True) > 0
 
     def tieneFacturas(self, id_timbrado):
+        """Indica si hay facturas que usan este registro de timbrado (impide desactivarlo)."""
         sql = "SELECT 1 FROM facturas WHERE id_timbrado=%s LIMIT 1"
         return self.execute_query_one(sql, (id_timbrado,)) is not None

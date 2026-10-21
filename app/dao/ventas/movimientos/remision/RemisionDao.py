@@ -4,10 +4,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RemisionDao(BaseDAO):
+    """Acceso a datos de remisión (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getRemisiones(self):
+        """Lista los registros de remisión."""
         sql = """
             SELECT
                 r.id_remision,
@@ -41,6 +44,7 @@ class RemisionDao(BaseDAO):
         return rows
 
     def getRemisionById(self, id_remision):
+        """Devuelve el registro de remisión por su id, o None si no existe."""
         sql = """
             SELECT
                 r.id_remision,
@@ -77,6 +81,7 @@ class RemisionDao(BaseDAO):
         return row
 
     def getRemisionDetalle(self, id_remision):
+        """Devuelve las líneas de detalle de remisión para el id indicado."""
         sql = """
             SELECT
                 rd.id_remision_detalle,
@@ -95,6 +100,7 @@ class RemisionDao(BaseDAO):
         return self.execute_query(sql, (id_remision,))
 
     def _generarNumero(self, cur):
+        """Genera el siguiente número correlativo de remisión dentro de la transacción en curso (cursor `cur`)."""
         año = datetime.now().year
         mes = datetime.now().strftime('%m')
         patron = f'REM-{año}-{mes}-%'
@@ -115,6 +121,7 @@ class RemisionDao(BaseDAO):
         return f'REM-{año}-{mes}-{siguiente:04d}'
 
     def guardar(self, data, usuario_creacion=None):
+        """Registra el documento con su cabecera y detalle en una sola transacción; devuelve el id."""
         def _op(cur):
             numero = self._generarNumero(cur)
             cur.execute(
@@ -161,6 +168,7 @@ class RemisionDao(BaseDAO):
         return self.execute_transaction(_op)
 
     def marcarEntregada(self, id_remision, usuario=None):
+        """Marca la remisión como entregada."""
         filas = self.execute_query(
             """
             UPDATE remisiones
@@ -175,6 +183,7 @@ class RemisionDao(BaseDAO):
         return filas > 0
 
     def anular(self, id_remision, usuario=None):
+        """Anula la remisión."""
         filas = self.execute_query(
             """
             UPDATE remisiones

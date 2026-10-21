@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.tipo_tratamiento.TipoTratamientoDao import TipoTratamientoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipotratamientoapi = Blueprint('tipotratamientoapi', __name__)
 
@@ -9,6 +10,7 @@ tipotratamientoapi = Blueprint('tipotratamientoapi', __name__)
 @tipotratamientoapi.route('/tipos-tratamientos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposTratamientos():
+    """GET: lista los registros de tipo de tratamiento."""
     try:
         data = TipoTratamientoDao().getTiposTratamientos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getTiposTratamientos():
 @tipotratamientoapi.route('/tipos-tratamientos/<int:tipo_tratamiento_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoTratamiento(tipo_tratamiento_id):
+    """GET: registro de tipo de tratamiento por su id; 404 si no existe."""
     try:
         registro = TipoTratamientoDao().getTipoTratamientoById(tipo_tratamiento_id)
         if not registro:
@@ -33,6 +36,7 @@ def getTipoTratamiento(tipo_tratamiento_id):
 @tipotratamientoapi.route('/tipos-tratamientos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoTratamiento():
+    """POST: valida los datos y crea un registro de tipo de tratamiento; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoTratamientoDao()
 
@@ -40,11 +44,11 @@ def addTipoTratamiento():
     estado = bool(data.get('est_tipo_tratamiento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoTratamientoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de tratamiento', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoTratamiento(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addTipoTratamiento():
 @tipotratamientoapi.route('/tipos-tratamientos/<int:tipo_tratamiento_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoTratamiento(tipo_tratamiento_id):
+    """PUT: valida y actualiza el registro de tipo de tratamiento; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoTratamientoDao()
 
@@ -67,11 +72,11 @@ def updateTipoTratamiento(tipo_tratamiento_id):
     estado = bool(data.get('est_tipo_tratamiento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoTratamientoExiste(descripcion, excluir_id=tipo_tratamiento_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de tratamiento', descripcion)}), 400
 
     try:
         dao.updateTipoTratamiento(tipo_tratamiento_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateTipoTratamiento(tipo_tratamiento_id):
 @tipotratamientoapi.route('/tipos-tratamientos/<int:tipo_tratamiento_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoTratamiento(tipo_tratamiento_id):
+    """DELETE: baja lógica del registro de tipo de tratamiento; 404 si no existe."""
     dao = TipoTratamientoDao()
 
     if not dao.getTipoTratamientoById(tipo_tratamiento_id):

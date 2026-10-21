@@ -3,6 +3,8 @@
 from functools import wraps
 from flask import session, redirect, url_for, abort, flash, request, jsonify
 
+from app.auth.utils.permisos import tiene_permiso_accion
+
 
 def role_required(*roles):
     """Exige que el usuario tenga alguno de los roles indicados.
@@ -53,4 +55,30 @@ def role_required(*roles):
     return decorator
 
 
+def permiso_requerido(modulo, accion):
+    """Exige además del rol el permiso `accion` (LEER/CREAR/EDITAR/ELIMINAR) sobre `modulo` en la matriz «Permisos».
 
+    Uso (debajo de @role_required):
+        @permiso_requerido("VENTAS", "CREAR")
+    """
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped_view(*args, **kwargs):
+            if not tiene_permiso_accion(modulo, accion):
+                es_ajax = (request.path.startswith('/api/')
+                           or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                           or request.is_json
+                           or 'application/json' in request.headers.get('Accept', ''))
+                if es_ajax:
+                    return jsonify({
+                        'success': False,
+                        'error': f'No tenés permiso de {accion.lower()} en {modulo.title()}.',
+                        'code': 'FORBIDDEN'
+                    }), 403
+                return abort(403)
+            return view_func(*args, **kwargs)
+
+        return wrapped_view
+
+    return decorator

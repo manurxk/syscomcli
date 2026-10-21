@@ -3,7 +3,8 @@ from flask import Blueprint, request, jsonify, current_app as app, session, send
 from app.dao.ventas.movimientos.remision.RemisionDao import RemisionDao
 from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
 from app.services.documento_ventas_pdf_service import DocumentoVentasPdfService
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 remisionapi = Blueprint('remisionapi', __name__)
 
@@ -12,7 +13,9 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @remisionapi.route('/remisiones', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getRemisiones():
+    """GET: lista los registros de remisión."""
     try:
         return jsonify({'success': True, 'data': RemisionDao().getRemisiones(), 'error': None}), 200
     except Exception as e:
@@ -22,7 +25,9 @@ def getRemisiones():
 
 @remisionapi.route('/remisiones/<int:id_remision>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getRemision(id_remision):
+    """GET: devuelve remisión por su id; 404 si no existe."""
     try:
         dao = RemisionDao()
         reg = dao.getRemisionById(id_remision)
@@ -37,12 +42,14 @@ def getRemision(id_remision):
 
 @remisionapi.route('/remisiones', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
 def addRemision():
+    """POST: valida los datos y registra remisión; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     for campo in ['id_paciente', 'fecha_remision']:
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -64,7 +71,9 @@ def addRemision():
 
 @remisionapi.route('/remisiones/<int:id_remision>/entregar', methods=['PUT'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "EDITAR")
 def entregarRemision(id_remision):
+    """PUT: marca la remisión como entregada."""
     dao = RemisionDao()
     if not dao.getRemisionById(id_remision):
         return jsonify({'success': False, 'error': 'No se encontró la remisión.'}), 404
@@ -80,7 +89,9 @@ def entregarRemision(id_remision):
 
 @remisionapi.route('/remisiones/<int:id_remision>/anular', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
+@permiso_requerido("VENTAS", "ELIMINAR")
 def anularRemision(id_remision):
+    """PUT: anula la remisión."""
     dao = RemisionDao()
     if not dao.getRemisionById(id_remision):
         return jsonify({'success': False, 'error': 'No se encontró la remisión.'}), 404
@@ -96,6 +107,7 @@ def anularRemision(id_remision):
 
 @remisionapi.route('/remisiones/<int:id_remision>/pdf', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getRemisionPdf(id_remision):
     """PDF imprimible (REMISION.html), con firmas de quien entrega y quien recibe."""
     try:

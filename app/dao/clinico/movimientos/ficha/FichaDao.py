@@ -2,6 +2,7 @@ from app.core.base_dao import BaseDAO
 
 
 class FichaDao(BaseDAO):
+    """Consultas de solo lectura que arman la ficha clínica del paciente, más sus notas."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
@@ -11,6 +12,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getFichaCompleta(self, id_paciente):
+        """Arma el diccionario completo de la ficha clínica del paciente (datos, anamnesis, PEI, consultas, diagnósticos, tratamientos, procedimientos, citas y notas)."""
         return {
             'paciente': self.getDatosPaciente(id_paciente),
             'anamnesis': self.getAnamnesisPaciente(id_paciente),
@@ -29,6 +31,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getDatosPaciente(self, id_paciente):
+        """Devuelve los datos personales del paciente para la ficha."""
         sql = """
             SELECT
                 pac.id_paciente,
@@ -104,6 +107,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getAnamnesisPaciente(self, id_paciente):
+        """Devuelve la anamnesis vigente del paciente."""
         sql = """
             SELECT
                 a.id_anamnesis, a.nro_version, a.motivo_consulta,
@@ -138,6 +142,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getPeiPaciente(self, id_paciente):
+        """Devuelve el PEI vigente del paciente."""
         sql = """
             SELECT
                 p.id_pei, p.nro_version, p.pei_estado,
@@ -163,6 +168,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getConsultasRecientes(self, id_paciente, limite=10):
+        """Devuelve las últimas consultas del paciente (hasta `limite`)."""
         sql = """
             SELECT
                 c.id_consulta,
@@ -204,6 +210,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getDiagnosticosPaciente(self, id_paciente):
+        """Devuelve los diagnósticos registrados al paciente."""
         sql = """
             SELECT
                 rd.id_registro_diagnostico,
@@ -242,6 +249,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getTratamientosActivos(self, id_paciente):
+        """Devuelve los tratamientos activos del paciente."""
         sql = """
             SELECT
                 t.id_tratamiento,
@@ -296,6 +304,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getProcedimientosRecientes(self, id_paciente, limite=15):
+        """Devuelve los últimos procedimientos realizados al paciente (hasta `limite`)."""
         sql = """
             SELECT
                 rp.id_registro_procedimiento,
@@ -333,6 +342,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getProximasCitas(self, id_paciente, limite=5):
+        """Devuelve las próximas citas del paciente (hasta `limite`)."""
         sql = """
             SELECT
                 cit.id_cita,
@@ -376,6 +386,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getNotasPaciente(self, id_paciente):
+        """Devuelve las notas clínicas del paciente."""
         sql = """
             SELECT
                 n.id_nota,
@@ -398,6 +409,7 @@ class FichaDao(BaseDAO):
         } for f in filas]
 
     def guardarNota(self, id_paciente, id_especialista, nota_contenido, usuario_creacion=None):
+        """Inserta una nota clínica del especialista sobre el paciente y devuelve su id."""
         sql = """
             INSERT INTO notas_clinicas(id_paciente, id_especialista, nota_contenido, usuario_creacion)
             VALUES (%s, %s, %s, %s)
@@ -418,6 +430,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getDatosGenerador(self, id_especialista):
+        """Devuelve nombre, matrícula y especialidades del especialista que genera la ficha."""
         sql = """
             SELECT
                 pe.per_nombre || ' ' || pe.per_apellido AS nombre_completo,
@@ -445,6 +458,7 @@ class FichaDao(BaseDAO):
     # ----------------------------------------
 
     def getTimeline(self, id_paciente, limite=30):
+        """Devuelve la línea de tiempo clínica del paciente, hasta `limite` eventos."""
         sql = """
             SELECT * FROM (
                 SELECT

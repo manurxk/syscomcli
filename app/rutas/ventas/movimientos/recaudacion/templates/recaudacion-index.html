@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Recaudaciones (listado y gestión). Ruta: /recaudacion-index. API: /api/v1/recaudaciones. #}
 {% block titulo %}Recaudaciones{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -10,7 +11,7 @@
           <div class="page-header-subtitle">Agrupación de cobros para depósito bancario</div>
         </div>
         <div class="col-auto mt-4">
-          <a class="btn btn-primary btn-sm" href="{{ url_for('recaudacion.recaudacionAgregar') }}">Nueva Recaudación</a>
+          {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a class="btn btn-primary btn-sm" href="{{ url_for('recaudacion.recaudacionAgregar') }}">Nueva Recaudación</a>{% endif %}
         </div>
       </div>
     </div>
@@ -76,6 +77,7 @@
         <div class="mb-2"><strong>Observaciones:</strong> <span id="dlObs">—</span></div>
 
         <!-- Formulario para depositar (visible solo si PENDIENTE) -->
+        {% if tiene_permiso_accion('VENTAS', 'EDITAR') %}
         <div id="bloqueDepositar" class="border rounded p-3 mt-3 d-none bg-light">
           <h6 class="fw-bold mb-2">Marcar como Depositada</h6>
           <div class="row gx-2 align-items-end">
@@ -88,10 +90,11 @@
             </div>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="modal-footer border-top">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
+        {% if tiene_permiso_accion('VENTAS', 'ELIMINAR') %}<button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>{% endif %}
       </div>
     </div>
   </div>
@@ -131,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   });
   cargar();
-  document.getElementById('btnAnular').addEventListener('click',    anular);
-  document.getElementById('btnDepositar').addEventListener('click', depositar);
+  document.getElementById('btnAnular')?.addEventListener('click',    anular);
+  document.getElementById('btnDepositar')?.addEventListener('click', depositar);
 });
 
 async function cargar() {
@@ -165,8 +168,8 @@ async function verDetalle(id) {
   const cls = est === 'ANULADA' ? 'danger' : est === 'DEPOSITADA' ? 'success' : 'warning';
   document.getElementById('dlEstado').innerHTML = `<span class="badge bg-${cls}">${est}</span>`;
 
-  document.getElementById('bloqueDepositar').classList.toggle('d-none', est !== 'PENDIENTE');
-  document.getElementById('btnAnular').classList.toggle('d-none', est === 'ANULADA');
+  document.getElementById('bloqueDepositar')?.classList.toggle('d-none', est !== 'PENDIENTE');
+  document.getElementById('btnAnular')?.classList.toggle('d-none', est === 'ANULADA');
 
   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 }

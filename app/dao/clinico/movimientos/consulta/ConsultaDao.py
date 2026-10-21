@@ -2,6 +2,7 @@ from app.core.base_dao import BaseDAO
 
 
 class ConsultaDao(BaseDAO):
+    """Acceso a datos de las consultas clínicas."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")

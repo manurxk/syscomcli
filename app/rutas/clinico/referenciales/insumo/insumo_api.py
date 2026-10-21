@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.insumo.InsumoDao import InsumoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 insumoapi = Blueprint('insumoapi', __name__)
 
@@ -9,6 +10,7 @@ insumoapi = Blueprint('insumoapi', __name__)
 @insumoapi.route('/insumos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getInsumos():
+    """GET: lista los registros de insumo."""
     try:
         data = InsumoDao().getInsumos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getInsumos():
 @insumoapi.route('/insumos/<int:insumo_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getInsumo(insumo_id):
+    """GET: registro de insumo por su id; 404 si no existe."""
     try:
         registro = InsumoDao().getInsumoById(insumo_id)
         if not registro:
@@ -33,6 +36,7 @@ def getInsumo(insumo_id):
 @insumoapi.route('/insumos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addInsumo():
+    """POST: valida los datos y crea un registro de insumo; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = InsumoDao()
 
@@ -44,11 +48,11 @@ def addInsumo():
     estado = bool(data.get('est_insumo', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.insumoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un insumo "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un insumo', descripcion)}), 400
     if stock_actual is not None and float(stock_actual) < 0:
         return jsonify({'success': False, 'error': 'El stock actual no puede ser negativo.'}), 400
     if stock_minimo is not None and float(stock_minimo) < 0:
@@ -70,6 +74,7 @@ def addInsumo():
 @insumoapi.route('/insumos/<int:insumo_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateInsumo(insumo_id):
+    """PUT: valida y actualiza el registro de insumo; 404 si no existe."""
     data = request.get_json() or {}
     dao = InsumoDao()
 
@@ -84,11 +89,11 @@ def updateInsumo(insumo_id):
     estado = bool(data.get('est_insumo', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.insumoExiste(descripcion, excluir_id=insumo_id):
-        return jsonify({'success': False, 'error': f'Ya existe un insumo "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un insumo', descripcion)}), 400
     if stock_actual is not None and float(stock_actual) < 0:
         return jsonify({'success': False, 'error': 'El stock actual no puede ser negativo.'}), 400
     if stock_minimo is not None and float(stock_minimo) < 0:
@@ -110,6 +115,7 @@ def updateInsumo(insumo_id):
 @insumoapi.route('/insumos/<int:insumo_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarInsumo(insumo_id):
+    """DELETE: baja lógica del registro de insumo; 404 si no existe."""
     dao = InsumoDao()
 
     if not dao.getInsumoById(insumo_id):

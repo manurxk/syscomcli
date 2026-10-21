@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Menú (listado y gestión). Ruta: /menu-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/roles, /api/v1/menu. #}
 
 {% block titulo %}
 Menú
@@ -37,10 +38,10 @@ Menú
       <div class="table-responsive">
         <table class="table table-hover table-bordered align-middle" id="tblMatriz">
           <thead class="table-light">
-            <tr><th>Grupo</th><th>Página</th><th class="text-center">Visible</th></tr>
+            <tr><th>Grupo</th><th>Página</th><th>Descripción</th><th class="text-center">Visible</th></tr>
           </thead>
           <tbody id="tbodyMatriz">
-            <tr><td colspan="3" class="text-center text-muted py-4">Seleccione un rol para ver su menú.</td></tr>
+            <tr><td colspan="4" class="text-center text-muted py-4">Seleccione un rol para ver su menú.</td></tr>
           </tbody>
         </table>
       </div>
@@ -90,6 +91,7 @@ Menú
           $tbody.append(`<tr>
             <td>${fila.grupo_menu || ''}</td>
             <td>${fila.des_pagina}</td>
+            <td class="text-muted small">${$('<div>').text(fila.descripcion || '').html()}</td>
             <td class="text-center">
               <input type="checkbox" class="form-check-input chk-visible" data-id-pagina="${fila.id_pagina}" ${checked} ${disabled}>
             </td>
@@ -138,7 +140,7 @@ Menú
       if (idRol) {
         renderMatriz(idRol);
       } else {
-        $('#tbodyMatriz').html('<tr><td colspan="3" class="text-center text-muted py-4">Seleccione un rol para ver su menú.</td></tr>');
+        $('#tbodyMatriz').html('<tr><td colspan="4" class="text-center text-muted py-4">Seleccione un rol para ver su menú.</td></tr>');
       }
     });
     guardar();

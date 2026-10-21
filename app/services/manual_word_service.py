@@ -642,6 +642,28 @@ def _lista(doc, nodo):
         _runs(p, en_linea)
 
 
+def _figura_html(doc, nodo):
+    """<figure class="captura"><img><figcaption>: captura centrada con pie «Figura N.M.» (N = capítulo, M = figura
+    del capítulo), como en docs/scripts/generar_plantilla_manual.py. Sin imagen en disco no pone nada."""
+    img = next(_descendientes(nodo, 'img'), None)
+    ruta = (img.atributos.get('src') or '').removeprefix('file://') if img else ''
+    if not os.path.isfile(ruta):
+        return
+    doc.add_paragraph('', style='Figura').add_run().add_picture(ruta, width=Cm(15))
+    # N = capítulo (títulos 1 hasta aquí) y M = figura dentro del capítulo. Se calculan al generar y M va en un
+    # campo SEQ con reinicio explícito (\r): así el índice de figuras y LibreOffice dan lo mismo que Word.
+    capitulo = sum(1 for p in doc.paragraphs if p.style.name == 'Heading 1')
+    anterior_cap, anterior_n = getattr(doc, '_ultima_figura', (None, 0))
+    numero = anterior_n + 1 if anterior_cap == capitulo else 1
+    doc._ultima_figura = (capitulo, numero)
+    pie = doc.add_paragraph('', style='Caption')
+    pie.add_run(f'Figura {capitulo}.').bold = True
+    campo(pie, f'SEQ Figura \\r {numero} \\* ARABIC', str(numero))
+    pie.add_run('. ').bold = True
+    leyenda = next(_descendientes(nodo, 'figcaption'), None)
+    pie.add_run(_colapsar(_texto_plano(leyenda)).strip() if leyenda else '')
+
+
 def _es_nota(nodo):
     return isinstance(nodo, _Nodo) and nodo.etiqueta == 'p' and ('importante' in nodo.clases or 'peligro' in nodo.clases)
 
@@ -655,7 +677,13 @@ def _bloques(doc, hijos):
             _runs(doc.add_paragraph(''), envoltorio)
             continue
         e = nodo.etiqueta
-        if e == 'h4':
+        if e == 'h3':  # la guía de uso trae el título del capítulo dentro de cada sección
+            doc.add_heading(_colapsar(_texto_plano(nodo)).strip(), level=1)
+        elif e == 'figure':
+            _figura_html(doc, nodo)
+        elif 'aqui' in nodo.clases:  # rótulo «Pantalla actual» de la vista previa: no va en el documento
+            continue
+        elif e == 'h4':
             doc.add_paragraph(_colapsar(_texto_plano(nodo)).strip(), style='Heading 2')
         elif e == 'h5':
             doc.add_paragraph(_colapsar(_texto_plano(nodo)).strip(), style='Heading 3')
@@ -684,9 +712,14 @@ def _bloques(doc, hijos):
 
 def html_a_docx(doc, ruta_html):
     """Vuelca una sección de la ayuda (h4, h5, p, p.importante, p.peligro, ul, ol, table, pre) al documento."""
-    lector = _LectorHtml()
     with open(ruta_html, encoding='utf-8') as f:
-        lector.feed(f.read())
+        html_texto_a_docx(doc, f.read())
+
+
+def html_texto_a_docx(doc, html):
+    """Igual que html_a_docx, con el HTML ya en memoria (secciones renderizadas con Jinja)."""
+    lector = _LectorHtml()
+    lector.feed(html)
     _bloques(doc, lector.raiz.hijos)
 
 
@@ -736,6 +769,27 @@ def manual_seguridad(raiz, dir_secciones, secciones, scripts, logo, fecha):
         html_a_docx(doc, os.path.join(dir_secciones, s['template']))
     anexo_scripts(doc, raiz, scripts, fecha)
     return guardar(doc, 'Manual de seguridad y operación del sistema')
+
+
+def manual_guia(secciones_html, perfil, logo, fecha):
+    """Guía de uso del sistema (manual de usuario, .docx en bytes) para un perfil. secciones_html = HTML ya
+    renderizado de cada capítulo (Primeros pasos, una por pantalla y el anexo de avisos); cada uno trae su h3."""
+    titulo = 'Guía de uso del sistema'
+    doc = nuevo_documento()
+    encabezado_y_pie(doc.sections[0], titulo)
+    portada(doc, logo, titulo, f'Manual de usuario · Perfil {perfil}',
+            ('Sistema SYSCLIN de gestión clínica', f'Versión {VERSION}', fecha))
+    control(doc, [
+        ('Documento', 'Guía de uso del sistema (manual de usuario)'),
+        ('Perfil', perfil),
+        ('Versión', VERSION),
+        ('Fecha de generación', fecha),
+        ('Referencia', 'IEEE Std 1063-2001, Software User Documentation; ISO/IEC 26514:2008'),
+    ], fecha)
+    indice(doc, con_figuras=True)
+    for html in secciones_html:
+        html_texto_a_docx(doc, html)
+    return guardar(doc, titulo)
 
 
 def docx_a_pdf(docx_bytes, timeout=110):

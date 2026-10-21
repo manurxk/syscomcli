@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class AuditoriaDao(BaseDAO):
+    """Acceso a datos de la auditoría: eventos del sistema, cambios en datos y alertas."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def registrar_evento(self, id_usuario, accion, detalle=None, ip_origen=None):
+        """Inserta un evento en la auditoría del sistema y devuelve su id."""
         sql = """
             INSERT INTO auditoria_sistema (id_usuario, accion, detalle, ip_origen)
             VALUES (%s, %s, %s, %s)
@@ -321,6 +324,7 @@ class AuditoriaDao(BaseDAO):
     # ------------------------------------------------------------------
 
     def getMaxIdCambio(self):
+        """Devuelve el mayor id de cambio registrado en la auditoría de transacciones (0 si no hay)."""
         fila = self.execute_query_one("SELECT COALESCE(MAX(id_auditoria_transaccion), 0) AS maximo FROM auditoria_transacciones")
         return fila["maximo"]
 

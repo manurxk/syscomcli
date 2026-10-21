@@ -2,11 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RecordatorioDao(BaseDAO):
+    """Acceso a datos de los recordatorios de citas."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getRecordatoriosByCita(self, id_cita):
+        """Lista los recordatorios de la cita."""
         sql = """
             SELECT id_recordatorio, canal, minutos_antes, est_recordatorio
             FROM recordatorios
@@ -73,5 +75,6 @@ class RecordatorioDao(BaseDAO):
         return self.execute_query_one(sql, (id_recordatorio,))
 
     def marcarEnviado(self, id_recordatorio):
+        """Marca el recordatorio como enviado."""
         sql = "UPDATE recordatorios SET est_recordatorio = FALSE WHERE id_recordatorio = %s"
         return self.execute_query(sql, (id_recordatorio,), commit=True) > 0

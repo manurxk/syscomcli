@@ -16,6 +16,7 @@ _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
 @accesoapi.route('/acceso/usuarios', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getUsuariosConEstadoAcceso():
+    """GET: usuarios con su estado de acceso."""
     try:
         data = AccesoDao().getUsuariosConEstadoAcceso()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -27,6 +28,7 @@ def getUsuariosConEstadoAcceso():
 @accesoapi.route('/acceso/usuarios/<int:id_usuario>/sesiones', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getSesionesPorUsuario(id_usuario):
+    """GET: sesiones del usuario."""
     try:
         data = AccesoDao().getSesionesPorUsuario(id_usuario)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -38,6 +40,7 @@ def getSesionesPorUsuario(id_usuario):
 @accesoapi.route('/acceso/sesiones/<int:id_sesion>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def cerrarSesion(id_sesion):
+    """DELETE: cierra la sesión indicada."""
     try:
         fila = _dao.execute_query_one("SELECT token_sesion FROM sesiones WHERE id_sesion = %s", (id_sesion,))
         if not fila:
@@ -57,6 +60,7 @@ def cerrarSesion(id_sesion):
 @accesoapi.route('/acceso/usuarios/<int:id_usuario>/desbloquear', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desbloquearUsuario(id_usuario):
+    """POST: desbloquea la cuenta del usuario y la vuelve a nivel 0."""
     try:
         ok = UsuarioDao().resetearIntentos(id_usuario, usuario_modificacion=session.get('id_usuario'))
         if not ok:
@@ -77,6 +81,7 @@ def desbloquearUsuario(id_usuario):
 @accesoapi.route('/acceso/usuarios/<int:id_usuario>/mfa/revocar', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def revocarMfa(id_usuario):
+    """POST: revoca el MFA configurado del usuario."""
     try:
         AccesoDao().revocarMfa(id_usuario, usuario_modificacion=session.get('id_usuario'))
         app.logger.info(f"MFA revocado para usuario {id_usuario} por {session.get('usu_nick')}")

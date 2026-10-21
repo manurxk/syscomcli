@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class ItemServicioDao(BaseDAO):
+    """Acceso a datos de ítem de servicio (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getItemsServicios(self):
+        """Lista los registros de ítem de servicio."""
         sql = """
             SELECT i.id_item_servicio, i.des_item_servicio, i.cod_item_servicio,
                    i.id_tipo_item, ti.des_tipo_item, i.item_precio_unitario,
@@ -21,6 +24,7 @@ class ItemServicioDao(BaseDAO):
         return self.execute_query(sql)
 
     def getItemServicioById(self, id_item_servicio):
+        """Devuelve el registro de ítem de servicio por su id, o None si no existe."""
         sql = """
             SELECT id_item_servicio, des_item_servicio, cod_item_servicio,
                    id_tipo_item, item_precio_unitario, id_moneda,
@@ -30,9 +34,11 @@ class ItemServicioDao(BaseDAO):
         return self.execute_query_one(sql, (id_item_servicio,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .\-]+$", descripcion))
 
     def itemServicioExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de ítem de servicio con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM items_servicios WHERE UPPER(des_item_servicio) = UPPER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -43,6 +49,7 @@ class ItemServicioDao(BaseDAO):
     def guardarItemServicio(self, descripcion, id_tipo_item, codigo=None, precio_unitario=0,
                             id_moneda=None, aplica_impuesto=False, id_tipo_impuesto=None,
                             estado=True, usuario_creacion=None):
+        """Inserta un registro de ítem de servicio y devuelve el id generado."""
         sql = """
             INSERT INTO items_servicios (des_item_servicio, cod_item_servicio, id_tipo_item,
                                          item_precio_unitario, id_moneda, aplica_impuesto,
@@ -61,6 +68,7 @@ class ItemServicioDao(BaseDAO):
     def updateItemServicio(self, id_item_servicio, descripcion, id_tipo_item, codigo=None,
                            precio_unitario=0, id_moneda=None, aplica_impuesto=False,
                            id_tipo_impuesto=None, estado=True, usuario_modificacion=None):
+        """Actualiza los datos de ítem de servicio; devuelve True si modificó una fila."""
         sql = """
             UPDATE items_servicios
             SET des_item_servicio=%s, cod_item_servicio=%s, id_tipo_item=%s,
@@ -77,5 +85,6 @@ class ItemServicioDao(BaseDAO):
         ) > 0
 
     def desactivarItemServicio(self, id_item_servicio, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de ítem de servicio; devuelve True si modificó una fila."""
         sql = "UPDATE items_servicios SET est_item_servicio=FALSE, usuario_modificacion=%s WHERE id_item_servicio=%s"
         return self.execute_query(sql, (usuario_modificacion, id_item_servicio), commit=True) > 0

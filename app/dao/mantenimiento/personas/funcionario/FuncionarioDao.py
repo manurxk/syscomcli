@@ -3,6 +3,7 @@ import re
 from app.core.base_dao import BaseDAO
 
 class FuncionarioDao(BaseDAO):
+    """Acceso a datos de funcionarios."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")

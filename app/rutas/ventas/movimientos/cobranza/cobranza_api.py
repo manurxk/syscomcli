@@ -3,7 +3,8 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.movimientos.cobranza.CobranzaDao import CobranzaDao
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 cobranzaapi = Blueprint('cobranzaapi', __name__)
 
@@ -12,7 +13,9 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @cobranzaapi.route('/cobranzas', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getCobranzas():
+    """GET: lista los registros de cobranza."""
     try:
         return jsonify({'success': True, 'data': CobranzaDao().getCobranzas(), 'error': None}), 200
     except Exception as e:
@@ -22,7 +25,9 @@ def getCobranzas():
 
 @cobranzaapi.route('/cobranzas/<int:id_cobranza>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getCobranza(id_cobranza):
+    """GET: devuelve cobranza por su id; 404 si no existe."""
     try:
         dao = CobranzaDao()
         reg = dao.getCobranzaById(id_cobranza)
@@ -37,12 +42,14 @@ def getCobranza(id_cobranza):
 
 @cobranzaapi.route('/cobranzas', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
 def addCobranza():
+    """POST: valida los datos y registra cobranza; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     for campo in ('id_cuenta_cobrar', 'id_factura', 'id_caja'):
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -69,7 +76,9 @@ def addCobranza():
 
 @cobranzaapi.route('/cobranzas/<int:id_cobranza>/anular', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
+@permiso_requerido("VENTAS", "ELIMINAR")
 def anularCobranza(id_cobranza):
+    """PUT: anula la cobranza."""
     try:
         ok = CobranzaDao().anular(id_cobranza, usuario=session.get('id_usuario'))
         if not ok:

@@ -4,11 +4,13 @@ ESTADOS_VALIDOS = ('PENDIENTE', 'NOTIFICADO', 'ACEPTADO', 'EXPIRADO', 'CANCELADO
 
 
 class ListaEsperaDao(BaseDAO):
+    """Acceso a datos de la lista de espera de pacientes por un horario de agenda."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getListaEspera(self, id_agenda_horario=None):
+        """Lista las solicitudes de la lista de espera del horario de agenda."""
         sql = """
             SELECT le.id_lista_espera, le.id_agenda_horario, le.id_paciente,
                    le.estado, le.prioridad, le.motivo, le.est_lista_espera,
@@ -33,6 +35,7 @@ class ListaEsperaDao(BaseDAO):
         return self.execute_query(sql, {"id_agenda_horario": id_agenda_horario})
 
     def getListaEsperaById(self, id_lista_espera):
+        """Devuelve la solicitud de lista de espera por su id, o None si no existe."""
         sql = """
             SELECT id_lista_espera, id_agenda_horario, id_paciente, estado,
                    prioridad, motivo, est_lista_espera
@@ -59,6 +62,7 @@ class ListaEsperaDao(BaseDAO):
         return fila["id_lista_espera"] if fila else None
 
     def cambiarEstado(self, id_lista_espera, nuevo_estado, usuario_modificacion=None):
+        """Cambia el estado de la solicitud de lista de espera."""
         if nuevo_estado not in ESTADOS_VALIDOS:
             raise ValueError(f"Estado inválido. Valores permitidos: {ESTADOS_VALIDOS}.")
         sql = """
@@ -72,5 +76,6 @@ class ListaEsperaDao(BaseDAO):
         ) > 0
 
     def desactivar(self, id_lista_espera, usuario_modificacion=None):
+        """Da de baja (lógica) el registro; devuelve True si modificó una fila."""
         sql = "UPDATE lista_espera SET est_lista_espera = FALSE, usuario_modificacion = %s WHERE id_lista_espera = %s"
         return self.execute_query(sql, (usuario_modificacion, id_lista_espera), commit=True) > 0

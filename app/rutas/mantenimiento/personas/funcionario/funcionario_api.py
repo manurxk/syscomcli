@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 
 funcionarioapi = Blueprint('funcionarioapi', __name__)
@@ -170,7 +171,7 @@ def addFuncionario():
         if campo not in data or not data[campo]:
             return jsonify({
                 'success': False,
-                'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
+                'error': msg_obligatorio(campo)
             }), 400
 
     if not funcionariodao.validarNombreApellido(data['nombre']) or not funcionariodao.validarNombreApellido(data['apellido']):
@@ -277,7 +278,7 @@ def updateFuncionario(id_funcionario):
         if campo not in data or not data[campo]:
             return jsonify({
                 'success': False,
-                'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
+                'error': msg_obligatorio(campo)
             }), 400
 
     if not funcionariodao.validarNombreApellido(data['nombre']) or not funcionariodao.validarNombreApellido(data['apellido']):

@@ -1,29 +1,17 @@
+import psycopg2.errors
+
 from app.core.base_dao import BaseDAO
 from app.dao.agendamiento.agenda_horarios.AgendaHorariosDao import AgendaHorariosDao
 
 
 class CitaDao(BaseDAO):
 
-    # Cambios de estado permitidos (mismo mapa que SIGUIENTES_ESTADOS de cita-index.html,
-    # más AGENDADA -> EN_CONSULTA, que hace "Iniciar consulta"). Los estados finales no cambian.
-    TRANSICIONES = {
-        'AGENDADA': ('CONFIRMADA', 'EN_CONSULTA', 'AUSENTE', 'CANCELADA'),
-        'CONFIRMADA': ('EN_CONSULTA', 'AUSENTE', 'CANCELADA'),
-        'EN_CONSULTA': ('COMPLETADA',),
-        'COMPLETADA': (),
-        'AUSENTE': (),
-        'CANCELADA': (),
-    }
-
-    # Correcciones permitidas SOLO el mismo día de la cita, sin administrador (decisión del
-    # usuario 2026-10-13): deshacer un cierre por error. Completada nunca vuelve atrás sin
-    # administrador (ver corregirCita).
-    TRANSICIONES_MISMO_DIA = {
-        'AUSENTE': ('CONFIRMADA',),      # el paciente llegó tarde
-        'CANCELADA': ('AGENDADA',),      # solo si su turno sigue libre (se vuelve a reservar)
-    }
+    # Los cambios de estado los valida sp_cambiar_estado_cita (con fn_transicion_cita_valida):
+    # mapa de transiciones, correcciones del mismo día y regla del día de la cita.
 
     # Una cita es "de un día anterior" cuando terminó el día asignado (hora de Asunción)
+    """Acceso a datos de las citas y su historial de estados."""
+
     SQL_ES_PASADA = "c.cita_inicio::date < (now() AT TIME ZONE 'America/Asuncion')::date"
     SQL_ES_FUTURA = "c.cita_inicio::date > (now() AT TIME ZONE 'America/Asuncion')::date"
 
@@ -32,47 +20,6 @@ class CitaDao(BaseDAO):
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
-
-    def _validarTransicion(self, cur, id_cita, cod_estado_nuevo):
-        """Valida el cambio de estado y devuelve (id_estado_actual, id_slot_agenda, cod_estado_actual).
-        Una cita de un día anterior solo puede cerrarse (estado final: Ausente, Cancelada o,
-        si estaba en consulta, Completada) o reprogramarse desde Editar. La consulta solo se
-        inicia el día de la cita (a cualquier hora de ese día)."""
-        cur.execute(
-            f"""
-            SELECT c.id_estado_cita, c.id_slot_agenda, ec.cod_estado_cita, ec.des_estado_cita,
-                   {self.SQL_ES_PASADA} AS es_pasada, {self.SQL_ES_FUTURA} AS es_futura,
-                   (SELECT en.es_final FROM estados_citas en WHERE en.cod_estado_cita = %s) AS nuevo_es_final
-            FROM citas c
-            JOIN estados_citas ec ON c.id_estado_cita = ec.id_estado_cita
-            WHERE c.id_cita = %s
-            FOR UPDATE OF c
-            """,
-            (cod_estado_nuevo, id_cita),
-        )
-        fila = cur.fetchone()
-        if fila is None:
-            raise ValueError("La cita indicada no existe")
-        id_estado_actual, id_slot_agenda, cod_actual, des_actual, es_pasada, es_futura, nuevo_es_final = fila
-
-        permitidos = self.TRANSICIONES.get(cod_actual, ())
-        if not es_pasada and not es_futura:
-            permitidos = permitidos + self.TRANSICIONES_MISMO_DIA.get(cod_actual, ())
-        if cod_estado_nuevo not in permitidos:
-            if not permitidos:
-                raise ValueError(
-                    f"La cita ya está cerrada (estado '{des_actual}'). Para corregirla use "
-                    f"'Corregir' (requiere autorización de un administrador)."
-                )
-            raise ValueError(f"Una cita en estado '{des_actual}' no puede pasar a '{cod_estado_nuevo}'.")
-        if es_pasada and not nuevo_es_final:
-            raise ValueError(
-                "La cita es de un día anterior: solo puede marcarse como Ausente, Cancelada "
-                "o Completada (si estaba en consulta), o reprogramarse desde Editar."
-            )
-        if es_futura and cod_estado_nuevo in ('EN_CONSULTA', 'AUSENTE'):
-            raise ValueError("La cita es de un día futuro: la consulta (o la ausencia) se registra el día de la cita.")
-        return id_estado_actual, id_slot_agenda, cod_actual
 
     def _reservarTurnoDeCita(self, cur, id_cita):
         """Vuelve a reservar el turno de una cita cancelada (al cancelar se liberó y la cita
@@ -96,12 +43,29 @@ class CitaDao(BaseDAO):
         cur.execute("UPDATE slots_agenda SET estado_slot = 'RESERVADO' WHERE id_slot_agenda = %s", (fila[0],))
         cur.execute("UPDATE citas SET id_slot_agenda = %s WHERE id_cita = %s", (fila[0], id_cita))
 
+    def _llamarCambioEstado(self, cur, id_cita, cod_estado_nuevo, usuario_modificacion, motivo):
+        """CALL sp_cambiar_estado_cita: devuelve (estado anterior, estado nuevo). Los errores de
+        regla de la base llegan como ValueError con su mensaje."""
+        try:
+            cur.execute(
+                """
+                CALL sp_cambiar_estado_cita(
+                    p_id_cita => %s, p_cod_estado_nuevo => %s, p_usuario_modificacion => %s,
+                    o_cod_estado_anterior => NULL, o_cod_estado_nuevo => NULL, p_motivo => %s)
+                """,
+                (id_cita, cod_estado_nuevo, usuario_modificacion, motivo),
+            )
+        except psycopg2.errors.RaiseException as e:
+            raise ValueError(e.diag.message_primary) from e
+        return cur.fetchone()
+
     def validarCambioEstado(self, id_cita, cod_estado_nuevo):
-        """Valida sin cambiar nada (ej. antes de crear la consulta en "Iniciar consulta")."""
+        """Valida sin cambiar nada (ej. antes de crear la consulta en "Iniciar consulta"):
+        llama al procedimiento y revierte."""
         con = self._get_conexion()
         cur = con.cursor()
         try:
-            self._validarTransicion(cur, id_cita, cod_estado_nuevo)
+            self._llamarCambioEstado(cur, id_cita, cod_estado_nuevo, None, None)
         finally:
             con.rollback()
             cur.close()
@@ -136,6 +100,7 @@ class CitaDao(BaseDAO):
         return self.execute_query(sql, (id_especialista,))
 
     def getEstadosCitas(self):
+        """Lista los estados posibles de una cita."""
         sql = """
             SELECT id_estado_cita, cod_estado_cita, des_estado_cita, orden, es_final
             FROM estados_citas
@@ -146,6 +111,7 @@ class CitaDao(BaseDAO):
 
     def getSlotsDisponibles(self, id_especialista=None, id_especialidad=None, desde=None, hasta=None):
         # Solo turnos de agendas activas (una agenda desactivada no ofrece turnos) y marca de sobreturno
+        """Lista los turnos libres, filtrados por especialista, especialidad y rango de fechas."""
         sql = f"""
             SELECT sa.id_slot_agenda, sa.id_especialista, sa.id_sede, sa.id_consultorio,
                    TO_CHAR(sa.slot_inicio, 'YYYY-MM-DD HH24:MI') AS slot_inicio,
@@ -178,6 +144,7 @@ class CitaDao(BaseDAO):
         return self.execute_query(sql, params)
 
     def getCitas(self, id_especialista=None, id_paciente=None, desde=None, hasta=None):
+        """Lista las citas, con filtros opcionales por especialista, paciente y rango de fechas."""
         sql = f"""
             SELECT c.id_cita, c.id_paciente, pp.per_nombre AS paciente_nombre,
                    pp.per_apellido AS paciente_apellido, p.pac_historia_clinica,
@@ -219,6 +186,7 @@ class CitaDao(BaseDAO):
         return self.execute_query(sql, params)
 
     def getCitaById(self, id_cita):
+        """Devuelve la cita por su id, o None si no existe."""
         sql = """
             SELECT c.id_cita, c.id_paciente, pp.per_nombre AS paciente_nombre,
                    pp.per_apellido AS paciente_apellido, p.pac_historia_clinica,
@@ -350,6 +318,7 @@ class CitaDao(BaseDAO):
         return self.execute_transaction(_crear)
 
     def getLogEstados(self, id_cita):
+        """Devuelve el historial de cambios de estado de la cita."""
         sql = """
             SELECT l.id_cita_log_estado,
                    ea.des_estado_cita AS estado_anterior,
@@ -470,76 +439,12 @@ class CitaDao(BaseDAO):
         return self.execute_transaction(_actualizar)
 
     def cambiarEstadoCita(self, id_cita, cod_estado_nuevo, usuario_modificacion, motivo=None):
-        """Cambia el estado de una cita según TRANSICIONES (ver _validarTransicion). Si el
-        nuevo estado es CANCELADA, libera el slot reservado para que vuelva a estar disponible."""
-
-        def _cambiar(cur):
-            id_estado_anterior, id_slot_agenda, cod_estado_anterior = self._validarTransicion(cur, id_cita, cod_estado_nuevo)
-
-            if cod_estado_anterior == "CANCELADA":
-                self._reservarTurnoDeCita(cur, id_cita)
-
-            cur.execute(
-                "SELECT id_estado_cita FROM estados_citas WHERE cod_estado_cita = %s AND est_estado_cita = TRUE",
-                (cod_estado_nuevo,),
-            )
-            estado_row = cur.fetchone()
-            if estado_row is None:
-                raise ValueError(f"Estado '{cod_estado_nuevo}' no encontrado")
-            id_estado_nuevo = estado_row[0]
-
-            cur.execute(
-                """
-                UPDATE citas
-                SET id_estado_cita = %s, usuario_modificacion = %s,
-                    motivo_cancelacion = CASE WHEN %s = 'CANCELADA' THEN %s ELSE motivo_cancelacion END
-                WHERE id_cita = %s
-                """,
-                (id_estado_nuevo, usuario_modificacion, cod_estado_nuevo, motivo, id_cita),
-            )
-
-            if cod_estado_nuevo == "CANCELADA" and id_slot_agenda:
-                cur.execute(
-                    "UPDATE slots_agenda SET estado_slot = 'DISPONIBLE' WHERE id_slot_agenda = %s AND estado_slot = 'RESERVADO'",
-                    (id_slot_agenda,),
-                )
-                cur.execute(
-                    "UPDATE citas SET id_slot_agenda = NULL WHERE id_cita = %s",
-                    (id_cita,),
-                )
-
-            if cod_estado_nuevo == "COMPLETADA":
-                cur.execute(
-                    """
-                    UPDATE consultas SET consulta_estado = 'FINALIZADA', usuario_modificacion = %s
-                    WHERE id_cita = %s AND consulta_estado != 'FINALIZADA'
-                    """,
-                    (usuario_modificacion, id_cita),
-                )
-
-            if cod_estado_nuevo == "CONFIRMADA":
-                cur.execute(
-                    """
-                    INSERT INTO recordatorios (id_cita, canal, minutos_antes, usuario_creacion)
-                    VALUES (%(id_cita)s, 'EMAIL', 1440, %(usuario)s),
-                           (%(id_cita)s, 'EMAIL', 120, %(usuario)s)
-                    ON CONFLICT (id_cita, canal, minutos_antes) DO NOTHING
-                    """,
-                    {"id_cita": id_cita, "usuario": usuario_modificacion},
-                )
-
-            cur.execute(
-                """
-                INSERT INTO citas_log_estados
-                    (id_cita, id_estado_anterior, id_estado_nuevo, motivo_cambio, usuario_cambio)
-                VALUES (%s, %s, %s, %s, %s)
-                """,
-                (id_cita, id_estado_anterior, id_estado_nuevo, motivo, usuario_modificacion),
-            )
-
-            return True
-
-        return self.execute_transaction(_cambiar)
+        """Cambia el estado de una cita con sp_cambiar_estado_cita: valida la transición, libera o
+        vuelve a reservar el turno, finaliza la consulta al completar, crea los recordatorios al
+        confirmar y deja el cambio en citas_log_estados, todo en la misma transacción."""
+        return self.execute_transaction(
+            lambda cur: bool(self._llamarCambioEstado(cur, id_cita, cod_estado_nuevo, usuario_modificacion, motivo))
+        )
 
 
     CAMPOS_CORREGIBLES = ('motivo', 'observaciones', 'id_especialidad', 'modalidad')

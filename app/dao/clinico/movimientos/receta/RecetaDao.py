@@ -3,10 +3,13 @@ from datetime import date
 
 
 class RecetaDao(BaseDAO):
+    """Acceso a datos de las recetas emitidas en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los recetas de la consulta."""
         sql = """
             SELECT r.id_receta, r.id_consulta, r.receta_numero, r.receta_fecha,
                    r.receta_validez_dias, r.receta_indicaciones_generales,
@@ -41,6 +44,7 @@ class RecetaDao(BaseDAO):
         return recetas
 
     def guardar(self, id_consulta, id_paciente, id_especialista, datos, usuario_creacion=None):
+        """Inserta una receta en la consulta y devuelve su id."""
         detalles = datos.get('detalles') or []
         if not detalles:
             raise ValueError('La receta debe tener al menos un medicamento.')
@@ -98,5 +102,6 @@ class RecetaDao(BaseDAO):
         return receta
 
     def desactivar(self, id_receta, usuario_modificacion=None):
+        """Da de baja (lógica) la receta; devuelve True si modificó una fila."""
         sql = "UPDATE recetas SET est_receta = FALSE, usuario_modificacion = %s WHERE id_receta = %s"
         return self.execute_query(sql, (usuario_modificacion, id_receta), commit=True) > 0

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Facturas (listado y gestión). Ruta: /factura-index. Roles: ADMINISTRADOR, SUPERADMIN, VENTAS. API: /api/v1/facturas. #}
 {% block titulo %}Facturas{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -10,7 +11,7 @@
           <div class="page-header-subtitle">Listado de comprobantes emitidos</div>
         </div>
         <div class="col-auto mt-4">
-          <a class="btn btn-primary btn-sm" href="{{ url_for('factura.facturaAgregar') }}">Nueva Factura</a>
+          {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a class="btn btn-primary btn-sm" href="{{ url_for('factura.facturaAgregar') }}">Nueva Factura</a>{% endif %}
         </div>
       </div>
     </div>
@@ -80,7 +81,7 @@
         <button type="button" class="btn btn-outline-primary btn-sm" id="btnEnviarCorreo" onclick="enviarCorreo()">
           <i data-feather="mail" class="icon-xs"></i> Reenviar por correo
         </button>
-        <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
+        {% if tiene_permiso_accion('VENTAS', 'ELIMINAR') %}<button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>{% endif %}
       </div>
     </div>
   </div>
@@ -116,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   });
   cargar();
-  document.getElementById('btnAnular').addEventListener('click', anular);
+  document.getElementById('btnAnular')?.addEventListener('click', anular);
 });
 
 async function cargar() {
@@ -157,7 +158,7 @@ async function verDetalle(id) {
   });
 
   const btnAnular = document.getElementById('btnAnular');
-  btnAnular.classList.toggle('d-none', d.des_estado_factura === 'ANULADA');
+  btnAnular?.classList.toggle('d-none', d.des_estado_factura === 'ANULADA');
 
   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 }
@@ -186,10 +187,13 @@ async function enviarCorreo() {
 
 async function anular() {
   if (!facturaActual || !confirm(`¿Anular la factura ${facturaActual.factura_numero}? Esta acción no se puede revertir.`)) return;
+  const motivo = (prompt('Motivo de la anulación (obligatorio):') || '').trim();
+  if (motivo.length < 3) { alert('Debe indicar el motivo de la anulación.'); return; }
   const csrf = document.querySelector('meta[name="csrf-token"]').content;
   const r = await fetch(`${API}/${facturaActual.id_factura}/anular`, {
     method: 'PUT',
-    headers: { 'X-CSRFToken': csrf }
+    headers: { 'X-CSRFToken': csrf, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ motivo })
   });
   const j = await r.json();
   if (j.success) {

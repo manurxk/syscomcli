@@ -4,7 +4,8 @@ from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
 from app.services.factura_pdf_service import FacturaPDFService
 from app.services.EmailService import EmailService
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 facturaapi = Blueprint('facturaapi', __name__)
 
@@ -59,7 +60,9 @@ def _enviar_factura_por_correo(id_factura):
 
 @facturaapi.route('/facturas', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getFacturas():
+    """GET: lista los registros de factura."""
     try:
         return jsonify({'success': True, 'data': FacturaDao().getFacturas(), 'error': None}), 200
     except Exception as e:
@@ -69,7 +72,9 @@ def getFacturas():
 
 @facturaapi.route('/facturas/<int:id_factura>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getFactura(id_factura):
+    """GET: devuelve factura por su id; 404 si no existe."""
     try:
         dao = FacturaDao()
         reg = dao.getFacturaById(id_factura)
@@ -85,7 +90,9 @@ def getFactura(id_factura):
 
 @facturaapi.route('/facturas/<int:id_factura>/detalle', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getFacturaDetalle(id_factura):
+    """GET: líneas de detalle de la factura."""
     try:
         return jsonify({'success': True, 'data': FacturaDao().getFacturaDetalle(id_factura), 'error': None}), 200
     except Exception as e:
@@ -95,7 +102,9 @@ def getFacturaDetalle(id_factura):
 
 @facturaapi.route('/facturas', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
 def addFactura():
+    """POST: valida los datos y registra factura; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     # Validaciones básicas
@@ -103,7 +112,7 @@ def addFactura():
                     'id_timbrado', 'id_punto_expedicion', 'id_estado_factura', 'fecha_factura']
     for campo in obligatorios:
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -114,7 +123,7 @@ def addFactura():
         if not d.get('item_cantidad') or int(d['item_cantidad']) <= 0:
             return jsonify({'success': False, 'error': 'La cantidad de cada ítem debe ser mayor a 0.'}), 400
         if d.get('item_precio_con_iva') is None or float(d['item_precio_con_iva']) < 0:
-            return jsonify({'success': False, 'error': 'El precio de cada ítem es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio('Precio de cada ítem')}), 400
 
     # Factura al contado: se cobra en el acto, así que la caja del cobro debe estar abierta
     id_caja = (data.get('cobro') or {}).get('id_caja')
@@ -140,7 +149,9 @@ def addFactura():
 
 @facturaapi.route('/facturas/<int:id_factura>/pdf', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getFacturaPDF(id_factura):
+    """GET: genera y devuelve el PDF (KuDE) de la factura."""
     try:
         factura, buffer = _construir_pdf_factura(id_factura)
         if not factura:
@@ -155,6 +166,7 @@ def getFacturaPDF(id_factura):
 
 @facturaapi.route('/facturas/<int:id_factura>/enviar-correo', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def enviarFacturaCorreo(id_factura):
     """Reenvío manual del PDF de la factura por correo (ej. si el envío automático
     al timbrar falló, o el cliente lo pide de nuevo)."""
@@ -167,12 +179,17 @@ def enviarFacturaCorreo(id_factura):
 
 @facturaapi.route('/facturas/<int:id_factura>/anular', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
+@permiso_requerido("VENTAS", "ELIMINAR")
 def anularFactura(id_factura):
+    """PUT: anula la factura con motivo obligatorio (llama a sp_anular_factura); solo ADMINISTRADOR/SUPERADMIN."""
     dao = FacturaDao()
     if not dao.getFacturaById(id_factura):
         return jsonify({'success': False, 'error': 'No se encontró la factura.'}), 404
+    motivo = ((request.get_json(silent=True) or {}).get('motivo') or '').strip()
+    if len(motivo) < 3:
+        return jsonify({'success': False, 'error': 'Debe indicar el motivo de la anulación.'}), 400
     try:
-        ok = dao.anular(id_factura, usuario_anulacion=session.get('id_usuario'))
+        ok = dao.anular(id_factura, usuario_anulacion=session.get('id_usuario'), motivo=motivo)
         if not ok:
             return jsonify({'success': False, 'error': 'La factura ya está anulada o no se pudo anular.'}), 409
         return jsonify({'success': True, 'mensaje': f'Factura {id_factura} anulada.', 'error': None}), 200

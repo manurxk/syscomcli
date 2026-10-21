@@ -5,6 +5,7 @@ from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.auth.utils.decorators import role_required
 from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
 from app.services.documento_clinico_pdf_service import DocumentoClinicoPdfService
+from app.utils.mensajes_validacion import msg_obligatorio
 
 recetaapi = Blueprint('recetaapi', __name__)
 
@@ -14,6 +15,7 @@ ROLES_RECETA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @recetaapi.route('/consultas/<int:id_consulta>/recetas', methods=['GET'])
 @role_required(*ROLES_RECETA)
 def getRecetas(id_consulta):
+    """GET: lista los recetas de la consulta."""
     try:
         data = RecetaDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -25,9 +27,10 @@ def getRecetas(id_consulta):
 @recetaapi.route('/consultas/<int:id_consulta>/recetas', methods=['POST'])
 @role_required(*ROLES_RECETA)
 def addReceta(id_consulta):
+    """POST: valida y registra receta en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('receta_fecha'):
-        return jsonify({'success': False, 'error': 'La fecha de la receta es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fecha de la receta')}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -60,6 +63,7 @@ def addReceta(id_consulta):
 @recetaapi.route('/recetas/<int:id_receta>', methods=['DELETE'])
 @role_required(*ROLES_RECETA)
 def deleteReceta(id_receta):
+    """DELETE: baja lógica de receta; 404 si no existe."""
     try:
         if RecetaDao().desactivar(id_receta, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200

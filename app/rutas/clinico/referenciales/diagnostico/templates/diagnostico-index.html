@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Diagnósticos (listado y gestión). Ruta: /diagnostico-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/diagnosticos. #}
 
 {% block titulo %}
 Diagnósticos
@@ -140,7 +141,7 @@ Diagnósticos
       const codCie10 = $('#txtCodCie10').val().trim();
 
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

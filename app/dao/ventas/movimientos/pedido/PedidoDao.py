@@ -4,10 +4,13 @@ from datetime import date
 
 
 class PedidoDao(BaseDAO):
+    """Acceso a datos de pedido (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPedidos(self):
+        """Lista los registros de pedido."""
         sql = """
             SELECT p.id_pedido, p.pedido_numero, p.id_paciente, p.id_profesional,
                    p.fecha_pedido, p.fecha_entrega, p.pedido_subtotal, p.pedido_descuento,
@@ -32,6 +35,7 @@ class PedidoDao(BaseDAO):
         return pedidos
 
     def getPedidoById(self, id_pedido):
+        """Devuelve el registro de pedido por su id, o None si no existe."""
         sql = """
             SELECT p.id_pedido, p.pedido_numero, p.id_paciente, p.id_profesional,
                    p.fecha_pedido, p.fecha_entrega, p.pedido_subtotal, p.pedido_descuento,
@@ -57,6 +61,7 @@ class PedidoDao(BaseDAO):
         return pedido
 
     def getDetallePedido(self, id_pedido):
+        """Devuelve las líneas de detalle de pedido para el id indicado."""
         sql = """
             SELECT pd.id_pedido_detalle, pd.id_pedido, pd.id_item_servicio,
                    pd.item_descripcion, pd.item_cantidad, pd.item_precio_unitario,
@@ -68,6 +73,7 @@ class PedidoDao(BaseDAO):
         return self.execute_query(sql, (id_pedido,))
 
     def _generarNumero(self, cur):
+        """Genera el siguiente número correlativo de pedido dentro de la transacción en curso (cursor `cur`)."""
         anio = date.today().year
         mes = date.today().strftime('%m')
         cur.execute(
@@ -83,6 +89,7 @@ class PedidoDao(BaseDAO):
         return f'PED-{anio}-{mes}-{siguiente:04d}'
 
     def guardar(self, datos, usuario_creacion=None):
+        """Registra el documento con su cabecera y detalle en una sola transacción; devuelve el id."""
         return self.execute_transaction(lambda cur: self.crearEnTransaccion(cur, datos, usuario_creacion))
 
     def crearEnTransaccion(self, cur, datos, usuario_creacion=None):
@@ -135,9 +142,11 @@ class PedidoDao(BaseDAO):
         return id_pedido
 
     def actualizarEstado(self, id_pedido, nuevo_estado, usuario_modificacion=None):
+        """Cambia el estado del documento."""
         sql = "UPDATE pedidos SET pedido_estado = %s, usuario_modificacion = %s WHERE id_pedido = %s"
         return self.execute_query(sql, (nuevo_estado, usuario_modificacion, id_pedido), commit=True) > 0
 
     def desactivar(self, id_pedido, usuario_modificacion=None):
+        """Da de baja (lógica) el documento."""
         sql = "UPDATE pedidos SET est_pedido = FALSE, usuario_modificacion = %s WHERE id_pedido = %s"
         return self.execute_query(sql, (usuario_modificacion, id_pedido), commit=True) > 0

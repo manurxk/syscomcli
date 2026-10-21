@@ -2,18 +2,23 @@ from app.core.base_dao import BaseDAO
 
 
 class EstadoCivilDao(BaseDAO):
+    """Acceso a datos de estado civil (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getEstadosCiviles(self):
+        """Lista los registros de estado civil."""
         sql = "SELECT id_estado_civil, des_estado_civil, est_estado_civil FROM estados_civiles ORDER BY id_estado_civil"
         return self.execute_query(sql)
 
     def getEstadoCivilById(self, estado_civil_id):
+        """Devuelve el registro de estado civil por su id, o None si no existe."""
         sql = "SELECT id_estado_civil, des_estado_civil, est_estado_civil FROM estados_civiles WHERE id_estado_civil = %s"
         return self.execute_query_one(sql, (estado_civil_id,))
 
     def guardarEstadoCivil(self, descripcion, estado):
+        """Inserta un registro de estado civil y devuelve el id generado."""
         sql = """
             INSERT INTO estados_civiles (des_estado_civil, est_estado_civil)
             VALUES (%s, %s)
@@ -23,6 +28,7 @@ class EstadoCivilDao(BaseDAO):
         return fila["id_estado_civil"] if fila else None
 
     def updateEstadoCivil(self, estado_civil_id, descripcion, estado):
+        """Actualiza los datos de estado civil; devuelve True si modificó una fila."""
         sql = """
             UPDATE estados_civiles
             SET des_estado_civil = %s, est_estado_civil = %s

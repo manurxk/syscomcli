@@ -1,3 +1,4 @@
+import time
 from datetime import date, datetime
 from flask import Blueprint, render_template, session, \
     request, redirect, url_for, flash, current_app as app
@@ -16,6 +17,23 @@ from app.core.moneda import get_moneda, formatear
 logmod = Blueprint('login', __name__, template_folder='../templates')
 
 COOKIE_DISPOSITIVO_CONFIABLE = 'mfa_trust'
+COOKIE_RECORDAR_USUARIO = 'recordar_usuario'
+RECORDAR_USUARIO_DIAS = 30
+
+
+def _aplicar_recordarme(response, usuario_nombre, recordar):
+    """'Recordarme': guarda SOLO el nombre de usuario (nunca la contraseña) en
+    una cookie de 30 días para precargarlo en el próximo login. Si el checkbox
+    viene destildado, borra la cookie."""
+    if recordar and usuario_nombre:
+        response.set_cookie(
+            COOKIE_RECORDAR_USUARIO, usuario_nombre.strip(),
+            max_age=RECORDAR_USUARIO_DIAS * 24 * 60 * 60,
+            httponly=True, samesite='Lax'
+        )
+    else:
+        response.delete_cookie(COOKIE_RECORDAR_USUARIO)
+    return response
 
 
 def _emitir_dispositivo_confiable(response, id_usuario):
@@ -84,30 +102,45 @@ def login():
             return redirect(url_for('login.login'))
 
         # Usar servicio de autenticación mejorado
+        inicio_login = time.perf_counter()
         exitoso, datos_usuario, mensaje = AuthService.login(
             usuario_nombre=usuario_nombre,
             password=usuario_clave,
             token_dispositivo=request.cookies.get(COOKIE_DISPOSITIVO_CONFIABLE)
         )
+        # Duración del procesamiento del login (verificación de clave, bloqueos,
+        # sesión). Solo el nombre de usuario y la IP: nunca la contraseña.
+        if exitoso:
+            resultado = 'OK'
+        elif datos_usuario and (datos_usuario.get('requiere_mfa') or datos_usuario.get('requiere_vincular_correo')):
+            resultado = 'PASO_MFA'
+        else:
+            resultado = 'FALLIDO'
+        app.logger.info(
+            f"LOGIN_TIEMPO usuario='{usuario_nombre}' resultado={resultado} "
+            f"duracion_ms={(time.perf_counter() - inicio_login) * 1000:.0f} ip={request.remote_addr}"
+        )
+
+        recordar = request.form.get('recordar') == '1'
 
         if exitoso:
             _iniciar_sesion_flask(datos_usuario)
             response = redirect(url_for('login.inicio'))
             if datos_usuario.get('mfa_habilitado'):
                 response = _emitir_dispositivo_confiable(response, datos_usuario['id_usuario'])
-            return response
+            return _aplicar_recordarme(response, usuario_nombre, recordar)
 
         if datos_usuario and datos_usuario.get('requiere_vincular_correo'):
             # Password correcta, tiene MFA habilitado pero no tiene correo registrado
             session['mfa_pendiente_id_usuario'] = datos_usuario['id_usuario']
             flash(mensaje, 'info')
-            return redirect(url_for('login.vincular_correo'))
+            return _aplicar_recordarme(redirect(url_for('login.vincular_correo')), usuario_nombre, recordar)
 
         if datos_usuario and datos_usuario.get('requiere_mfa'):
             # Password correcta, falta el código de verificación por correo
             session['mfa_pendiente_id_usuario'] = datos_usuario['id_usuario']
             flash(mensaje, 'info')
-            return redirect(url_for('login.verificar_mfa'))
+            return _aplicar_recordarme(redirect(url_for('login.verificar_mfa')), usuario_nombre, recordar)
 
         id_usuario_audit = datos_usuario.get('id_usuario', 0) if datos_usuario else 0
         AuditoriaDao().registrar_evento(
@@ -127,7 +160,8 @@ def login():
         return redirect(url_for('login.login'))
 
     # si es GET
-    return render_template('login.html')
+    usuario_recordado = request.cookies.get(COOKIE_RECORDAR_USUARIO, '')
+    return render_template('login.html', usuario_recordado=usuario_recordado)
 
 
 @logmod.route('/login/recuperar-password', methods=['GET'])

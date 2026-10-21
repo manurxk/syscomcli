@@ -1,5 +1,5 @@
 -- 16_datos_referenciales.sql — Datos referenciales
--- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -251,38 +251,38 @@ COPY public.entidades_adheridas (id_entidad_adherida, des_entidad_adherida, cod_
 COPY public.entidades_emisoras (id_entidad_emisora, des_entidad_emisora, cod_entidad_emisora, ruc_entidad, telefono_entidad, email_entidad, tipo_entidad, est_entidad_emisora, fecha_creacion, usuario_creacion, fecha_modificacion, usuario_modificacion) FROM stdin;
 \.
 
-COPY public.paginas (id_pagina, id_modulo, des_pagina, pag_direccion, est_pagina, fecha_creacion, usuario_creacion, fecha_modificacion, usuario_modificacion, icono, orden, grupo_menu) FROM stdin;
-1	1	Funcionarios	funcionario.funcionarioIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	briefcase	10	Personas
-2	1	Pacientes	paciente.pacienteIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	users	20	Personas
-3	1	Usuarios	usuario.usuarioIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	user-check	30	Personas
-4	2	Agenda Medica	agenda_horarios.agendaHorariosIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	calendar	10	Agendamiento
-5	2	Citas	cita.citaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	clipboard	20	Agendamiento
-6	2	Lista de Espera	lista_espera.listaEsperaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	clock	30	Agendamiento
-7	3	Mi Agenda	mi_agenda.miAgendaIndex	t	2026-07-22 11:06:11.239235	\N	2026-09-06 22:57:30.784865	\N	calendar	10	Clinico
-8	3	Consultas	consulta.consultaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	file-text	20	Clinico
-9	3	PEI	pei.peiIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	book-open	30	Clinico
-10	3	Fichas Medicas	ficha.fichaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	clipboard	40	Clinico
-11	4	Pedidos	pedido.pedidoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	shopping-cart	10	Ventas
-12	4	Presupuestos	presupuesto.presupuestoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	file-text	20	Ventas
-13	4	Estado de Caja	apertura_cierre_caja.cajaEstado	t	2026-07-22 11:06:11.239235	\N	\N	\N	unlock	30	Ventas
-14	4	Historial de Caja	apertura_cierre_caja.cajaHistorial	t	2026-07-22 11:06:11.239235	\N	\N	\N	clock	40	Ventas
-15	4	Arqueos de Caja	arqueo_caja.arqueoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	check-square	50	Ventas
-16	4	Facturas	factura.facturaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	file-text	60	Ventas
-17	4	Remisiones	remision.remisionIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	truck	70	Ventas
-18	4	Notas de Credito	nota_credito.notaCreditoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	minus-circle	80	Ventas
-19	4	Notas de Debito	nota_debito.notaDebitoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	plus-circle	90	Ventas
-20	4	Cuentas a Cobrar	cuenta_cobrar.cuentaCobrarIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	credit-card	100	Ventas
-21	4	Cobranzas	cobranza.cobranzaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	dollar-sign	110	Ventas
-22	4	Recaudaciones	recaudacion.recaudacionIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	archive	120	Ventas
-23	4	Libro de Ventas	libro_ventas.libroVentasIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	book	130	Ventas
-24	1	Referenciales	referenciales.referencialesIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	sliders	10	Configuracion
-25	4	Timbrados	timbrado.timbradoIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	award	20	Configuracion
-26	4	Puntos de Expedicion	punto_expedicion.puntoExpedicionIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	map-pin	30	Configuracion
-27	1	Roles y Permisos	permisos.permisosIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	shield	40	Configuracion
-28	1	Auditoria	auditoria.auditoriaIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	eye	50	Configuracion
-29	1	Menu	menu.menuIndex	t	2026-07-22 11:06:11.239235	\N	\N	\N	list	60	Configuracion
-30	1	Accesos	acceso.accesoIndex	f	2026-07-22 11:06:11.239235	\N	2026-10-19 09:36:15.167869	\N	key	70	Configuracion
-31	5	Reportes	reporte.reporteIndex	t	2026-08-12 16:37:36.952627	\N	2026-10-19 17:37:07.970538	\N	bar-chart-2	10	Reportes
+COPY public.paginas (id_pagina, id_modulo, des_pagina, pag_direccion, est_pagina, fecha_creacion, usuario_creacion, fecha_modificacion, usuario_modificacion, icono, orden, grupo_menu, descripcion) FROM stdin;
+1	1	Funcionarios	funcionario.funcionarioIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	briefcase	10	Personas	Personal de la clínica y sus datos
+2	1	Pacientes	paciente.pacienteIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	users	20	Personas	Registro de pacientes y sus datos personales
+3	1	Usuarios	usuario.usuarioIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	user-check	30	Personas	Usuarios que ingresan al sistema y sus roles
+4	2	Agenda Medica	agenda_horarios.agendaHorariosIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	calendar	10	Agendamiento	Horarios de atención de cada especialista y turnos disponibles
+5	2	Citas	cita.citaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	clipboard	20	Agendamiento	Agendar, confirmar, reprogramar y cancelar citas
+6	2	Lista de Espera	lista_espera.listaEsperaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	clock	30	Agendamiento	Pacientes esperando un turno disponible
+7	3	Mi Agenda	mi_agenda.miAgendaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	calendar	10	Clinico	Sus citas del día y de la semana (solo lectura)
+8	3	Consultas	consulta.consultaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	file-text	20	Clinico	Atención del paciente: anamnesis, registro clínico, órdenes, recetas y certificados
+9	3	PEI	pei.peiIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	book-open	30	Clinico	Plan de intervención de cada paciente
+10	3	Fichas Medicas	ficha.fichaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	clipboard	40	Clinico	Ficha médica imprimible del paciente
+11	4	Pedidos	pedido.pedidoIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	shopping-cart	10	Ventas	Pedidos de servicios solicitados por el paciente
+12	4	Presupuestos	presupuesto.presupuestoIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	file-text	20	Ventas	Presupuestos de servicios antes de facturar
+13	4	Estado de Caja	apertura_cierre_caja.cajaEstado	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	unlock	30	Ventas	Abrir y cerrar la caja del día
+14	4	Historial de Caja	apertura_cierre_caja.cajaHistorial	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	clock	40	Ventas	Aperturas y cierres de caja anteriores
+15	4	Arqueos de Caja	arqueo_caja.arqueoIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	check-square	50	Ventas	Conteo de efectivo y diferencias de la caja
+16	4	Facturas	factura.facturaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	file-text	60	Ventas	Emitir, imprimir y anular facturas
+17	4	Remisiones	remision.remisionIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	truck	70	Ventas	Remisiones de entrega de servicios o insumos
+18	4	Notas de Credito	nota_credito.notaCreditoIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	minus-circle	80	Ventas	Notas de crédito sobre facturas emitidas
+19	4	Notas de Debito	nota_debito.notaDebitoIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	plus-circle	90	Ventas	Notas de débito sobre facturas emitidas
+20	4	Cuentas a Cobrar	cuenta_cobrar.cuentaCobrarIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	credit-card	100	Ventas	Saldos pendientes de cobro de las facturas a crédito
+21	4	Cobranzas	cobranza.cobranzaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	dollar-sign	110	Ventas	Registrar los cobros de facturas y cuotas
+22	4	Recaudaciones	recaudacion.recaudacionIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	archive	120	Ventas	Resumen de lo recaudado por forma de pago
+23	4	Libro de Ventas	libro_ventas.libroVentasIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	book	130	Ventas	Libro de ventas del período para la declaración de impuestos
+24	1	Referenciales	referenciales.referencialesIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	sliders	10	Configuracion	Catálogos del sistema: países, ciudades, monedas, impuestos y otros
+25	4	Timbrados	timbrado.timbradoIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	award	20	Configuracion	Timbrados fiscales y su numeración vigente
+26	4	Puntos de Expedicion	punto_expedicion.puntoExpedicionIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	map-pin	30	Configuracion	Sucursales y puntos de expedición de documentos
+27	1	Roles y Permisos	permisos.permisosIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	shield	40	Configuracion	Qué acciones puede realizar cada rol en cada módulo
+28	1	Auditoria	auditoria.auditoriaIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	eye	50	Configuracion	Registro de quién hizo qué en el sistema
+29	1	Menu	menu.menuIndex	t	2026-07-22 11:06:11.239235	\N	2026-10-20 09:05:03.784468	\N	list	60	Configuracion	Qué páginas ve cada rol en el menú lateral
+30	1	Accesos	acceso.accesoIndex	f	2026-07-22 11:06:11.239235	\N	2026-10-19 09:36:15.167869	\N	key	70	Configuracion	\N
+31	5	Reportes	reporte.reporteIndex	t	2026-08-12 16:37:36.952627	\N	2026-10-20 09:05:03.784468	\N	bar-chart-2	10	Reportes	Reportes de gestión, clínicos y de ventas según su rol
 \.
 
 COPY public.roles_permisos (id_rol_permiso, id_rol, id_modulo, id_accion, permitido, fecha_creacion, usuario_creacion, fecha_modificacion, usuario_modificacion) FROM stdin;

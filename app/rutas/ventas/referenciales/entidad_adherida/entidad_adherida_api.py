@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.entidad_adherida.EntidadAdheridaDao import EntidadAdheridaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 entidadadheridaapi = Blueprint('entidadadheridaapi', __name__)
 
@@ -9,6 +10,7 @@ entidadadheridaapi = Blueprint('entidadadheridaapi', __name__)
 @entidadadheridaapi.route('/entidades-adheridas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getEntidadesAdheridas():
+    """GET: lista los registros de entidad adherida."""
     try:
         return jsonify({'success': True, 'data': EntidadAdheridaDao().getEntidadesAdheridas(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getEntidadesAdheridas():
 @entidadadheridaapi.route('/entidades-adheridas/<int:id_entidad_adherida>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getEntidadAdherida(id_entidad_adherida):
+    """GET: devuelve entidad adherida por su id; 404 si no existe."""
     try:
         registro = EntidadAdheridaDao().getEntidadAdheridaById(id_entidad_adherida)
         if not registro:
@@ -32,17 +35,18 @@ def getEntidadAdherida(id_entidad_adherida):
 @entidadadheridaapi.route('/entidades-adheridas', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addEntidadAdherida():
+    """POST: valida los datos y registra entidad adherida; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = EntidadAdheridaDao()
 
     descripcion = (data.get('des_entidad_adherida') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y guiones')}), 400
     if dao.entidadAdheridaExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe una entidad adherida "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una entidad adherida', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarEntidadAdherida(
@@ -63,6 +67,7 @@ def addEntidadAdherida():
 @entidadadheridaapi.route('/entidades-adheridas/<int:id_entidad_adherida>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateEntidadAdherida(id_entidad_adherida):
+    """PUT: valida y actualiza entidad adherida; 404 si no existe."""
     data = request.get_json() or {}
     dao = EntidadAdheridaDao()
 
@@ -72,11 +77,11 @@ def updateEntidadAdherida(id_entidad_adherida):
     descripcion = (data.get('des_entidad_adherida') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y guiones')}), 400
     if dao.entidadAdheridaExiste(descripcion, excluir_id=id_entidad_adherida):
-        return jsonify({'success': False, 'error': f'Ya existe una entidad adherida "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una entidad adherida', descripcion)}), 400
 
     try:
         dao.updateEntidadAdherida(
@@ -98,6 +103,7 @@ def updateEntidadAdherida(id_entidad_adherida):
 @entidadadheridaapi.route('/entidades-adheridas/<int:id_entidad_adherida>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarEntidadAdherida(id_entidad_adherida):
+    """DELETE: da de baja (lógica) entidad adherida; 404 si no existe."""
     dao = EntidadAdheridaDao()
     if not dao.getEntidadAdheridaById(id_entidad_adherida):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

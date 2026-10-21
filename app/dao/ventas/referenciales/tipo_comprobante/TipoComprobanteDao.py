@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class TipoComprobanteDao(BaseDAO):
+    """Acceso a datos de tipo de comprobante (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getTiposComprobantes(self):
+        """Lista los registros de tipo de comprobante."""
         sql = """
             SELECT id_tipo_comprobante, des_tipo_comprobante, cod_tipo_comprobante,
                    codigo_sifen, requiere_timbrado, tipo_documento, est_tipo_comprobante
@@ -16,6 +19,7 @@ class TipoComprobanteDao(BaseDAO):
         return self.execute_query(sql)
 
     def getTipoComprobanteById(self, id_tipo_comprobante):
+        """Devuelve el registro de tipo de comprobante por su id, o None si no existe."""
         sql = """
             SELECT id_tipo_comprobante, des_tipo_comprobante, cod_tipo_comprobante,
                    codigo_sifen, requiere_timbrado, tipo_documento, est_tipo_comprobante
@@ -24,9 +28,11 @@ class TipoComprobanteDao(BaseDAO):
         return self.execute_query_one(sql, (id_tipo_comprobante,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .]+$", descripcion))
 
     def tipoComprobanteExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de tipo de comprobante con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM tipos_comprobantes WHERE LOWER(des_tipo_comprobante)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -37,6 +43,7 @@ class TipoComprobanteDao(BaseDAO):
     def guardarTipoComprobante(self, descripcion, codigo=None, codigo_sifen=None,
                                 requiere_timbrado=True, tipo_documento=None,
                                 estado=True, usuario_creacion=None):
+        """Inserta un registro de tipo de comprobante y devuelve el id generado."""
         sql = """
             INSERT INTO tipos_comprobantes (des_tipo_comprobante, cod_tipo_comprobante,
                                             codigo_sifen, requiere_timbrado, tipo_documento,
@@ -56,6 +63,7 @@ class TipoComprobanteDao(BaseDAO):
     def updateTipoComprobante(self, id_tipo_comprobante, descripcion, codigo=None,
                                codigo_sifen=None, requiere_timbrado=True,
                                tipo_documento=None, estado=True, usuario_modificacion=None):
+        """Actualiza los datos de tipo de comprobante; devuelve True si modificó una fila."""
         sql = """
             UPDATE tipos_comprobantes
             SET des_tipo_comprobante=%s, cod_tipo_comprobante=%s, codigo_sifen=%s,
@@ -72,5 +80,6 @@ class TipoComprobanteDao(BaseDAO):
         ) > 0
 
     def desactivarTipoComprobante(self, id_tipo_comprobante, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de tipo de comprobante; devuelve True si modificó una fila."""
         sql = "UPDATE tipos_comprobantes SET est_tipo_comprobante=FALSE, usuario_modificacion=%s WHERE id_tipo_comprobante=%s"
         return self.execute_query(sql, (usuario_modificacion, id_tipo_comprobante), commit=True) > 0

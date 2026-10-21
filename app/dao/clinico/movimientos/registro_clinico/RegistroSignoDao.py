@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RegistroSignoDao(BaseDAO):
+    """Acceso a datos de los signos registrados en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los signos registrados de la consulta."""
         sql = """
             SELECT rs.id_registro_signo, rs.id_consulta, rs.id_signo,
                    rs.registro_intensidad, rs.registro_observaciones, rs.fecha_creacion,
@@ -21,6 +24,7 @@ class RegistroSignoDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, datos, usuario_creacion=None):
+        """Inserta un signo registrado en la consulta y devuelve su id."""
         sql = """
             INSERT INTO registro_signos (
                 id_consulta, id_signo, registro_intensidad, registro_observaciones, usuario_creacion
@@ -37,6 +41,7 @@ class RegistroSignoDao(BaseDAO):
         return fila['id_registro_signo'] if fila else None
 
     def desactivar(self, id_registro_signo, usuario_modificacion=None):
+        """Da de baja (lógica) el signo registrado; devuelve True si modificó una fila."""
         sql = """
             UPDATE registro_signos SET est_registro_signo = FALSE, usuario_modificacion = %s
             WHERE id_registro_signo = %s

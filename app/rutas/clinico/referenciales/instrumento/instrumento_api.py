@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.instrumento.InstrumentoDao import InstrumentoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 instrumentoapi = Blueprint('instrumentoapi', __name__)
 
@@ -9,6 +10,7 @@ instrumentoapi = Blueprint('instrumentoapi', __name__)
 @instrumentoapi.route('/instrumentos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getInstrumentos():
+    """GET: lista los registros de instrumento."""
     try:
         data = InstrumentoDao().getInstrumentos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getInstrumentos():
 @instrumentoapi.route('/instrumentos/<int:instrumento_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getInstrumento(instrumento_id):
+    """GET: registro de instrumento por su id; 404 si no existe."""
     try:
         registro = InstrumentoDao().getInstrumentoById(instrumento_id)
         if not registro:
@@ -33,6 +36,7 @@ def getInstrumento(instrumento_id):
 @instrumentoapi.route('/instrumentos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addInstrumento():
+    """POST: valida los datos y crea un registro de instrumento; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = InstrumentoDao()
 
@@ -40,11 +44,11 @@ def addInstrumento():
     estado = bool(data.get('est_instrumento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.instrumentoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un instrumento', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarInstrumento(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addInstrumento():
 @instrumentoapi.route('/instrumentos/<int:instrumento_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateInstrumento(instrumento_id):
+    """PUT: valida y actualiza el registro de instrumento; 404 si no existe."""
     data = request.get_json() or {}
     dao = InstrumentoDao()
 
@@ -67,11 +72,11 @@ def updateInstrumento(instrumento_id):
     estado = bool(data.get('est_instrumento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.instrumentoExiste(descripcion, excluir_id=instrumento_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un instrumento', descripcion)}), 400
 
     try:
         dao.updateInstrumento(instrumento_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateInstrumento(instrumento_id):
 @instrumentoapi.route('/instrumentos/<int:instrumento_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarInstrumento(instrumento_id):
+    """DELETE: baja lógica del registro de instrumento; 404 si no existe."""
     dao = InstrumentoDao()
 
     if not dao.getInstrumentoById(instrumento_id):

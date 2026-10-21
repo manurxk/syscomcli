@@ -37,6 +37,7 @@ class AuthDao(BaseDAO):
             return False, f"Error al cambiar contraseña: {str(e)}"
 
     def crear_password_reset_token(self, id_usuario: int, ip_solicitud: str, email_destino: str = None) -> Optional[str]:
+        """Genera un token de recuperación de contraseña (vigencia de 24 horas) y devuelve su valor."""
         import uuid
         from datetime import datetime, timedelta
 
@@ -52,6 +53,7 @@ class AuthDao(BaseDAO):
         return str(fila["token"]) if fila else None
 
     def validar_password_reset_token(self, token: str) -> Optional[Dict]:
+        """Devuelve los datos del token si existe, no fue usado y no venció; si no, None."""
         sql = """
             SELECT id_token, id_usuario, fecha_expiracion, usado, email_destino
             FROM password_reset_tokens
@@ -60,6 +62,7 @@ class AuthDao(BaseDAO):
         return self.execute_query_one(sql, (token,))
 
     def marcar_token_como_usado(self, token: str) -> bool:
+        """Marca el token de recuperación como usado."""
         sql = """
             UPDATE password_reset_tokens
             SET usado = TRUE, fecha_uso = CURRENT_TIMESTAMP
@@ -68,6 +71,7 @@ class AuthDao(BaseDAO):
         return self.execute_query(sql, (token,), commit=True) > 0
 
     def resetear_password_con_token(self, token: str, password_nueva: str) -> Tuple[bool, str]:
+        """Cambia la contraseña del usuario dueño del token; devuelve (éxito, mensaje)."""
         token_data = self.validar_password_reset_token(token)
         if not token_data:
             return False, "Token inválido o expirado"

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.diagnostico.DiagnosticoDao import DiagnosticoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 diagnosticoapi = Blueprint('diagnosticoapi', __name__)
 
@@ -9,6 +10,7 @@ diagnosticoapi = Blueprint('diagnosticoapi', __name__)
 @diagnosticoapi.route('/diagnosticos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getDiagnosticos():
+    """GET: lista los registros de diagnóstico."""
     try:
         data = DiagnosticoDao().getDiagnosticos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getDiagnosticos():
 @diagnosticoapi.route('/diagnosticos/<int:diagnostico_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getDiagnostico(diagnostico_id):
+    """GET: registro de diagnóstico por su id; 404 si no existe."""
     try:
         registro = DiagnosticoDao().getDiagnosticoById(diagnostico_id)
         if not registro:
@@ -33,6 +36,7 @@ def getDiagnostico(diagnostico_id):
 @diagnosticoapi.route('/diagnosticos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addDiagnostico():
+    """POST: valida los datos y crea un registro de diagnóstico; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = DiagnosticoDao()
 
@@ -41,16 +45,16 @@ def addDiagnostico():
     estado = bool(data.get('est_diagnostico', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.diagnosticoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un diagnóstico "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un diagnóstico', descripcion)}), 400
     if cod_cie10:
         if not dao.validarCodigoCie10(cod_cie10):
             return jsonify({'success': False, 'error': 'El código CIE-10 no tiene un formato válido (ej. F32 o F32.1).'}), 400
         if dao.codigoCie10Existe(cod_cie10):
-            return jsonify({'success': False, 'error': f'Ya existe un diagnóstico con el código CIE-10 "{cod_cie10}".'}), 400
+            return jsonify({'success': False, 'error': msg_existe('un diagnóstico con el código CIE-10', cod_cie10)}), 400
 
     try:
         nuevo_id = dao.guardarDiagnostico(descripcion, cod_cie10, estado, usuario_creacion=session.get('id_usuario'))
@@ -63,6 +67,7 @@ def addDiagnostico():
 @diagnosticoapi.route('/diagnosticos/<int:diagnostico_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateDiagnostico(diagnostico_id):
+    """PUT: valida y actualiza el registro de diagnóstico; 404 si no existe."""
     data = request.get_json() or {}
     dao = DiagnosticoDao()
 
@@ -74,16 +79,16 @@ def updateDiagnostico(diagnostico_id):
     estado = bool(data.get('est_diagnostico', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.diagnosticoExiste(descripcion, excluir_id=diagnostico_id):
-        return jsonify({'success': False, 'error': f'Ya existe un diagnóstico "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un diagnóstico', descripcion)}), 400
     if cod_cie10:
         if not dao.validarCodigoCie10(cod_cie10):
             return jsonify({'success': False, 'error': 'El código CIE-10 no tiene un formato válido (ej. F32 o F32.1).'}), 400
         if dao.codigoCie10Existe(cod_cie10, excluir_id=diagnostico_id):
-            return jsonify({'success': False, 'error': f'Ya existe un diagnóstico con el código CIE-10 "{cod_cie10}".'}), 400
+            return jsonify({'success': False, 'error': msg_existe('un diagnóstico con el código CIE-10', cod_cie10)}), 400
 
     try:
         dao.updateDiagnostico(diagnostico_id, descripcion, cod_cie10, estado, usuario_modificacion=session.get('id_usuario'))
@@ -96,6 +101,7 @@ def updateDiagnostico(diagnostico_id):
 @diagnosticoapi.route('/diagnosticos/<int:diagnostico_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarDiagnostico(diagnostico_id):
+    """DELETE: baja lógica del registro de diagnóstico; 404 si no existe."""
     dao = DiagnosticoDao()
 
     if not dao.getDiagnosticoById(diagnostico_id):

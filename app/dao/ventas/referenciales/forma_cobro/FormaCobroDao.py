@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class FormaCobroDao(BaseDAO):
+    """Acceso a datos de forma de cobro (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getFormasCobro(self):
+        """Lista los registros de forma de cobro."""
         sql = """
             SELECT id_forma_cobro, des_forma_cobro, cod_forma_cobro,
                    requiere_entidad, permite_cuotas, est_forma_cobro
@@ -16,6 +19,7 @@ class FormaCobroDao(BaseDAO):
         return self.execute_query(sql)
 
     def getFormaCobroById(self, id_forma_cobro):
+        """Devuelve el registro de forma de cobro por su id, o None si no existe."""
         sql = """
             SELECT id_forma_cobro, des_forma_cobro, cod_forma_cobro,
                    requiere_entidad, permite_cuotas, est_forma_cobro
@@ -24,9 +28,11 @@ class FormaCobroDao(BaseDAO):
         return self.execute_query_one(sql, (id_forma_cobro,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .]+$", descripcion))
 
     def formaCobroExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de forma de cobro con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM formas_cobro WHERE LOWER(des_forma_cobro)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -35,6 +41,7 @@ class FormaCobroDao(BaseDAO):
         return self.execute_query_one(sql, tuple(params)) is not None
 
     def codigoExiste(self, codigo, excluir_id=None):
+        """Indica si ya existe un registro de forma de cobro con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM formas_cobro WHERE UPPER(cod_forma_cobro)=UPPER(%s)"
         params = [codigo]
         if excluir_id:
@@ -44,6 +51,7 @@ class FormaCobroDao(BaseDAO):
 
     def guardarFormaCobro(self, descripcion, codigo, requiere_entidad=False,
                           permite_cuotas=False, estado=True, usuario_creacion=None):
+        """Inserta un registro de forma de cobro y devuelve el id generado."""
         sql = """
             INSERT INTO formas_cobro (des_forma_cobro, cod_forma_cobro, requiere_entidad,
                                       permite_cuotas, est_forma_cobro, usuario_creacion)
@@ -60,6 +68,7 @@ class FormaCobroDao(BaseDAO):
 
     def updateFormaCobro(self, id_forma_cobro, descripcion, codigo, requiere_entidad=False,
                          permite_cuotas=False, estado=True, usuario_modificacion=None):
+        """Actualiza los datos de forma de cobro; devuelve True si modificó una fila."""
         sql = """
             UPDATE formas_cobro
             SET des_forma_cobro=%s, cod_forma_cobro=%s, requiere_entidad=%s,
@@ -74,5 +83,6 @@ class FormaCobroDao(BaseDAO):
         ) > 0
 
     def desactivarFormaCobro(self, id_forma_cobro, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de forma de cobro; devuelve True si modificó una fila."""
         sql = "UPDATE formas_cobro SET est_forma_cobro=FALSE, usuario_modificacion=%s WHERE id_forma_cobro=%s"
         return self.execute_query(sql, (usuario_modificacion, id_forma_cobro), commit=True) > 0

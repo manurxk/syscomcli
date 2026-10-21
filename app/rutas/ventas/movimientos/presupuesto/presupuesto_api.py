@@ -4,7 +4,8 @@ from app.dao.ventas.movimientos.presupuesto.PresupuestoDao import PresupuestoDao
 from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
 from app.dao.agendamiento.cita.CitaDao import CitaDao
 from app.services.documento_ventas_pdf_service import DocumentoVentasPdfService
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 presupuestoapi = Blueprint('presupuestoapi', __name__)
 
@@ -15,7 +16,9 @@ ESTADOS_VALIDOS = ('PENDIENTE', 'APROBADO', 'RECHAZADO', 'VENCIDO')
 
 @presupuestoapi.route('/presupuestos', methods=['GET'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "LEER")
 def getPresupuestos():
+    """GET: lista los registros de presupuesto."""
     try:
         return jsonify({'success': True, 'data': PresupuestoDao().getPresupuestos(), 'error': None}), 200
     except Exception as e:
@@ -25,7 +28,9 @@ def getPresupuestos():
 
 @presupuestoapi.route('/presupuestos/<int:id_presupuesto>', methods=['GET'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "LEER")
 def getPresupuesto(id_presupuesto):
+    """GET: devuelve presupuesto por su id; 404 si no existe."""
     try:
         registro = PresupuestoDao().getPresupuestoById(id_presupuesto)
         if not registro:
@@ -38,6 +43,7 @@ def getPresupuesto(id_presupuesto):
 
 @presupuestoapi.route('/presupuestos/pei-vigente/<int:id_paciente>', methods=['GET'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "LEER")
 def getPeiVigentePresupuesto(id_paciente):
     """Referencia del PEI vigente para ligarlo al presupuesto (sin contenido clínico)."""
     try:
@@ -49,6 +55,7 @@ def getPeiVigentePresupuesto(id_paciente):
 
 @presupuestoapi.route('/presupuestos/<int:id_presupuesto>/pdf', methods=['GET'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "LEER")
 def getPresupuestoPdf(id_presupuesto):
     """PDF imprimible (PRESUPUESTO.html). Si está ligado a un PEI lo firma el especialista del PEI;
     si no, el profesional del presupuesto."""
@@ -74,13 +81,15 @@ def getPresupuestoPdf(id_presupuesto):
 
 @presupuestoapi.route('/presupuestos', methods=['POST'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "CREAR")
 def addPresupuesto():
+    """POST: valida los datos y registra presupuesto; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     if not data.get('id_paciente'):
-        return jsonify({'success': False, 'error': 'El paciente es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Paciente')}), 400
     if not data.get('fecha_presupuesto'):
-        return jsonify({'success': False, 'error': 'La fecha del presupuesto es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fecha del presupuesto')}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -103,7 +112,9 @@ def addPresupuesto():
 
 @presupuestoapi.route('/presupuestos/<int:id_presupuesto>/estado', methods=['PUT'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "EDITAR")
 def updateEstadoPresupuesto(id_presupuesto):
+    """PUT: cambia el estado del presupuesto."""
     data = request.get_json() or {}
     nuevo_estado = data.get('presupuesto_estado')
     if nuevo_estado not in ESTADOS_VALIDOS:
@@ -123,7 +134,9 @@ def updateEstadoPresupuesto(id_presupuesto):
 
 @presupuestoapi.route('/presupuestos/<int:id_presupuesto>/convertir-pedido', methods=['POST'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "CREAR")
 def convertirPresupuestoEnPedido(id_presupuesto):
+    """POST: crea un pedido a partir de un presupuesto."""
     try:
         numero = PresupuestoDao().convertirEnPedido(id_presupuesto, usuario=session.get('id_usuario'))
         return jsonify({'success': True, 'data': {'pedido_numero': numero}, 'error': None}), 201
@@ -136,7 +149,9 @@ def convertirPresupuestoEnPedido(id_presupuesto):
 
 @presupuestoapi.route('/presupuestos/<int:id_presupuesto>', methods=['DELETE'])
 @role_required(*ROLES_PRES)
+@permiso_requerido("VENTAS", "ELIMINAR")
 def deletePresupuesto(id_presupuesto):
+    """DELETE: da de baja el presupuesto."""
     dao = PresupuestoDao()
     if not dao.getPresupuestoById(id_presupuesto):
         return jsonify({'success': False, 'error': 'No se encontró el presupuesto.'}), 404

@@ -4,6 +4,8 @@ from app.core.base_dao import BaseDAO
 
 
 class InsumoDao(BaseDAO):
+    """Acceso a datos de insumo (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
@@ -13,6 +15,7 @@ class InsumoDao(BaseDAO):
         return bool(re.match(patron, descripcion))
 
     def getInsumos(self):
+        """Lista los registros de insumo."""
         sql = """
             SELECT id_insumo, des_insumo, insumo_unidad_medida, stock_actual,
                    stock_minimo, insumo_precio_unitario, est_insumo
@@ -22,6 +25,7 @@ class InsumoDao(BaseDAO):
         return self.execute_query(sql)
 
     def getInsumoById(self, insumo_id):
+        """Devuelve el registro de insumo por su id, o None si no existe."""
         sql = """
             SELECT id_insumo, des_insumo, insumo_unidad_medida, stock_actual,
                    stock_minimo, insumo_precio_unitario, est_insumo
@@ -31,6 +35,7 @@ class InsumoDao(BaseDAO):
         return self.execute_query_one(sql, (insumo_id,))
 
     def insumoExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de insumo con esa descripción; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM insumos WHERE LOWER(des_insumo) = LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -40,6 +45,7 @@ class InsumoDao(BaseDAO):
 
     def guardarInsumo(self, des_insumo, insumo_unidad_medida, stock_actual, stock_minimo,
                        insumo_precio_unitario, estado, usuario_creacion=None):
+        """Inserta un registro de insumo y devuelve el id generado."""
         sql = """
             INSERT INTO insumos (
                 des_insumo, insumo_unidad_medida, stock_actual, stock_minimo,
@@ -55,6 +61,7 @@ class InsumoDao(BaseDAO):
 
     def updateInsumo(self, insumo_id, des_insumo, insumo_unidad_medida, stock_actual, stock_minimo,
                       insumo_precio_unitario, estado, usuario_modificacion=None):
+        """Actualiza los datos de insumo; devuelve True si modificó una fila."""
         sql = """
             UPDATE insumos SET
                 des_insumo = %s, insumo_unidad_medida = %s, stock_actual = %s,
@@ -68,6 +75,7 @@ class InsumoDao(BaseDAO):
         ), commit=True) > 0
 
     def desactivarInsumo(self, insumo_id, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de insumo; devuelve True si modificó una fila."""
         sql = """
             UPDATE insumos SET est_insumo = FALSE, usuario_modificacion = %s
             WHERE id_insumo = %s

@@ -6,6 +6,7 @@ usuariomod = Blueprint('usuario', __name__, template_folder='templates')
 @usuariomod.route('/usuario-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def usuarioIndex():
+    """Página principal de usuarios."""
     return render_template('usuario-index.html')
 
 @usuariomod.route('/usuario-detalle/<int:id_usuario>')

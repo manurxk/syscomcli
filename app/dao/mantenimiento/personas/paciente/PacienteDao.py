@@ -4,6 +4,7 @@ from datetime import date, datetime
 from app.core.base_dao import BaseDAO
 
 class PacienteDao(BaseDAO):
+    """Acceso a datos de pacientes."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
@@ -405,7 +406,7 @@ class PacienteDao(BaseDAO):
         Campos obligatorios: nombre, apellido, cedula, fecha_nacimiento
         """
         if not all([nombre, apellido, cedula, fecha_nacimiento]):
-            raise ValueError("Faltan campos obligatorios: nombre, apellido, cedula, fecha_nacimiento")
+            raise ValueError("Faltan campos obligatorios: nombre, apellido, cédula y fecha de nacimiento.")
 
         if self.cedulaExiste(cedula):
             raise ValueError(f'Ya existe una persona registrada con la cédula "{cedula}".')

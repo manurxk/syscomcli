@@ -3,7 +3,8 @@ from flask import Blueprint, request, jsonify, current_app as app, session, send
 from app.dao.ventas.movimientos.nota_debito.NotaDebitoDao import NotaDebitoDao
 from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
 from app.services.factura_pdf_service import FacturaPDFService
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 notadebitoapi = Blueprint('notadebitoapi', __name__)
 
@@ -12,7 +13,9 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @notadebitoapi.route('/notas-debito', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getNotasDebito():
+    """GET: lista los registros de nota de débito."""
     try:
         return jsonify({'success': True, 'data': NotaDebitoDao().getNotasDebito(), 'error': None}), 200
     except Exception as e:
@@ -22,7 +25,9 @@ def getNotasDebito():
 
 @notadebitoapi.route('/notas-debito/<int:id_nota_debito>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getNotaDebito(id_nota_debito):
+    """GET: devuelve nota de débito por su id; 404 si no existe."""
     try:
         dao = NotaDebitoDao()
         reg = dao.getNotaDebitoById(id_nota_debito)
@@ -37,12 +42,14 @@ def getNotaDebito(id_nota_debito):
 
 @notadebitoapi.route('/notas-debito', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
 def addNotaDebito():
+    """POST: valida los datos y registra nota de débito; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     for campo in ('id_factura', 'motivo'):
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -63,7 +70,9 @@ def addNotaDebito():
 
 @notadebitoapi.route('/notas-debito/<int:id_nota_debito>/anular', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
+@permiso_requerido("VENTAS", "ELIMINAR")
 def anularNotaDebito(id_nota_debito):
+    """PUT: anula la nota de débito."""
     dao = NotaDebitoDao()
     if not dao.getNotaDebitoById(id_nota_debito):
         return jsonify({'success': False, 'error': 'No se encontró la nota de débito.'}), 404
@@ -79,6 +88,7 @@ def anularNotaDebito(id_nota_debito):
 
 @notadebitoapi.route('/notas-debito/<int:id_nota_debito>/pdf', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getNotaDebitoPDF(id_nota_debito):
     """KuDE de la nota (FE.html, misma plantilla que la factura asociada)."""
     try:

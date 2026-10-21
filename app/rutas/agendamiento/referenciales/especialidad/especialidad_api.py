@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.agendamiento.referenciales.especialidad.EspecialidadDao import EspecialidadDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 especialidadapi = Blueprint('especialidadapi', __name__)
 
@@ -9,6 +10,7 @@ especialidadapi = Blueprint('especialidadapi', __name__)
 @especialidadapi.route('/especialidades', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO", "RECEPCION")
 def getEspecialidades():
+    """GET: lista los registros de especialidad."""
     try:
         data = EspecialidadDao().getEspecialidades()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getEspecialidades():
 @especialidadapi.route('/especialidades/<int:especialidad_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO", "RECEPCION")
 def getEspecialidad(especialidad_id):
+    """GET: registro de especialidad por su id; 404 si no existe."""
     try:
         especialidad = EspecialidadDao().getEspecialidadById(especialidad_id)
         if not especialidad:
@@ -33,6 +36,7 @@ def getEspecialidad(especialidad_id):
 @especialidadapi.route('/especialidades', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addEspecialidad():
+    """POST: valida los datos y crea un registro de especialidad; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     especialidaddao = EspecialidadDao()
 
@@ -40,11 +44,11 @@ def addEspecialidad():
     estado = bool(data.get('est_especialidad', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not especialidaddao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if especialidaddao.especialidadExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe una especialidad "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una especialidad', descripcion)}), 400
 
     try:
         especialidad_id = especialidaddao.guardarEspecialidad(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addEspecialidad():
 @especialidadapi.route('/especialidades/<int:especialidad_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateEspecialidad(especialidad_id):
+    """PUT: valida y actualiza el registro de especialidad; 404 si no existe."""
     data = request.get_json() or {}
     especialidaddao = EspecialidadDao()
 
@@ -67,11 +72,11 @@ def updateEspecialidad(especialidad_id):
     estado = bool(data.get('est_especialidad', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not especialidaddao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if especialidaddao.especialidadExiste(descripcion, excluir_id=especialidad_id):
-        return jsonify({'success': False, 'error': f'Ya existe una especialidad "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una especialidad', descripcion)}), 400
 
     try:
         especialidaddao.updateEspecialidad(especialidad_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateEspecialidad(especialidad_id):
 @especialidadapi.route('/especialidades/<int:especialidad_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarEspecialidad(especialidad_id):
+    """DELETE: baja lógica del registro de especialidad; 404 si no existe."""
     especialidaddao = EspecialidadDao()
 
     if not especialidaddao.getEspecialidadById(especialidad_id):

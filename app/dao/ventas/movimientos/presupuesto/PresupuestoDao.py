@@ -5,10 +5,13 @@ from datetime import date
 
 
 class PresupuestoDao(BaseDAO):
+    """Acceso a datos de presupuesto (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPresupuestos(self):
+        """Lista los registros de presupuesto."""
         sql = """
             SELECT p.id_presupuesto, p.presupuesto_numero, p.id_paciente, p.id_profesional,
                    p.fecha_presupuesto, p.fecha_validez, p.presupuesto_subtotal,
@@ -34,6 +37,7 @@ class PresupuestoDao(BaseDAO):
         return presupuestos
 
     def getPresupuestoById(self, id_presupuesto):
+        """Devuelve el registro de presupuesto por su id, o None si no existe."""
         sql = """
             SELECT p.id_presupuesto, p.presupuesto_numero, p.id_paciente, p.id_profesional,
                    p.fecha_presupuesto, p.fecha_validez, p.presupuesto_subtotal,
@@ -63,6 +67,7 @@ class PresupuestoDao(BaseDAO):
         return presupuesto
 
     def getDetallePresupuesto(self, id_presupuesto):
+        """Devuelve las líneas de detalle de presupuesto para el id indicado."""
         sql = """
             SELECT pd.id_presupuesto_detalle, pd.id_presupuesto, pd.id_item_servicio,
                    pd.item_descripcion, pd.item_cantidad, pd.item_precio_unitario,
@@ -88,6 +93,7 @@ class PresupuestoDao(BaseDAO):
         return self.execute_query_one(sql, (id_paciente,))
 
     def _generarNumero(self, cur):
+        """Genera el siguiente número correlativo de presupuesto dentro de la transacción en curso (cursor `cur`)."""
         anio = date.today().year
         mes = date.today().strftime('%m')
         cur.execute(
@@ -103,6 +109,7 @@ class PresupuestoDao(BaseDAO):
         return f'PRES-{anio}-{mes}-{siguiente:04d}'
 
     def guardar(self, datos, usuario_creacion=None):
+        """Registra el documento con su cabecera y detalle en una sola transacción; devuelve el id."""
         detalles = datos.get('detalles') or []
         if not detalles:
             raise ValueError('El presupuesto debe tener al menos un ítem.')
@@ -160,6 +167,7 @@ class PresupuestoDao(BaseDAO):
         return self.execute_transaction(_crear)
 
     def actualizarEstado(self, id_presupuesto, nuevo_estado, usuario_modificacion=None):
+        """Cambia el estado del documento."""
         sql = "UPDATE presupuestos SET presupuesto_estado = %s, usuario_modificacion = %s WHERE id_presupuesto = %s"
         return self.execute_query(sql, (nuevo_estado, usuario_modificacion, id_presupuesto), commit=True) > 0
 
@@ -207,5 +215,6 @@ class PresupuestoDao(BaseDAO):
         return self.execute_transaction(_convertir)
 
     def desactivar(self, id_presupuesto, usuario_modificacion=None):
+        """Da de baja (lógica) el documento."""
         sql = "UPDATE presupuestos SET est_presupuesto = FALSE, usuario_modificacion = %s WHERE id_presupuesto = %s"
         return self.execute_query(sql, (usuario_modificacion, id_presupuesto), commit=True) > 0

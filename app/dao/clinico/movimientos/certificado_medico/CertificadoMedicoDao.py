@@ -3,10 +3,13 @@ from datetime import date
 
 
 class CertificadoMedicoDao(BaseDAO):
+    """Acceso a datos de los certificados médicos emitidos en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los certificados médicos de la consulta."""
         sql = """
             SELECT c.id_certificado, c.id_consulta, c.id_tipo_certificado_medico,
                    c.certificado_numero, c.certificado_fecha, c.certificado_dias_reposo,
@@ -27,6 +30,7 @@ class CertificadoMedicoDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, id_paciente, id_especialista, datos, usuario_creacion=None):
+        """Inserta un certificado médico en la consulta y devuelve su id."""
         def _crear(cur):
             anio = date.today().year
             cur.execute(
@@ -76,5 +80,6 @@ class CertificadoMedicoDao(BaseDAO):
         return cert
 
     def desactivar(self, id_certificado, usuario_modificacion=None):
+        """Da de baja (lógica) el certificado médico; devuelve True si modificó una fila."""
         sql = "UPDATE certificados_medicos SET est_certificado = FALSE, usuario_modificacion = %s WHERE id_certificado = %s"
         return self.execute_query(sql, (usuario_modificacion, id_certificado), commit=True) > 0

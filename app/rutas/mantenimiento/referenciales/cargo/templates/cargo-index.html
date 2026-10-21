@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Cargos (listado y gestión). Ruta: /cargo-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/cargos. #}
 
 {% block titulo %}
 Cargos
@@ -149,7 +150,7 @@ Cargos
       const descripcion = $('#txtDescripcion').val().trim();
 
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.estado_factura.EstadoFacturaDao import EstadoFacturaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 estadofacturaapi = Blueprint('estadofacturaapi', __name__)
 
@@ -9,6 +10,7 @@ estadofacturaapi = Blueprint('estadofacturaapi', __name__)
 @estadofacturaapi.route('/estados-factura', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getEstadosFactura():
+    """GET: lista los registros de estado de factura."""
     try:
         return jsonify({'success': True, 'data': EstadoFacturaDao().getEstadosFactura(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getEstadosFactura():
 @estadofacturaapi.route('/estados-factura/<int:id_estado_factura>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getEstadoFactura(id_estado_factura):
+    """GET: devuelve estado de factura por su id; 404 si no existe."""
     try:
         registro = EstadoFacturaDao().getEstadoFacturaById(id_estado_factura)
         if not registro:
@@ -32,17 +35,18 @@ def getEstadoFactura(id_estado_factura):
 @estadofacturaapi.route('/estados-factura', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addEstadoFactura():
+    """POST: valida los datos y registra estado de factura; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = EstadoFacturaDao()
 
     descripcion = (data.get('des_estado_factura') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.estadoFacturaExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un estado de factura "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un estado de factura', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarEstadoFactura(
@@ -63,6 +67,7 @@ def addEstadoFactura():
 @estadofacturaapi.route('/estados-factura/<int:id_estado_factura>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateEstadoFactura(id_estado_factura):
+    """PUT: valida y actualiza estado de factura; 404 si no existe."""
     data = request.get_json() or {}
     dao = EstadoFacturaDao()
 
@@ -72,11 +77,11 @@ def updateEstadoFactura(id_estado_factura):
     descripcion = (data.get('des_estado_factura') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.estadoFacturaExiste(descripcion, excluir_id=id_estado_factura):
-        return jsonify({'success': False, 'error': f'Ya existe un estado de factura "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un estado de factura', descripcion)}), 400
 
     try:
         dao.updateEstadoFactura(
@@ -98,6 +103,7 @@ def updateEstadoFactura(id_estado_factura):
 @estadofacturaapi.route('/estados-factura/<int:id_estado_factura>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarEstadoFactura(id_estado_factura):
+    """DELETE: da de baja (lógica) estado de factura; 404 si no existe."""
     dao = EstadoFacturaDao()
     if not dao.getEstadoFacturaById(id_estado_factura):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

@@ -20,6 +20,16 @@
         })();
     </script>
 
+    <!-- Tamaño de texto elegido (A−/A+) antes de pintar; el diseño usa rem -->
+    <script>
+        (function () {
+            try {
+                var p = parseInt(localStorage.getItem('login-font-pct'), 10);
+                if (p >= 85 && p <= 140) document.documentElement.style.fontSize = p + '%';
+            } catch (e) {}
+        })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
@@ -277,6 +287,29 @@
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
         }
 
+        .font-switch { display: inline-flex; gap: 4px; }
+
+        .font-btn {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            font: inherit;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: var(--chip-bg);
+            border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .font-btn:hover:not([disabled]) { color: var(--accent-text); }
+
+        .font-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+        .font-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
         .theme-toggle {
             width: 34px;
             height: 34px;
@@ -454,6 +487,15 @@
 
         .toggle-pw svg { width: 18px; height: 18px; }
 
+        .field-error {
+            margin-top: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--danger);
+        }
+
+        .field-error[hidden] { display: none; }
+
         .caps-hint {
             display: flex;
             align-items: center;
@@ -467,6 +509,19 @@
         .caps-hint[hidden] { display: none; }
 
         .caps-hint svg { width: 14px; height: 14px; }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: -4px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .remember input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+
+        .remember label { cursor: pointer; }
 
         .btn-primary {
             width: 100%;
@@ -617,6 +672,12 @@
                             {% if codigo == idioma_actual %}aria-current="true"{% endif %}>{{ sigla }}</a>
                         {% endfor %}
                     </nav>
+                    <div class="font-switch" role="group" aria-label="{{ _('Tamaño del texto') }}">
+                        <button type="button" class="font-btn" id="fontMenos" aria-label="{{ _('Reducir texto') }}"
+                            title="{{ _('Reducir texto') }}">A−</button>
+                        <button type="button" class="font-btn" id="fontMas" aria-label="{{ _('Aumentar texto') }}"
+                            title="{{ _('Aumentar texto') }}">A+</button>
+                    </div>
                     <button type="button" class="theme-toggle" id="themeToggle" title="{{ _('Cambiar tema') }}"
                         aria-label="{{ _('Cambiar tema') }}">
                         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -634,7 +695,9 @@
                     {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                     {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'info' }}" role="alert">
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'info' }}"
+                        role="{{ 'alert' if category == 'danger' else 'status' }}"
+                        aria-live="{{ 'assertive' if category == 'danger' else 'polite' }}" aria-atomic="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             {% if category == 'danger' %}
                             <circle cx="12" cy="12" r="10" />
@@ -665,8 +728,12 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 </span>
                                 <input type="text" id="inputUsuario" name="usuario_nombre" placeholder="{{ _('Nombre de usuario') }}"
-                                    required autocomplete="username" autocapitalize="none" spellcheck="false" autofocus>
+                                    value="{{ usuario_recordado or '' }}"
+                                    required autocomplete="username" autocapitalize="none" spellcheck="false"
+                                    aria-describedby="errUsuario" {{ '' if usuario_recordado else 'autofocus' }}>
                             </div>
+                            <div class="field-error" id="errUsuario" aria-live="polite" hidden
+                                data-msg-vacio="{{ _('El campo \"Usuario\" es obligatorio.') }}"></div>
                         </div>
 
                         <!-- Contraseña -->
@@ -680,17 +747,27 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 </span>
                                 <input type="password" id="usuario_clave" name="usuario_clave" placeholder="••••••••"
-                                    required autocomplete="current-password">
+                                    required autocomplete="current-password" aria-describedby="errClave"
+                                    {{ 'autofocus' if usuario_recordado else '' }}>
                                 <button type="button" class="toggle-pw" id="togglePassword" aria-pressed="false"
                                     aria-label="{{ _('Mostrar contraseña') }}"
                                     data-label-show="{{ _('Mostrar contraseña') }}" data-label-hide="{{ _('Ocultar contraseña') }}">
                                     <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
+                            <div class="field-error" id="errClave" aria-live="polite" hidden
+                                data-msg-vacio="{{ _('El campo \"Contraseña\" es obligatorio.') }}"
+                                data-msg-corta="{{ _('La contraseña debe tener al menos 8 caracteres.') }}"></div>
                             <div class="caps-hint" id="capsHint" hidden>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                                 {{ _('Bloq Mayús está activado') }}
                             </div>
+                        </div>
+
+                        <!-- Recordarme: guarda solo el usuario, 30 días -->
+                        <div class="remember">
+                            <input type="checkbox" id="chkRecordar" name="recordar" value="1" {{ 'checked' if usuario_recordado else '' }}>
+                            <label for="chkRecordar">{{ _('Recordarme en este equipo (30 días)') }}</label>
                         </div>
 
                         <!-- Submit -->
@@ -745,18 +822,42 @@
         });
         pw.addEventListener('blur', () => { capsHint.hidden = true; });
 
-        // Al escribir de nuevo se limpia el estado de error
+        // Validación en el navegador (vacío / longitud mínima). No cambia el POST:
+        // el servidor sigue siendo quien decide si las credenciales son válidas.
+        const MIN_CLAVE = 8;
+        const errUsuario = document.getElementById('errUsuario');
+        const errClave = document.getElementById('errClave');
+
+        function mensajeDe(input) {
+            if (input === user) return !input.value.trim() ? errUsuario.dataset.msgVacio : '';
+            if (!input.value) return errClave.dataset.msgVacio;
+            return input.value.length < MIN_CLAVE ? errClave.dataset.msgCorta : '';
+        }
+
+        function validar(input) {
+            const caja = input === user ? errUsuario : errClave;
+            const msg = mensajeDe(input);
+            caja.textContent = msg;
+            caja.hidden = !msg;
+            if (msg) input.setAttribute('aria-invalid', 'true');
+            else input.removeAttribute('aria-invalid');
+            return !msg;
+        }
+
+        // Al salir del campo se valida; mientras hay error, se revalida en cada tecla
         [user, pw].forEach((input) => {
-            input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
+            input.addEventListener('blur', () => { if (input.value) validar(input); });
+            input.addEventListener('input', () => {
+                if (input.getAttribute('aria-invalid') === 'true') validar(input);
+            });
         });
 
-        // Validación de campos vacíos + estado de carga al enviar
+        // Validación al enviar + estado de carga
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             let valido = true;
             [user, pw].forEach((input) => {
-                const vacio = !input.value.trim();
-                input.setAttribute('aria-invalid', String(vacio));
-                if (vacio && valido) { input.focus(); valido = false; }
+                const ok = validar(input);
+                if (!ok && valido) { input.focus(); valido = false; }
             });
             if (!valido) { e.preventDefault(); return; }
 
@@ -772,6 +873,26 @@
             btnSpinner.hidden = true;
             btnText.textContent = btnLabel;
         });
+
+        // Tamaño de texto A−/A+ (porcentaje sobre el tamaño base, se recuerda en el navegador)
+        const PASOS_FUENTE = [85, 100, 115, 130];
+        const fontMenos = document.getElementById('fontMenos');
+        const fontMas = document.getElementById('fontMas');
+        let pasoFuente = 1;
+        try {
+            const guardado = PASOS_FUENTE.indexOf(parseInt(localStorage.getItem('login-font-pct'), 10));
+            if (guardado >= 0) pasoFuente = guardado;
+        } catch (e) {}
+
+        function aplicarFuente() {
+            document.documentElement.style.fontSize = PASOS_FUENTE[pasoFuente] + '%';
+            fontMenos.disabled = pasoFuente === 0;
+            fontMas.disabled = pasoFuente === PASOS_FUENTE.length - 1;
+            try { localStorage.setItem('login-font-pct', PASOS_FUENTE[pasoFuente]); } catch (e) {}
+        }
+        fontMenos.addEventListener('click', () => { if (pasoFuente > 0) { pasoFuente--; aplicarFuente(); } });
+        fontMas.addEventListener('click', () => { if (pasoFuente < PASOS_FUENTE.length - 1) { pasoFuente++; aplicarFuente(); } });
+        aplicarFuente();
 
         // Tema claro/oscuro — misma clave y atributo que base.html
         document.getElementById('themeToggle').addEventListener('click', () => {

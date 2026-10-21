@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class TratamientoDao(BaseDAO):
+    """Acceso a datos de los tratamientos indicados en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los tratamientos de la consulta."""
         sql = """
             SELECT t.id_tratamiento, t.id_consulta, t.id_tipo_tratamiento,
                    t.des_tratamiento, t.tratamiento_objetivos, t.numero_sesiones,
@@ -26,6 +29,7 @@ class TratamientoDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, datos, usuario_creacion=None):
+        """Inserta un tratamiento en la consulta y devuelve su id."""
         sql = """
             INSERT INTO tratamientos (
                 id_consulta, id_tipo_tratamiento, des_tratamiento, tratamiento_objetivos,
@@ -49,6 +53,7 @@ class TratamientoDao(BaseDAO):
         return fila['id_tratamiento'] if fila else None
 
     def desactivar(self, id_tratamiento, usuario_modificacion=None):
+        """Da de baja (lógica) el tratamiento; devuelve True si modificó una fila."""
         sql = """
             UPDATE tratamientos SET est_tratamiento = FALSE, usuario_modificacion = %s
             WHERE id_tratamiento = %s

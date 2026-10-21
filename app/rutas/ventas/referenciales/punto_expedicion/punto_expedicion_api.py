@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.punto_expedicion.PuntoExpedicionDao import PuntoExpedicionDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 puntoexpedicionapi = Blueprint('puntoexpedicionapi', __name__)
 
@@ -12,6 +13,7 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 @puntoexpedicionapi.route('/puntos-expedicion', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 def getPuntosExpedicion():
+    """GET: lista los registros de punto de expedición."""
     id_timbrado = request.args.get('id_timbrado', type=int)
     try:
         return jsonify({'success': True, 'data': PuntoExpedicionDao().getPuntosExpedicion(id_timbrado), 'error': None}), 200
@@ -23,6 +25,7 @@ def getPuntosExpedicion():
 @puntoexpedicionapi.route('/puntos-expedicion/vigentes', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 def getPuntosVigentes():
+    """GET: lista los registros de punto de expedición."""
     try:
         return jsonify({'success': True, 'data': PuntoExpedicionDao().getPuntosVigentes(), 'error': None}), 200
     except Exception as e:
@@ -33,6 +36,7 @@ def getPuntosVigentes():
 @puntoexpedicionapi.route('/puntos-expedicion/<int:id_punto_expedicion>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 def getPuntoExpedicion(id_punto_expedicion):
+    """GET: devuelve punto de expedición por su id; 404 si no existe."""
     try:
         reg = PuntoExpedicionDao().getPuntoExpedicionById(id_punto_expedicion)
         if not reg:
@@ -46,6 +50,7 @@ def getPuntoExpedicion(id_punto_expedicion):
 @puntoexpedicionapi.route('/puntos-expedicion', methods=['POST'])
 @role_required(*ROLES_ADM)
 def addPuntoExpedicion():
+    """POST: valida los datos y registra punto de expedición; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = PuntoExpedicionDao()
 
@@ -54,13 +59,13 @@ def addPuntoExpedicion():
     nombre = (data.get('nombre_punto_expedicion') or '').strip()
 
     if not id_timbrado:
-        return jsonify({'success': False, 'error': 'El timbrado es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Timbrado')}), 400
     if not codigo:
         return jsonify({'success': False, 'error': 'El código es obligatorio (3 dígitos).'}), 400
     if not dao.validarCodigo(codigo.zfill(3)):
         return jsonify({'success': False, 'error': 'El código debe tener 3 dígitos numéricos.'}), 400
     if not nombre:
-        return jsonify({'success': False, 'error': 'El nombre del punto es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Nombre del punto')}), 400
     if dao.codigoExiste(id_timbrado, codigo.zfill(3)):
         return jsonify({'success': False, 'error': f'Ya existe el código "{codigo}" para este timbrado.'}), 400
 
@@ -81,6 +86,7 @@ def addPuntoExpedicion():
 @puntoexpedicionapi.route('/puntos-expedicion/<int:id_punto_expedicion>', methods=['PUT'])
 @role_required(*ROLES_ADM)
 def updatePuntoExpedicion(id_punto_expedicion):
+    """PUT: valida y actualiza punto de expedición; 404 si no existe."""
     data = request.get_json() or {}
     dao = PuntoExpedicionDao()
 
@@ -92,11 +98,11 @@ def updatePuntoExpedicion(id_punto_expedicion):
     nombre = (data.get('nombre_punto_expedicion') or '').strip()
 
     if not codigo:
-        return jsonify({'success': False, 'error': 'El código es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Código')}), 400
     if not dao.validarCodigo(codigo.zfill(3)):
         return jsonify({'success': False, 'error': 'El código debe tener 3 dígitos numéricos.'}), 400
     if not nombre:
-        return jsonify({'success': False, 'error': 'El nombre es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Nombre')}), 400
     if dao.codigoExiste(reg['id_timbrado'], codigo.zfill(3), excluir_id=id_punto_expedicion):
         return jsonify({'success': False, 'error': f'Ya existe el código "{codigo}" para este timbrado.'}), 400
 
@@ -117,6 +123,7 @@ def updatePuntoExpedicion(id_punto_expedicion):
 @puntoexpedicionapi.route('/puntos-expedicion/<int:id_punto_expedicion>', methods=['DELETE'])
 @role_required(*ROLES_ADM)
 def deletePuntoExpedicion(id_punto_expedicion):
+    """DELETE: da de baja (lógica) punto de expedición; 404 si no existe."""
     dao = PuntoExpedicionDao()
     if not dao.getPuntoExpedicionById(id_punto_expedicion):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

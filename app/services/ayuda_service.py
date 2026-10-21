@@ -56,3 +56,17 @@ class AyudaService:
         """PDF exportado del mismo Word con LibreOffice: el PDF y el Word quedan iguales."""
         from app.services import manual_word_service
         return manual_word_service.docx_a_pdf(self.manual_seguridad_docx(secciones, scripts, fecha))
+
+    def manual_guia_docx(self, secciones_html, perfil, fecha):
+        """Guía de uso (manual de usuario) en Word, con el formato estándar (manual_word_service)."""
+        from app.services import manual_word_service
+        return manual_word_service.manual_guia(
+            secciones_html=secciones_html,
+            perfil=perfil,
+            logo=os.path.join(app.root_path, 'static', 'img', 'sys_logo.png'),
+            fecha=fecha)
+
+    def manual_guia_pdf(self, secciones_html, perfil, fecha):
+        """PDF exportado del mismo Word con LibreOffice: el PDF y el Word quedan iguales."""
+        from app.services import manual_word_service
+        return manual_word_service.docx_a_pdf(self.manual_guia_docx(secciones_html, perfil, fecha))

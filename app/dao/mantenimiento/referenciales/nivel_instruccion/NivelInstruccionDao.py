@@ -2,18 +2,23 @@ from app.core.base_dao import BaseDAO
 
 
 class NivelInstruccionDao(BaseDAO):
+    """Acceso a datos de nivel de instrucción (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getNivelesInstruccion(self):
+        """Lista los registros de nivel de instrucción."""
         sql = "SELECT id_nivel_instruccion, des_nivel_instruccion, est_nivel_instruccion FROM niveles_instruccion ORDER BY id_nivel_instruccion"
         return self.execute_query(sql)
 
     def getNivelInstruccionById(self, nivel_instruccion_id):
+        """Devuelve el registro de nivel de instrucción por su id, o None si no existe."""
         sql = "SELECT id_nivel_instruccion, des_nivel_instruccion, est_nivel_instruccion FROM niveles_instruccion WHERE id_nivel_instruccion = %s"
         return self.execute_query_one(sql, (nivel_instruccion_id,))
 
     def guardarNivelInstruccion(self, descripcion, estado):
+        """Inserta un registro de nivel de instrucción y devuelve el id generado."""
         sql = """
             INSERT INTO niveles_instruccion (des_nivel_instruccion, est_nivel_instruccion)
             VALUES (%s, %s)
@@ -23,6 +28,7 @@ class NivelInstruccionDao(BaseDAO):
         return fila["id_nivel_instruccion"] if fila else None
 
     def updateNivelInstruccion(self, nivel_instruccion_id, descripcion, estado):
+        """Actualiza los datos de nivel de instrucción; devuelve True si modificó una fila."""
         sql = """
             UPDATE niveles_instruccion
             SET des_nivel_instruccion = %s, est_nivel_instruccion = %s

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Tipos de Análisis (listado y gestión). Ruta: /tipo-analisis-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/tipos-analisis. #}
 
 {% block titulo %}
 Tipos de Análisis
@@ -132,7 +133,7 @@ Tipos de Análisis
       const descripcion = $('#txtDescripcion').val().trim();
 
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

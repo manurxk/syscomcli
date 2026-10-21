@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Nueva Factura (formulario de alta). Ruta: /factura-agregar. Roles: ADMINISTRADOR, SUPERADMIN, VENTAS. API: /api/v1/facturas, /api/v1/timbrados, /api/v1/puntos-expedicion, /api/v1/tipos-comprobantes, /api/v1/condiciones-venta…. #}
 {% block titulo %}Nueva Factura{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -526,7 +527,7 @@ document.getElementById('btnConfirmarItem').addEventListener('click', () => {
   const id_tipo_impuesto = selImp.value ? parseInt(selImp.value) : null;
   const id_item_servicio = document.getElementById('selItemServicio').value || null;
 
-  if (!desc) { alert('La descripción es obligatoria.'); return; }
+  if (!desc) { alert('El campo "Descripción" es obligatorio.'); return; }
   if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
   if (precio < 0) { alert('El precio no puede ser negativo.'); return; }
 

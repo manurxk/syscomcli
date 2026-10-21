@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.core.moneda import get_moneda, redondear
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 aperturacierrecajaapi = Blueprint('aperturacierrecajaapi', __name__)
 
@@ -11,7 +12,9 @@ ROLES_CAJA = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @aperturacierrecajaapi.route('/cajas-estado', methods=['GET'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "LEER")
 def getCajasEstado():
+    """GET: estado actual de cada caja (abierta o cerrada)."""
     try:
         return jsonify({'success': True, 'data': AperturaCierreCajaDao().getEstadoCajas(), 'error': None}), 200
     except Exception as e:
@@ -21,7 +24,9 @@ def getCajasEstado():
 
 @aperturacierrecajaapi.route('/aperturas-cierres', methods=['GET'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "LEER")
 def getAperturasCierres():
+    """GET: lista los registros de apertura/cierre de caja."""
     try:
         return jsonify({'success': True, 'data': AperturaCierreCajaDao().getAperturasCierres(), 'error': None}), 200
     except Exception as e:
@@ -31,7 +36,9 @@ def getAperturasCierres():
 
 @aperturacierrecajaapi.route('/aperturas-cierres/<int:id_apertura_cierre>', methods=['GET'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "LEER")
 def getAperturaCierre(id_apertura_cierre):
+    """GET: devuelve apertura/cierre de caja por su id; 404 si no existe."""
     try:
         registro = AperturaCierreCajaDao().getAperturaCierreById(id_apertura_cierre)
         if not registro:
@@ -44,7 +51,9 @@ def getAperturaCierre(id_apertura_cierre):
 
 @aperturacierrecajaapi.route('/cajas/<int:id_caja>/apertura-activa', methods=['GET'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "LEER")
 def getAperturaActiva(id_caja):
+    """GET: apertura vigente de la caja indicada, o vacío si está cerrada."""
     try:
         apertura = AperturaCierreCajaDao().getAperturaActivaPorCaja(id_caja)
         return jsonify({'success': True, 'data': apertura, 'error': None}), 200
@@ -55,7 +64,9 @@ def getAperturaActiva(id_caja):
 
 @aperturacierrecajaapi.route('/cajas/<int:id_caja>/saldo-esperado', methods=['GET'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "LEER")
 def getSaldoEsperado(id_caja):
+    """GET: saldo que debería haber en la caja según los cobros de la apertura vigente."""
     try:
         saldo = AperturaCierreCajaDao().calcularSaldoEsperado(id_caja)
         if saldo is None:
@@ -68,7 +79,9 @@ def getSaldoEsperado(id_caja):
 
 @aperturacierrecajaapi.route('/cajas/<int:id_caja>/historial', methods=['GET'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "LEER")
 def getHistorialCaja(id_caja):
+    """GET: historial de aperturas y cierres de la caja; admite filtro de fechas por query string."""
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')
     try:
@@ -81,15 +94,17 @@ def getHistorialCaja(id_caja):
 
 @aperturacierrecajaapi.route('/apertura-caja', methods=['POST'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "CREAR")
 def abrirCaja():
+    """POST: abre la caja con saldo inicial; la moneda queda fijada por la apertura."""
     data = request.get_json() or {}
     id_caja = data.get('id_caja')
     id_usuario = data.get('id_usuario') or session.get('id_usuario')
 
     if not id_caja:
-        return jsonify({'success': False, 'error': 'La caja es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Caja')}), 400
     if not id_usuario:
-        return jsonify({'success': False, 'error': 'El usuario es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Usuario')}), 400
 
     observaciones = data.get('observaciones')
 
@@ -120,17 +135,19 @@ def abrirCaja():
 
 @aperturacierrecajaapi.route('/cierre-caja', methods=['POST'])
 @role_required(*ROLES_CAJA)
+@permiso_requerido("VENTAS", "EDITAR")
 def cerrarCaja():
+    """POST: cierra la caja con el saldo contado (llama al procedimiento sp_cerrar_caja)."""
     data = request.get_json() or {}
     id_caja = data.get('id_caja')
     id_usuario = data.get('id_usuario') or session.get('id_usuario')
 
     if not id_caja:
-        return jsonify({'success': False, 'error': 'La caja es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Caja')}), 400
     if not id_usuario:
-        return jsonify({'success': False, 'error': 'El usuario es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Usuario')}), 400
     if data.get('saldo_final') is None:
-        return jsonify({'success': False, 'error': 'El saldo final es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Saldo final')}), 400
 
     try:
         nuevo_id = AperturaCierreCajaDao().guardarCierre(

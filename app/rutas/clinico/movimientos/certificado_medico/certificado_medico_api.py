@@ -5,6 +5,7 @@ from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.auth.utils.decorators import role_required
 from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
 from app.services.documento_clinico_pdf_service import DocumentoClinicoPdfService
+from app.utils.mensajes_validacion import msg_obligatorio
 
 certificadomedicoapi = Blueprint('certificadomedicoapi', __name__)
 
@@ -14,6 +15,7 @@ ROLES_CERTIFICADO = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @certificadomedicoapi.route('/consultas/<int:id_consulta>/certificados', methods=['GET'])
 @role_required(*ROLES_CERTIFICADO)
 def getCertificados(id_consulta):
+    """GET: lista los certificados médicos de la consulta."""
     try:
         data = CertificadoMedicoDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -25,13 +27,14 @@ def getCertificados(id_consulta):
 @certificadomedicoapi.route('/consultas/<int:id_consulta>/certificados', methods=['POST'])
 @role_required(*ROLES_CERTIFICADO)
 def addCertificado(id_consulta):
+    """POST: valida y registra certificado médico en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_tipo_certificado_medico'):
-        return jsonify({'success': False, 'error': 'El tipo de certificado es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Tipo de certificado')}), 400
     if not data.get('certificado_fecha'):
-        return jsonify({'success': False, 'error': 'La fecha del certificado es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fecha del certificado')}), 400
     if not (data.get('certificado_motivo') or '').strip():
-        return jsonify({'success': False, 'error': 'El motivo del certificado es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Motivo del certificado')}), 400
 
     consulta = ConsultaDao().getConsultaParaEditar(id_consulta)
     if not consulta:
@@ -51,6 +54,7 @@ def addCertificado(id_consulta):
 @certificadomedicoapi.route('/certificados/<int:id_certificado>', methods=['DELETE'])
 @role_required(*ROLES_CERTIFICADO)
 def deleteCertificado(id_certificado):
+    """DELETE: baja lógica de certificado médico; 404 si no existe."""
     try:
         if CertificadoMedicoDao().desactivar(id_certificado, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200

@@ -4,10 +4,13 @@ from app.core.moneda import get_moneda, redondear
 
 
 class ArqueoCajaDao(BaseDAO):
+    """Acceso a datos de arqueo de caja (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def _generarNumeroArqueo(self, cur):
+        """Genera el siguiente número correlativo de arqueo de caja dentro de la transacción en curso (cursor `cur`)."""
         patron = "ARQ-" + "' || TO_CHAR(NOW(), 'YYYY-MM') || '-%"
         cur.execute("""
             SELECT TO_CHAR(NOW(), 'YYYY') AS anio,
@@ -23,6 +26,7 @@ class ArqueoCajaDao(BaseDAO):
         return f"ARQ-{anio}-{mes}-{str(siguiente).zfill(4)}"
 
     def getArqueos(self):
+        """Lista los registros de arqueo de caja."""
         sql = """
             SELECT
                 a.id_arqueo,
@@ -47,6 +51,7 @@ class ArqueoCajaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getArqueoById(self, id_arqueo):
+        """Devuelve el registro de arqueo de caja por su id, o None si no existe."""
         sql = """
             SELECT
                 a.id_arqueo,
@@ -71,6 +76,7 @@ class ArqueoCajaDao(BaseDAO):
         return self.execute_query_one(sql, (id_arqueo,))
 
     def getArqueosPorCaja(self, id_caja):
+        """Lista los arqueos de la caja indicada."""
         sql = """
             SELECT
                 a.id_arqueo,
@@ -91,6 +97,7 @@ class ArqueoCajaDao(BaseDAO):
         return self.execute_query(sql, (id_caja,))
 
     def calcularMontoEsperado(self, id_apertura_cierre, id_caja):
+        """Calcula el monto esperado de la apertura indicada para compararlo con el conteo real."""
         apertura = self.execute_query_one("""
             SELECT saldo_inicial, saldo_final, id_moneda,
                    TO_CHAR(fecha_operacion, 'YYYY-MM-DD HH24:MI:SS') AS fecha_operacion
@@ -121,6 +128,7 @@ class ArqueoCajaDao(BaseDAO):
 
     def guardarArqueo(self, id_apertura_cierre, id_caja, monto_real,
                       observaciones=None, usuario_creacion=None):
+        """Registra el arqueo: compara el monto real contado con el esperado y guarda la diferencia."""
         apertura = self.execute_query_one(
             "SELECT id_moneda FROM aperturas_cierre_caja WHERE id_apertura_cierre = %s",
             (id_apertura_cierre,)

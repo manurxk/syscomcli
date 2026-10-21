@@ -24,6 +24,7 @@ CAMPOS_BOOLEANOS_ANAMNESIS = [
 
 
 class AnamnesisDao(BaseDAO):
+    """Acceso a datos de la anamnesis del paciente (con historial de versiones)."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
@@ -83,6 +84,7 @@ class AnamnesisDao(BaseDAO):
         } for f in filas]
 
     def tieneAnamnesis(self, id_paciente):
+        """Indica si el paciente ya tiene una anamnesis registrada."""
         sql = "SELECT 1 FROM anamnesis WHERE id_paciente = %s AND es_version_actual = TRUE"
         return self.execute_query_one(sql, (id_paciente,)) is not None
 

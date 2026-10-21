@@ -27,6 +27,7 @@ def _rango():
 
 
 def _sin_permiso():
+    """Respuesta 403 cuando el rol no puede ver la pestaña de Reportes."""
     return jsonify({"success": False, "error": "No tiene permiso para esta pestaña de Reportes."}), 403
 
 
@@ -74,6 +75,7 @@ def _kpis_agenda(datos_estado):
 
 
 def _promedio_diario(cantidad, fecha_desde, fecha_hasta):
+    """Promedio diario de `cantidad` en el rango de fechas (devuelve `cantidad` si el rango es inválido)."""
     try:
         dias = (datetime.strptime(fecha_hasta, '%Y-%m-%d') - datetime.strptime(fecha_desde, '%Y-%m-%d')).days + 1
         return round(cantidad / dias, 1) if dias > 0 else cantidad
@@ -95,6 +97,7 @@ def _formatear(servicio, filas, campos):
 @reporteapi.route('/reporte/resumen-data', methods=['GET'])
 @role_required(*ROLES_PANTALLA_REPORTES)
 def api_resumen_data():
+    """GET: datos de la pestaña Resumen de Reportes."""
     if not alcance_de_sesion('resumen')['permitida']:
         return _sin_permiso()
     fecha_desde, fecha_hasta = _rango()
@@ -159,6 +162,7 @@ def api_ventas_data():
 @reporteapi.route('/reporte/ventas/pdf', methods=['GET'])
 @role_required(*ROLES_PANTALLA_REPORTES)
 def reporte_ventas_pdf():
+    """GET: genera el PDF del reporte de Ventas con los mismos filtros de la pantalla."""
     if not alcance_de_sesion('ventas')['permitida']:
         return _sin_permiso()
     fecha_desde, fecha_hasta = _rango()
@@ -187,6 +191,7 @@ def reporte_ventas_pdf():
 @reporteapi.route('/reporte/agendamiento-data', methods=['GET'])
 @role_required(*ROLES_PANTALLA_REPORTES)
 def api_agendamiento_data():
+    """GET: datos de la pestaña Agendamiento de Reportes."""
     alcance = _alcance('agendamiento')
     if not alcance['permitida']:
         return _sin_permiso()
@@ -211,6 +216,7 @@ def api_agendamiento_data():
 @reporteapi.route('/reporte/agendamiento/pdf', methods=['GET'])
 @role_required(*ROLES_PANTALLA_REPORTES)
 def reporte_agendamiento_pdf():
+    """GET: genera el PDF del reporte de Agendamiento con los mismos filtros de la pantalla."""
     alcance = _alcance('agendamiento')
     if not alcance['permitida']:
         return _sin_permiso()
@@ -245,6 +251,7 @@ def reporte_agendamiento_pdf():
 @reporteapi.route('/reporte/consultorio-data', methods=['GET'])
 @role_required(*ROLES_PANTALLA_REPORTES)
 def api_consultorio_data():
+    """GET: datos de la pestaña Consultorio de Reportes (el Clínico ve solo lo propio)."""
     alcance = _alcance('consultorio')
     if not alcance['permitida']:
         return _sin_permiso()
@@ -269,6 +276,7 @@ def api_consultorio_data():
 @reporteapi.route('/reporte/consultorio/pdf', methods=['GET'])
 @role_required(*ROLES_PANTALLA_REPORTES)
 def reporte_consultorio_pdf():
+    """GET: genera el PDF del reporte de Consultorio con los mismos filtros de la pantalla."""
     alcance = _alcance('consultorio')
     if not alcance['permitida']:
         return _sin_permiso()

@@ -10,10 +10,13 @@ PATRON_HORA = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
 
 
 class EmpresaDao(BaseDAO):
+    """Acceso a datos de empresa (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getEmpresaPrincipal(self):
+        """Devuelve los datos de la empresa (registro único), o None."""
         sql = """
             SELECT e.id_empresa, e.ruc_nit, e.digito_verificador, e.razon_social, e.nombre_comercial,
                    e.tipo_contribuyente, e.id_ciudad, c.des_ciudad, e.direccion, e.numero_casa, e.codigo_postal,
@@ -36,6 +39,7 @@ class EmpresaDao(BaseDAO):
         return bool(re.match(patron, email or "", re.IGNORECASE))
 
     def rucExiste(self, ruc_nit, excluir_id=None):
+        """Indica si ya existe una empresa con ese RUC; `excluir_id` omite el propio registro."""
         sql = "SELECT 1 FROM empresa WHERE ruc_nit = %s"
         params = [ruc_nit]
         if excluir_id:
@@ -73,6 +77,7 @@ class EmpresaDao(BaseDAO):
                        numero_casa=None, codigo_postal=None, sitio_web=None,
                        actividad_economica_principal=None, horario_atencion=None, horario_atencion_tramos=None,
                        usuario_modificacion=None):
+        """Actualiza los datos de la empresa; devuelve True si modificó una fila."""
         sql = """
             UPDATE empresa
             SET ruc_nit = %s, digito_verificador = %s, razon_social = %s, nombre_comercial = %s,
@@ -91,6 +96,7 @@ class EmpresaDao(BaseDAO):
 
 
     def _tramosJson(self, tramos):
+        """Convierte los tramos de horario de atención a JSON para guardarlos."""
         return json.dumps(tramos) if tramos else None
 
     def validarTramos(self, tramos):

@@ -14,6 +14,7 @@ SECCIONES_PDF = ('anamnesis', 'diagnosticos', 'tratamientos_activos', 'proximas_
 
 
 def _resolver_id_especialista():
+    """Devuelve el id de especialista del usuario en sesión, o None si no es especialista."""
     id_funcionario = session.get('id_funcionario')
     if not id_funcionario:
         return None
@@ -23,6 +24,7 @@ def _resolver_id_especialista():
 @fichaapi.route('/clinico/ficha/<int:id_paciente>', methods=['GET'])
 @role_required(*ROLES_FICHA)
 def getFicha(id_paciente):
+    """GET: ficha clínica completa del paciente; 404 si no existe."""
     try:
         data = FichaDao().getFichaCompleta(id_paciente)
         if not data or not data.get('paciente'):
@@ -36,6 +38,7 @@ def getFicha(id_paciente):
 @fichaapi.route('/clinico/ficha/<int:id_paciente>/pdf', methods=['GET'])
 @role_required(*ROLES_FICHA)
 def getFichaPdf(id_paciente):
+    """GET: genera y devuelve el PDF de la ficha clínica del paciente."""
     id_especialista = _resolver_id_especialista()
     if not id_especialista:
         return jsonify({
@@ -79,6 +82,7 @@ def getFichaPdf(id_paciente):
 @fichaapi.route('/clinico/ficha/<int:id_paciente>/notas', methods=['GET'])
 @role_required(*ROLES_FICHA)
 def getNotas(id_paciente):
+    """GET: notas clínicas del paciente."""
     try:
         data = FichaDao().getNotasPaciente(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -90,6 +94,7 @@ def getNotas(id_paciente):
 @fichaapi.route('/clinico/ficha/<int:id_paciente>/notas', methods=['POST'])
 @role_required(*ROLES_FICHA)
 def addNota(id_paciente):
+    """POST: agrega una nota clínica del especialista al paciente."""
     body = request.get_json() or {}
     contenido = (body.get('nota_contenido') or '').strip()
     if not contenido:
@@ -113,6 +118,7 @@ def addNota(id_paciente):
 @fichaapi.route('/clinico/ficha/notas/<int:id_nota>', methods=['DELETE'])
 @role_required(*ROLES_FICHA)
 def deleteNota(id_nota):
+    """DELETE: baja lógica de la nota clínica; 404 si no existe."""
     try:
         ok = FichaDao().eliminarNota(id_nota, usuario_modificacion=session.get('id_usuario'))
         if not ok:

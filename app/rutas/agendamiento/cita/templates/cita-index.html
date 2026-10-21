@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Citas (listado y gestión). Ruta: /citas-index. Roles: ADMINISTRADOR, SUPERADMIN, RECEPCION. API: /api/v1/citas. #}
 
 {% block titulo %}
 Citas
@@ -153,7 +154,7 @@ Citas
   const ESTADOS_FINALES = ['COMPLETADA', 'AUSENTE', 'CANCELADA'];
   // La consulta y la ausencia se registran el día de la cita (a cualquier hora de ese día)
   const SOLO_EL_DIA = ['EN_CONSULTA', 'AUSENTE'];
-  // Deshacer un cierre por error, solo el mismo día de la cita (lo valida CitaDao.TRANSICIONES_MISMO_DIA)
+  // Deshacer un cierre por error, solo el mismo día de la cita (lo valida sp_cambiar_estado_cita)
   const CORRECCION_MISMO_DIA = {
     AUSENTE: [['CONFIRMADA', 'Volver a confirmada', 'rotate-left', 'warning']],
     CANCELADA: [['AGENDADA', 'Reactivar (si el turno sigue libre)', 'rotate-left', 'warning']]
@@ -398,7 +399,7 @@ Citas
         fetch(`/api/v1/citas/${idCita}/estado`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
-          body: JSON.stringify({ cod_estado_nuevo: codEstadoNuevo, motivo: result.value || null })
+          body: JSON.stringify({ cod_estado_nuevo: codEstadoNuevo, motivo: (typeof result.value === 'string' && result.value) || null })
         })
           .then(resp => resp.json())
           .then(data => {

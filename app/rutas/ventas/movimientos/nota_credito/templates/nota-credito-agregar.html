@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Nueva Nota de Crédito (formulario de alta). Ruta: /nota-credito-agregar. API: /api/v1/notas-credito, /api/v1/facturas, /api/v1/tipos-comprobantes. #}
 {% block titulo %}Nueva Nota de Crédito{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -322,7 +323,7 @@ document.getElementById('btnConfirmarItem').addEventListener('click', () => {
   const precio = parseFloat(document.getElementById('itemPrecio').value) || 0;
   const monto  = Math.round(cant * precio);
 
-  if (!desc)  { alert('La descripción es obligatoria.'); return; }
+  if (!desc)  { alert('El campo "Descripción" es obligatorio.'); return; }
   if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
 
   const item = { item_descripcion: desc, item_cantidad: cant, item_precio_unitario: precio, monto_total: monto };
@@ -339,7 +340,7 @@ document.getElementById('btnGuardar').addEventListener('click', async () => {
   const motivo    = document.getElementById('txtMotivo').value.trim();
 
   if (!idFactura) { alert('Debés seleccionar una factura.'); return; }
-  if (!motivo)    { alert('El motivo es obligatorio.'); return; }
+  if (!motivo)    { alert('El campo "Motivo" es obligatorio.'); return; }
   if (!detalles.length) { alert('Debe agregar al menos un ítem.'); return; }
 
   const body = {

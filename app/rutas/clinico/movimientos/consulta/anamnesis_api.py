@@ -1,15 +1,19 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.clinico.movimientos.consulta.AnamnesisDao import AnamnesisDao, CAMPOS_ANAMNESIS, CAMPOS_BOOLEANOS_ANAMNESIS
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 anamnesisapi = Blueprint('anamnesisapi', __name__)
 
 ROLES_ANAMNESIS = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+# Mismos valores que el CHECK chk_anamnesis_informante de la tabla anamnesis
+INFORMANTES_VALIDOS = ('PACIENTE', 'MADRE', 'PADRE', 'TUTOR', 'OTRO')
 
 
 @anamnesisapi.route('/anamnesis/paciente/<int:id_paciente>', methods=['GET'])
 @role_required(*ROLES_ANAMNESIS)
 def getAnamnesisActual(id_paciente):
+    """GET: anamnesis vigente del paciente."""
     try:
         data = AnamnesisDao().getAnamnesisActual(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -21,6 +25,7 @@ def getAnamnesisActual(id_paciente):
 @anamnesisapi.route('/anamnesis/paciente/<int:id_paciente>/historial', methods=['GET'])
 @role_required(*ROLES_ANAMNESIS)
 def getHistorialAnamnesis(id_paciente):
+    """GET: historial de versiones de la anamnesis del paciente."""
     try:
         data = AnamnesisDao().getHistorialAnamnesis(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -32,6 +37,7 @@ def getHistorialAnamnesis(id_paciente):
 @anamnesisapi.route('/anamnesis/<int:id_anamnesis>', methods=['GET'])
 @role_required(*ROLES_ANAMNESIS)
 def getAnamnesis(id_anamnesis):
+    """GET: anamnesis por su id; 404 si no existe."""
     try:
         data = AnamnesisDao().getAnamnesisById(id_anamnesis)
         if not data:
@@ -49,10 +55,15 @@ def addVersionAnamnesis(id_paciente):
     data = request.get_json() or {}
 
     if not (data.get('motivo_consulta') or '').strip():
-        return jsonify({'success': False, 'error': 'El campo "motivo_consulta" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('motivo_consulta')}), 400
+
+    informante = (data.get('informante') or '').strip().upper() or None
+    if informante and informante not in INFORMANTES_VALIDOS:
+        return jsonify({'success': False, 'error': f'El informante debe ser uno de: {", ".join(INFORMANTES_VALIDOS)}.'}), 400
 
     try:
         datos = {campo: data.get(campo) for campo in CAMPOS_ANAMNESIS}
+        datos['informante'] = informante
         for campo in CAMPOS_BOOLEANOS_ANAMNESIS:
             datos[campo] = bool(data.get(campo, False))
         id_anamnesis = AnamnesisDao().guardarNuevaVersion(id_paciente, datos, usuario_creacion=session.get('id_usuario'))

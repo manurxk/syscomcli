@@ -5,6 +5,7 @@ from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.auth.utils.decorators import role_required
 from app.dao.clinico.movimientos.ficha.FichaDao import FichaDao
 from app.services.documento_clinico_pdf_service import DocumentoClinicoPdfService
+from app.utils.mensajes_validacion import msg_obligatorio
 
 ordenapi = Blueprint('ordenapi', __name__)
 
@@ -14,6 +15,7 @@ ROLES_ORDEN = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @ordenapi.route('/consultas/<int:id_consulta>/ordenes', methods=['GET'])
 @role_required(*ROLES_ORDEN)
 def getOrdenes(id_consulta):
+    """GET: lista los órdenes de estudio de la consulta."""
     try:
         data = OrdenDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -25,9 +27,10 @@ def getOrdenes(id_consulta):
 @ordenapi.route('/consultas/<int:id_consulta>/ordenes', methods=['POST'])
 @role_required(*ROLES_ORDEN)
 def addOrden(id_consulta):
+    """POST: valida y registra orden de estudio en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('orden_fecha'):
-        return jsonify({'success': False, 'error': 'La fecha de la orden es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fecha de la orden')}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -60,6 +63,7 @@ def addOrden(id_consulta):
 @ordenapi.route('/ordenes/<int:id_orden>', methods=['DELETE'])
 @role_required(*ROLES_ORDEN)
 def deleteOrden(id_orden):
+    """DELETE: baja lógica de orden de estudio; 404 si no existe."""
     try:
         if OrdenDao().desactivar(id_orden, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200

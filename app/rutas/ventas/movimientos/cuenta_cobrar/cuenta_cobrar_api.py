@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, current_app as app
 
 from app.dao.ventas.movimientos.cuenta_cobrar.CuentaCobrarDao import CuentaCobrarDao
 from app.dao.ventas.movimientos.cobranza.CobranzaDao import CobranzaDao
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
 
 cuentacobrarapi = Blueprint('cuentacobrarapi', __name__)
 
@@ -11,7 +11,9 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @cuentacobrarapi.route('/cuentas-cobrar', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getCuentasCobrar():
+    """GET: lista los registros de cuenta a cobrar."""
     try:
         return jsonify({'success': True, 'data': CuentaCobrarDao().getCuentasCobrar(), 'error': None}), 200
     except Exception as e:
@@ -21,7 +23,9 @@ def getCuentasCobrar():
 
 @cuentacobrarapi.route('/cuentas-cobrar/pendientes', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getCuentasCobrarPendientes():
+    """GET: lista las cuentas a cobrar con saldo pendiente."""
     try:
         return jsonify({'success': True, 'data': CuentaCobrarDao().getCuentasCobrarPendientes(), 'error': None}), 200
     except Exception as e:
@@ -31,7 +35,9 @@ def getCuentasCobrarPendientes():
 
 @cuentacobrarapi.route('/cuentas-cobrar/<int:id_cuenta_cobrar>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getCuentaCobrar(id_cuenta_cobrar):
+    """GET: devuelve cuenta a cobrar por su id; 404 si no existe."""
     try:
         dao = CuentaCobrarDao()
         reg = dao.getCuentaCobrarById(id_cuenta_cobrar)

@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RegistroInsumoDao(BaseDAO):
+    """Acceso a datos de los insumos utilizados en una consulta (descuenta stock)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los insumos utilizados de la consulta."""
         sql = """
             SELECT ri.id_registro_insumo, ri.id_consulta, ri.id_insumo,
                    ri.registro_cantidad, ri.registro_observaciones, ri.fecha_creacion,
@@ -21,6 +24,7 @@ class RegistroInsumoDao(BaseDAO):
         return filas
 
     def getStockDisponible(self, id_insumo):
+        """Devuelve el stock actual del insumo."""
         sql = "SELECT stock_actual FROM insumos WHERE id_insumo = %s"
         fila = self.execute_query_one(sql, (id_insumo,))
         return fila['stock_actual'] if fila else None

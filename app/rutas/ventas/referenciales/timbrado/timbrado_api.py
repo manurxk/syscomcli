@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.timbrado.TimbradoDao import TimbradoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_existe, msg_obligatorio
 
 timbradoapi = Blueprint('timbradoapi', __name__)
 
@@ -12,6 +13,7 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 @timbradoapi.route('/timbrados', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 def getTimbrados():
+    """GET: lista los registros de timbrado."""
     try:
         return jsonify({'success': True, 'data': TimbradoDao().getTimbrados(), 'error': None}), 200
     except Exception as e:
@@ -22,6 +24,7 @@ def getTimbrados():
 @timbradoapi.route('/timbrados/vigentes', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 def getTimbradosVigentes():
+    """GET: lista los registros de timbrado."""
     try:
         return jsonify({'success': True, 'data': TimbradoDao().getTimbradosVigentes(), 'error': None}), 200
     except Exception as e:
@@ -32,6 +35,7 @@ def getTimbradosVigentes():
 @timbradoapi.route('/timbrados/<int:id_timbrado>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 def getTimbrado(id_timbrado):
+    """GET: devuelve timbrado por su id; 404 si no existe."""
     try:
         reg = TimbradoDao().getTimbradoById(id_timbrado)
         if not reg:
@@ -45,6 +49,7 @@ def getTimbrado(id_timbrado):
 @timbradoapi.route('/timbrados', methods=['POST'])
 @role_required(*ROLES_ADM)
 def addTimbrado():
+    """POST: valida los datos y registra timbrado; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TimbradoDao()
 
@@ -54,17 +59,17 @@ def addTimbrado():
     fecha_vencimiento = data.get('fecha_vencimiento')
 
     if not numero:
-        return jsonify({'success': False, 'error': 'El número de timbrado es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Número de timbrado')}), 400
     if not dao.validarNumeroTimbrado(numero):
         return jsonify({'success': False, 'error': 'El número de timbrado debe tener 8 dígitos numéricos.'}), 400
     if not dao.validarCodigoEstablecimiento(codigo_estab):
         return jsonify({'success': False, 'error': 'El código de establecimiento debe tener 3 dígitos numéricos.'}), 400
     if not fecha_inicio or not fecha_vencimiento:
-        return jsonify({'success': False, 'error': 'Las fechas de inicio y vencimiento son obligatorias.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fechas de inicio y vencimiento')}), 400
     if fecha_vencimiento < fecha_inicio:
         return jsonify({'success': False, 'error': 'La fecha de vencimiento debe ser mayor o igual a la de inicio.'}), 400
     if dao.timbradoExiste(numero):
-        return jsonify({'success': False, 'error': f'Ya existe un timbrado con número "{numero}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un timbrado con número', numero)}), 400
 
     try:
         nuevo_id = dao.guardar(
@@ -85,6 +90,7 @@ def addTimbrado():
 @timbradoapi.route('/timbrados/<int:id_timbrado>', methods=['PUT'])
 @role_required(*ROLES_ADM)
 def updateTimbrado(id_timbrado):
+    """PUT: valida y actualiza timbrado; 404 si no existe."""
     data = request.get_json() or {}
     dao = TimbradoDao()
 
@@ -97,13 +103,13 @@ def updateTimbrado(id_timbrado):
     fecha_vencimiento = data.get('fecha_vencimiento')
 
     if not numero:
-        return jsonify({'success': False, 'error': 'El número de timbrado es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Número de timbrado')}), 400
     if not dao.validarNumeroTimbrado(numero):
         return jsonify({'success': False, 'error': 'El número de timbrado debe tener 8 dígitos numéricos.'}), 400
     if not dao.validarCodigoEstablecimiento(codigo_estab):
         return jsonify({'success': False, 'error': 'El código de establecimiento debe tener 3 dígitos numéricos.'}), 400
     if not fecha_inicio or not fecha_vencimiento:
-        return jsonify({'success': False, 'error': 'Las fechas son obligatorias.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fechas')}), 400
     if fecha_vencimiento < fecha_inicio:
         return jsonify({'success': False, 'error': 'La fecha de vencimiento debe ser mayor o igual a la de inicio.'}), 400
     if dao.timbradoExiste(numero, excluir_id=id_timbrado):
@@ -129,6 +135,7 @@ def updateTimbrado(id_timbrado):
 @timbradoapi.route('/timbrados/<int:id_timbrado>', methods=['DELETE'])
 @role_required(*ROLES_ADM)
 def deleteTimbrado(id_timbrado):
+    """DELETE: da de baja (lógica) timbrado; 404 si no existe."""
     dao = TimbradoDao()
     if not dao.getTimbradoById(id_timbrado):
         return jsonify({'success': False, 'error': 'No se encontró el timbrado.'}), 404

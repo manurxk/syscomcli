@@ -8,10 +8,13 @@ from app.dao.ventas.movimientos.cuenta_cobrar.CuentaCobrarDao import CuentaCobra
 
 
 class NotaDebitoDao(BaseDAO):
+    """Acceso a datos de nota de débito (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getNotasDebito(self):
+        """Lista los registros de nota de débito."""
         sql = """
             SELECT
                 nd.id_nota_debito,
@@ -43,6 +46,7 @@ class NotaDebitoDao(BaseDAO):
         return self.execute_query(sql)
 
     def getNotaDebitoById(self, id_nota_debito):
+        """Devuelve el registro de nota de débito por su id, o None si no existe."""
         sql = """
             SELECT
                 nd.id_nota_debito,
@@ -76,6 +80,7 @@ class NotaDebitoDao(BaseDAO):
         return self.execute_query_one(sql, (id_nota_debito,))
 
     def getNotaDebitoDetalle(self, id_nota_debito):
+        """Devuelve las líneas de detalle de nota de débito para el id indicado."""
         sql = """
             SELECT
                 id_nota_debito_detalle,
@@ -92,6 +97,7 @@ class NotaDebitoDao(BaseDAO):
         return self.execute_query(sql, (id_nota_debito,))
 
     def _generarNumero(self, cur):
+        """Genera el siguiente número correlativo de nota de débito dentro de la transacción en curso (cursor `cur`)."""
         año = datetime.now().year
         mes = datetime.now().strftime('%m')
         patron = f'ND-{año}-{mes}-%'
@@ -112,6 +118,7 @@ class NotaDebitoDao(BaseDAO):
         return f'ND-{año}-{mes}-{siguiente:04d}'
 
     def guardar(self, data, usuario_creacion=None):
+        """Registra el documento con su cabecera y detalle en una sola transacción; devuelve el id."""
         detalles = data.get('detalles') or []
         if not detalles:
             raise ValueError('La nota de débito debe tener al menos un ítem.')
@@ -223,7 +230,7 @@ class NotaDebitoDao(BaseDAO):
             fila = cur.fetchone()
             if not fila:
                 return False
-            CuentaCobrarDao().ajustarPorNotaEnTransaccion(cur, fila[0], -fila[1], usuario)
+            CuentaCobrarDao().ajustarPorNotaEnTransaccion(cur, fila[0], -fila[1], usuario, es_anulacion_de_nota=True)
             # En el libro de ventas la nota anulada sigue figurando, pero en 0
             cur.execute("""
                 UPDATE libro_ventas

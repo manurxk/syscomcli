@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Presupuestos (listado y gestión). Ruta: /presupuesto-index. Roles: ADMINISTRADOR, SUPERADMIN, VENTAS. API: /api/v1/presupuestos. #}
 {% block titulo %}Presupuestos{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -10,7 +11,7 @@
           <div class="page-header-subtitle">Presupuestos pre-venta para pacientes</div>
         </div>
         <div class="col-auto mt-4">
-          <a href="{{ url_for('presupuesto.presupuestoAgregar') }}" class="btn btn-primary btn-sm">Nuevo Presupuesto</a>
+          {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a href="{{ url_for('presupuesto.presupuestoAgregar') }}" class="btn btn-primary btn-sm">Nuevo Presupuesto</a>{% endif %}
         </div>
       </div>
     </div>
@@ -41,6 +42,9 @@
 {% endblock %}
 {% block js %}
 <script>
+// Permisos por acción (matriz «Permisos»): aprobar/rechazar = EDITAR, convertir en pedido = CREAR
+const PUEDE_EDITAR = {{ tiene_permiso_accion('VENTAS', 'EDITAR') | tojson }};
+const PUEDE_CREAR = {{ tiene_permiso_accion('VENTAS', 'CREAR') | tojson }};
   const CSRFToken = "{{ csrf_token() }}";
 
   const badgeEstado = est => {
@@ -70,9 +74,9 @@
           data: row => {
             const puedeEstado = !['RECHAZADO','CONVERTIDO'].includes(row.presupuesto_estado);
             return `
-              <button class="btn btn-datatable btn-icon btn-outline-success me-1" name="btn_aprobar" data-id="${row.id_presupuesto}" title="Aprobar" ${row.presupuesto_estado!=='PENDIENTE'?'disabled':''}><i class="fas fa-check"></i></button>
-              <button class="btn btn-datatable btn-icon btn-outline-danger me-1" name="btn_rechazar" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Rechazar" ${!puedeEstado?'disabled':''}><i class="fas fa-times"></i></button>
-              <button class="btn btn-datatable btn-icon btn-outline-primary me-1" name="btn_convertir" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Convertir en pedido" ${row.presupuesto_estado!=='APROBADO'?'disabled':''}><i class="fas fa-share"></i></button>
+              ${PUEDE_EDITAR ? `<button class="btn btn-datatable btn-icon btn-outline-success me-1" name="btn_aprobar" data-id="${row.id_presupuesto}" title="Aprobar" ${row.presupuesto_estado!=='PENDIENTE'?'disabled':''}><i class="fas fa-check"></i></button>
+              <button class="btn btn-datatable btn-icon btn-outline-danger me-1" name="btn_rechazar" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Rechazar" ${!puedeEstado?'disabled':''}><i class="fas fa-times"></i></button>` : ''}
+              ${PUEDE_CREAR ? `<button class="btn btn-datatable btn-icon btn-outline-primary me-1" name="btn_convertir" data-id="${row.id_presupuesto}" data-num="${row.presupuesto_numero}" title="Convertir en pedido" ${row.presupuesto_estado!=='APROBADO'?'disabled':''}><i class="fas fa-share"></i></button>` : ''}
               <a class="btn btn-datatable btn-icon btn-outline-secondary" href="/api/v1/presupuestos/${row.id_presupuesto}/pdf" target="_blank" title="Imprimir PDF"><i class="fas fa-print"></i></a>
             `;
           },

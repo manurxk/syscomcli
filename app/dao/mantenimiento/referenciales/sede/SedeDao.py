@@ -5,10 +5,13 @@ from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
 
 
 class SedeDao(BaseDAO):
+    """Acceso a datos de sede (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getSedes(self):
+        """Lista los registros de sede."""
         sql = """
             SELECT id_sede, id_empresa, des_sede, codigo_sede, cod_establecimiento_sifen,
                    id_ciudad, direccion, telefono, email, es_principal, est_sede
@@ -18,6 +21,7 @@ class SedeDao(BaseDAO):
         return self.execute_query(sql)
 
     def getSedeById(self, sede_id):
+        """Devuelve el registro de sede por su id, o None si no existe."""
         sql = """
             SELECT id_sede, id_empresa, des_sede, codigo_sede, cod_establecimiento_sifen,
                    id_ciudad, direccion, codigo_postal, latitud, longitud, telefono, email,
@@ -61,6 +65,7 @@ class SedeDao(BaseDAO):
     def guardarSede(self, descripcion, codigo_sede=None, cod_establecimiento_sifen=None, id_ciudad=None,
                      direccion=None, codigo_postal=None, latitud=None, longitud=None, telefono=None,
                      email=None, horario_atencion=None, estado=True, usuario_creacion=None):
+        """Inserta un registro de sede y devuelve el id generado."""
         empresa = EmpresaDao().getEmpresaPrincipal()
         if not empresa:
             raise ValueError("No hay una empresa configurada. Configure los datos de la empresa antes de crear sedes.")
@@ -82,6 +87,7 @@ class SedeDao(BaseDAO):
     def updateSede(self, sede_id, descripcion, codigo_sede=None, cod_establecimiento_sifen=None, id_ciudad=None,
                     direccion=None, codigo_postal=None, latitud=None, longitud=None, telefono=None,
                     email=None, horario_atencion=None, estado=True, usuario_modificacion=None):
+        """Actualiza los datos de sede; devuelve True si modificó una fila."""
         sql = """
             UPDATE sedes
             SET des_sede = %s, codigo_sede = %s, cod_establecimiento_sifen = %s, id_ciudad = %s,
@@ -96,6 +102,7 @@ class SedeDao(BaseDAO):
         ), commit=True) > 0
 
     def desactivarSede(self, sede_id, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de sede; devuelve True si modificó una fila."""
         sql = """
             UPDATE sedes
             SET est_sede = FALSE, usuario_modificacion = %s

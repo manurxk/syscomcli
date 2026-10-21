@@ -8,6 +8,7 @@ from app.services.UltraMsgService import UltraMsgService
 from app.auth.services.auth_service import AuthService
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
+from app.utils.mensajes_validacion import msg_obligatorio
 
 citaapi = Blueprint('citaapi', __name__)
 
@@ -19,6 +20,7 @@ ESTADOS_VALIDOS = ('AGENDADA', 'CONFIRMADA', 'EN_CONSULTA', 'COMPLETADA', 'AUSEN
 @citaapi.route('/citas/especialistas', methods=['GET'])
 @role_required(*ROLES_CITAS)
 def getEspecialistasParaCitas():
+    """GET: especialistas disponibles para agendar citas."""
     try:
         data = FuncionarioDao().getEspecialistasActivos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -30,6 +32,7 @@ def getEspecialistasParaCitas():
 @citaapi.route('/citas/slots-disponibles', methods=['GET'])
 @role_required(*ROLES_CITAS)
 def getSlotsDisponibles():
+    """GET: turnos libres, con filtros de especialista, especialidad y fechas."""
     try:
         id_especialista = request.args.get('id_especialista', type=int)
         id_especialidad = request.args.get('id_especialidad', type=int)
@@ -45,6 +48,7 @@ def getSlotsDisponibles():
 @citaapi.route('/citas', methods=['GET'])
 @role_required(*ROLES_CITAS)
 def getCitas():
+    """GET: lista las citas, con filtros por especialista, paciente y fechas."""
     try:
         id_especialista = request.args.get('id_especialista', type=int)
         id_paciente = request.args.get('id_paciente', type=int)
@@ -60,6 +64,7 @@ def getCitas():
 @citaapi.route('/citas/<int:id_cita>', methods=['GET'])
 @role_required(*ROLES_CITAS)
 def getCita(id_cita):
+    """GET: cita por su id; 404 si no existe."""
     try:
         cita = CitaDao().getCitaById(id_cita)
         if not cita:
@@ -73,12 +78,13 @@ def getCita(id_cita):
 @citaapi.route('/citas', methods=['POST'])
 @role_required(*ROLES_CITAS)
 def addCita():
+    """POST: valida y registra una cita en un turno libre."""
     data = request.get_json() or {}
 
     if not data.get('id_paciente'):
-        return jsonify({'success': False, 'error': 'El campo "id_paciente" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('id_paciente')}), 400
     if not data.get('id_slot_agenda'):
-        return jsonify({'success': False, 'error': 'El campo "id_slot_agenda" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('id_slot_agenda')}), 400
 
     try:
         datos = {
@@ -109,9 +115,9 @@ def updateCita(id_cita):
     data = request.get_json() or {}
 
     if not data.get('id_slot_agenda'):
-        return jsonify({'success': False, 'error': 'El campo "id_slot_agenda" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('id_slot_agenda')}), 400
     if not data.get('motivo'):
-        return jsonify({'success': False, 'error': 'El campo "motivo" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('motivo')}), 400
 
     try:
         datos = {
@@ -135,6 +141,7 @@ def updateCita(id_cita):
 @citaapi.route('/citas/<int:id_cita>/logs', methods=['GET'])
 @role_required(*ROLES_CITAS)
 def getLogsCita(id_cita):
+    """GET: historial de cambios de estado de la cita."""
     try:
         data = CitaDao().getLogEstados(id_cita)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -146,6 +153,7 @@ def getLogsCita(id_cita):
 @citaapi.route('/citas/<int:id_cita>/recordatorios', methods=['GET'])
 @role_required(*ROLES_CITAS)
 def getRecordatoriosCita(id_cita):
+    """GET: recordatorios de la cita."""
     try:
         data = RecordatorioDao().getRecordatoriosByCita(id_cita)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -196,6 +204,7 @@ def reenviarRecordatorio(id_cita, id_recordatorio):
 @citaapi.route('/citas/<int:id_cita>/estado', methods=['PATCH'])
 @role_required(*ROLES_CITAS)
 def cambiarEstadoCita(id_cita):
+    """PATCH: cambia el estado de la cita (las transiciones se validan en el servidor)."""
     data = request.get_json() or {}
     cod_estado_nuevo = data.get('cod_estado_nuevo')
 
@@ -228,7 +237,7 @@ def corregirCita(id_cita):
     if cod_estado_nuevo and cod_estado_nuevo not in ESTADOS_VALIDOS:
         return jsonify({'success': False, 'error': f'Estado inválido. Valores permitidos: {ESTADOS_VALIDOS}.'}), 400
     if not (data.get('motivo_correccion') or '').strip():
-        return jsonify({'success': False, 'error': 'El motivo de la corrección es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Motivo de la corrección')}), 400
 
     try:
         roles = {(r or '').upper() for r in session.get('roles', [])}

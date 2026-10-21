@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.caja.CajaDao import CajaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 cajaapi = Blueprint('cajaapi', __name__)
 
@@ -11,6 +12,7 @@ ESTADOS_CAJA_VALIDOS = ('ABIERTA', 'CERRADA')
 @cajaapi.route('/cajas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getCajas():
+    """GET: lista los registros de caja."""
     try:
         return jsonify({'success': True, 'data': CajaDao().getCajas(), 'error': None}), 200
     except Exception as e:
@@ -21,6 +23,7 @@ def getCajas():
 @cajaapi.route('/cajas/<int:id_caja>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getCaja(id_caja):
+    """GET: devuelve caja por su id; 404 si no existe."""
     try:
         registro = CajaDao().getCajaById(id_caja)
         if not registro:
@@ -34,6 +37,7 @@ def getCaja(id_caja):
 @cajaapi.route('/cajas', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addCaja():
+    """POST: valida los datos y registra caja; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = CajaDao()
 
@@ -42,15 +46,15 @@ def addCaja():
     saldo_inicial = float(data.get('caja_saldo_inicial', 0))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y guiones')}), 400
     if estado_caja not in ESTADOS_CAJA_VALIDOS:
         return jsonify({'success': False, 'error': f'El estado de caja debe ser uno de: {", ".join(ESTADOS_CAJA_VALIDOS)}.'}), 400
     if saldo_inicial < 0:
         return jsonify({'success': False, 'error': 'El saldo inicial no puede ser negativo.'}), 400
     if dao.cajaExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe una caja "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una caja', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarCaja(
@@ -70,6 +74,7 @@ def addCaja():
 @cajaapi.route('/cajas/<int:id_caja>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateCaja(id_caja):
+    """PUT: valida y actualiza caja; 404 si no existe."""
     data = request.get_json() or {}
     dao = CajaDao()
 
@@ -83,15 +88,15 @@ def updateCaja(id_caja):
     saldo_inicial = float(saldo_inicial) if saldo_inicial is not None else None
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y guiones')}), 400
     if estado_caja is not None and estado_caja not in ESTADOS_CAJA_VALIDOS:
         return jsonify({'success': False, 'error': f'El estado de caja debe ser uno de: {", ".join(ESTADOS_CAJA_VALIDOS)}.'}), 400
     if saldo_inicial is not None and saldo_inicial < 0:
         return jsonify({'success': False, 'error': 'El saldo inicial no puede ser negativo.'}), 400
     if dao.cajaExiste(descripcion, excluir_id=id_caja):
-        return jsonify({'success': False, 'error': f'Ya existe una caja "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una caja', descripcion)}), 400
 
     try:
         dao.updateCaja(
@@ -112,6 +117,7 @@ def updateCaja(id_caja):
 @cajaapi.route('/cajas/<int:id_caja>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarCaja(id_caja):
+    """DELETE: da de baja (lógica) caja; 404 si no existe."""
     dao = CajaDao()
     if not dao.getCajaById(id_caja):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class CajaDao(BaseDAO):
+    """Acceso a datos de caja (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getCajas(self):
+        """Lista los registros de caja."""
         sql = """
             SELECT id_caja, des_caja, cod_caja, caja_saldo_inicial,
                    caja_saldo_actual, caja_estado, est_caja
@@ -16,6 +19,7 @@ class CajaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getCajaById(self, id_caja):
+        """Devuelve el registro de caja por su id, o None si no existe."""
         sql = """
             SELECT id_caja, des_caja, cod_caja, caja_saldo_inicial,
                    caja_saldo_actual, caja_estado, est_caja
@@ -24,9 +28,11 @@ class CajaDao(BaseDAO):
         return self.execute_query_one(sql, (id_caja,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .\-]+$", descripcion))
 
     def cajaExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de caja con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM cajas WHERE LOWER(des_caja)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -36,6 +42,7 @@ class CajaDao(BaseDAO):
 
     def guardarCaja(self, descripcion, codigo=None, saldo_inicial=0,
                     estado_caja='CERRADA', estado=True, usuario_creacion=None):
+        """Inserta un registro de caja y devuelve el id generado."""
         sql = """
             INSERT INTO cajas (des_caja, cod_caja, caja_saldo_inicial, caja_saldo_actual,
                                caja_estado, est_caja, usuario_creacion)
@@ -52,6 +59,7 @@ class CajaDao(BaseDAO):
 
     def updateCaja(self, id_caja, descripcion, codigo=None, saldo_inicial=None,
                    estado_caja=None, estado=True, usuario_modificacion=None):
+        """Actualiza los datos de caja; devuelve True si modificó una fila."""
         sql = """
             UPDATE cajas
             SET des_caja=%s, cod_caja=%s, est_caja=%s, usuario_modificacion=%s
@@ -72,5 +80,6 @@ class CajaDao(BaseDAO):
         return self.execute_query(sql, tuple(params), commit=True) > 0
 
     def desactivarCaja(self, id_caja, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de caja; devuelve True si modificó una fila."""
         sql = "UPDATE cajas SET est_caja=FALSE, usuario_modificacion=%s WHERE id_caja=%s"
         return self.execute_query(sql, (usuario_modificacion, id_caja), commit=True) > 0

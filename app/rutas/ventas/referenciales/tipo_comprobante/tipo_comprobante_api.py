@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.tipo_comprobante.TipoComprobanteDao import TipoComprobanteDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipocomprobanteapi = Blueprint('tipocomprobanteapi', __name__)
 
@@ -9,6 +10,7 @@ tipocomprobanteapi = Blueprint('tipocomprobanteapi', __name__)
 @tipocomprobanteapi.route('/tipos-comprobantes', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getTiposComprobantes():
+    """GET: lista los registros de tipo de comprobante."""
     try:
         return jsonify({'success': True, 'data': TipoComprobanteDao().getTiposComprobantes(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getTiposComprobantes():
 @tipocomprobanteapi.route('/tipos-comprobantes/<int:id_tipo_comprobante>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getTipoComprobante(id_tipo_comprobante):
+    """GET: devuelve tipo de comprobante por su id; 404 si no existe."""
     try:
         registro = TipoComprobanteDao().getTipoComprobanteById(id_tipo_comprobante)
         if not registro:
@@ -32,17 +35,18 @@ def getTipoComprobante(id_tipo_comprobante):
 @tipocomprobanteapi.route('/tipos-comprobantes', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoComprobante():
+    """POST: valida los datos y registra tipo de comprobante; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoComprobanteDao()
 
     descripcion = (data.get('des_tipo_comprobante') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoComprobanteExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un tipo de comprobante "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de comprobante', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoComprobante(
@@ -63,6 +67,7 @@ def addTipoComprobante():
 @tipocomprobanteapi.route('/tipos-comprobantes/<int:id_tipo_comprobante>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoComprobante(id_tipo_comprobante):
+    """PUT: valida y actualiza tipo de comprobante; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoComprobanteDao()
 
@@ -72,11 +77,11 @@ def updateTipoComprobante(id_tipo_comprobante):
     descripcion = (data.get('des_tipo_comprobante') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoComprobanteExiste(descripcion, excluir_id=id_tipo_comprobante):
-        return jsonify({'success': False, 'error': f'Ya existe un tipo de comprobante "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de comprobante', descripcion)}), 400
 
     try:
         dao.updateTipoComprobante(
@@ -98,6 +103,7 @@ def updateTipoComprobante(id_tipo_comprobante):
 @tipocomprobanteapi.route('/tipos-comprobantes/<int:id_tipo_comprobante>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoComprobante(id_tipo_comprobante):
+    """DELETE: da de baja (lógica) tipo de comprobante; 404 si no existe."""
     dao = TipoComprobanteDao()
     if not dao.getTipoComprobanteById(id_tipo_comprobante):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

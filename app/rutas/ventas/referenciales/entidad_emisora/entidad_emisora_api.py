@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.entidad_emisora.EntidadEmisoraDao import EntidadEmisoraDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 entidademisoraapi = Blueprint('entidademisoraapi', __name__)
 
@@ -9,6 +10,7 @@ entidademisoraapi = Blueprint('entidademisoraapi', __name__)
 @entidademisoraapi.route('/entidades-emisoras', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getEntidadesEmisoras():
+    """GET: lista los registros de entidad emisora."""
     try:
         return jsonify({'success': True, 'data': EntidadEmisoraDao().getEntidadesEmisoras(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getEntidadesEmisoras():
 @entidademisoraapi.route('/entidades-emisoras/<int:id_entidad_emisora>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getEntidadEmisora(id_entidad_emisora):
+    """GET: devuelve entidad emisora por su id; 404 si no existe."""
     try:
         registro = EntidadEmisoraDao().getEntidadEmisoraById(id_entidad_emisora)
         if not registro:
@@ -32,17 +35,18 @@ def getEntidadEmisora(id_entidad_emisora):
 @entidademisoraapi.route('/entidades-emisoras', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addEntidadEmisora():
+    """POST: valida los datos y registra entidad emisora; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = EntidadEmisoraDao()
 
     descripcion = (data.get('des_entidad_emisora') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y guiones')}), 400
     if dao.entidadEmisoraExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe una entidad emisora "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una entidad emisora', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarEntidadEmisora(
@@ -64,6 +68,7 @@ def addEntidadEmisora():
 @entidademisoraapi.route('/entidades-emisoras/<int:id_entidad_emisora>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateEntidadEmisora(id_entidad_emisora):
+    """PUT: valida y actualiza entidad emisora; 404 si no existe."""
     data = request.get_json() or {}
     dao = EntidadEmisoraDao()
 
@@ -73,11 +78,11 @@ def updateEntidadEmisora(id_entidad_emisora):
     descripcion = (data.get('des_entidad_emisora') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y guiones')}), 400
     if dao.entidadEmisoraExiste(descripcion, excluir_id=id_entidad_emisora):
-        return jsonify({'success': False, 'error': f'Ya existe una entidad emisora "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una entidad emisora', descripcion)}), 400
 
     try:
         dao.updateEntidadEmisora(
@@ -100,6 +105,7 @@ def updateEntidadEmisora(id_entidad_emisora):
 @entidademisoraapi.route('/entidades-emisoras/<int:id_entidad_emisora>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarEntidadEmisora(id_entidad_emisora):
+    """DELETE: da de baja (lógica) entidad emisora; 404 si no existe."""
     dao = EntidadEmisoraDao()
     if not dao.getEntidadEmisoraById(id_entidad_emisora):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

@@ -4,6 +4,8 @@ from app.core.base_dao import BaseDAO
 
 
 class ConsultorioDao(BaseDAO):
+    """Acceso a datos de consultorio (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
@@ -13,6 +15,7 @@ class ConsultorioDao(BaseDAO):
         return bool(re.match(patron, descripcion))
 
     def getConsultorios(self, id_sede=None):
+        """Lista los registros de consultorio."""
         sql = """
             SELECT c.id_consultorio, c.id_sede, s.des_sede, c.des_consultorio, c.est_consultorio
             FROM consultorios c
@@ -23,6 +26,7 @@ class ConsultorioDao(BaseDAO):
         return self.execute_query(sql, {"id_sede": id_sede})
 
     def getConsultorioById(self, id_consultorio):
+        """Devuelve el registro de consultorio por su id, o None si no existe."""
         sql = """
             SELECT id_consultorio, id_sede, des_consultorio, est_consultorio
             FROM consultorios
@@ -40,6 +44,7 @@ class ConsultorioDao(BaseDAO):
         return self.execute_query_one(sql, tuple(params)) is not None
 
     def guardarConsultorio(self, id_sede, des_consultorio, estado=True, usuario_creacion=None):
+        """Inserta un registro de consultorio y devuelve el id generado."""
         sql = """
             INSERT INTO consultorios (id_sede, des_consultorio, est_consultorio, usuario_creacion)
             VALUES (%s, %s, %s, %s)
@@ -51,6 +56,7 @@ class ConsultorioDao(BaseDAO):
         return fila["id_consultorio"] if fila else None
 
     def updateConsultorio(self, id_consultorio, id_sede, des_consultorio, estado=True, usuario_modificacion=None):
+        """Actualiza los datos de consultorio; devuelve True si modificó una fila."""
         sql = """
             UPDATE consultorios
             SET id_sede = %s, des_consultorio = %s, est_consultorio = %s, usuario_modificacion = %s
@@ -61,6 +67,7 @@ class ConsultorioDao(BaseDAO):
         ) > 0
 
     def desactivarConsultorio(self, id_consultorio, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de consultorio; devuelve True si modificó una fila."""
         sql = """
             UPDATE consultorios
             SET est_consultorio = FALSE, usuario_modificacion = %s

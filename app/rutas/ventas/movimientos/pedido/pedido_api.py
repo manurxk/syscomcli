@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.movimientos.pedido.PedidoDao import PedidoDao
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 pedidoapi = Blueprint('pedidoapi', __name__)
 
@@ -10,7 +11,9 @@ ROLES_PEDIDO = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @pedidoapi.route('/pedidos', methods=['GET'])
 @role_required(*ROLES_PEDIDO)
+@permiso_requerido("VENTAS", "LEER")
 def getPedidos():
+    """GET: lista los registros de pedido."""
     try:
         return jsonify({'success': True, 'data': PedidoDao().getPedidos(), 'error': None}), 200
     except Exception as e:
@@ -20,7 +23,9 @@ def getPedidos():
 
 @pedidoapi.route('/pedidos/<int:id_pedido>', methods=['GET'])
 @role_required(*ROLES_PEDIDO)
+@permiso_requerido("VENTAS", "LEER")
 def getPedido(id_pedido):
+    """GET: devuelve pedido por su id; 404 si no existe."""
     try:
         registro = PedidoDao().getPedidoById(id_pedido)
         if not registro:
@@ -33,13 +38,15 @@ def getPedido(id_pedido):
 
 @pedidoapi.route('/pedidos', methods=['POST'])
 @role_required(*ROLES_PEDIDO)
+@permiso_requerido("VENTAS", "CREAR")
 def addPedido():
+    """POST: valida los datos y registra pedido; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     if not data.get('id_paciente'):
-        return jsonify({'success': False, 'error': 'El paciente es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Paciente')}), 400
     if not data.get('fecha_pedido'):
-        return jsonify({'success': False, 'error': 'La fecha del pedido es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fecha del pedido')}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -62,7 +69,9 @@ def addPedido():
 
 @pedidoapi.route('/pedidos/<int:id_pedido>/estado', methods=['PUT'])
 @role_required(*ROLES_PEDIDO)
+@permiso_requerido("VENTAS", "EDITAR")
 def updateEstadoPedido(id_pedido):
+    """PUT: cambia el estado del pedido."""
     data = request.get_json() or {}
     nuevo_estado = data.get('pedido_estado')
     if nuevo_estado not in ('PENDIENTE', 'CONFIRMADO', 'FACTURADO', 'CANCELADO'):
@@ -82,7 +91,9 @@ def updateEstadoPedido(id_pedido):
 
 @pedidoapi.route('/pedidos/<int:id_pedido>', methods=['DELETE'])
 @role_required(*ROLES_PEDIDO)
+@permiso_requerido("VENTAS", "ELIMINAR")
 def deletePedido(id_pedido):
+    """DELETE: da de baja el pedido."""
     dao = PedidoDao()
     if not dao.getPedidoById(id_pedido):
         return jsonify({'success': False, 'error': 'No se encontró el pedido.'}), 404

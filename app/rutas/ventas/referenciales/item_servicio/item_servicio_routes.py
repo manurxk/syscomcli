@@ -7,4 +7,5 @@ itemserviciomod = Blueprint('item_servicio', __name__, template_folder='template
 @itemserviciomod.route('/item-servicio-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def itemServicioIndex():
+    """Página principal de ítem de servicio (listado y acciones)."""
     return render_template('item-servicio-index.html')

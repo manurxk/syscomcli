@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import psycopg2.errors
+
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
 from app.core.moneda import get_moneda, redondear
@@ -91,11 +93,14 @@ def numero_a_letras(monto, moneda=None) -> str:
 
 # ── FacturaDao ─────────────────────────────────────────────────────────────
 class FacturaDao(BaseDAO):
+    """Acceso a datos de factura (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     # ── Consultas ─────────────────────────────────────────────────────────
     def getFacturas(self):
+        """Lista los registros de factura."""
         sql = """
             SELECT
                 f.id_factura, f.factura_numero, f.fecha_factura,
@@ -128,6 +133,7 @@ class FacturaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getFacturasHoy(self):
+        """Lista las facturas emitidas en la fecha actual."""
         sql = """
             SELECT f.id_factura, f.factura_numero, f.factura_total
             FROM facturas f
@@ -157,6 +163,7 @@ class FacturaDao(BaseDAO):
         return self.execute_query(sql, (limite,))
 
     def getFacturaById(self, id_factura):
+        """Devuelve el registro de factura por su id, o None si no existe."""
         sql = """
             SELECT
                 f.id_factura, f.factura_numero, f.fecha_factura, f.fecha_vencimiento,
@@ -164,7 +171,7 @@ class FacturaDao(BaseDAO):
                 f.factura_total_letras, f.codigo_sifen, f.numero_timbrado, f.observaciones,
                 f.id_paciente, f.id_pedido, f.id_timbrado, f.id_punto_expedicion,
                 f.id_tipo_comprobante, f.id_condicion_venta, f.id_moneda, f.id_estado_factura,
-                f.fecha_anulacion,
+                f.fecha_anulacion, f.motivo_anulacion,
                 CONCAT(pp.per_nombre, ' ', pp.per_apellido) AS paciente_nombre,
                 pp.per_cedula AS paciente_cedula, pp.per_telefono AS paciente_telefono,
                 pp.per_correo AS paciente_correo,
@@ -190,6 +197,7 @@ class FacturaDao(BaseDAO):
         return self.execute_query_one(sql, (id_factura,))
 
     def getFacturaDetalle(self, id_factura):
+        """Devuelve las líneas de detalle de factura para el id indicado."""
         sql = """
             SELECT
                 fd.id_factura_detalle, fd.id_factura, fd.id_item_servicio,
@@ -498,43 +506,23 @@ class FacturaDao(BaseDAO):
         return self.execute_transaction(_fn)
 
     # ── Cambio de estado ─────────────────────────────────────────────────
-    def anular(self, id_factura, usuario_anulacion=None):
-        """Anula una factura (soft delete: fecha_anulacion + estado ANULADA) y, en la
-        misma transacción, sus cobranzas registradas: así el cobro sale de la caja."""
-        sql_estado = """
-            SELECT id_estado_factura FROM estados_factura
-            WHERE UPPER(des_estado_factura) = 'ANULADA' LIMIT 1
-        """
-        est = self.execute_query_one(sql_estado)
-        if not est:
-            raise ValueError("No existe el estado ANULADA en estados_factura.")
-
+    def anular(self, id_factura, usuario_anulacion=None, motivo=None):
+        """Anula una factura con sp_anular_factura: estado ANULADA, sus cobranzas (el cobro sale
+        de la caja), su cuenta a cobrar (ANULADA) y su fila del libro de ventas (en 0), todo en
+        la misma transacción. Devuelve False si ya estaba anulada."""
         def _fn(cur):
-            cur.execute("""
-                UPDATE facturas
-                SET id_estado_factura=%s,
-                    fecha_anulacion=now(),
-                    usuario_anulacion=%s,
-                    usuario_modificacion=%s
-                WHERE id_factura=%s AND fecha_anulacion IS NULL
-            """, (est['id_estado_factura'], usuario_anulacion, usuario_anulacion, id_factura))
-            if cur.rowcount == 0:
-                return False
-
-            cur.execute("""
-                UPDATE cobranzas
-                SET est_cobranza = 'ANULADA',
-                    fecha_modificacion = CURRENT_TIMESTAMP,
-                    usuario_modificacion = %s
-                WHERE id_factura = %s AND est_cobranza = 'REGISTRADA'
-            """, (usuario_anulacion, id_factura))
-
-            # En el libro de ventas el comprobante anulado sigue figurando, pero en 0
-            cur.execute("""
-                UPDATE libro_ventas
-                SET monto_gravado = 0, monto_exento = 0, monto_iva = 0, monto_total = 0
-                WHERE id_factura = %s AND tipo_comprobante = 'FACTURA'
-            """, (id_factura,))
-            return True
+            try:
+                cur.execute("""
+                    CALL sp_anular_factura(
+                        p_id_factura => %s, p_usuario_anulacion => %s,
+                        o_anulada => NULL, o_cobranzas_anuladas => NULL, o_cuentas_anuladas => NULL,
+                        p_motivo => %s)
+                """, (id_factura, usuario_anulacion, motivo))
+            except psycopg2.errors.RaiseException as e:
+                raise ValueError(e.diag.message_primary) from e
+            anulada, cobranzas, cuentas = cur.fetchone()
+            if anulada:
+                app.logger.info(f"Factura {id_factura} anulada ({cobranzas} cobranzas, {cuentas} cuentas)")
+            return anulada
 
         return self.execute_transaction(_fn)

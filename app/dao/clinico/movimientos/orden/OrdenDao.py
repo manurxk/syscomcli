@@ -3,10 +3,13 @@ from datetime import date
 
 
 class OrdenDao(BaseDAO):
+    """Acceso a datos de las órdenes de estudio emitidas en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los órdenes de estudio de la consulta."""
         sql = """
             SELECT o.id_orden, o.id_consulta, o.orden_numero, o.orden_fecha,
                    o.orden_estado, o.orden_observaciones, o.orden_indicaciones, o.fecha_creacion
@@ -45,6 +48,7 @@ class OrdenDao(BaseDAO):
         return ordenes
 
     def guardar(self, id_consulta, id_paciente, id_especialista, datos, usuario_creacion=None):
+        """Inserta una orden de estudio en la consulta y devuelve su id."""
         detalles = datos.get('detalles') or []
         if not detalles:
             raise ValueError('La orden debe tener al menos un ítem de estudio o análisis.')
@@ -109,5 +113,6 @@ class OrdenDao(BaseDAO):
         return orden
 
     def desactivar(self, id_orden, usuario_modificacion=None):
+        """Da de baja (lógica) la orden de estudio; devuelve True si modificó una fila."""
         sql = "UPDATE ordenes SET est_orden = FALSE, usuario_modificacion = %s WHERE id_orden = %s"
         return self.execute_query(sql, (usuario_modificacion, id_orden), commit=True) > 0

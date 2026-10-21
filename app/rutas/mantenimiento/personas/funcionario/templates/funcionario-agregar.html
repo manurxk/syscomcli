@@ -1,4 +1,5 @@
 ﻿{% extends 'base.html' %}
+{# Ventana: {% if id_funcionario %}Editar Funcionario{% else %}Registrar Funcionario{% endif %} (formulario de alta). Ruta: /funcionario-editar/<int:id_funcionario>. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/generos, /api/v1/estados-civiles, /api/v1/niveles-instruccion, /api/v1/profesiones, /api/v1/cargos-permitidos…. #}
 
 {% block titulo %}
 {% if id_funcionario %}Editar Funcionario{% else %}Registrar Funcionario{% endif %}

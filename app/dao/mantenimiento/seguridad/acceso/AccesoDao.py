@@ -2,6 +2,8 @@ from app.core.base_dao import BaseDAO
 
 
 class AccesoDao(BaseDAO):
+    """Acceso a datos de las sesiones y el estado de acceso de los usuarios."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
@@ -24,6 +26,7 @@ class AccesoDao(BaseDAO):
         return self.execute_query(sql)
 
     def getSesionesPorUsuario(self, id_usuario):
+        """Lista las sesiones del usuario."""
         sql = """
             SELECT id_sesion, ip_address, user_agent, fecha_inicio, fecha_ultimo_ping, fecha_expiracion
             FROM sesiones

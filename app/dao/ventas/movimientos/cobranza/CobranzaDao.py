@@ -7,12 +7,15 @@ from app.core.moneda import get_moneda, redondear
 
 
 class CobranzaDao(BaseDAO):
+    """Acceso a datos de cobranza (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     # ── Consultas ─────────────────────────────────────────────────────────
 
     def getCobranzas(self):
+        """Lista los registros de cobranza."""
         sql = """
             SELECT
                 c.id_cobranza,
@@ -43,6 +46,7 @@ class CobranzaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getCobranzaById(self, id_cobranza):
+        """Devuelve el registro de cobranza por su id, o None si no existe."""
         sql = """
             SELECT
                 c.id_cobranza,
@@ -79,6 +83,7 @@ class CobranzaDao(BaseDAO):
         return self.execute_query_one(sql, (id_cobranza,))
 
     def getCobranzaDetalle(self, id_cobranza):
+        """Devuelve las líneas de detalle de cobranza para el id indicado."""
         sql = """
             SELECT
                 cd.id_cobranza_detalle,
@@ -107,6 +112,7 @@ class CobranzaDao(BaseDAO):
         return self.execute_query(sql, (id_cobranza,))
 
     def getCobranzasPorCuenta(self, id_cuenta_cobrar):
+        """Lista las cobranzas aplicadas a una cuenta a cobrar."""
         sql = """
             SELECT
                 c.id_cobranza,
@@ -123,6 +129,7 @@ class CobranzaDao(BaseDAO):
     # ── Helpers internos ─────────────────────────────────────────────────
 
     def _generarNumero(self, cur):
+        """Genera el siguiente número correlativo de cobranza dentro de la transacción en curso (cursor `cur`)."""
         año = datetime.now().year
         mes = datetime.now().strftime('%m')
         patron = f'COB-{año}-{mes}-%'
@@ -183,7 +190,7 @@ class CobranzaDao(BaseDAO):
         id_caja          = data.get('id_caja')
 
         if not all([id_cuenta_cobrar, id_factura, id_caja]):
-            raise ValueError('id_cuenta_cobrar, id_factura e id_caja son obligatorios.')
+            raise ValueError('La cuenta a cobrar, la factura y la caja son obligatorias.')
 
         monto_total_raw = sum(Decimal(str(d.get('monto_cobrado', 0))) for d in detalles)
         if monto_total_raw <= 0:
@@ -203,6 +210,8 @@ class CobranzaDao(BaseDAO):
         monto_pendiente_actual, estado_actual, id_moneda = cta
         if estado_actual == 'COBRADA':
             raise ValueError('Esta cuenta ya está completamente cobrada.')
+        if estado_actual == 'ANULADA':
+            raise ValueError('La cuenta a cobrar está anulada (la factura fue anulada).')
 
         # 2b. La apertura de caja activa debe operar en la misma moneda que la cuenta a cobrar
         if moneda_caja != id_moneda:

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.movimientos.derivacion.DerivacionDao import DerivacionDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 derivacionapi = Blueprint('derivacionapi', __name__)
 
@@ -11,6 +12,7 @@ ROLES_DERIVACION = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @derivacionapi.route('/consultas/<int:id_consulta>/derivaciones', methods=['GET'])
 @role_required(*ROLES_DERIVACION)
 def getDerivaciones(id_consulta):
+    """GET: lista los derivaciones de la consulta."""
     try:
         data = DerivacionDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -22,11 +24,12 @@ def getDerivaciones(id_consulta):
 @derivacionapi.route('/consultas/<int:id_consulta>/derivaciones', methods=['POST'])
 @role_required(*ROLES_DERIVACION)
 def addDerivacion(id_consulta):
+    """POST: valida y registra derivación en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_especialidad_destino'):
-        return jsonify({'success': False, 'error': 'La especialidad de destino es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Especialidad de destino')}), 400
     if not (data.get('motivo_derivacion') or '').strip():
-        return jsonify({'success': False, 'error': 'El motivo de derivación es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Motivo de derivación')}), 400
 
     try:
         nuevo_id = DerivacionDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
@@ -39,6 +42,7 @@ def addDerivacion(id_consulta):
 @derivacionapi.route('/derivaciones/<int:id_derivacion>', methods=['DELETE'])
 @role_required(*ROLES_DERIVACION)
 def deleteDerivacion(id_derivacion):
+    """DELETE: baja lógica de derivación; 404 si no existe."""
     try:
         if DerivacionDao().desactivar(id_derivacion, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Derivación eliminada correctamente.', 'error': None}), 200

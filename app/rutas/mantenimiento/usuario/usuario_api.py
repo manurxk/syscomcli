@@ -6,6 +6,7 @@ from app.auth.utils.password_validator import validar_politica_password
 from app.core.base_dao import BaseDAO
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
+from app.utils.mensajes_validacion import msg_obligatorio
 
 
 usuarioapi = Blueprint('usuarioapi', __name__)
@@ -14,10 +15,12 @@ _dao_roles = BaseDAO(db_name_env="DB_NAME_NUEVA")
 
 
 def _es_superadmin():
+    """Indica si el usuario en sesión tiene el rol SUPERADMIN."""
     return 'SUPERADMIN' in {(r or "").strip().upper() for r in session.get("roles", [])}
 
 
 def _mensaje_tope_usuarios():
+    """Mensaje de error cuando se alcanzó el máximo de usuarios activos con funcionario."""
     return (f'Se alcanzó el máximo de {MAX_USUARIOS_CON_FUNCIONARIO} usuarios activos con funcionario. '
             'Desactive un usuario existente antes de crear o reactivar otro.')
 
@@ -177,7 +180,7 @@ def validarUsername():
     if not username:
         return jsonify({
             'success': False,
-            'error': 'El username es requerido'
+            'error': msg_obligatorio('Username')
         }), 400
 
     try:
@@ -212,7 +215,7 @@ def addUsuario():
         if campo not in data or not data[campo]:
             return jsonify({
                 'success': False,
-                'error': f'El campo {campo} es obligatorio.'
+                'error': msg_obligatorio(campo)
             }), 400
 
     if not _es_superadmin():
@@ -303,7 +306,7 @@ def updateUsuario(id_usuario):
     if not data.get('username'):
         return jsonify({
             'success': False,
-            'error': 'El username es obligatorio.'
+            'error': msg_obligatorio('Username')
         }), 400
 
     reactivando = not usuario_existente['est_usuario'] and data.get('est_usuario', True)

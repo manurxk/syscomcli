@@ -7,4 +7,5 @@ permisosmod = Blueprint('permisos', __name__, template_folder='templates')
 @permisosmod.route('/permisos-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def permisosIndex():
+    """Página de la matriz de permisos por rol."""
     return render_template('permisos-index.html')

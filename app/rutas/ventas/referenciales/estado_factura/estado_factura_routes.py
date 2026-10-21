@@ -7,4 +7,5 @@ estadofacturamod = Blueprint('estado_factura', __name__, template_folder='templa
 @estadofacturamod.route('/estado-factura-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def estadoFacturaIndex():
+    """Página principal de estado de factura (listado y acciones)."""
     return render_template('estado-factura-index.html')

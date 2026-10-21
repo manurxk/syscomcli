@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Pedidos (listado y gestión). Ruta: /pedido-index. Roles: ADMINISTRADOR, SUPERADMIN, VENTAS. API: /api/v1/pedidos. #}
 {% block titulo %}Pedidos{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -10,7 +11,7 @@
           <div class="page-header-subtitle">Pedidos de clientes/pacientes — pre-venta</div>
         </div>
         <div class="col-auto mt-4">
-          <a href="{{ url_for('pedido.pedidoAgregar') }}" class="btn btn-primary btn-sm">Nuevo Pedido</a>
+          {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a href="{{ url_for('pedido.pedidoAgregar') }}" class="btn btn-primary btn-sm">Nuevo Pedido</a>{% endif %}
         </div>
       </div>
     </div>

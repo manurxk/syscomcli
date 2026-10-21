@@ -7,4 +7,5 @@ signomod = Blueprint('signo', __name__, template_folder='templates')
 @signomod.route('/signo-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def signoIndex():
+    """Página del ABM de signo (tabla y ventana modal)."""
     return render_template('signo-index.html')

@@ -10,6 +10,7 @@ from reportlab.lib.enums import TA_CENTER
 from openpyxl import Workbook
 import io
 from datetime import datetime
+from app.utils.mensajes_validacion import msg_obligatorio
 
 
 pacienteapi = Blueprint('pacienteapi', __name__)
@@ -352,6 +353,7 @@ def getPacientesMenores():
 @pacienteapi.route('/pacientes/buscar', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION", "VENTAS")
 def buscarPacientes():
+    """GET: busca pacientes según el texto indicado."""
     q = request.args.get('q', '').strip()
     if len(q) < 2:
         return jsonify({'success': True, 'data': [], 'error': None}), 200
@@ -443,7 +445,7 @@ def addPaciente():
         if campo not in data or not data[campo]:
             return jsonify({
                 'success': False,
-                'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
+                'error': msg_obligatorio(campo)
             }), 400
 
     if not pacientedao.validarNombreApellido(data['nombre']) or not pacientedao.validarNombreApellido(data['apellido']):
@@ -512,6 +514,7 @@ def addPaciente():
 @pacienteapi.route('/pacientes/<int:pac_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def updatePaciente(pac_id):
+    """PUT: actualiza los datos del paciente; 404 si no existe."""
     data = request.get_json()
     pacientedao = PacienteDao()
 
@@ -538,7 +541,7 @@ def updatePaciente(pac_id):
         if campo not in data or not data[campo]:
             return jsonify({
                 'success': False,
-                'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
+                'error': msg_obligatorio(campo)
             }), 400
 
     if not pacientedao.validarNombreApellido(data['nombre']) or not pacientedao.validarNombreApellido(data['apellido']):
@@ -608,6 +611,7 @@ def updatePaciente(pac_id):
 @pacienteapi.route('/pacientes/<int:pac_id>/documento-fiscal', methods=['PATCH'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION", "VENTAS")
 def actualizarDocumentoFiscal(pac_id):
+    """PATCH: actualiza el documento fiscal del paciente."""
     data = request.get_json() or {}
     pacientedao = PacienteDao()
 

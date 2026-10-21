@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Atender Consulta (formulario de alta). Ruta: /consulta-editar/<int:id_consulta>. API: /api/v1/anamnesis, /api/v1/diagnosticos, /api/v1/registro-diagnosticos, /api/v1/signos, /api/v1/registro-signos…. #}
 
 {% block titulo %}
 Atender Consulta
@@ -733,7 +734,7 @@ Atender Consulta
       const motivo = $('#anm_motivo_consulta').val().trim();
 
       if (!motivo) {
-        Swal.fire('Atención', 'El motivo de consulta de la anamnesis es obligatorio.', 'warning');
+        Swal.fire('Atención', 'El campo "Motivo de consulta de la anamnesis" es obligatorio.', 'warning');
         return;
       }
 
@@ -1154,7 +1155,7 @@ Atender Consulta
     $('#btnGuardarOrden').on('click', function () {
       const fecha = $('#ord_fecha').val();
       if (!fecha) {
-        Swal.fire('Atención', 'La fecha de la orden es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Fecha de la orden" es obligatorio.', 'warning');
         return;
       }
       if (lineasOrden.length === 0) {
@@ -1305,7 +1306,7 @@ Atender Consulta
     $('#btnGuardarReceta').on('click', function () {
       const fecha = $('#rec_fecha').val();
       if (!fecha) {
-        Swal.fire('Atención', 'La fecha de la receta es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Fecha de la receta" es obligatorio.', 'warning');
         return;
       }
       if (lineasReceta.length === 0) {
@@ -1385,7 +1386,7 @@ Atender Consulta
       const motivo = $('#txtMotivo').val().trim();
 
       if (!motivo) {
-        Swal.fire('Atención', 'El motivo de consulta es obligatorio.', 'warning');
+        Swal.fire('Atención', 'El campo "Motivo de consulta" es obligatorio.', 'warning');
         return;
       }
 

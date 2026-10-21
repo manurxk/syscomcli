@@ -6,6 +6,7 @@ pacientemod = Blueprint('paciente', __name__, template_folder='templates')
 @pacientemod.route('/paciente-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def pacienteIndex():
+    """Página principal de pacientes."""
     return render_template('paciente-index.html')
 
 @pacientemod.route('/paciente-agregar')

@@ -7,4 +7,5 @@ medicamentomod = Blueprint('medicamento', __name__, template_folder='templates')
 @medicamentomod.route('/medicamento-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def medicamentoIndex():
+    """Página del ABM de medicamento (tabla y ventana modal)."""
     return render_template('medicamento-index.html')

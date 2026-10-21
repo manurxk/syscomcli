@@ -9,6 +9,7 @@ TIPOS_CONTRIBUYENTE = ("PERSONA_FISICA", "PERSONA_JURIDICA", "EAS")
 
 
 def _extraer_datos(data):
+    """Toma del JSON los datos de la empresa, los normaliza y devuelve (datos, errores de validación)."""
     errores = []
 
     ruc_nit = (data.get('ruc_nit') or '').strip()
@@ -74,6 +75,7 @@ def _extraer_datos(data):
 @empresaapi.route('/empresa', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getEmpresa():
+    """GET: datos de la empresa (registro único)."""
     try:
         data = EmpresaDao().getEmpresaPrincipal()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -85,6 +87,7 @@ def getEmpresa():
 @empresaapi.route('/empresa', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addEmpresa():
+    """POST: crea el registro de la empresa."""
     data = request.get_json() or {}
     empresadao = EmpresaDao()
 
@@ -110,6 +113,7 @@ def addEmpresa():
 @empresaapi.route('/empresa/<int:id_empresa>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateEmpresa(id_empresa):
+    """PUT: valida y actualiza los datos de la empresa; 404 si no existe."""
     data = request.get_json() or {}
     empresadao = EmpresaDao()
 

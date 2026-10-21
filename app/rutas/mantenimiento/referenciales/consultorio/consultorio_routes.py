@@ -7,4 +7,5 @@ consultoriomod = Blueprint('consultorio', __name__, template_folder='templates')
 @consultoriomod.route('/consultorio-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def consultorioIndex():
+    """Página del ABM de consultorio (tabla y ventana modal)."""
     return render_template('consultorio-index.html')

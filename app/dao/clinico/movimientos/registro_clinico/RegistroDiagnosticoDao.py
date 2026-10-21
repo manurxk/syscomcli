@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RegistroDiagnosticoDao(BaseDAO):
+    """Acceso a datos de los diagnósticos registrados en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los diagnósticos registrados de la consulta."""
         sql = """
             SELECT rd.id_registro_diagnostico, rd.id_consulta, rd.id_diagnostico,
                    rd.registro_tipo, rd.registro_gravedad, rd.des_registro_diagnostico,
@@ -22,6 +25,7 @@ class RegistroDiagnosticoDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, datos, usuario_creacion=None):
+        """Inserta un diagnóstico registrado en la consulta y devuelve su id."""
         sql = """
             INSERT INTO registro_diagnosticos (
                 id_consulta, id_diagnostico, registro_tipo, registro_gravedad,
@@ -41,6 +45,7 @@ class RegistroDiagnosticoDao(BaseDAO):
         return fila['id_registro_diagnostico'] if fila else None
 
     def desactivar(self, id_registro_diagnostico, usuario_modificacion=None):
+        """Da de baja (lógica) el diagnóstico registrado; devuelve True si modificó una fila."""
         sql = """
             UPDATE registro_diagnosticos SET est_registro_diagnostico = FALSE, usuario_modificacion = %s
             WHERE id_registro_diagnostico = %s

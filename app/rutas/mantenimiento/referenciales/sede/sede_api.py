@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.mantenimiento.referenciales.sede.SedeDao import SedeDao
 from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 sedeapi = Blueprint('sedeapi', __name__)
 
@@ -10,6 +11,7 @@ sedeapi = Blueprint('sedeapi', __name__)
 @sedeapi.route('/sedes', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getSedes():
+    """GET: lista los registros de sede."""
     try:
         data = SedeDao().getSedes()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -21,6 +23,7 @@ def getSedes():
 @sedeapi.route('/sedes/<int:sede_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getSede(sede_id):
+    """GET: registro de sede por su id; 404 si no existe."""
     try:
         sede = SedeDao().getSedeById(sede_id)
         if not sede:
@@ -34,6 +37,7 @@ def getSede(sede_id):
 @sedeapi.route('/sedes', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addSede():
+    """POST: valida los datos y crea un registro de sede; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     sededao = SedeDao()
 
@@ -49,9 +53,9 @@ def addSede():
     estado = bool(data.get('est_sede', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not sededao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if not sededao.validarCodigoEstablecimiento(cod_establecimiento_sifen):
         return jsonify({'success': False, 'error': 'El código de establecimiento SIFEN debe tener 3 dígitos numéricos.'}), 400
 
@@ -59,9 +63,9 @@ def addSede():
     if not empresa:
         return jsonify({'success': False, 'error': 'No hay una empresa configurada. Configure los datos de la empresa antes de crear sedes.'}), 400
     if sededao.descripcionExiste(descripcion, empresa['id_empresa']):
-        return jsonify({'success': False, 'error': f'Ya existe una sede "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una sede', descripcion)}), 400
     if sededao.codigoEstablecimientoExiste(cod_establecimiento_sifen, empresa['id_empresa']):
-        return jsonify({'success': False, 'error': f'Ya existe una sede con el código de establecimiento "{cod_establecimiento_sifen}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una sede con el código de establecimiento', cod_establecimiento_sifen)}), 400
 
     try:
         sede_id = sededao.guardarSede(
@@ -81,6 +85,7 @@ def addSede():
 @sedeapi.route('/sedes/<int:sede_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateSede(sede_id):
+    """PUT: valida y actualiza el registro de sede; 404 si no existe."""
     data = request.get_json() or {}
     sededao = SedeDao()
 
@@ -100,15 +105,15 @@ def updateSede(sede_id):
     estado = bool(data.get('est_sede', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not sededao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if not sededao.validarCodigoEstablecimiento(cod_establecimiento_sifen):
         return jsonify({'success': False, 'error': 'El código de establecimiento SIFEN debe tener 3 dígitos numéricos.'}), 400
     if sededao.descripcionExiste(descripcion, actual['id_empresa'], excluir_id=sede_id):
-        return jsonify({'success': False, 'error': f'Ya existe una sede "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una sede', descripcion)}), 400
     if sededao.codigoEstablecimientoExiste(cod_establecimiento_sifen, actual['id_empresa'], excluir_id=sede_id):
-        return jsonify({'success': False, 'error': f'Ya existe una sede con el código de establecimiento "{cod_establecimiento_sifen}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una sede con el código de establecimiento', cod_establecimiento_sifen)}), 400
 
     try:
         sededao.updateSede(
@@ -126,6 +131,7 @@ def updateSede(sede_id):
 @sedeapi.route('/sedes/<int:sede_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarSede(sede_id):
+    """DELETE: baja lógica del registro de sede; 404 si no existe."""
     sededao = SedeDao()
 
     if not sededao.getSedeById(sede_id):

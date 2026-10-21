@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Nuevo Pedido (formulario de alta). Ruta: /pedido-agregar. Roles: ADMINISTRADOR, SUPERADMIN, VENTAS. API: /api/v1/pacientes, /api/v1/funcionarios, /api/v1/monedas, /api/v1/items-servicios, /api/v1/pedidos. #}
 {% block titulo %}Nuevo Pedido{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -332,7 +333,7 @@
       const cant = parseFloat($('#txtItemCant').val()||1);
       const precio = parseFloat($('#txtItemPrecio').val()||0);
       const desc2 = parseFloat($('#txtItemDesc2').val()||0);
-      if (!desc) { Swal.fire('Atención','La descripción del ítem es obligatoria.','warning'); return; }
+      if (!desc) { Swal.fire('Atención','El campo "Descripción del ítem" es obligatorio.','warning'); return; }
       if (cant <= 0) { Swal.fire('Atención','La cantidad debe ser mayor a 0.','warning'); return; }
       lineasPedido.push({
         id_item_servicio: $('#selItemServicio').val() ? parseInt($('#selItemServicio').val()) : null,
@@ -371,7 +372,7 @@
     $('#btnGuardarPedido').on('click', function() {
       const idPac = parseInt($('#hidIdPaciente').val());
       if (!idPac) { Swal.fire('Atención','Seleccione un paciente.','warning'); return; }
-      if (!$('#txtFechaPedido').val()) { Swal.fire('Atención','La fecha del pedido es obligatoria.','warning'); return; }
+      if (!$('#txtFechaPedido').val()) { Swal.fire('Atención','El campo "Fecha del pedido" es obligatorio.','warning'); return; }
       if (!lineasPedido.length) { Swal.fire('Atención','Agregue al menos un ítem al pedido.','warning'); return; }
 
       const payload = {

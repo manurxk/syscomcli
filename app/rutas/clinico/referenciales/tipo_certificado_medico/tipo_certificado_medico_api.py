@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.tipo_certificado_medico.TipoCertificadoMedicoDao import TipoCertificadoMedicoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipocertificadomedicoapi = Blueprint('tipocertificadomedicoapi', __name__)
 
@@ -9,6 +10,7 @@ tipocertificadomedicoapi = Blueprint('tipocertificadomedicoapi', __name__)
 @tipocertificadomedicoapi.route('/tipos-certificados-medicos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposCertificadosMedicos():
+    """GET: lista los registros de tipo de certificado médico."""
     try:
         data = TipoCertificadoMedicoDao().getTiposCertificadosMedicos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getTiposCertificadosMedicos():
 @tipocertificadomedicoapi.route('/tipos-certificados-medicos/<int:tipo_certificado_medico_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getTipoCertificadoMedico(tipo_certificado_medico_id):
+    """GET: registro de tipo de certificado médico por su id; 404 si no existe."""
     try:
         registro = TipoCertificadoMedicoDao().getTipoCertificadoMedicoById(tipo_certificado_medico_id)
         if not registro:
@@ -33,6 +36,7 @@ def getTipoCertificadoMedico(tipo_certificado_medico_id):
 @tipocertificadomedicoapi.route('/tipos-certificados-medicos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoCertificadoMedico():
+    """POST: valida los datos y crea un registro de tipo de certificado médico; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoCertificadoMedicoDao()
 
@@ -40,11 +44,11 @@ def addTipoCertificadoMedico():
     estado = bool(data.get('est_tipo_certificado_medico', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoCertificadoMedicoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de certificado médico', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoCertificadoMedico(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addTipoCertificadoMedico():
 @tipocertificadomedicoapi.route('/tipos-certificados-medicos/<int:tipo_certificado_medico_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoCertificadoMedico(tipo_certificado_medico_id):
+    """PUT: valida y actualiza el registro de tipo de certificado médico; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoCertificadoMedicoDao()
 
@@ -67,11 +72,11 @@ def updateTipoCertificadoMedico(tipo_certificado_medico_id):
     estado = bool(data.get('est_tipo_certificado_medico', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoCertificadoMedicoExiste(descripcion, excluir_id=tipo_certificado_medico_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de certificado médico', descripcion)}), 400
 
     try:
         dao.updateTipoCertificadoMedico(tipo_certificado_medico_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateTipoCertificadoMedico(tipo_certificado_medico_id):
 @tipocertificadomedicoapi.route('/tipos-certificados-medicos/<int:tipo_certificado_medico_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoCertificadoMedico(tipo_certificado_medico_id):
+    """DELETE: baja lógica del registro de tipo de certificado médico; 404 si no existe."""
     dao = TipoCertificadoMedicoDao()
 
     if not dao.getTipoCertificadoMedicoById(tipo_certificado_medico_id):

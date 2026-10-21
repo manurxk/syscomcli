@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Consultorios (listado y gestión). Ruta: /consultorio-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/sedes, /api/v1/consultorios. #}
 
 {% block titulo %}
 Consultorios
@@ -162,11 +163,11 @@ Consultorios
       const descripcion = $('#txtDescripcion').val().trim();
 
       if (!idSede) {
-        Swal.fire('Atención', 'La sede es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Sede" es obligatorio.', 'warning');
         return;
       }
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

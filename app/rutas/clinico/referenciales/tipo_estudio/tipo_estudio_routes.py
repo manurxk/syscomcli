@@ -7,4 +7,5 @@ tipo_estudiomod = Blueprint('tipo_estudio', __name__, template_folder='templates
 @tipo_estudiomod.route('/tipo-estudio-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def tipoEstudioIndex():
+    """Página del ABM de tipo de estudio (tabla y ventana modal)."""
     return render_template('tipo_estudio-index.html')

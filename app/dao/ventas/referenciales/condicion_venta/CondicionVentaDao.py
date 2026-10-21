@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class CondicionVentaDao(BaseDAO):
+    """Acceso a datos de condición de venta (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getCondicionesVenta(self):
+        """Lista los registros de condición de venta."""
         sql = """
             SELECT id_condicion_venta, des_condicion_venta, cod_condicion_venta,
                    dias_credito, permite_cuotas, numero_cuotas_max, est_condicion_venta
@@ -16,6 +19,7 @@ class CondicionVentaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getCondicionVentaById(self, id_condicion_venta):
+        """Devuelve el registro de condición de venta por su id, o None si no existe."""
         sql = """
             SELECT id_condicion_venta, des_condicion_venta, cod_condicion_venta,
                    dias_credito, permite_cuotas, numero_cuotas_max, est_condicion_venta
@@ -24,9 +28,11 @@ class CondicionVentaDao(BaseDAO):
         return self.execute_query_one(sql, (id_condicion_venta,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .]+$", descripcion))
 
     def condicionVentaExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de condición de venta con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM condiciones_venta WHERE LOWER(des_condicion_venta)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -37,6 +43,7 @@ class CondicionVentaDao(BaseDAO):
     def guardarCondicionVenta(self, descripcion, codigo=None, dias_credito=0,
                                permite_cuotas=False, numero_cuotas_max=1,
                                estado=True, usuario_creacion=None):
+        """Inserta un registro de condición de venta y devuelve el id generado."""
         sql = """
             INSERT INTO condiciones_venta (des_condicion_venta, cod_condicion_venta,
                                            dias_credito, permite_cuotas, numero_cuotas_max,
@@ -55,6 +62,7 @@ class CondicionVentaDao(BaseDAO):
     def updateCondicionVenta(self, id_condicion_venta, descripcion, codigo=None,
                               dias_credito=0, permite_cuotas=False, numero_cuotas_max=1,
                               estado=True, usuario_modificacion=None):
+        """Actualiza los datos de condición de venta; devuelve True si modificó una fila."""
         sql = """
             UPDATE condiciones_venta
             SET des_condicion_venta=%s, cod_condicion_venta=%s, dias_credito=%s,
@@ -71,5 +79,6 @@ class CondicionVentaDao(BaseDAO):
         ) > 0
 
     def desactivarCondicionVenta(self, id_condicion_venta, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de condición de venta; devuelve True si modificó una fila."""
         sql = "UPDATE condiciones_venta SET est_condicion_venta=FALSE, usuario_modificacion=%s WHERE id_condicion_venta=%s"
         return self.execute_query(sql, (usuario_modificacion, id_condicion_venta), commit=True) > 0

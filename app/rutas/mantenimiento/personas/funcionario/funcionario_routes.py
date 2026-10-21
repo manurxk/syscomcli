@@ -6,6 +6,7 @@ funcionariomod = Blueprint('funcionario', __name__, template_folder='templates')
 @funcionariomod.route('/funcionario-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def funcionarioIndex():
+    """Página principal de funcionarios."""
     return render_template('funcionario-index.html')
 
 @funcionariomod.route('/funcionario-agregar')

@@ -7,4 +7,5 @@ monedamod = Blueprint('moneda', __name__, template_folder='templates')
 @monedamod.route('/moneda-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def monedaIndex():
+    """Página principal de moneda (listado y acciones)."""
     return render_template('moneda-index.html')

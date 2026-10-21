@@ -9,6 +9,7 @@ menuapi = Blueprint('menuapi', __name__)
 @menuapi.route('/menu/paginas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getPaginas():
+    """GET: páginas del sistema disponibles para el menú."""
     try:
         data = MenuDao().getPaginas()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +21,7 @@ def getPaginas():
 @menuapi.route('/menu/roles/<int:id_rol>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getMatrizMenu(id_rol):
+    """GET: páginas del menú habilitadas para el rol."""
     try:
         data = MenuDao().getMatrizMenu(id_rol)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -31,6 +33,7 @@ def getMatrizMenu(id_rol):
 @menuapi.route('/menu/roles/<int:id_rol>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def guardarMatrizMenu(id_rol):
+    """PUT: guarda la matriz del menú del rol."""
     data = request.get_json() or {}
     cambios = data.get('cambios') or []
 

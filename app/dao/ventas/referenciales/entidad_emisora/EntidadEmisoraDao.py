@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class EntidadEmisoraDao(BaseDAO):
+    """Acceso a datos de entidad emisora (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getEntidadesEmisoras(self):
+        """Lista los registros de entidad emisora."""
         sql = """
             SELECT id_entidad_emisora, des_entidad_emisora, cod_entidad_emisora,
                    ruc_entidad, telefono_entidad, email_entidad, tipo_entidad, est_entidad_emisora
@@ -16,6 +19,7 @@ class EntidadEmisoraDao(BaseDAO):
         return self.execute_query(sql)
 
     def getEntidadEmisoraById(self, id_entidad_emisora):
+        """Devuelve el registro de entidad emisora por su id, o None si no existe."""
         sql = """
             SELECT id_entidad_emisora, des_entidad_emisora, cod_entidad_emisora,
                    ruc_entidad, telefono_entidad, email_entidad, tipo_entidad, est_entidad_emisora
@@ -24,9 +28,11 @@ class EntidadEmisoraDao(BaseDAO):
         return self.execute_query_one(sql, (id_entidad_emisora,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .\-]+$", descripcion))
 
     def entidadEmisoraExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de entidad emisora con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM entidades_emisoras WHERE LOWER(des_entidad_emisora)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -37,6 +43,7 @@ class EntidadEmisoraDao(BaseDAO):
     def guardarEntidadEmisora(self, descripcion, codigo=None, ruc=None, telefono=None,
                                email=None, tipo_entidad=None, estado=True,
                                usuario_creacion=None):
+        """Inserta un registro de entidad emisora y devuelve el id generado."""
         sql = """
             INSERT INTO entidades_emisoras (des_entidad_emisora, cod_entidad_emisora,
                                             ruc_entidad, telefono_entidad, email_entidad,
@@ -57,6 +64,7 @@ class EntidadEmisoraDao(BaseDAO):
     def updateEntidadEmisora(self, id_entidad_emisora, descripcion, codigo=None,
                               ruc=None, telefono=None, email=None, tipo_entidad=None,
                               estado=True, usuario_modificacion=None):
+        """Actualiza los datos de entidad emisora; devuelve True si modificó una fila."""
         sql = """
             UPDATE entidades_emisoras
             SET des_entidad_emisora=%s, cod_entidad_emisora=%s, ruc_entidad=%s,
@@ -74,5 +82,6 @@ class EntidadEmisoraDao(BaseDAO):
         ) > 0
 
     def desactivarEntidadEmisora(self, id_entidad_emisora, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de entidad emisora; devuelve True si modificó una fila."""
         sql = "UPDATE entidades_emisoras SET est_entidad_emisora=FALSE, usuario_modificacion=%s WHERE id_entidad_emisora=%s"
         return self.execute_query(sql, (usuario_modificacion, id_entidad_emisora), commit=True) > 0

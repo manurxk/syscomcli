@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.signo.SignoDao import SignoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 signoapi = Blueprint('signoapi', __name__)
 
@@ -9,6 +10,7 @@ signoapi = Blueprint('signoapi', __name__)
 @signoapi.route('/signos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSignos():
+    """GET: lista los registros de signo."""
     try:
         data = SignoDao().getSignos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getSignos():
 @signoapi.route('/signos/<int:signo_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSigno(signo_id):
+    """GET: registro de signo por su id; 404 si no existe."""
     try:
         registro = SignoDao().getSignoById(signo_id)
         if not registro:
@@ -33,6 +36,7 @@ def getSigno(signo_id):
 @signoapi.route('/signos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addSigno():
+    """POST: valida los datos y crea un registro de signo; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = SignoDao()
 
@@ -40,11 +44,11 @@ def addSigno():
     estado = bool(data.get('est_signo', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.signoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un signo', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarSigno(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addSigno():
 @signoapi.route('/signos/<int:signo_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateSigno(signo_id):
+    """PUT: valida y actualiza el registro de signo; 404 si no existe."""
     data = request.get_json() or {}
     dao = SignoDao()
 
@@ -67,11 +72,11 @@ def updateSigno(signo_id):
     estado = bool(data.get('est_signo', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.signoExiste(descripcion, excluir_id=signo_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un signo', descripcion)}), 400
 
     try:
         dao.updateSigno(signo_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateSigno(signo_id):
 @signoapi.route('/signos/<int:signo_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarSigno(signo_id):
+    """DELETE: baja lógica del registro de signo; 404 si no existe."""
     dao = SignoDao()
 
     if not dao.getSignoById(signo_id):

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.mantenimiento.referenciales.cargo.CargoDao import CargoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 cargoapi = Blueprint('cargoapi', __name__)
 
@@ -9,6 +10,7 @@ cargoapi = Blueprint('cargoapi', __name__)
 @cargoapi.route('/cargos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getCargos():
+    """GET: lista los registros de cargo."""
     try:
         data = CargoDao().getCargos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getCargos():
 @cargoapi.route('/cargos/<int:cargo_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getCargo(cargo_id):
+    """GET: registro de cargo por su id; 404 si no existe."""
     try:
         cargo = CargoDao().getCargoById(cargo_id)
         if not cargo:
@@ -33,6 +36,7 @@ def getCargo(cargo_id):
 @cargoapi.route('/cargos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addCargo():
+    """POST: valida los datos y crea un registro de cargo; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     cargodao = CargoDao()
 
@@ -41,13 +45,13 @@ def addCargo():
     es_clinico = bool(data.get('es_clinico', False))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not cargodao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if cargodao.esCargoReservado(descripcion):
         return jsonify({'success': False, 'error': f'El cargo "{descripcion}" está reservado por el sistema.'}), 400
     if cargodao.cargoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un cargo "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un cargo', descripcion)}), 400
 
     try:
         cargo_id = cargodao.guardarCargo(descripcion, estado, es_clinico=es_clinico, usuario_creacion=session.get('id_usuario'))
@@ -60,6 +64,7 @@ def addCargo():
 @cargoapi.route('/cargos/<int:cargo_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateCargo(cargo_id):
+    """PUT: valida y actualiza el registro de cargo; 404 si no existe."""
     data = request.get_json() or {}
     cargodao = CargoDao()
 
@@ -71,13 +76,13 @@ def updateCargo(cargo_id):
     es_clinico = bool(data.get('es_clinico', False))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not cargodao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if cargodao.esCargoReservado(descripcion):
         return jsonify({'success': False, 'error': f'El cargo "{descripcion}" está reservado por el sistema.'}), 400
     if cargodao.cargoExiste(descripcion, excluir_id=cargo_id):
-        return jsonify({'success': False, 'error': f'Ya existe un cargo "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un cargo', descripcion)}), 400
 
     try:
         cargodao.updateCargo(cargo_id, descripcion, estado, es_clinico=es_clinico, usuario_modificacion=session.get('id_usuario'))
@@ -90,6 +95,7 @@ def updateCargo(cargo_id):
 @cargoapi.route('/cargos/<int:cargo_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarCargo(cargo_id):
+    """DELETE: baja lógica del registro de cargo; 404 si no existe."""
     cargodao = CargoDao()
 
     if not cargodao.getCargoById(cargo_id):

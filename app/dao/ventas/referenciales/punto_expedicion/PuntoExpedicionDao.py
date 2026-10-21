@@ -4,6 +4,8 @@ from app.core.base_dao import BaseDAO
 
 
 class PuntoExpedicionDao(BaseDAO):
+    """Acceso a datos de punto de expedición (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
@@ -12,6 +14,7 @@ class PuntoExpedicionDao(BaseDAO):
         return bool(re.match(r"^[0-9]{3}$", codigo))
 
     def getPuntosExpedicion(self, id_timbrado=None):
+        """Devuelve datos de punto de expedición según id_timbrado."""
         if id_timbrado:
             sql = """
                 SELECT pe.id_punto_expedicion, pe.id_timbrado, pe.codigo_punto_expedicion,
@@ -34,6 +37,7 @@ class PuntoExpedicionDao(BaseDAO):
         return self.execute_query(sql)
 
     def getPuntoExpedicionById(self, id_punto_expedicion):
+        """Devuelve el registro de punto de expedición por su id, o None si no existe."""
         sql = """
             SELECT pe.id_punto_expedicion, pe.id_timbrado, pe.codigo_punto_expedicion,
                    pe.nombre_punto_expedicion, pe.ultimo_numero_usado, pe.est_punto_expedicion,
@@ -61,6 +65,7 @@ class PuntoExpedicionDao(BaseDAO):
         return self.execute_query(sql)
 
     def codigoExiste(self, id_timbrado, codigo_punto_expedicion, excluir_id=None):
+        """Indica si ya existe un registro de punto de expedición con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = """
             SELECT 1 FROM puntos_expedicion
             WHERE id_timbrado=%s AND codigo_punto_expedicion=%s
@@ -73,6 +78,7 @@ class PuntoExpedicionDao(BaseDAO):
 
     def guardar(self, id_timbrado, codigo_punto_expedicion, nombre_punto_expedicion,
                 est_punto_expedicion=True, usuario_creacion=None):
+        """Registra el documento con su cabecera y detalle en una sola transacción; devuelve el id."""
         sql = """
             INSERT INTO puntos_expedicion(
                 id_timbrado, codigo_punto_expedicion, nombre_punto_expedicion,
@@ -91,6 +97,7 @@ class PuntoExpedicionDao(BaseDAO):
 
     def update(self, id_punto_expedicion, codigo_punto_expedicion, nombre_punto_expedicion,
                est_punto_expedicion=True, usuario_modificacion=None):
+        """Actualiza los datos de punto de expedición; devuelve True si modificó una fila."""
         sql = """
             UPDATE puntos_expedicion
             SET codigo_punto_expedicion=%s, nombre_punto_expedicion=%s,
@@ -105,6 +112,7 @@ class PuntoExpedicionDao(BaseDAO):
         ) > 0
 
     def desactivar(self, id_punto_expedicion, usuario_modificacion=None):
+        """Da de baja (lógica) el documento."""
         sql = """
             UPDATE puntos_expedicion
             SET est_punto_expedicion=FALSE, usuario_modificacion=%s
@@ -113,5 +121,6 @@ class PuntoExpedicionDao(BaseDAO):
         return self.execute_query(sql, (usuario_modificacion, id_punto_expedicion), commit=True) > 0
 
     def tieneFacturas(self, id_punto_expedicion):
+        """Indica si hay facturas que usan este registro de punto de expedición (impide desactivarlo)."""
         sql = "SELECT 1 FROM facturas WHERE id_punto_expedicion=%s LIMIT 1"
         return self.execute_query_one(sql, (id_punto_expedicion,)) is not None

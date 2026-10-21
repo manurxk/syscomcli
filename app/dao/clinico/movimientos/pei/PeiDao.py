@@ -7,6 +7,7 @@ CAMPOS_PEI = [
 
 
 class PeiDao(BaseDAO):
+    """Acceso a datos del Plan de Intervención Individual (PEI) del paciente."""
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
@@ -108,6 +109,7 @@ class PeiDao(BaseDAO):
         } for f in filas]
 
     def tienePei(self, id_paciente):
+        """Indica si el paciente ya tiene un PEI registrado."""
         sql = "SELECT 1 FROM pei WHERE id_paciente = %s AND es_version_actual = TRUE"
         return self.execute_query_one(sql, (id_paciente,)) is not None
 

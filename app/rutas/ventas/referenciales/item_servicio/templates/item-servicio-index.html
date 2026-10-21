@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Ítems / Servicios (listado y gestión). Ruta: /item-servicio-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/tipos-items, /api/v1/monedas, /api/v1/tipos-impuestos, /api/v1/items-servicios. #}
 {% block titulo %}Ítems / Servicios{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -162,8 +163,8 @@
       const id = $('#txtId').val();
       const desc = $('#txtDescripcion').val().trim();
       const idTipoItem = $('#selTipoItem').val();
-      if (!desc) { Swal.fire('Atención','La descripción es obligatoria.','warning'); return; }
-      if (!idTipoItem) { Swal.fire('Atención','El tipo de ítem es obligatorio.','warning'); return; }
+      if (!desc) { Swal.fire('Atención','El campo "Descripción" es obligatorio.','warning'); return; }
+      if (!idTipoItem) { Swal.fire('Atención','El campo "Tipo de ítem" es obligatorio.','warning'); return; }
       const payload = {
         des_item_servicio: desc,
         cod_item_servicio: $('#txtCodigo').val().trim() || null,

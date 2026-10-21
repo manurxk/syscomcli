@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class TipoImpuestoDao(BaseDAO):
+    """Acceso a datos de tipo de impuesto (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getTiposImpuestos(self):
+        """Lista los registros de tipo de impuesto."""
         sql = """
             SELECT id_tipo_impuesto, des_tipo_impuesto, cod_tipo_impuesto,
                    porcentaje_impuesto, tipo_calculo, est_tipo_impuesto
@@ -16,6 +19,7 @@ class TipoImpuestoDao(BaseDAO):
         return self.execute_query(sql)
 
     def getTipoImpuestoById(self, id_tipo_impuesto):
+        """Devuelve el registro de tipo de impuesto por su id, o None si no existe."""
         sql = """
             SELECT id_tipo_impuesto, des_tipo_impuesto, cod_tipo_impuesto,
                    porcentaje_impuesto, tipo_calculo, est_tipo_impuesto
@@ -24,9 +28,11 @@ class TipoImpuestoDao(BaseDAO):
         return self.execute_query_one(sql, (id_tipo_impuesto,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .%]+$", descripcion))
 
     def tipoImpuestoExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de tipo de impuesto con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM tipos_impuestos WHERE LOWER(des_tipo_impuesto)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -36,6 +42,7 @@ class TipoImpuestoDao(BaseDAO):
 
     def guardarTipoImpuesto(self, descripcion, codigo=None, porcentaje=0,
                              tipo_calculo='PORCENTAJE', estado=True, usuario_creacion=None):
+        """Inserta un registro de tipo de impuesto y devuelve el id generado."""
         sql = """
             INSERT INTO tipos_impuestos (des_tipo_impuesto, cod_tipo_impuesto,
                                          porcentaje_impuesto, tipo_calculo,
@@ -54,6 +61,7 @@ class TipoImpuestoDao(BaseDAO):
     def updateTipoImpuesto(self, id_tipo_impuesto, descripcion, codigo=None,
                             porcentaje=0, tipo_calculo='PORCENTAJE',
                             estado=True, usuario_modificacion=None):
+        """Actualiza los datos de tipo de impuesto; devuelve True si modificó una fila."""
         sql = """
             UPDATE tipos_impuestos
             SET des_tipo_impuesto=%s, cod_tipo_impuesto=%s, porcentaje_impuesto=%s,
@@ -68,5 +76,6 @@ class TipoImpuestoDao(BaseDAO):
         ) > 0
 
     def desactivarTipoImpuesto(self, id_tipo_impuesto, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de tipo de impuesto; devuelve True si modificó una fila."""
         sql = "UPDATE tipos_impuestos SET est_tipo_impuesto=FALSE, usuario_modificacion=%s WHERE id_tipo_impuesto=%s"
         return self.execute_query(sql, (usuario_modificacion, id_tipo_impuesto), commit=True) > 0

@@ -7,4 +7,5 @@ timbradomod = Blueprint('timbrado', __name__, template_folder='templates')
 @timbradomod.route('/timbrado-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def timbradoIndex():
+    """Página principal de timbrado (listado y acciones)."""
     return render_template('timbrado-index.html')

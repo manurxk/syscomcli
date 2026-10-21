@@ -7,4 +7,5 @@ tipocomprobantemod = Blueprint('tipo_comprobante', __name__, template_folder='te
 @tipocomprobantemod.route('/tipo-comprobante-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def tipoComprobanteIndex():
+    """Página principal de tipo de comprobante (listado y acciones)."""
     return render_template('tipo-comprobante-index.html')

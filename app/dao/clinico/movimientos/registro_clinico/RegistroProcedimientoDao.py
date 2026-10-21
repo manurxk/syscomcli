@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RegistroProcedimientoDao(BaseDAO):
+    """Acceso a datos de los procedimientos realizados en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los procedimientos realizados de la consulta."""
         sql = """
             SELECT rp.id_registro_procedimiento, rp.id_consulta, rp.id_tipo_procedimiento,
                    rp.des_registro_procedimiento, rp.registro_duracion, rp.registro_resultado,
@@ -22,6 +25,7 @@ class RegistroProcedimientoDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, datos, usuario_creacion=None):
+        """Inserta un procedimiento realizado en la consulta y devuelve su id."""
         sql = """
             INSERT INTO registro_procedimientos (
                 id_consulta, id_tipo_procedimiento, des_registro_procedimiento,
@@ -41,6 +45,7 @@ class RegistroProcedimientoDao(BaseDAO):
         return fila['id_registro_procedimiento'] if fila else None
 
     def desactivar(self, id_registro_procedimiento, usuario_modificacion=None):
+        """Da de baja (lógica) el procedimiento realizado; devuelve True si modificó una fila."""
         sql = """
             UPDATE registro_procedimientos SET est_registro_procedimiento = FALSE, usuario_modificacion = %s
             WHERE id_registro_procedimiento = %s

@@ -1,5 +1,5 @@
 -- 15_cobranza_cxc.sql — Cuentas a cobrar, cobranzas y libro de ventas
--- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -118,7 +118,7 @@ CREATE TABLE public.cuentas_cobrar (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT cuentas_cobrar_est_cuenta_cobrar_check CHECK (((est_cuenta_cobrar)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'PARCIAL'::character varying, 'COBRADA'::character varying, 'VENCIDA'::character varying])::text[])))
+    CONSTRAINT cuentas_cobrar_est_cuenta_cobrar_check CHECK (((est_cuenta_cobrar)::text = ANY (ARRAY['PENDIENTE'::text, 'PARCIAL'::text, 'COBRADA'::text, 'VENCIDA'::text, 'ANULADA'::text])))
 );
 
 --

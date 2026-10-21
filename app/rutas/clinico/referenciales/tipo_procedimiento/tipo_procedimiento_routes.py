@@ -7,4 +7,5 @@ tipo_procedimientomod = Blueprint('tipo_procedimiento', __name__, template_folde
 @tipo_procedimientomod.route('/tipo-procedimiento-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def tipoProcedimientoIndex():
+    """Página del ABM de tipo de procedimiento (tabla y ventana modal)."""
     return render_template('tipo_procedimiento-index.html')

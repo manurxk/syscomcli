@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class DerivacionDao(BaseDAO):
+    """Acceso a datos de las derivaciones a otra especialidad hechas en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los derivaciones de la consulta."""
         sql = """
             SELECT d.id_derivacion, d.id_consulta, d.id_especialidad_destino,
                    e.des_especialidad, d.motivo_derivacion, d.derivacion_observaciones,
@@ -21,6 +24,7 @@ class DerivacionDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, datos, usuario_creacion=None):
+        """Inserta una derivación en la consulta y devuelve su id."""
         sql = """
             INSERT INTO derivaciones (
                 id_consulta, id_especialidad_destino, motivo_derivacion,
@@ -38,6 +42,7 @@ class DerivacionDao(BaseDAO):
         return fila['id_derivacion'] if fila else None
 
     def desactivar(self, id_derivacion, usuario_modificacion=None):
+        """Da de baja (lógica) la derivación; devuelve True si modificó una fila."""
         sql = """
             UPDATE derivaciones SET est_derivacion = FALSE, usuario_modificacion = %s
             WHERE id_derivacion = %s AND est_derivacion = TRUE

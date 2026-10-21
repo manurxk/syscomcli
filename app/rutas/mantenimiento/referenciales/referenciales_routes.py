@@ -7,4 +7,5 @@ referencialesmod = Blueprint('referenciales', __name__, template_folder='templat
 @referencialesmod.route('/referenciales-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def referencialesIndex():
+    """Página índice de los referenciales de Mantenimiento."""
     return render_template('referenciales-index.html')

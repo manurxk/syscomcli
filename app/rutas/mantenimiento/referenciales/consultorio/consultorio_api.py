@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.mantenimiento.referenciales.consultorio.ConsultorioDao import ConsultorioDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_obligatorio
 
 consultorioapi = Blueprint('consultorioapi', __name__)
 
@@ -9,6 +10,7 @@ consultorioapi = Blueprint('consultorioapi', __name__)
 @consultorioapi.route('/consultorios', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getConsultorios():
+    """GET: lista los registros de consultorio."""
     try:
         data = ConsultorioDao().getConsultorios()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getConsultorios():
 @consultorioapi.route('/consultorios/<int:consultorio_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getConsultorio(consultorio_id):
+    """GET: registro de consultorio por su id; 404 si no existe."""
     try:
         consultorio = ConsultorioDao().getConsultorioById(consultorio_id)
         if not consultorio:
@@ -33,6 +36,7 @@ def getConsultorio(consultorio_id):
 @consultorioapi.route('/consultorios', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addConsultorio():
+    """POST: valida los datos y crea un registro de consultorio; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     consultoriodao = ConsultorioDao()
 
@@ -41,11 +45,11 @@ def addConsultorio():
     estado = bool(data.get('est_consultorio', True))
 
     if not id_sede:
-        return jsonify({'success': False, 'error': 'La sede es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Sede')}), 400
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not consultoriodao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if consultoriodao.descripcionExiste(id_sede, descripcion):
         return jsonify({'success': False, 'error': f'Ya existe un consultorio "{descripcion}" en esa sede.'}), 400
 
@@ -62,6 +66,7 @@ def addConsultorio():
 @consultorioapi.route('/consultorios/<int:consultorio_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateConsultorio(consultorio_id):
+    """PUT: valida y actualiza el registro de consultorio; 404 si no existe."""
     data = request.get_json() or {}
     consultoriodao = ConsultorioDao()
 
@@ -74,11 +79,11 @@ def updateConsultorio(consultorio_id):
     estado = bool(data.get('est_consultorio', True))
 
     if not id_sede:
-        return jsonify({'success': False, 'error': 'La sede es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Sede')}), 400
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not consultoriodao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números y espacios.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números y espacios')}), 400
     if consultoriodao.descripcionExiste(id_sede, descripcion, excluir_id=consultorio_id):
         return jsonify({'success': False, 'error': f'Ya existe un consultorio "{descripcion}" en esa sede.'}), 400
 
@@ -95,6 +100,7 @@ def updateConsultorio(consultorio_id):
 @consultorioapi.route('/consultorios/<int:consultorio_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarConsultorio(consultorio_id):
+    """DELETE: baja lógica del registro de consultorio; 404 si no existe."""
     consultoriodao = ConsultorioDao()
 
     if not consultoriodao.getConsultorioById(consultorio_id):

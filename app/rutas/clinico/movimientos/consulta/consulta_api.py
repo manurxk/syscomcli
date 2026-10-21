@@ -3,6 +3,7 @@ from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.dao.agendamiento.cita.CitaDao import CitaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 consultaapi = Blueprint('consultaapi', __name__)
 
@@ -24,6 +25,7 @@ def getEspecialistasParaConsultas():
 @consultaapi.route('/consultas', methods=['GET'])
 @role_required(*ROLES_CONSULTA)
 def getConsultas():
+    """GET: lista las consultas; admite filtros id_especialista, id_paciente y estado por query string."""
     try:
         id_especialista = request.args.get('id_especialista', type=int)
         id_paciente = request.args.get('id_paciente', type=int)
@@ -39,6 +41,7 @@ def getConsultas():
 @consultaapi.route('/consultas/<int:id_consulta>', methods=['GET'])
 @role_required(*ROLES_CONSULTA)
 def getConsulta(id_consulta):
+    """GET: consulta por su id; 404 si no existe."""
     try:
         consulta = ConsultaDao().getConsultaById(id_consulta)
         if not consulta:
@@ -52,6 +55,7 @@ def getConsulta(id_consulta):
 @consultaapi.route('/consultas/<int:id_consulta>/editar', methods=['GET'])
 @role_required(*ROLES_CONSULTA)
 def getConsultaParaEditar(id_consulta):
+    """GET: consulta con los datos necesarios para el formulario de edición; 404 si no existe."""
     try:
         consulta = ConsultaDao().getConsultaParaEditar(id_consulta)
         if not consulta:
@@ -65,6 +69,7 @@ def getConsultaParaEditar(id_consulta):
 @consultaapi.route('/consultas/paciente/<int:id_paciente>', methods=['GET'])
 @role_required(*ROLES_CONSULTA)
 def getConsultasPorPaciente(id_paciente):
+    """GET: consultas del paciente."""
     try:
         data = ConsultaDao().getConsultasPorPaciente(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -76,6 +81,7 @@ def getConsultasPorPaciente(id_paciente):
 @consultaapi.route('/consultas/cita/<int:id_cita>', methods=['GET'])
 @role_required(*ROLES_CONSULTA)
 def getConsultaDesdeCita(id_cita):
+    """GET: consulta vinculada a la cita, o vacío si aún no se inició."""
     try:
         consulta = ConsultaDao().getConsultaDesdeCita(id_cita)
         return jsonify({'success': True, 'data': consulta, 'error': None}), 200
@@ -126,6 +132,7 @@ def iniciarConsultaDesdeCita(id_cita):
 @consultaapi.route('/consultas/<int:id_consulta>', methods=['PUT'])
 @role_required(*ROLES_CONSULTA)
 def updateConsulta(id_consulta):
+    """PUT: valida y actualiza fecha, motivo y estado de la consulta; 404 si no existe."""
     data = request.get_json() or {}
     dao = ConsultaDao()
 
@@ -136,7 +143,7 @@ def updateConsulta(id_consulta):
     campos_requeridos = ['consulta_fecha', 'consulta_motivo', 'consulta_estado']
     for campo in campos_requeridos:
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     try:
         usuario = session.get('id_usuario')
@@ -159,6 +166,7 @@ def updateConsulta(id_consulta):
 @consultaapi.route('/consultas/<int:id_consulta>', methods=['DELETE'])
 @role_required(*ROLES_CONSULTA)
 def deleteConsulta(id_consulta):
+    """DELETE: baja lógica de la consulta; 404 si no existe."""
     try:
         if ConsultaDao().desactivarConsulta(id_consulta, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Consulta desactivada correctamente.', 'error': None}), 200

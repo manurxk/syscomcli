@@ -6,6 +6,7 @@ from app.dao.clinico.movimientos.registro_clinico.RegistroSintomaDao import Regi
 from app.dao.clinico.movimientos.registro_clinico.RegistroProcedimientoDao import RegistroProcedimientoDao
 from app.dao.clinico.movimientos.registro_clinico.RegistroInsumoDao import RegistroInsumoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 registroclinicoapi = Blueprint('registroclinicoapi', __name__)
 
@@ -18,6 +19,7 @@ ROLES_REGISTRO_CLINICO = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @registroclinicoapi.route('/consultas/<int:id_consulta>/diagnosticos', methods=['GET'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def getRegistroDiagnosticos(id_consulta):
+    """GET: lista los diagnósticos registrados de la consulta."""
     try:
         data = RegistroDiagnosticoDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -29,9 +31,10 @@ def getRegistroDiagnosticos(id_consulta):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/diagnosticos', methods=['POST'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def addRegistroDiagnostico(id_consulta):
+    """POST: valida y registra diagnóstico registrado en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_diagnostico'):
-        return jsonify({'success': False, 'error': 'El diagnóstico es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Diagnóstico')}), 400
 
     try:
         nuevo_id = RegistroDiagnosticoDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
@@ -44,6 +47,7 @@ def addRegistroDiagnostico(id_consulta):
 @registroclinicoapi.route('/registro-diagnosticos/<int:id_registro_diagnostico>', methods=['DELETE'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def deleteRegistroDiagnostico(id_registro_diagnostico):
+    """DELETE: baja lógica de diagnóstico registrado; 404 si no existe."""
     try:
         if RegistroDiagnosticoDao().desactivar(id_registro_diagnostico, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200
@@ -59,6 +63,7 @@ def deleteRegistroDiagnostico(id_registro_diagnostico):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/signos', methods=['GET'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def getRegistroSignos(id_consulta):
+    """GET: lista los signos registrados de la consulta."""
     try:
         data = RegistroSignoDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -70,9 +75,10 @@ def getRegistroSignos(id_consulta):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/signos', methods=['POST'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def addRegistroSigno(id_consulta):
+    """POST: valida y registra signo registrado en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_signo'):
-        return jsonify({'success': False, 'error': 'El signo es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Signo')}), 400
 
     try:
         nuevo_id = RegistroSignoDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
@@ -85,6 +91,7 @@ def addRegistroSigno(id_consulta):
 @registroclinicoapi.route('/registro-signos/<int:id_registro_signo>', methods=['DELETE'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def deleteRegistroSigno(id_registro_signo):
+    """DELETE: baja lógica de signo registrado; 404 si no existe."""
     try:
         if RegistroSignoDao().desactivar(id_registro_signo, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200
@@ -100,6 +107,7 @@ def deleteRegistroSigno(id_registro_signo):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/sintomas', methods=['GET'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def getRegistroSintomas(id_consulta):
+    """GET: lista los síntomas registrados de la consulta."""
     try:
         data = RegistroSintomaDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -111,9 +119,10 @@ def getRegistroSintomas(id_consulta):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/sintomas', methods=['POST'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def addRegistroSintoma(id_consulta):
+    """POST: valida y registra síntoma registrado en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_sintoma'):
-        return jsonify({'success': False, 'error': 'El síntoma es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Síntoma')}), 400
 
     try:
         nuevo_id = RegistroSintomaDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
@@ -126,6 +135,7 @@ def addRegistroSintoma(id_consulta):
 @registroclinicoapi.route('/registro-sintomas/<int:id_registro_sintoma>', methods=['DELETE'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def deleteRegistroSintoma(id_registro_sintoma):
+    """DELETE: baja lógica de síntoma registrado; 404 si no existe."""
     try:
         if RegistroSintomaDao().desactivar(id_registro_sintoma, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200
@@ -141,6 +151,7 @@ def deleteRegistroSintoma(id_registro_sintoma):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/procedimientos', methods=['GET'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def getRegistroProcedimientos(id_consulta):
+    """GET: lista los procedimientos realizados de la consulta."""
     try:
         data = RegistroProcedimientoDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -152,9 +163,10 @@ def getRegistroProcedimientos(id_consulta):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/procedimientos', methods=['POST'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def addRegistroProcedimiento(id_consulta):
+    """POST: valida y registra procedimiento realizado en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_tipo_procedimiento'):
-        return jsonify({'success': False, 'error': 'El tipo de procedimiento es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Tipo de procedimiento')}), 400
 
     try:
         nuevo_id = RegistroProcedimientoDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
@@ -167,6 +179,7 @@ def addRegistroProcedimiento(id_consulta):
 @registroclinicoapi.route('/registro-procedimientos/<int:id_registro_procedimiento>', methods=['DELETE'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def deleteRegistroProcedimiento(id_registro_procedimiento):
+    """DELETE: baja lógica de procedimiento realizado; 404 si no existe."""
     try:
         if RegistroProcedimientoDao().desactivar(id_registro_procedimiento, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200
@@ -182,6 +195,7 @@ def deleteRegistroProcedimiento(id_registro_procedimiento):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/insumos', methods=['GET'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def getRegistroInsumos(id_consulta):
+    """GET: lista los insumos utilizados de la consulta."""
     try:
         data = RegistroInsumoDao().getPorConsulta(id_consulta)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -193,9 +207,10 @@ def getRegistroInsumos(id_consulta):
 @registroclinicoapi.route('/consultas/<int:id_consulta>/insumos', methods=['POST'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def addRegistroInsumo(id_consulta):
+    """POST: valida y registra insumo utilizado en la consulta (201)."""
     data = request.get_json() or {}
     if not data.get('id_insumo'):
-        return jsonify({'success': False, 'error': 'El insumo es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Insumo')}), 400
     try:
         cantidad = float(data.get('registro_cantidad') or 0)
     except (TypeError, ValueError):
@@ -217,6 +232,7 @@ def addRegistroInsumo(id_consulta):
 @registroclinicoapi.route('/registro-insumos/<int:id_registro_insumo>', methods=['DELETE'])
 @role_required(*ROLES_REGISTRO_CLINICO)
 def deleteRegistroInsumo(id_registro_insumo):
+    """DELETE: baja lógica de insumo utilizado; 404 si no existe."""
     try:
         if RegistroInsumoDao().desactivar(id_registro_insumo, session.get('id_usuario')):
             return jsonify({'success': True, 'mensaje': 'Registro eliminado correctamente.', 'error': None}), 200

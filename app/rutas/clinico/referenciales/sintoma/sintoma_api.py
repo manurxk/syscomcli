@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.sintoma.SintomaDao import SintomaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 sintomaapi = Blueprint('sintomaapi', __name__)
 
@@ -9,6 +10,7 @@ sintomaapi = Blueprint('sintomaapi', __name__)
 @sintomaapi.route('/sintomas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSintomas():
+    """GET: lista los registros de síntoma."""
     try:
         data = SintomaDao().getSintomas()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getSintomas():
 @sintomaapi.route('/sintomas/<int:sintoma_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getSintoma(sintoma_id):
+    """GET: registro de síntoma por su id; 404 si no existe."""
     try:
         registro = SintomaDao().getSintomaById(sintoma_id)
         if not registro:
@@ -33,6 +36,7 @@ def getSintoma(sintoma_id):
 @sintomaapi.route('/sintomas', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addSintoma():
+    """POST: valida los datos y crea un registro de síntoma; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = SintomaDao()
 
@@ -40,11 +44,11 @@ def addSintoma():
     estado = bool(data.get('est_sintoma', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.sintomaExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un síntoma', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarSintoma(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addSintoma():
 @sintomaapi.route('/sintomas/<int:sintoma_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateSintoma(sintoma_id):
+    """PUT: valida y actualiza el registro de síntoma; 404 si no existe."""
     data = request.get_json() or {}
     dao = SintomaDao()
 
@@ -67,11 +72,11 @@ def updateSintoma(sintoma_id):
     estado = bool(data.get('est_sintoma', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.sintomaExiste(descripcion, excluir_id=sintoma_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un síntoma', descripcion)}), 400
 
     try:
         dao.updateSintoma(sintoma_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateSintoma(sintoma_id):
 @sintomaapi.route('/sintomas/<int:sintoma_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarSintoma(sintoma_id):
+    """DELETE: baja lógica del registro de síntoma; 404 si no existe."""
     dao = SintomaDao()
 
     if not dao.getSintomaById(sintoma_id):

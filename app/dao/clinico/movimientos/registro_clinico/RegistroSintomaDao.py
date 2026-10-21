@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class RegistroSintomaDao(BaseDAO):
+    """Acceso a datos de los síntomas registrados en una consulta."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getPorConsulta(self, id_consulta):
+        """Lista los síntomas registrados de la consulta."""
         sql = """
             SELECT rs.id_registro_sintoma, rs.id_consulta, rs.id_sintoma,
                    rs.registro_intensidad, rs.registro_observaciones, rs.fecha_creacion,
@@ -21,6 +24,7 @@ class RegistroSintomaDao(BaseDAO):
         return filas
 
     def guardar(self, id_consulta, datos, usuario_creacion=None):
+        """Inserta un síntoma registrado en la consulta y devuelve su id."""
         sql = """
             INSERT INTO registro_sintomas (
                 id_consulta, id_sintoma, registro_intensidad, registro_observaciones, usuario_creacion
@@ -37,6 +41,7 @@ class RegistroSintomaDao(BaseDAO):
         return fila['id_registro_sintoma'] if fila else None
 
     def desactivar(self, id_registro_sintoma, usuario_modificacion=None):
+        """Da de baja (lógica) el síntoma registrado; devuelve True si modificó una fila."""
         sql = """
             UPDATE registro_sintomas SET est_registro_sintoma = FALSE, usuario_modificacion = %s
             WHERE id_registro_sintoma = %s

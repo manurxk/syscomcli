@@ -27,6 +27,7 @@ def _listar(dao_fn, campo_id, campo_desc):
 @referencialesapi.route('/ciudades', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getCiudades():
+    """GET: lista las ciudades (catálogo para selectores)."""
     try:
         ciudades = CiudadDao().getCiudades()
         data = [{'id': c['id_ciudad'], 'descripcion': c['des_ciudad'], 'id_departamento': c['id_departamento']} for c in ciudades]
@@ -39,6 +40,7 @@ def getCiudades():
 @referencialesapi.route('/ciudades/<int:id_ciudad>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getCiudad(id_ciudad):
+    """GET: ciudad por su id; 404 si no existe."""
     try:
         ciudad = CiudadDao().getCiudadById(id_ciudad)
         if not ciudad:
@@ -67,6 +69,7 @@ def getCiudad(id_ciudad):
 @referencialesapi.route('/departamentos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getDepartamentos():
+    """GET: lista los departamentos (catálogo para selectores)."""
     try:
         data = _listar(DepartamentoDao().getDepartamentos, 'id_departamento', 'des_departamento')
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -78,6 +81,7 @@ def getDepartamentos():
 @referencialesapi.route('/paises', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getPaises():
+    """GET: lista los países (catálogo para selectores)."""
     try:
         data = _listar(PaisDao().getPaises, 'id_pais', 'des_pais')
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -92,6 +96,7 @@ def getPaises():
 @referencialesapi.route('/generos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getGeneros():
+    """GET: lista los géneros (catálogo para selectores)."""
     try:
         data = _listar(GeneroDao().getGeneros, 'id_genero', 'des_genero')
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -103,6 +108,7 @@ def getGeneros():
 @referencialesapi.route('/estados-civiles', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEstadosCiviles():
+    """GET: lista los estados civiles (catálogo para selectores)."""
     try:
         data = _listar(EstadoCivilDao().getEstadosCiviles, 'id_estado_civil', 'des_estado_civil')
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -117,6 +123,7 @@ def getEstadosCiviles():
 @referencialesapi.route('/niveles-instruccion', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getNivelesInstruccion():
+    """GET: lista los niveles de instrucción (catálogo para selectores)."""
     try:
         data = _listar(NivelInstruccionDao().getNivelesInstruccion, 'id_nivel_instruccion', 'des_nivel_instruccion')
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -128,6 +135,7 @@ def getNivelesInstruccion():
 @referencialesapi.route('/profesiones', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getProfesiones():
+    """GET: lista las profesiones (catálogo para selectores)."""
     try:
         data = _listar(ProfesionDao().getProfesiones, 'id_profesion', 'des_profesion')
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -142,6 +150,7 @@ def getProfesiones():
 @referencialesapi.route('/cargos-permitidos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getCargosPermitidos():
+    """GET: cargos que se pueden asignar a un funcionario (sin los reservados)."""
     try:
         cargos = CargoDao().getCargos()
         data = [
@@ -160,6 +169,7 @@ def getCargosPermitidos():
 @referencialesapi.route('/especialidades-permitidas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEspecialidades():
+    """GET: lista las especialidades (catálogo para selectores)."""
     try:
         data = _listar(EspecialidadDao().getEspecialidades, 'id_especialidad', 'des_especialidad')
         return jsonify({'success': True, 'data': data, 'error': None}), 200

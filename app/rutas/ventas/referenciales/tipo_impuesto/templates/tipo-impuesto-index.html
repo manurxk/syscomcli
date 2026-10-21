@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Tipos de Impuesto (listado y gestión). Ruta: /tipo-impuesto-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/tipos-impuestos. #}
 {% block titulo %}Tipos de Impuesto{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -114,7 +115,7 @@
     $('#btnGuardar').on('click', () => {
       const id = $('#txtId').val();
       const desc = $('#txtDescripcion').val().trim();
-      if (!desc) { Swal.fire('Atención','La descripción es obligatoria.','warning'); return; }
+      if (!desc) { Swal.fire('Atención','El campo "Descripción" es obligatorio.','warning'); return; }
       const payload = {
         des_tipo_impuesto: desc,
         cod_tipo_impuesto: $('#txtCodigo').val().trim() || null,

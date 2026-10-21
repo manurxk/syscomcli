@@ -7,6 +7,8 @@ MAX_USUARIOS_CON_FUNCIONARIO = 10
 
 
 class UsuarioDao(BaseDAO):
+    """Acceso a datos de usuarios, sus roles y la autenticación."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
@@ -43,6 +45,7 @@ class UsuarioDao(BaseDAO):
         return filas
 
     def getUsuarioById(self, id_usuario):
+        """Devuelve el usuario por su id, o None si no existe."""
         sql = """
             SELECT
                 u.id_usuario,
@@ -82,6 +85,7 @@ class UsuarioDao(BaseDAO):
         return self.execute_query(sql)
 
     def validarUsernameDisponible(self, username, id_usuario=None):
+        """Indica si el nombre de usuario está libre; `id_usuario` omite al propio usuario al editar."""
         if id_usuario:
             sql = "SELECT id_usuario FROM usuarios WHERE usu_nick = %s AND id_usuario != %s"
             params = (username, id_usuario)
@@ -151,6 +155,7 @@ class UsuarioDao(BaseDAO):
         return self.execute_query(sql, params, commit=True) > 0
 
     def desactivarUsuario(self, id_usuario, usuario_modificacion=None):
+        """Da de baja (lógica) al usuario; devuelve True si modificó una fila."""
         sql = """
             UPDATE usuarios
             SET est_usuario = FALSE, usuario_modificacion = %s
@@ -197,6 +202,7 @@ class UsuarioDao(BaseDAO):
         return self.execute_query(sql, (id_usuario,))
 
     def obtener_rol_principal(self, id_usuario):
+        """Devuelve el rol principal activo del usuario, o None."""
         sql = """
             SELECT r.id_rol, r.cod_rol, r.des_rol, ur.id_usuario_rol
             FROM usuarios_roles ur
@@ -207,11 +213,13 @@ class UsuarioDao(BaseDAO):
         return self.execute_query_one(sql, (id_usuario,))
 
     def contar_usuarios_activos_con_funcionario(self):
+        """Cuenta los usuarios activos vinculados a un funcionario (para el tope de usuarios)."""
         sql = "SELECT COUNT(*) AS total FROM usuarios WHERE est_usuario = TRUE AND id_funcionario IS NOT NULL"
         fila = self.execute_query_one(sql)
         return fila["total"] if fila else 0
 
     def contar_roles_activos(self, id_usuario):
+        """Cuenta los roles activos del usuario (para el tope de roles por usuario)."""
         sql = "SELECT COUNT(*) AS total FROM usuarios_roles WHERE id_usuario = %s AND est_usuario_rol = TRUE"
         fila = self.execute_query_one(sql, (id_usuario,))
         return fila["total"] if fila else 0

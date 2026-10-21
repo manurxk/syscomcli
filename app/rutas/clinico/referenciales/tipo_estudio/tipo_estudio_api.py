@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.tipo_estudio.TipoEstudioDao import TipoEstudioDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipoestudioapi = Blueprint('tipoestudioapi', __name__)
 
@@ -9,6 +10,7 @@ tipoestudioapi = Blueprint('tipoestudioapi', __name__)
 @tipoestudioapi.route('/tipos-estudios', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposEstudios():
+    """GET: lista los registros de tipo de estudio."""
     try:
         data = TipoEstudioDao().getTiposEstudios()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getTiposEstudios():
 @tipoestudioapi.route('/tipos-estudios/<int:tipo_estudio_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoEstudio(tipo_estudio_id):
+    """GET: registro de tipo de estudio por su id; 404 si no existe."""
     try:
         registro = TipoEstudioDao().getTipoEstudioById(tipo_estudio_id)
         if not registro:
@@ -33,6 +36,7 @@ def getTipoEstudio(tipo_estudio_id):
 @tipoestudioapi.route('/tipos-estudios', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoEstudio():
+    """POST: valida los datos y crea un registro de tipo de estudio; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoEstudioDao()
 
@@ -40,11 +44,11 @@ def addTipoEstudio():
     estado = bool(data.get('est_tipo_estudio', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoEstudioExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de estudio', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoEstudio(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addTipoEstudio():
 @tipoestudioapi.route('/tipos-estudios/<int:tipo_estudio_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoEstudio(tipo_estudio_id):
+    """PUT: valida y actualiza el registro de tipo de estudio; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoEstudioDao()
 
@@ -67,11 +72,11 @@ def updateTipoEstudio(tipo_estudio_id):
     estado = bool(data.get('est_tipo_estudio', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoEstudioExiste(descripcion, excluir_id=tipo_estudio_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de estudio', descripcion)}), 400
 
     try:
         dao.updateTipoEstudio(tipo_estudio_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateTipoEstudio(tipo_estudio_id):
 @tipoestudioapi.route('/tipos-estudios/<int:tipo_estudio_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoEstudio(tipo_estudio_id):
+    """DELETE: baja lógica del registro de tipo de estudio; 404 si no existe."""
     dao = TipoEstudioDao()
 
     if not dao.getTipoEstudioById(tipo_estudio_id):

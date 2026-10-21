@@ -3,7 +3,8 @@ from flask import Blueprint, request, jsonify, current_app as app, session, send
 from app.dao.ventas.movimientos.nota_credito.NotaCreditoDao import NotaCreditoDao
 from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
 from app.services.factura_pdf_service import FacturaPDFService
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 notacreditoapi = Blueprint('notacreditoapi', __name__)
 
@@ -12,7 +13,9 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @notacreditoapi.route('/notas-credito', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getNotasCredito():
+    """GET: lista los registros de nota de crédito."""
     try:
         return jsonify({'success': True, 'data': NotaCreditoDao().getNotasCredito(), 'error': None}), 200
     except Exception as e:
@@ -22,7 +25,9 @@ def getNotasCredito():
 
 @notacreditoapi.route('/notas-credito/<int:id_nota_credito>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getNotaCredito(id_nota_credito):
+    """GET: devuelve nota de crédito por su id; 404 si no existe."""
     try:
         dao = NotaCreditoDao()
         reg = dao.getNotaCreditoById(id_nota_credito)
@@ -37,12 +42,14 @@ def getNotaCredito(id_nota_credito):
 
 @notacreditoapi.route('/notas-credito', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
 def addNotaCredito():
+    """POST: valida los datos y registra nota de crédito; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     for campo in ('id_factura', 'motivo'):
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     detalles = data.get('detalles') or []
     if not detalles:
@@ -63,7 +70,9 @@ def addNotaCredito():
 
 @notacreditoapi.route('/notas-credito/<int:id_nota_credito>/anular', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
+@permiso_requerido("VENTAS", "ELIMINAR")
 def anularNotaCredito(id_nota_credito):
+    """PUT: anula la nota de crédito."""
     dao = NotaCreditoDao()
     if not dao.getNotaCreditoById(id_nota_credito):
         return jsonify({'success': False, 'error': 'No se encontró la nota de crédito.'}), 404
@@ -79,6 +88,7 @@ def anularNotaCredito(id_nota_credito):
 
 @notacreditoapi.route('/notas-credito/<int:id_nota_credito>/pdf', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getNotaCreditoPDF(id_nota_credito):
     """KuDE de la nota (FE.html, misma plantilla que la factura asociada)."""
     try:

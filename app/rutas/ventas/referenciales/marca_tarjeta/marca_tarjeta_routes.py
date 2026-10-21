@@ -7,4 +7,5 @@ marcatarjetamod = Blueprint('marca_tarjeta', __name__, template_folder='template
 @marcatarjetamod.route('/marca-tarjeta-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def marcaTarjetaIndex():
+    """Página principal de marca de tarjeta (listado y acciones)."""
     return render_template('marca-tarjeta-index.html')

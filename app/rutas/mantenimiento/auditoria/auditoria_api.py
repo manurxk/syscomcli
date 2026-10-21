@@ -90,6 +90,7 @@ def getResumenCambiosDatos():
 @auditoriaapi.route('/auditoria/cambios/tablas', methods=['GET'])
 @role_required(*ROLES_PANTALLA_AUDITORIA)
 def getTablasCambiosDatos():
+    """GET: tablas con cambios registrados en la auditoría de datos."""
     try:
         nivel, id_propio = _alcance_sesion()
         data = AuditoriaDao().getTablasCambios(nivel['detalle'], modulos_propios=nivel['propios'], id_propio=id_propio)
@@ -123,6 +124,7 @@ def getInformeSemanalPdf():
 @auditoriaapi.route('/auditoria', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getEventosAuditoria():
+    """GET: eventos de auditoría con filtros y paginación."""
     auditoriadao = AuditoriaDao()
 
     try:
@@ -154,6 +156,7 @@ def getEventosAuditoria():
 @auditoriaapi.route('/auditoria/intentos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getIntentosAcceso():
+    """GET: intentos de acceso (login) registrados."""
     try:
         resultado = AuditoriaDao().getIntentosAcceso(
             fecha_desde=request.args.get('fecha_desde'),
@@ -173,6 +176,7 @@ def getIntentosAcceso():
 @auditoriaapi.route('/auditoria/intentos/sospechosos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getIpsSospechosas():
+    """GET: IP con intentos de acceso sospechosos."""
     try:
         data = AuditoriaDao().getIpsSospechosas(
             fecha_desde=request.args.get('fecha_desde'),
@@ -188,6 +192,7 @@ def getIpsSospechosas():
 @auditoriaapi.route('/auditoria/recuperaciones', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getSolicitudesRecuperacionGlobal():
+    """GET: solicitudes de recuperación de contraseña de todos los usuarios."""
     try:
         resultado = AuditoriaDao().getSolicitudesRecuperacionGlobal(
             fecha_desde=request.args.get('fecha_desde'),
@@ -205,6 +210,7 @@ def getSolicitudesRecuperacionGlobal():
 @auditoriaapi.route('/auditoria/acciones', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getAccionesAuditoria():
+    """GET: acciones de auditoría disponibles para el filtro."""
     try:
         acciones = [{'accion': a, 'label': get_label(a)} for a in sorted(AuditAccion._ALL)]
         return jsonify({'success': True, 'data': acciones, 'error': None}), 200

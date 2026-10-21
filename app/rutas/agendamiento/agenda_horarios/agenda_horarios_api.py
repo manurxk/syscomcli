@@ -10,6 +10,7 @@ from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
 from app.utils.auditoria_constantes import AuditAccion
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 agendahorariosapi = Blueprint('agendahorariosapi', __name__)
 
@@ -31,6 +32,7 @@ def _especialistaPropio():
 
 
 def _calcularCuposTotales(hora_inicio, hora_fin, duracion_turno_min):
+    """Calcula la cantidad de turnos del horario dividiendo la duración entre `duracion_turno_min` (mínimo 1)."""
     h1, m1 = (int(p) for p in hora_inicio.split(':')[:2])
     h2, m2 = (int(p) for p in hora_fin.split(':')[:2])
     minutos_totales = (h2 * 60 + m2) - (h1 * 60 + m1)
@@ -38,11 +40,12 @@ def _calcularCuposTotales(hora_inicio, hora_fin, duracion_turno_min):
 
 
 def _validarDatos(data):
+    """Valida los datos del horario de agenda; devuelve el mensaje de error o None si son válidos."""
     campos_obligatorios = ('id_especialista', 'id_sede', 'id_consultorio', 'id_dia_semana',
                             'hora_inicio', 'hora_fin', 'duracion_turno_min', 'fec_desde')
     for campo in campos_obligatorios:
         if not data.get(campo):
-            return f'El campo "{campo}" es obligatorio.'
+            return msg_obligatorio(campo)
 
     try:
         datetime.strptime(data['hora_inicio'], '%H:%M')
@@ -91,6 +94,7 @@ def _advertenciaHorarioClinica(id_dia_semana, hora_inicio, hora_fin):
 @agendahorariosapi.route('/especialistas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getEspecialistas():
+    """GET: lista los especialistas."""
     try:
         data = FuncionarioDao().getEspecialistasActivos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -102,6 +106,7 @@ def getEspecialistas():
 @agendahorariosapi.route('/dias-semana', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def getDiasSemana():
+    """GET: lista los días de la semana."""
     try:
         data = DiaSemanaDao().getDiasSemana()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -113,6 +118,7 @@ def getDiasSemana():
 @agendahorariosapi.route('/agenda-horarios', methods=['GET'])
 @role_required(*ROLES_GESTION_AGENDA, "CLINICO")
 def getAgendaHorarios():
+    """GET: lista los horarios de agenda; admite filtro por especialista."""
     try:
         if _soloAgendaPropia():
             id_especialista = _especialistaPropio()
@@ -130,6 +136,7 @@ def getAgendaHorarios():
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>', methods=['GET'])
 @role_required(*ROLES_GESTION_AGENDA, "CLINICO")
 def getAgendaHorario(id_agenda_horario):
+    """GET: horario de agenda por su id; 404 si no existe."""
     try:
         agendadao = AgendaHorariosDao()
         agenda = agendadao.getAgendaHorarioById(id_agenda_horario)
@@ -144,6 +151,7 @@ def getAgendaHorario(id_agenda_horario):
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>/slots', methods=['GET'])
 @role_required(*ROLES_GESTION_AGENDA, "CLINICO")
 def getSlotsAgendaHorario(id_agenda_horario):
+    """GET: turnos (slots) generados para el horario de agenda."""
     try:
         agendadao = AgendaHorariosDao()
         agenda = agendadao.getAgendaHorarioById(id_agenda_horario)
@@ -159,6 +167,7 @@ def getSlotsAgendaHorario(id_agenda_horario):
 @agendahorariosapi.route('/agenda-horarios', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def addAgendaHorario():
+    """POST: valida y crea el horario de agenda."""
     data = request.get_json() or {}
 
     error = _validarDatos(data)
@@ -199,6 +208,7 @@ def addAgendaHorario():
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def updateAgendaHorario(id_agenda_horario):
+    """PUT: valida y actualiza el horario de agenda; 404 si no existe."""
     data = request.get_json() or {}
     agendadao = AgendaHorariosDao()
 
@@ -244,6 +254,7 @@ def updateAgendaHorario(id_agenda_horario):
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>/estado', methods=['PATCH'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 def cambiarEstadoAgendaHorario(id_agenda_horario):
+    """PATCH: activa o desactiva el horario de agenda."""
     data = request.get_json() or {}
     agendadao = AgendaHorariosDao()
 
@@ -276,6 +287,7 @@ def _fecha_hora(valor):
 @agendahorariosapi.route('/agenda-horarios/bloqueos', methods=['GET'])
 @role_required(*ROLES_GESTION_AGENDA)
 def getBloqueosAgenda():
+    """GET: lista los bloqueos de agenda; admite filtro por especialista."""
     try:
         data = AgendaHorariosDao().getBloqueos(request.args.get('id_especialista', None, type=int))
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -299,7 +311,7 @@ def addBloqueoAgenda():
     if hasta <= desde:
         return jsonify({'success': False, 'error': 'El fin del bloqueo debe ser posterior al inicio.'}), 400
     if not motivo:
-        return jsonify({'success': False, 'error': 'El motivo del bloqueo es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Motivo del bloqueo')}), 400
     if hasta < datetime.now():
         return jsonify({'success': False, 'error': 'El bloqueo tiene que terminar en el futuro.'}), 400
     try:
@@ -316,6 +328,7 @@ def addBloqueoAgenda():
 @agendahorariosapi.route('/agenda-horarios/bloqueos/<id_bloqueo>', methods=['DELETE'])
 @role_required(*ROLES_GESTION_AGENDA)
 def deleteBloqueoAgenda(id_bloqueo):
+    """DELETE: levanta el bloqueo y libera los turnos; 404 si no existe."""
     try:
         if not AgendaHorariosDao().levantarBloqueo(id_bloqueo, session.get('id_usuario')):
             return jsonify({'success': False, 'error': 'No se encontró el bloqueo.'}), 404

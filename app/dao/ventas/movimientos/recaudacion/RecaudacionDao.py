@@ -6,12 +6,15 @@ from app.core.moneda import get_moneda, redondear
 
 
 class RecaudacionDao(BaseDAO):
+    """Acceso a datos de recaudación (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     # ── Consultas ─────────────────────────────────────────────────────────
 
     def getRecaudaciones(self):
+        """Lista los registros de recaudación."""
         sql = """
             SELECT
                 r.id_recaudacion,
@@ -40,6 +43,7 @@ class RecaudacionDao(BaseDAO):
         return self.execute_query(sql)
 
     def getRecaudacionById(self, id_recaudacion):
+        """Devuelve el registro de recaudación por su id, o None si no existe."""
         sql = """
             SELECT
                 r.id_recaudacion,
@@ -69,6 +73,7 @@ class RecaudacionDao(BaseDAO):
         return self.execute_query_one(sql, (id_recaudacion,))
 
     def getRecaudacionesPendientes(self):
+        """Lista las recaudaciones pendientes de depósito."""
         sql = """
             SELECT
                 r.id_recaudacion,
@@ -90,6 +95,7 @@ class RecaudacionDao(BaseDAO):
     # ── Helpers internos ─────────────────────────────────────────────────
 
     def _generarNumero(self, cur):
+        """Genera el siguiente número correlativo de recaudación dentro de la transacción en curso (cursor `cur`)."""
         año    = datetime.now().year
         mes    = datetime.now().strftime('%m')
         patron = f'REC-{año}-{mes}-%'
@@ -135,7 +141,7 @@ class RecaudacionDao(BaseDAO):
         id_deposito = data.get('id_deposito')
 
         if not all([id_caja, id_deposito]):
-            raise ValueError('id_caja e id_deposito son obligatorios.')
+            raise ValueError('La caja y el depósito son obligatorios.')
 
         fecha_deposito = data.get('fecha_deposito') or None
 

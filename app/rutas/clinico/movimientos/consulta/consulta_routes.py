@@ -9,6 +9,7 @@ ROLES_CONSULTA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 @consultamod.route('/consulta-index')
 @role_required(*ROLES_CONSULTA)
 def consultaIndex():
+    """Página principal de Consulta (workspace de la consulta clínica)."""
     return render_template('consulta-index.html')
 
 

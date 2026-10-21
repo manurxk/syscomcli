@@ -3,10 +3,13 @@ from app.core.base_dao import BaseDAO
 
 
 class DepositoDao(BaseDAO):
+    """Acceso a datos de depósito (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getDepositos(self):
+        """Lista los registros de depósito."""
         sql = """
             SELECT id_deposito, des_deposito, cod_deposito, tipo_deposito,
                    numero_cuenta, banco_deposito, ruc_banco, moneda_deposito, est_deposito
@@ -16,6 +19,7 @@ class DepositoDao(BaseDAO):
         return self.execute_query(sql)
 
     def getDepositoById(self, id_deposito):
+        """Devuelve el registro de depósito por su id, o None si no existe."""
         sql = """
             SELECT id_deposito, des_deposito, cod_deposito, tipo_deposito,
                    numero_cuenta, banco_deposito, ruc_banco, moneda_deposito, est_deposito
@@ -24,9 +28,11 @@ class DepositoDao(BaseDAO):
         return self.execute_query_one(sql, (id_deposito,))
 
     def validarDescripcion(self, descripcion):
+        """Indica si la descripción solo contiene caracteres permitidos."""
         return bool(re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .\-]+$", descripcion))
 
     def depositoExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de depósito con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM depositos WHERE LOWER(des_deposito)=LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -37,6 +43,7 @@ class DepositoDao(BaseDAO):
     def guardarDeposito(self, descripcion, codigo=None, tipo_deposito='BANCO',
                         numero_cuenta=None, banco=None, ruc_banco=None,
                         moneda='PYG', estado=True, usuario_creacion=None):
+        """Inserta un registro de depósito y devuelve el id generado."""
         sql = """
             INSERT INTO depositos (des_deposito, cod_deposito, tipo_deposito,
                                    numero_cuenta, banco_deposito, ruc_banco,
@@ -57,6 +64,7 @@ class DepositoDao(BaseDAO):
     def updateDeposito(self, id_deposito, descripcion, codigo=None, tipo_deposito='BANCO',
                        numero_cuenta=None, banco=None, ruc_banco=None,
                        moneda='PYG', estado=True, usuario_modificacion=None):
+        """Actualiza los datos de depósito; devuelve True si modificó una fila."""
         sql = """
             UPDATE depositos
             SET des_deposito=%s, cod_deposito=%s, tipo_deposito=%s,
@@ -74,5 +82,6 @@ class DepositoDao(BaseDAO):
         ) > 0
 
     def desactivarDeposito(self, id_deposito, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de depósito; devuelve True si modificó una fila."""
         sql = "UPDATE depositos SET est_deposito=FALSE, usuario_modificacion=%s WHERE id_deposito=%s"
         return self.execute_query(sql, (usuario_modificacion, id_deposito), commit=True) > 0

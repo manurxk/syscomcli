@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.tipo_analisis.TipoAnalisisDao import TipoAnalisisDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipoanalisisapi = Blueprint('tipoanalisisapi', __name__)
 
@@ -9,6 +10,7 @@ tipoanalisisapi = Blueprint('tipoanalisisapi', __name__)
 @tipoanalisisapi.route('/tipos-analisis', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposAnalisis():
+    """GET: lista los registros de tipo de análisis."""
     try:
         data = TipoAnalisisDao().getTiposAnalisis()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getTiposAnalisis():
 @tipoanalisisapi.route('/tipos-analisis/<int:tipo_analisis_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoAnalisis(tipo_analisis_id):
+    """GET: registro de tipo de análisis por su id; 404 si no existe."""
     try:
         registro = TipoAnalisisDao().getTipoAnalisisById(tipo_analisis_id)
         if not registro:
@@ -33,6 +36,7 @@ def getTipoAnalisis(tipo_analisis_id):
 @tipoanalisisapi.route('/tipos-analisis', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoAnalisis():
+    """POST: valida los datos y crea un registro de tipo de análisis; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoAnalisisDao()
 
@@ -40,11 +44,11 @@ def addTipoAnalisis():
     estado = bool(data.get('est_tipo_analisis', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoAnalisisExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de análisis', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoAnalisis(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addTipoAnalisis():
 @tipoanalisisapi.route('/tipos-analisis/<int:tipo_analisis_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoAnalisis(tipo_analisis_id):
+    """PUT: valida y actualiza el registro de tipo de análisis; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoAnalisisDao()
 
@@ -67,11 +72,11 @@ def updateTipoAnalisis(tipo_analisis_id):
     estado = bool(data.get('est_tipo_analisis', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoAnalisisExiste(descripcion, excluir_id=tipo_analisis_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de análisis', descripcion)}), 400
 
     try:
         dao.updateTipoAnalisis(tipo_analisis_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateTipoAnalisis(tipo_analisis_id):
 @tipoanalisisapi.route('/tipos-analisis/<int:tipo_analisis_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoAnalisis(tipo_analisis_id):
+    """DELETE: baja lógica del registro de tipo de análisis; 404 si no existe."""
     dao = TipoAnalisisDao()
 
     if not dao.getTipoAnalisisById(tipo_analisis_id):

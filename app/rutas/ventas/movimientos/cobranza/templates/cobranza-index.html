@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Cobranzas (listado y gestión). Ruta: /cobranza-index. API: /api/v1/cobranzas. #}
 {% block titulo %}Cobranzas{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -10,7 +11,7 @@
           <div class="page-header-subtitle">Registro de cobros efectivos sobre cuentas a cobrar</div>
         </div>
         <div class="col-auto mt-4">
-          <a class="btn btn-primary btn-sm" href="{{ url_for('cobranza.cobranzaAgregar') }}">Nueva Cobranza</a>
+          {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a class="btn btn-primary btn-sm" href="{{ url_for('cobranza.cobranzaAgregar') }}">Nueva Cobranza</a>{% endif %}
         </div>
       </div>
     </div>
@@ -83,7 +84,7 @@
       </div>
       <div class="modal-footer border-top">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>
+        {% if tiene_permiso_accion('VENTAS', 'ELIMINAR') %}<button type="button" class="btn btn-danger btn-sm d-none" id="btnAnular">Anular</button>{% endif %}
       </div>
     </div>
   </div>
@@ -118,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   });
   cargar();
-  document.getElementById('btnAnular').addEventListener('click', anular);
+  document.getElementById('btnAnular')?.addEventListener('click', anular);
 });
 
 async function cargar() {
@@ -168,7 +169,7 @@ async function verDetalle(id) {
     tbody.appendChild(tr);
   });
 
-  document.getElementById('btnAnular').classList.toggle('d-none', est === 'ANULADA');
+  document.getElementById('btnAnular')?.classList.toggle('d-none', est === 'ANULADA');
   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 }
 

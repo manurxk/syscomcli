@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.tipo_item.TipoItemDao import TipoItemDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipoitemapi = Blueprint('tipoitemapi', __name__)
 
@@ -9,6 +10,7 @@ tipoitemapi = Blueprint('tipoitemapi', __name__)
 @tipoitemapi.route('/tipos-items', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getTiposItems():
+    """GET: lista los registros de tipo de ítem."""
     try:
         return jsonify({'success': True, 'data': TipoItemDao().getTiposItems(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getTiposItems():
 @tipoitemapi.route('/tipos-items/<int:id_tipo_item>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getTipoItem(id_tipo_item):
+    """GET: devuelve tipo de ítem por su id; 404 si no existe."""
     try:
         registro = TipoItemDao().getTipoItemById(id_tipo_item)
         if not registro:
@@ -32,17 +35,18 @@ def getTipoItem(id_tipo_item):
 @tipoitemapi.route('/tipos-items', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoItem():
+    """POST: valida los datos y registra tipo de ítem; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoItemDao()
 
     descripcion = (data.get('des_tipo_item') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoItemExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un tipo de ítem "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de ítem', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoItem(
@@ -62,6 +66,7 @@ def addTipoItem():
 @tipoitemapi.route('/tipos-items/<int:id_tipo_item>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoItem(id_tipo_item):
+    """PUT: valida y actualiza tipo de ítem; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoItemDao()
 
@@ -71,11 +76,11 @@ def updateTipoItem(id_tipo_item):
     descripcion = (data.get('des_tipo_item') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoItemExiste(descripcion, excluir_id=id_tipo_item):
-        return jsonify({'success': False, 'error': f'Ya existe un tipo de ítem "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de ítem', descripcion)}), 400
 
     try:
         dao.updateTipoItem(
@@ -96,6 +101,7 @@ def updateTipoItem(id_tipo_item):
 @tipoitemapi.route('/tipos-items/<int:id_tipo_item>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoItem(id_tipo_item):
+    """DELETE: da de baja (lógica) tipo de ítem; 404 si no existe."""
     dao = TipoItemDao()
     if not dao.getTipoItemById(id_tipo_item):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

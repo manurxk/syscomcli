@@ -4,14 +4,18 @@ from app.core.base_dao import BaseDAO
 
 
 class CargoDao(BaseDAO):
+    """Acceso a datos de cargo (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getCargos(self):
+        """Lista los registros de cargo."""
         sql = "SELECT id_cargo, des_cargo, est_cargo, es_clinico FROM cargos ORDER BY id_cargo"
         return self.execute_query(sql)
 
     def getCargoById(self, cargo_id):
+        """Devuelve el registro de cargo por su id, o None si no existe."""
         sql = "SELECT id_cargo, des_cargo, est_cargo, es_clinico FROM cargos WHERE id_cargo = %s"
         return self.execute_query_one(sql, (cargo_id,))
 
@@ -21,9 +25,11 @@ class CargoDao(BaseDAO):
         return bool(re.match(patron, descripcion))
 
     def esCargoReservado(self, descripcion):
+        """Indica si la descripción corresponde a un cargo reservado del sistema."""
         return descripcion.strip().upper() in ("ADMINISTRADOR", "SUPERADMINISTRADOR")
 
     def cargoExiste(self, descripcion, excluir_id=None):
+        """Indica si ya existe un registro de cargo con ese valor; `excluir_id` omite el propio registro al editar."""
         sql = "SELECT 1 FROM cargos WHERE LOWER(des_cargo) = LOWER(%s)"
         params = [descripcion]
         if excluir_id:
@@ -32,6 +38,7 @@ class CargoDao(BaseDAO):
         return self.execute_query_one(sql, tuple(params)) is not None
 
     def guardarCargo(self, descripcion, estado, es_clinico=False, usuario_creacion=None):
+        """Inserta un registro de cargo y devuelve el id generado."""
         sql = """
             INSERT INTO cargos (des_cargo, est_cargo, es_clinico, usuario_creacion)
             VALUES (%s, %s, %s, %s)
@@ -41,6 +48,7 @@ class CargoDao(BaseDAO):
         return fila["id_cargo"] if fila else None
 
     def updateCargo(self, cargo_id, descripcion, estado, es_clinico=False, usuario_modificacion=None):
+        """Actualiza los datos de cargo; devuelve True si modificó una fila."""
         sql = """
             UPDATE cargos
             SET des_cargo = %s, est_cargo = %s, es_clinico = %s, usuario_modificacion = %s
@@ -49,6 +57,7 @@ class CargoDao(BaseDAO):
         return self.execute_query(sql, (descripcion, estado, es_clinico, usuario_modificacion, cargo_id), commit=True) > 0
 
     def desactivarCargo(self, cargo_id, usuario_modificacion=None):
+        """Da de baja (lógica) el registro de cargo; devuelve True si modificó una fila."""
         sql = """
             UPDATE cargos
             SET est_cargo = FALSE, usuario_modificacion = %s

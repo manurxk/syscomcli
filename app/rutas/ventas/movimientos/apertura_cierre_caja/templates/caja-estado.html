@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Estado de Cajas (estado actual). Ruta: /caja-estado. API: /api/v1/monedas, /api/v1/cajas-estado, /api/v1/cajas, /api/v1/apertura-caja, /api/v1/cierre-caja. #}
 {% block titulo %}Estado de Cajas{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -144,6 +145,9 @@
 {% endblock %}
 {% block js %}
 <script>
+// Permisos por acción (matriz «Permisos»): cierre = EDITAR, apertura = CREAR
+const PUEDE_CERRAR = {{ tiene_permiso_accion('VENTAS', 'EDITAR') | tojson }};
+const PUEDE_ABRIR = {{ tiene_permiso_accion('VENTAS', 'CREAR') | tojson }};
 const CSRFToken = "{{ csrf_token() }}";
 
 const fmt = n => parseFloat(n || 0).toLocaleString('es-PY');
@@ -179,12 +183,12 @@ async function cargarCajas() {
     const badgeText = abierta ? 'ABIERTA' : 'CERRADA';
     const borderClass = abierta ? 'border-start-success' : 'border-start-secondary';
     const btnAccion = abierta
-      ? `<button class="btn btn-danger btn-sm w-100" onclick="prepararCierre(${c.id_caja},'${c.des_caja}')">
+      ? (!PUEDE_CERRAR ? '' : `<button class="btn btn-danger btn-sm w-100" onclick="prepararCierre(${c.id_caja},'${c.des_caja}')">
            <i class="fas fa-lock me-1"></i>Cerrar Caja
-         </button>`
-      : `<button class="btn btn-success btn-sm w-100" onclick="prepararApertura(${c.id_caja},'${c.des_caja}')">
+         </button>`)
+      : (!PUEDE_ABRIR ? '' : `<button class="btn btn-success btn-sm w-100" onclick="prepararApertura(${c.id_caja},'${c.des_caja}')">
            <i class="fas fa-lock-open me-1"></i>Abrir Caja
-         </button>`;
+         </button>`);
     const infoApertura = abierta && c.fecha_apertura
       ? `<div class="small text-muted mt-2">Abierta: ${c.fecha_apertura} — ${c.usuario_apertura || ''} (${c.cod_moneda})</div>`
       : '';

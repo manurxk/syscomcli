@@ -7,4 +7,5 @@ entidademisoramod = Blueprint('entidad_emisora', __name__, template_folder='temp
 @entidademisoramod.route('/entidad-emisora-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def entidadEmisoraIndex():
+    """Página principal de entidad emisora (listado y acciones)."""
     return render_template('entidad-emisora-index.html')

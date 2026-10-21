@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.movimientos.recaudacion.RecaudacionDao import RecaudacionDao
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
+from app.utils.mensajes_validacion import msg_obligatorio
 
 recaudacionapi = Blueprint('recaudacionapi', __name__)
 
@@ -11,7 +12,9 @@ ROLES_ADMIN   = ("ADMINISTRADOR", "SUPERADMIN")
 
 @recaudacionapi.route('/recaudaciones', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getRecaudaciones():
+    """GET: lista los registros de recaudación."""
     try:
         return jsonify({'success': True, 'data': RecaudacionDao().getRecaudaciones(), 'error': None}), 200
     except Exception as e:
@@ -21,7 +24,9 @@ def getRecaudaciones():
 
 @recaudacionapi.route('/recaudaciones/pendientes', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getRecaudacionesPendientes():
+    """GET: lista los registros de recaudación."""
     try:
         return jsonify({'success': True, 'data': RecaudacionDao().getRecaudacionesPendientes(), 'error': None}), 200
     except Exception as e:
@@ -31,7 +36,9 @@ def getRecaudacionesPendientes():
 
 @recaudacionapi.route('/recaudaciones/<int:id_recaudacion>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getRecaudacion(id_recaudacion):
+    """GET: devuelve recaudación por su id; 404 si no existe."""
     try:
         reg = RecaudacionDao().getRecaudacionById(id_recaudacion)
         if not reg:
@@ -44,12 +51,14 @@ def getRecaudacion(id_recaudacion):
 
 @recaudacionapi.route('/recaudaciones', methods=['POST'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
 def addRecaudacion():
+    """POST: valida los datos y registra recaudación; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
 
     for campo in ('id_caja', 'id_deposito'):
         if not data.get(campo):
-            return jsonify({'success': False, 'error': f'El campo "{campo}" es obligatorio.'}), 400
+            return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
 
     monto_total = (float(data.get('monto_efectivo') or 0) +
                    float(data.get('monto_cheques')  or 0) +
@@ -69,11 +78,13 @@ def addRecaudacion():
 
 @recaudacionapi.route('/recaudaciones/<int:id_recaudacion>/depositar', methods=['PUT'])
 @role_required(*ROLES_ADMIN)
+@permiso_requerido("VENTAS", "EDITAR")
 def depositarRecaudacion(id_recaudacion):
+    """PUT: marca la recaudación como depositada."""
     data          = request.get_json() or {}
     fecha_deposito = data.get('fecha_deposito')
     if not fecha_deposito:
-        return jsonify({'success': False, 'error': 'La fecha de depósito es obligatoria.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Fecha de depósito')}), 400
     try:
         ok = RecaudacionDao().marcarDepositada(
             id_recaudacion, fecha_deposito, usuario=session.get('id_usuario')
@@ -90,7 +101,9 @@ def depositarRecaudacion(id_recaudacion):
 
 @recaudacionapi.route('/recaudaciones/<int:id_recaudacion>/anular', methods=['PUT'])
 @role_required(*ROLES_ADMIN)
+@permiso_requerido("VENTAS", "ELIMINAR")
 def anularRecaudacion(id_recaudacion):
+    """PUT: anula la recaudación."""
     try:
         ok = RecaudacionDao().anular(id_recaudacion, usuario=session.get('id_usuario'))
         if not ok:

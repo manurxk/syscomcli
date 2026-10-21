@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Medicamentos (listado y gestión). Ruta: /medicamento-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/medicamentos. #}
 
 {% block titulo %}
 Medicamentos
@@ -132,7 +133,7 @@ Medicamentos
       const descripcion = $('#txtDescripcion').val().trim();
 
       if (!descripcion) {
-        Swal.fire('Atención', 'La descripción es obligatoria.', 'warning');
+        Swal.fire('Atención', 'El campo "Descripción" es obligatorio.', 'warning');
         return;
       }
 

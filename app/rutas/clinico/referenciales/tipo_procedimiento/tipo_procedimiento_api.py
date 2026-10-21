@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.tipo_procedimiento.TipoProcedimientoDao import TipoProcedimientoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipoprocedimientoapi = Blueprint('tipoprocedimientoapi', __name__)
 
@@ -9,6 +10,7 @@ tipoprocedimientoapi = Blueprint('tipoprocedimientoapi', __name__)
 @tipoprocedimientoapi.route('/tipos-procedimientos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTiposProcedimientos():
+    """GET: lista los registros de tipo de procedimiento."""
     try:
         data = TipoProcedimientoDao().getTiposProcedimientos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getTiposProcedimientos():
 @tipoprocedimientoapi.route('/tipos-procedimientos/<int:tipo_procedimiento_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getTipoProcedimiento(tipo_procedimiento_id):
+    """GET: registro de tipo de procedimiento por su id; 404 si no existe."""
     try:
         registro = TipoProcedimientoDao().getTipoProcedimientoById(tipo_procedimiento_id)
         if not registro:
@@ -33,6 +36,7 @@ def getTipoProcedimiento(tipo_procedimiento_id):
 @tipoprocedimientoapi.route('/tipos-procedimientos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoProcedimiento():
+    """POST: valida los datos y crea un registro de tipo de procedimiento; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoProcedimientoDao()
 
@@ -40,11 +44,11 @@ def addTipoProcedimiento():
     estado = bool(data.get('est_tipo_procedimiento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoProcedimientoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de procedimiento', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoProcedimiento(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addTipoProcedimiento():
 @tipoprocedimientoapi.route('/tipos-procedimientos/<int:tipo_procedimiento_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoProcedimiento(tipo_procedimiento_id):
+    """PUT: valida y actualiza el registro de tipo de procedimiento; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoProcedimientoDao()
 
@@ -67,11 +72,11 @@ def updateTipoProcedimiento(tipo_procedimiento_id):
     estado = bool(data.get('est_tipo_procedimiento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.tipoProcedimientoExiste(descripcion, excluir_id=tipo_procedimiento_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de procedimiento', descripcion)}), 400
 
     try:
         dao.updateTipoProcedimiento(tipo_procedimiento_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateTipoProcedimiento(tipo_procedimiento_id):
 @tipoprocedimientoapi.route('/tipos-procedimientos/<int:tipo_procedimiento_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoProcedimiento(tipo_procedimiento_id):
+    """DELETE: baja lógica del registro de tipo de procedimiento; 404 si no existe."""
     dao = TipoProcedimientoDao()
 
     if not dao.getTipoProcedimientoById(tipo_procedimiento_id):

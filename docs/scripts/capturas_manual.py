@@ -19,7 +19,9 @@ Notas:
   suma al bloqueo de la cuenta. Ej.: -e CAPTURAS_PASS_PSICOADMIN para las capturas de ADMIN.
 - Sysclin permite una sola sesión por usuario: no usar una cuenta que alguien tenga abierta.
 - Las capturas muestran lo que haya en la base: correrlo solo con datos de prueba.
-- El script solo navega y abre formularios o modales: nunca presiona Guardar.
+- El script solo navega y abre formularios o modales: nunca presiona Guardar, salvo las capturas de la sección
+  "mensajes" (avisos de validación): ahí se envía un dato que el servidor RECHAZA (vacío, símbolos o repetido),
+  así que no se guarda nada.
 """
 import os
 import sys
@@ -62,7 +64,8 @@ def titulo(texto):
 MODAL = '.modal.show .modal-content'
 
 # Cada captura: sección de la guía, archivo, rol, pantalla, acciones previas y marcas (selector, número de paso[, 'esquina']).
-# Acciones: ('click', selector), ('esperar', selector) o ('js', código que se ejecuta en la página).
+# Acciones: ('click', selector), ('esperar', selector), ('js', código que se ejecuta en la página)
+# o ('llenar', selector, valor).
 # Recorte opcional: 'hasta' corta debajo de ese elemento; 'desde' empieza arriba de ese elemento;
 # 'alto' limita la altura en píxeles; 'elemento' captura solo ese elemento (por ejemplo, un modal).
 CAPTURAS = [
@@ -301,7 +304,7 @@ CAPTURAS = [
         'marcas': [(campo('Descripción'), 3), (boton('Guardar'), 4, 'esquina')],
     },
     {
-        'seccion': 'reportes', 'archivo': '01_filtros.jpg', 'rol': 'ADMIN',
+        'seccion': 'reportes', 'archivo': '01_filtros.jpg', 'rol': 'RECEPCION',
         'url': '/reporte/index',
         'marcas': [(campo('Desde'), 1), (boton('Aplicar'), 2, 'esquina'), (boton('Exportar PDF'), 3, 'esquina')],
     },
@@ -452,6 +455,55 @@ CAPTURAS = [
     },
 ]
 
+
+def _capturas_avisos():
+    """Avisos de validación (anexo de la guía): 3 tipos en 2 catálogos de ejemplo, rol Administrador.
+    Cada captura envía un dato que el servidor rechaza, así que no se guarda nada."""
+    pantallas = {'especialidad': '/agendamiento/referenciales/especialidad/especialidad-index',
+                 'cargo': '/mantenimiento/referenciales/cargo/cargo-index'}
+    abrir = [('click', '#btnAgregar'), ('esperar', '#modalFormulario.show')]
+    guardar = [('click', '#btnGuardar'), ('esperar', '.swal2-popup')]
+    # Repite la descripción de la primera fila del listado
+    repetir = [('esperar', '#tbl tbody tr td'),
+               ('js', "window.__desc = document.querySelector('#tbl tbody tr td:nth-child(2)').innerText.trim();")]
+    tipos = {
+        'obligatorio': abrir + guardar,
+        'caracteres': abrir + [('llenar', '#txtDescripcion', '....')] + guardar,
+        'ya_existe': repetir + abrir + [('js', "document.getElementById('txtDescripcion').value = window.__desc;")] + guardar,
+    }
+    return [{'seccion': 'mensajes', 'archivo': f'{tipo}_{pantalla}.jpg', 'rol': 'ADMIN', 'url': url,
+             'acciones': acciones, 'elemento': '.swal2-popup'}
+            for pantalla, url in pantallas.items() for tipo, acciones in tipos.items()]
+
+
+def _capturas_avisos_recepcion():
+    """Avisos de tipo 'valor' y 'estado' (anexo de la guía), con la cuenta de Recepción. Ambos los rechaza el
+    servidor, así que no se guarda nada: el rango de un bloqueo con el fin antes del inicio (Agenda Médica) y un
+    cambio de estado que la cita no admite (Citas: se cambia a Completada el botón de una cita Confirmada)."""
+    return [
+        {'seccion': 'mensajes', 'archivo': 'valor_agenda_medica.jpg', 'rol': 'RECEPCION',
+         'url': '/agendamiento/agenda-horarios/agenda-horarios-index',
+         'acciones': [('esperar', '#selectEspecialista option:nth-child(2)'),
+                      ('js', "const s = document.getElementById('selectEspecialista'); "
+                             "s.value = s.options[1].value; $(s).trigger('change');"),
+                      ('click', '#btnBloqueos'), ('esperar', '#modalBloqueos.show'),
+                      ('llenar', '#blqDesde', '2027-01-02T10:00'), ('llenar', '#blqHasta', '2027-01-01T10:00'),
+                      ('click', '#btnAgregarBloqueo'), ('esperar', '.swal2-popup')],
+         'elemento': '.swal2-popup'},
+        {'seccion': 'mensajes', 'archivo': 'estado_citas.jpg', 'rol': 'RECEPCION',
+         'url': '/agendamiento/citas/citas-index',
+         'acciones': [('esperar', '#tbl tbody tr td'), ('js', "$('#tbl').DataTable().search('Confirmada').draw()"),
+                      ('esperar', '#tbl tbody tr button[name="btn_cambiar_estado"]'),
+                      ('js', "$('#tbl tbody tr button[name=\"btn_cambiar_estado\"]').first().data('estado', 'COMPLETADA')"),
+                      ('click', '#tbl tbody tr button[name="btn_cambiar_estado"]'),
+                      ('esperar', '.swal2-confirm'), ('click', '.swal2-confirm'), ('esperar', '.swal2-icon-error')],
+         'elemento': '.swal2-popup'},
+    ]
+
+
+CAPTURAS += _capturas_avisos()
+CAPTURAS += _capturas_avisos_recepcion()
+
 # Marca circular violeta (paleta SYSCLIN) más un contorno. Por defecto va a la izquierda del elemento,
 # centrada (no tapa la etiqueta de arriba); 'esquina' la pone arriba a la izquierda (botones con vecino al lado).
 JS_MARCAR = """
@@ -497,9 +549,11 @@ def caja(page, selector):
 def capturar(page, c):
     page.goto(BASE + c['url'])
     page.wait_for_load_state('networkidle')
-    for accion, selector in c.get('acciones', []):
+    for accion, selector, *resto in c.get('acciones', []):
         if accion == 'click':
             page.locator(selector).first.click()
+        elif accion == 'llenar':
+            page.locator(selector).first.fill(resto[0])
         elif accion == 'esperar':
             # Las <option> nunca son "visibles": para esas alcanza con que existan
             estado = 'attached' if 'option' in selector else 'visible'

@@ -1,5 +1,5 @@
 -- 11_referenciales_ventas.sql — Referenciales de ventas
--- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).

@@ -1,4 +1,3 @@
-{% from 'macros.html' import modal %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -273,63 +272,23 @@
                         {% endif %}
 
                         {% for section in sidebar_items %}
-                        {% if section.is_flat %}
-                            {% for group in section.groups %}
-                            <li class="nav-header">{{ group.heading }}</li>
-                            {% for item in group['items'] %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ item.url if item.url else '#' }}">
-                                    {% if item.html_icon %}
-                                    <span class="nav-icon">{{ item.html_icon|safe }}</span>
-                                    {% else %}
-                                    <i class="nav-icon" data-feather="circle"></i>
-                                    {% endif %}
-                                    <p>{{ item.title }}</p>
-                                </a>
-                            </li>
-                            {% endfor %}
-                            {% endfor %}
-                        {% else %}
                         <li class="nav-header">{{ section.heading }}</li>
                         {% for menu in section.menus %}
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
+                        <li class="nav-item" role="none">
+                            <a href="#" class="nav-link" role="menuitem" aria-haspopup="true">
                                 <i class="nav-icon" data-feather="{{ menu.icon if menu.icon else 'circle' }}"></i>
                                 <p>
                                     {{ menu.title }}
                                     <i class="nav-arrow fas fa-angle-right"></i>
                                 </p>
                             </a>
-                            <ul class="nav nav-treeview">
-                                {% if menu.submenus %}
-                                {% for submenu in menu.submenus %}
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="nav-icon" data-feather="circle"></i>
-                                        <p>
-                                            {{ submenu.title }}
-                                            <i class="nav-arrow fas fa-angle-right"></i>
-                                        </p>
-                                    </a>
-                                    <ul class="nav nav-treeview">
-                                        {% for link in submenu.links %}
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="{{ link.url if link.url else '#' }}">
-                                                <i class="nav-icon" data-feather="circle"></i>
-                                                <p>{% if link.html_icon %}<span>{{ link.html_icon|safe }}</span>{% endif %}{{ link.title }}</p>
-                                            </a>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </li>
-                                {% endfor %}
-                                {% endif %}
+                            <ul class="nav nav-treeview" role="menu">
                                 {% if menu.links %}
                                 {% for link in menu.links %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ link.url if link.url else '#' }}">
-                                        {% if link.html_icon %}
-                                        <span class="nav-icon">{{ link.html_icon|safe }}</span>
+                                <li class="nav-item" role="none">
+                                    <a class="nav-link" role="menuitem" href="{{ link.url if link.url else '#' }}"{% if link.url and link.url == request.path %} aria-current="page"{% endif %}{% if link.descripcion %} title="{{ link.descripcion }}"{% endif %}>
+                                        {% if link.icon %}
+                                        <span class="nav-icon"><i data-feather="{{ link.icon }}"></i></span>
                                         {% else %}
                                         <i class="nav-icon" data-feather="circle"></i>
                                         {% endif %}
@@ -341,7 +300,6 @@
                             </ul>
                         </li>
                         {% endfor %}
-                        {% endif %}
                         {% endfor %}
 
                         {% if not sidebar_items %}
@@ -517,6 +475,7 @@
 
             var noResults = document.getElementById('menuSearchNoResults');
             var groups = document.querySelectorAll('.sidebar-menu > li.nav-item');
+            var restaurar = window.restaurarGruposMenu || function () {};
 
             input.addEventListener('input', function () {
                 var q = input.value.trim().toLowerCase();
@@ -538,6 +497,7 @@
                     if (q === '') {
                         groupLi.style.display = '';
                         groupLi.classList.remove('menu-open');
+                        restaurar();
                     } else {
                         groupLi.style.display = groupHasMatch ? '' : 'none';
                         groupLi.classList.toggle('menu-open', groupHasMatch);
@@ -548,6 +508,48 @@
                 if (noResults) noResults.style.display = (q !== '' && !anyMatch) ? '' : 'none';
             });
         });
+    </script>
+
+    <!-- Recordar qué grupos del menú quedaron abiertos (solo en este navegador) -->
+    <script>
+        (function () {
+            var KEY = 'sidebar-grupos-abiertos';
+            var grupos = document.querySelectorAll('.sidebar-menu > li.nav-item');
+            var buscador = document.getElementById('menuSearchInput');
+
+            function nombre(li) {
+                var p = li.querySelector(':scope > a > p');
+                return p ? p.firstChild.textContent.trim() : '';
+            }
+            function leer() {
+                try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; }
+            }
+            function restaurar() {
+                var abiertos = leer();
+                grupos.forEach(function (li) {
+                    if (li.querySelector(':scope > ul.nav-treeview') && abiertos.indexOf(nombre(li)) !== -1) {
+                        li.classList.add('menu-open');
+                    }
+                });
+            }
+            function guardar() {
+                if (buscador && buscador.value.trim() !== '') return;  // la búsqueda abre grupos por su cuenta
+                var abiertos = [];
+                grupos.forEach(function (li) {
+                    if (li.classList.contains('menu-open')) abiertos.push(nombre(li));
+                });
+                try { localStorage.setItem(KEY, JSON.stringify(abiertos)); } catch (e) {}
+            }
+
+            window.restaurarGruposMenu = restaurar;
+            document.addEventListener('DOMContentLoaded', function () {
+                restaurar();
+                var obs = new MutationObserver(guardar);
+                grupos.forEach(function (li) {
+                    obs.observe(li, { attributes: true, attributeFilter: ['class'] });
+                });
+            });
+        })();
     </script>
 
     <!-- Dark mode toggle -->

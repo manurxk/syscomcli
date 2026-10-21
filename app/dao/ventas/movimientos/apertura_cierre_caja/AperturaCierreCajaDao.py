@@ -1,12 +1,16 @@
+import psycopg2.errors
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
 
 
 class AperturaCierreCajaDao(BaseDAO):
+    """Acceso a datos de apertura y cierre de caja (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getAperturasCierres(self):
+        """Lista los registros de apertura/cierre de caja."""
         sql = """
             SELECT
                 ac.id_apertura_cierre,
@@ -35,6 +39,7 @@ class AperturaCierreCajaDao(BaseDAO):
         return self.execute_query(sql)
 
     def getAperturaCierreById(self, id_apertura_cierre):
+        """Devuelve el registro de apertura/cierre de caja por su id, o None si no existe."""
         sql = """
             SELECT
                 ac.id_apertura_cierre,
@@ -64,6 +69,7 @@ class AperturaCierreCajaDao(BaseDAO):
         return self.execute_query_one(sql, (id_apertura_cierre,))
 
     def getAperturaActivaPorCaja(self, id_caja):
+        """Devuelve la apertura vigente de la caja, o None si está cerrada."""
         sql = """
             SELECT
                 ac.id_apertura_cierre,
@@ -85,6 +91,7 @@ class AperturaCierreCajaDao(BaseDAO):
         return self.execute_query_one(sql, (id_caja,))
 
     def getEstadoCajas(self):
+        """Devuelve cada caja con su estado actual (abierta o cerrada)."""
         sql = """
             SELECT
                 c.id_caja,
@@ -117,6 +124,7 @@ class AperturaCierreCajaDao(BaseDAO):
         return self.execute_query(sql)
 
     def calcularSaldoEsperado(self, id_caja):
+        """Calcula el saldo esperado de la caja con los movimientos de la apertura vigente."""
         apertura = self.getAperturaActivaPorCaja(id_caja)
         if not apertura:
             return None
@@ -167,6 +175,7 @@ class AperturaCierreCajaDao(BaseDAO):
 
     def guardarApertura(self, id_caja, id_usuario, saldo_inicial=0,
                         observaciones=None, usuario_creacion=None, id_moneda=1):
+        """Registra la apertura de caja con su saldo inicial y moneda; devuelve el id."""
         apertura_activa = self.getAperturaActivaPorCaja(id_caja)
         if apertura_activa:
             raise ValueError(f"La caja ya tiene una apertura activa (ID {apertura_activa['id_apertura_cierre']}).")
@@ -198,42 +207,29 @@ class AperturaCierreCajaDao(BaseDAO):
                       monto_efectivo=0, monto_cheques=0, monto_tarjetas=0,
                       monto_transferencias=0, observaciones=None,
                       usuario_creacion=None):
-        apertura_activa = self.getAperturaActivaPorCaja(id_caja)
-        if not apertura_activa:
-            raise ValueError("No hay apertura activa para esta caja.")
-
+        """Registra el cierre de caja con los montos contados por medio de pago."""
         def _fn(cur):
-            cur.execute("""
-                UPDATE aperturas_cierre_caja
-                SET est_apertura_cierre = 'C',
-                    usuario_modificacion = %s
-                WHERE id_apertura_cierre = %s
-            """, (usuario_creacion, apertura_activa['id_apertura_cierre']))
-            cur.execute("""
-                INSERT INTO aperturas_cierre_caja(
-                    id_caja, id_usuario, tipo_operacion, saldo_inicial,
-                    saldo_final, monto_efectivo, monto_cheques, monto_tarjetas,
-                    monto_transferencias, observaciones, est_apertura_cierre, usuario_creacion
-                )
-                VALUES (%s, %s, 'CIERRE', %s, %s, %s, %s, %s, %s, %s, 'C', %s)
-                RETURNING id_apertura_cierre
-            """, (id_caja, id_usuario,
-                  apertura_activa['saldo_inicial'], saldo_final,
-                  monto_efectivo, monto_cheques, monto_tarjetas, monto_transferencias,
-                  observaciones, usuario_creacion))
-            cierre_id = cur.fetchone()[0]
-            cur.execute("""
-                UPDATE cajas
-                SET caja_estado = 'CERRADA',
-                    usuario_modificacion = %s
-                WHERE id_caja = %s
-            """, (usuario_creacion, id_caja))
-            app.logger.info(f"Cierre de caja {id_caja} registrado ID={cierre_id}")
+            # sp_cerrar_caja valida, cierra la apertura, registra el CIERRE y deja la caja CERRADA
+            try:
+                cur.execute("""
+                    CALL sp_cerrar_caja(
+                        p_id_caja => %s, p_id_usuario => %s, p_saldo_final => %s,
+                        o_id_cierre => NULL, o_saldo_esperado => NULL, o_diferencia => NULL,
+                        p_monto_efectivo => %s, p_monto_cheques => %s, p_monto_tarjetas => %s,
+                        p_monto_transferencias => %s, p_observaciones => %s, p_usuario_creacion => %s)
+                """, (id_caja, id_usuario, saldo_final, monto_efectivo, monto_cheques,
+                      monto_tarjetas, monto_transferencias, observaciones, usuario_creacion))
+            except psycopg2.errors.RaiseException as e:
+                raise ValueError(e.diag.message_primary) from e
+            cierre_id, saldo_esperado, diferencia = cur.fetchone()
+            app.logger.info(f"Cierre de caja {id_caja} registrado ID={cierre_id} "
+                            f"(esperado={saldo_esperado}, diferencia={diferencia})")
             return cierre_id
 
         return self.execute_transaction(_fn)
 
     def getHistorialPorCaja(self, id_caja, fecha_desde=None, fecha_hasta=None):
+        """Devuelve las aperturas y cierres de la caja, con filtro opcional de fechas."""
         sql = """
             SELECT
                 ac.id_apertura_cierre,

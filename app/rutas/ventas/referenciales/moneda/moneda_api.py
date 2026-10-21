@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.moneda.MonedaDao import MonedaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 monedaapi = Blueprint('monedaapi', __name__)
 
@@ -9,6 +10,7 @@ monedaapi = Blueprint('monedaapi', __name__)
 @monedaapi.route('/monedas', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getMonedas():
+    """GET: lista los registros de moneda."""
     try:
         return jsonify({'success': True, 'data': MonedaDao().getMonedas(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getMonedas():
 @monedaapi.route('/monedas/<int:id_moneda>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getMoneda(id_moneda):
+    """GET: devuelve moneda por su id; 404 si no existe."""
     try:
         registro = MonedaDao().getMonedaById(id_moneda)
         if not registro:
@@ -32,6 +35,7 @@ def getMoneda(id_moneda):
 @monedaapi.route('/monedas', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addMoneda():
+    """POST: valida los datos y registra moneda; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = MonedaDao()
 
@@ -39,13 +43,13 @@ def addMoneda():
     codigo = (data.get('cod_moneda') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not codigo:
-        return jsonify({'success': False, 'error': 'El código es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Código')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.monedaExiste(codigo):
-        return jsonify({'success': False, 'error': f'Ya existe una moneda con código "{codigo}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una moneda con código', codigo)}), 400
 
     try:
         nuevo_id = dao.guardarMoneda(
@@ -67,6 +71,7 @@ def addMoneda():
 @monedaapi.route('/monedas/<int:id_moneda>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateMoneda(id_moneda):
+    """PUT: valida y actualiza moneda; 404 si no existe."""
     data = request.get_json() or {}
     dao = MonedaDao()
 
@@ -77,13 +82,13 @@ def updateMoneda(id_moneda):
     codigo = (data.get('cod_moneda') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not codigo:
-        return jsonify({'success': False, 'error': 'El código es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Código')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.monedaExiste(codigo, excluir_id=id_moneda):
-        return jsonify({'success': False, 'error': f'Ya existe una moneda con código "{codigo}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('una moneda con código', codigo)}), 400
 
     try:
         dao.updateMoneda(
@@ -106,6 +111,7 @@ def updateMoneda(id_moneda):
 @monedaapi.route('/monedas/<int:id_moneda>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarMoneda(id_moneda):
+    """DELETE: da de baja (lógica) moneda; 404 si no existe."""
     dao = MonedaDao()
     if not dao.getMonedaById(id_moneda):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

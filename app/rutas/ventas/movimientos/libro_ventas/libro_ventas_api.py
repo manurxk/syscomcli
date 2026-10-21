@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app
 
 from app.dao.ventas.movimientos.libro_ventas.LibroVentasDao import LibroVentasDao
-from app.auth.utils.decorators import role_required
+from app.auth.utils.decorators import role_required, permiso_requerido
 
 libroventasapi = Blueprint('libroventasapi', __name__)
 
@@ -10,7 +10,9 @@ ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 
 @libroventasapi.route('/libro-ventas', methods=['GET'])
 @role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
 def getLibroVentas():
+    """Devuelve las facturas del período para el libro de ventas (rango de fechas)."""
     fecha_desde = request.args.get('fecha_desde') or None
     fecha_hasta = request.args.get('fecha_hasta') or None
     try:

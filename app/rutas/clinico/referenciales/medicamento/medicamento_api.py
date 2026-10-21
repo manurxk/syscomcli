@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.clinico.referenciales.medicamento.MedicamentoDao import MedicamentoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 medicamentoapi = Blueprint('medicamentoapi', __name__)
 
@@ -9,6 +10,7 @@ medicamentoapi = Blueprint('medicamentoapi', __name__)
 @medicamentoapi.route('/medicamentos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getMedicamentos():
+    """GET: lista los registros de medicamento."""
     try:
         data = MedicamentoDao().getMedicamentos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +22,7 @@ def getMedicamentos():
 @medicamentoapi.route('/medicamentos/<int:medicamento_id>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def getMedicamento(medicamento_id):
+    """GET: registro de medicamento por su id; 404 si no existe."""
     try:
         registro = MedicamentoDao().getMedicamentoById(medicamento_id)
         if not registro:
@@ -33,6 +36,7 @@ def getMedicamento(medicamento_id):
 @medicamentoapi.route('/medicamentos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addMedicamento():
+    """POST: valida los datos y crea un registro de medicamento; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = MedicamentoDao()
 
@@ -40,11 +44,11 @@ def addMedicamento():
     estado = bool(data.get('est_medicamento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.medicamentoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un medicamento', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarMedicamento(descripcion, estado, usuario_creacion=session.get('id_usuario'))
@@ -57,6 +61,7 @@ def addMedicamento():
 @medicamentoapi.route('/medicamentos/<int:medicamento_id>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateMedicamento(medicamento_id):
+    """PUT: valida y actualiza el registro de medicamento; 404 si no existe."""
     data = request.get_json() or {}
     dao = MedicamentoDao()
 
@@ -67,11 +72,11 @@ def updateMedicamento(medicamento_id):
     estado = bool(data.get('est_medicamento', True))
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción solo puede contener letras, números, espacios y puntos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios y puntos')}), 400
     if dao.medicamentoExiste(descripcion, excluir_id=medicamento_id):
-        return jsonify({'success': False, 'error': f'Ya existe un registro "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un medicamento', descripcion)}), 400
 
     try:
         dao.updateMedicamento(medicamento_id, descripcion, estado, usuario_modificacion=session.get('id_usuario'))
@@ -84,6 +89,7 @@ def updateMedicamento(medicamento_id):
 @medicamentoapi.route('/medicamentos/<int:medicamento_id>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarMedicamento(medicamento_id):
+    """DELETE: baja lógica del registro de medicamento; 404 si no existe."""
     dao = MedicamentoDao()
 
     if not dao.getMedicamentoById(medicamento_id):

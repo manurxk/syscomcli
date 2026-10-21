@@ -21,6 +21,7 @@ def _resolver_id_especialista(id_especialista_body=None):
 @peiapi.route('/pei', methods=['GET'])
 @role_required(*ROLES_PEI)
 def listPei():
+    """GET: lista los PEI registrados."""
     try:
         data = PeiDao().listTodosActuales()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -32,6 +33,7 @@ def listPei():
 @peiapi.route('/pei/paciente/<int:id_paciente>', methods=['GET'])
 @role_required(*ROLES_PEI)
 def getPeiActual(id_paciente):
+    """GET: PEI vigente del paciente."""
     try:
         data = PeiDao().getPeiActual(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -43,6 +45,7 @@ def getPeiActual(id_paciente):
 @peiapi.route('/pei/paciente/<int:id_paciente>/historial', methods=['GET'])
 @role_required(*ROLES_PEI)
 def getHistorialPei(id_paciente):
+    """GET: historial de versiones del PEI del paciente."""
     try:
         data = PeiDao().getHistorialPei(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -54,6 +57,7 @@ def getHistorialPei(id_paciente):
 @peiapi.route('/pei/<int:id_pei>', methods=['GET'])
 @role_required(*ROLES_PEI)
 def getPei(id_pei):
+    """GET: PEI por su id; 404 si no existe."""
     try:
         data = PeiDao().getPeiById(id_pei)
         if not data:

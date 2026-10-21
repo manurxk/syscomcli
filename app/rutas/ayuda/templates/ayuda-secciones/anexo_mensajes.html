@@ -1,0 +1,18 @@
+{# Anexo del manual: tipos de aviso de validación. Variables: mensajes (de _mensajes_validacion en ayuda_routes.py), figura #}
+<h3>Avisos de validación del sistema</h3>
+<p>Cuando un dato no cumple una regla, el sistema no lo guarda y muestra un aviso en rojo en la misma pantalla. Los avisos son de pocos tipos, y en todas las pantallas dicen lo mismo. Léalo: siempre nombra el campo o el problema. Se corrige y se vuelve a guardar; no se pierde lo ya escrito.</p>
+{% for m in mensajes %}
+<h4>{{ m.titulo }}</h4>
+<p>{{ m.significa }}</p>
+<p><strong>Ejemplo:</strong> {{ m.ejemplo }}</p>
+<p><strong>Qué hacer:</strong> {{ m.hacer }}</p>
+<p><strong>Pantallas donde puede aparecer:</strong></p>
+<ul>
+    {% for i in m.lista %}<li>{{ i }}</li>
+    {% endfor %}
+</ul>
+{% for archivo, pantalla in m.capturas %}
+{{ figura('mensajes/' ~ archivo, 'Aviso «' ~ m.titulo|lower ~ '» en ' ~ pantalla) }}
+{% endfor %}
+{% endfor %}
+<p>Si el aviso no coincide con ninguno de estos tipos, es una regla propia de esa pantalla (por ejemplo, una cita sin turno libre o una caja que no está abierta). El mensaje explica qué falta; si no queda claro, avise al administrador con el texto exacto que vio.</p>

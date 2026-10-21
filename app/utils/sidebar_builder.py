@@ -66,7 +66,8 @@ def build_sidebar():
         links_por_grupo[heading].append({
             "title": fila["title"],
             "url": url,
-            "html_icon": f'<i data-feather="{fila["icono"]}"></i>' if fila["icono"] else ""
+            "descripcion": fila["descripcion"] or "",
+            "icon": fila["icono"] or ""
         })
 
     menus = [{
@@ -76,7 +77,6 @@ def build_sidebar():
     } for heading in orden_grupos]
 
     return [{
-        "is_flat": False,
         "heading": "Menú principal",
         "menus": menus
     }]

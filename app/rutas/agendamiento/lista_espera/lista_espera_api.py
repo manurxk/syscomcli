@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.agendamiento.lista_espera.ListaEsperaDao import ListaEsperaDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_obligatorio
 
 listaesperaapi = Blueprint('listaesperaapi', __name__)
 
@@ -11,6 +12,7 @@ ROLES_LISTA_ESPERA = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
 @listaesperaapi.route('/lista-espera', methods=['GET'])
 @role_required(*ROLES_LISTA_ESPERA)
 def getListaEspera():
+    """GET: lista las solicitudes de la lista de espera."""
     try:
         id_agenda_horario = request.args.get('id_agenda_horario', type=int)
         data = ListaEsperaDao().getListaEspera(id_agenda_horario)
@@ -23,14 +25,15 @@ def getListaEspera():
 @listaesperaapi.route('/lista-espera', methods=['POST'])
 @role_required(*ROLES_LISTA_ESPERA)
 def addListaEspera():
+    """POST: registra una solicitud en la lista de espera."""
     data = request.get_json() or {}
     id_agenda_horario = data.get('id_agenda_horario')
     id_paciente = data.get('id_paciente')
 
     if not id_agenda_horario:
-        return jsonify({'success': False, 'error': 'El campo "id_agenda_horario" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('id_agenda_horario')}), 400
     if not id_paciente:
-        return jsonify({'success': False, 'error': 'El campo "id_paciente" es obligatorio.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('id_paciente')}), 400
 
     try:
         id_lista_espera = ListaEsperaDao().agregarOReactivar(
@@ -48,6 +51,7 @@ def addListaEspera():
 @listaesperaapi.route('/lista-espera/<int:id_lista_espera>/estado', methods=['PATCH'])
 @role_required(*ROLES_LISTA_ESPERA)
 def cambiarEstadoListaEspera(id_lista_espera):
+    """PATCH: cambia el estado de la solicitud de lista de espera."""
     data = request.get_json() or {}
     nuevo_estado = data.get('estado')
 
@@ -67,6 +71,7 @@ def cambiarEstadoListaEspera(id_lista_espera):
 @listaesperaapi.route('/lista-espera/<int:id_lista_espera>', methods=['DELETE'])
 @role_required(*ROLES_LISTA_ESPERA)
 def desactivarListaEspera(id_lista_espera):
+    """DELETE: baja lógica de la solicitud de lista de espera."""
     if not ListaEsperaDao().getListaEsperaById(id_lista_espera):
         return jsonify({'success': False, 'error': 'No se encontró el registro indicado.'}), 404
 

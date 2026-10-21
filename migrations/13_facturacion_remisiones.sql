@@ -1,5 +1,5 @@
 -- 13_facturacion_remisiones.sql — Facturación, notas de crédito/débito y remisiones
--- Generado el 2026-10-19 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -90,7 +90,8 @@ CREATE TABLE public.facturas (
     fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
-    usuario_modificacion integer
+    usuario_modificacion integer,
+    motivo_anulacion text
 );
 
 --
@@ -104,6 +105,12 @@ COMMENT ON COLUMN public.facturas.id_pedido IS 'Pedido de origen, si la factura 
 --
 
 COMMENT ON COLUMN public.facturas.codigo_sifen IS 'CDC devuelto por SIFEN. Vacío hasta conectar la facturación electrónica con la SET.';
+
+--
+-- Name: COLUMN facturas.motivo_anulacion; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.facturas.motivo_anulacion IS 'Motivo con el que se anulo la factura (lo carga sp_anular_factura; obligatorio). Vacio en las anuladas antes del 2026-10-20.';
 
 --
 -- Name: facturas_id_factura_seq; Type: SEQUENCE; Schema: public; Owner: -

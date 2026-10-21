@@ -9,6 +9,7 @@ permisosapi = Blueprint('permisosapi', __name__)
 @permisosapi.route('/permisos/modulos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getModulos():
+    """GET: módulos sobre los que se definen permisos."""
     try:
         data = PermisoDao().getModulos()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -20,6 +21,7 @@ def getModulos():
 @permisosapi.route('/permisos/acciones', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getAcciones():
+    """GET: acciones de permiso (leer, crear, editar, eliminar)."""
     try:
         data = PermisoDao().getAcciones()
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -31,6 +33,7 @@ def getAcciones():
 @permisosapi.route('/permisos/roles/<int:id_rol>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getMatrizPermisos(id_rol):
+    """GET: permisos por módulo y acción del rol."""
     try:
         data = PermisoDao().getMatrizPermisos(id_rol)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -42,6 +45,7 @@ def getMatrizPermisos(id_rol):
 @permisosapi.route('/permisos/roles/<int:id_rol>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def guardarMatrizPermisos(id_rol):
+    """PUT: guarda la matriz de permisos del rol."""
     data = request.get_json() or {}
     cambios = data.get('cambios') or []
 

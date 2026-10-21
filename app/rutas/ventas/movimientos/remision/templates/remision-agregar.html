@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Nueva Remisión (formulario de alta). Ruta: /remision-agregar. Roles: ADMINISTRADOR, SUPERADMIN, VENTAS. API: /api/v1/remisiones, /api/v1/pacientes, /api/v1/items-servicios. #}
 {% block titulo %}Nueva Remisión{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -298,7 +299,7 @@ document.getElementById('btnConfirmarItem').addEventListener('click', () => {
   const obs = document.getElementById('itemObs').value.trim() || null;
   const id_item_servicio = document.getElementById('selItemServicio').value || null;
 
-  if (!desc) { alert('La descripción es obligatoria.'); return; }
+  if (!desc) { alert('El campo "Descripción" es obligatorio.'); return; }
   if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
 
   const item = {
@@ -323,7 +324,7 @@ document.getElementById('btnGuardar').addEventListener('click', async () => {
   const fecha = document.getElementById('txtFechaRemision').value;
 
   if (!idPaciente) { alert('Debés seleccionar un paciente.'); return; }
-  if (!fecha) { alert('La fecha de remisión es obligatoria.'); return; }
+  if (!fecha) { alert('El campo "Fecha de remisión" es obligatorio.'); return; }
   if (!detalles.length) { alert('Debe agregar al menos un ítem.'); return; }
 
   const body = {

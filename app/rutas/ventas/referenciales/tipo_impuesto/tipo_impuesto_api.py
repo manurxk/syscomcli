@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.ventas.referenciales.tipo_impuesto.TipoImpuestoDao import TipoImpuestoDao
 from app.auth.utils.decorators import role_required
+from app.utils.mensajes_validacion import msg_caracteres, msg_existe, msg_obligatorio
 
 tipoimpuestoapi = Blueprint('tipoimpuestoapi', __name__)
 
@@ -9,6 +10,7 @@ tipoimpuestoapi = Blueprint('tipoimpuestoapi', __name__)
 @tipoimpuestoapi.route('/tipos-impuestos', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getTiposImpuestos():
+    """GET: lista los registros de tipo de impuesto."""
     try:
         return jsonify({'success': True, 'data': TipoImpuestoDao().getTiposImpuestos(), 'error': None}), 200
     except Exception as e:
@@ -19,6 +21,7 @@ def getTiposImpuestos():
 @tipoimpuestoapi.route('/tipos-impuestos/<int:id_tipo_impuesto>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
 def getTipoImpuesto(id_tipo_impuesto):
+    """GET: devuelve tipo de impuesto por su id; 404 si no existe."""
     try:
         registro = TipoImpuestoDao().getTipoImpuestoById(id_tipo_impuesto)
         if not registro:
@@ -32,17 +35,18 @@ def getTipoImpuesto(id_tipo_impuesto):
 @tipoimpuestoapi.route('/tipos-impuestos', methods=['POST'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def addTipoImpuesto():
+    """POST: valida los datos y registra tipo de impuesto; devuelve el id nuevo (201)."""
     data = request.get_json() or {}
     dao = TipoImpuestoDao()
 
     descripcion = (data.get('des_tipo_impuesto') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y el símbolo %')}), 400
     if dao.tipoImpuestoExiste(descripcion):
-        return jsonify({'success': False, 'error': f'Ya existe un tipo de impuesto "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de impuesto', descripcion)}), 400
 
     try:
         nuevo_id = dao.guardarTipoImpuesto(
@@ -62,6 +66,7 @@ def addTipoImpuesto():
 @tipoimpuestoapi.route('/tipos-impuestos/<int:id_tipo_impuesto>', methods=['PUT'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateTipoImpuesto(id_tipo_impuesto):
+    """PUT: valida y actualiza tipo de impuesto; 404 si no existe."""
     data = request.get_json() or {}
     dao = TipoImpuestoDao()
 
@@ -71,11 +76,11 @@ def updateTipoImpuesto(id_tipo_impuesto):
     descripcion = (data.get('des_tipo_impuesto') or '').strip().upper()
 
     if not descripcion:
-        return jsonify({'success': False, 'error': 'La descripción no puede estar vacía.'}), 400
+        return jsonify({'success': False, 'error': msg_obligatorio('Descripción')}), 400
     if not dao.validarDescripcion(descripcion):
-        return jsonify({'success': False, 'error': 'La descripción contiene caracteres inválidos.'}), 400
+        return jsonify({'success': False, 'error': msg_caracteres('Descripción', 'letras, números, espacios, puntos y el símbolo %')}), 400
     if dao.tipoImpuestoExiste(descripcion, excluir_id=id_tipo_impuesto):
-        return jsonify({'success': False, 'error': f'Ya existe un tipo de impuesto "{descripcion}".'}), 400
+        return jsonify({'success': False, 'error': msg_existe('un tipo de impuesto', descripcion)}), 400
 
     try:
         dao.updateTipoImpuesto(
@@ -96,6 +101,7 @@ def updateTipoImpuesto(id_tipo_impuesto):
 @tipoimpuestoapi.route('/tipos-impuestos/<int:id_tipo_impuesto>', methods=['DELETE'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarTipoImpuesto(id_tipo_impuesto):
+    """DELETE: da de baja (lógica) tipo de impuesto; 404 si no existe."""
     dao = TipoImpuestoDao()
     if not dao.getTipoImpuestoById(id_tipo_impuesto):
         return jsonify({'success': False, 'error': 'No se encontró el registro.'}), 404

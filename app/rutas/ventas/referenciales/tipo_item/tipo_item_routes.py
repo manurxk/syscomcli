@@ -7,4 +7,5 @@ tipoitemmod = Blueprint('tipo_item', __name__, template_folder='templates')
 @tipoitemmod.route('/tipo-item-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def tipoItemIndex():
+    """Página principal de tipo de ítem (listado y acciones)."""
     return render_template('tipo-item-index.html')

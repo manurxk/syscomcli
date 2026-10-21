@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Cuentas a Cobrar (listado y gestión). Ruta: /cuenta-cobrar-index. API: /api/v1/cuentas-cobrar. #}
 {% block titulo %}Cuentas a Cobrar{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -10,7 +11,7 @@
           <div class="page-header-subtitle">Deudas pendientes de clientes con condición de crédito</div>
         </div>
         <div class="col-auto mt-4">
-          <a class="btn btn-primary btn-sm" href="{{ url_for('cobranza.cobranzaAgregar') }}">Nueva Cobranza</a>
+          {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a class="btn btn-primary btn-sm" href="{{ url_for('cobranza.cobranzaAgregar') }}">Nueva Cobranza</a>{% endif %}
         </div>
       </div>
     </div>
@@ -28,6 +29,7 @@
           <option value="PARCIAL">Parcial</option>
           <option value="COBRADA">Cobrada</option>
           <option value="VENCIDA">Vencida</option>
+          <option value="ANULADA">Anulada</option>
         </select>
       </div>
     </div>
@@ -93,8 +95,8 @@
       </div>
       <div class="modal-footer border-top">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-        <a id="btnNuevaCobranza" class="btn btn-primary btn-sm d-none"
-           href="{{ url_for('cobranza.cobranzaAgregar') }}">Registrar Cobranza</a>
+        {% if tiene_permiso_accion('VENTAS', 'CREAR') %}<a id="btnNuevaCobranza" class="btn btn-primary btn-sm d-none"
+           href="{{ url_for('cobranza.cobranzaAgregar') }}">Registrar Cobranza</a>{% endif %}
       </div>
     </div>
   </div>
@@ -109,6 +111,7 @@ const COLORES = {
   PARCIAL:   'info',
   COBRADA:   'success',
   VENCIDA:   'danger',
+  ANULADA:   'secondary',
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -190,7 +193,7 @@ async function verDetalle(id) {
   }
 
   const btnCob = document.getElementById('btnNuevaCobranza');
-  btnCob.classList.toggle('d-none', est === 'COBRADA' || est === 'ANULADA');
+  btnCob?.classList.toggle('d-none', est === 'COBRADA' || est === 'ANULADA');
 
   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 }

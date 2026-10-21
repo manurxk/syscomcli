@@ -149,6 +149,7 @@
             {% for s in secciones %}
             <li><a href="#{{ s.id }}">{{ s.titulo }}</a></li>
             {% endfor %}
+            {% if mensajes %}<li><a href="#mensajes-validacion">Avisos de validación del sistema</a></li>{% endif %}
         </ol>
     </div>
 
@@ -160,6 +161,12 @@
         {% include s.template %}
     </section>
     {% endfor %}
+
+    {% if mensajes %}
+    <section class="seccion" id="mensajes-validacion">
+        {% include 'ayuda-secciones/anexo_mensajes.html' %}
+    </section>
+    {% endif %}
 
     {% if sin_guia %}
     <div class="pendientes">

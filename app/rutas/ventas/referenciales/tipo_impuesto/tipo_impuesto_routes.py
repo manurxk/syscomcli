@@ -7,4 +7,5 @@ tipoimpuestomod = Blueprint('tipo_impuesto', __name__, template_folder='template
 @tipoimpuestomod.route('/tipo-impuesto-index')
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def tipoImpuestoIndex():
+    """Página principal de tipo de impuesto (listado y acciones)."""
     return render_template('tipo-impuesto-index.html')

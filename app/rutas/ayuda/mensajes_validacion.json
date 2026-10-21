@@ -1,0 +1,5576 @@
+[
+ {
+  "blueprint": "acceso",
+  "accion": "Eliminar / dar de baja",
+  "mensaje": "No se pudo cerrar la sesión",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "'En consulta' se registra con 'Iniciar consulta', no con una corrección.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Debe seleccionar al menos una especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El especialista no tiene agendas cargadas.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El especialista no tiene esa especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El motivo de la corrección es obligatorio.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El slot indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El slot ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El sobreturno tiene que ser en el futuro.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El turno de esta cita ya no está libre (lo tomó otra cita o se quitó de la agenda). Agende una cita nueva.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El turno indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El turno seleccionado no corresponde al especialista de la cita",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya pasó; elija un turno futuro",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ese día el especialista no atiende en esta agenda.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ese horario está bloqueado ({…}).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Estado '{…}' no encontrado",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "La agenda está desactivada.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "La agenda indicada no existe.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "La agenda no permite sobreturnos: configure el % de sobreturnos en la agenda.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "La cita indicada no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "La cita sigue abierta: use las acciones normales (Editar o cambiar estado).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "La fecha está fuera de la vigencia de la agenda.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Matrícula es obligatoria para especialistas",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "No hay cambios para guardar.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "No se puede editar una cita en estado '{…}'",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ya existe un especialista registrado con la matrícula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ya existe un turno a esa hora en esta agenda.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ya existe una empresa configurada",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ya existe una persona registrada con la cédula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "Ya se usaron los {…} sobreturno(s) permitidos para ese día.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "",
+  "mensaje": "{…} tiene {…} cita(s) pendiente(s) (próxima: {…}). Cancélelas o reagéndelas con otro especialista antes de darlo de baja.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "El bloqueo tiene que terminar en el futuro.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo del bloqueo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "El fin del bloqueo debe ser posterior al inicio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "Indique la fecha y hora de inicio y de fin del bloqueo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "Indique la fecha y la hora del sobreturno.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "Seleccione el especialista.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Crear",
+  "mensaje": "Ya existe un horario que se superpone para ese especialista o consultorio en ese día.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "agenda_horarios",
+  "accion": "Editar",
+  "mensaje": "Ya existe un horario que se superpone para ese especialista o consultorio en ese día.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "apertura_cierre_caja",
+  "accion": "",
+  "mensaje": "La caja ya tiene una apertura activa (ID {…}).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "apertura_cierre_caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Caja\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "apertura_cierre_caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Saldo final\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "apertura_cierre_caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Usuario\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "arqueo_caja",
+  "accion": "",
+  "mensaje": "No se encontró la apertura de caja especificada.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "arqueo_caja",
+  "accion": "Consultar",
+  "mensaje": "El campo \"Caja\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "arqueo_caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Apertura de caja\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "arqueo_caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Caja\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "arqueo_caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Monto real\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "auditoria",
+  "accion": "Consultar",
+  "mensaje": "Las fechas no tienen un formato válido.",
+  "origen": "campo",
+  "roles": []
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Crear",
+  "mensaje": "El estado de caja debe ser uno de: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Crear",
+  "mensaje": "El saldo inicial no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Crear",
+  "mensaje": "Ya existe una caja \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Editar",
+  "mensaje": "El estado de caja debe ser uno de: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Editar",
+  "mensaje": "El saldo inicial no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "caja",
+  "accion": "Editar",
+  "mensaje": "Ya existe una caja \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Crear",
+  "mensaje": "El cargo \"{…}\" está reservado por el sistema.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Crear",
+  "mensaje": "Ya existe un cargo \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Editar",
+  "mensaje": "El cargo \"{…}\" está reservado por el sistema.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cargo",
+  "accion": "Editar",
+  "mensaje": "Ya existe un cargo \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "'En consulta' se registra con 'Iniciar consulta', no con una corrección.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "Debe seleccionar al menos una especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El especialista no tiene esa especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El motivo de la corrección es obligatorio.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El slot indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El slot ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El turno de esta cita ya no está libre (lo tomó otra cita o se quitó de la agenda). Agende una cita nueva.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El turno indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El turno seleccionado no corresponde al especialista de la cita",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya pasó; elija un turno futuro",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "Estado '{…}' no encontrado",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "La cita indicada no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "La cita sigue abierta: use las acciones normales (Editar o cambiar estado).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "Matrícula es obligatoria para especialistas",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "No hay cambios para guardar.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "No se puede editar una cita en estado '{…}'",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "Ya existe un especialista registrado con la matrícula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "Ya existe una persona registrada con la cédula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "",
+  "mensaje": "{…} tiene {…} cita(s) pendiente(s) (próxima: {…}). Cancélelas o reagéndelas con otro especialista antes de darlo de baja.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo de la corrección\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Crear",
+  "mensaje": "El campo \"Paciente\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Crear",
+  "mensaje": "El campo \"Turno\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Crear",
+  "mensaje": "El paciente no tiene teléfono registrado.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Crear",
+  "mensaje": "Estado inválido. Valores permitidos: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Editar",
+  "mensaje": "El campo \"Motivo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Editar",
+  "mensaje": "El campo \"Turno\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cita",
+  "accion": "Editar",
+  "mensaje": "Estado inválido. Valores permitidos: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "Cobranza no encontrada.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "El monto total cobrado debe ser mayor a cero.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "Esta cuenta ya está completamente cobrada.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "La cobranza debe tener al menos una forma de cobro.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "La cuenta a cobrar está anulada (la factura fue anulada).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "La cuenta a cobrar no existe.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "La cuenta a cobrar, la factura y la caja son obligatorias.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "La moneda de la caja no coincide con la de la cuenta a cobrar.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "",
+  "mensaje": "No hay caja abierta. Debe abrir la caja antes de registrar una cobranza.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Crear",
+  "mensaje": "Cada línea de detalle requiere una forma de cobro.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Crear",
+  "mensaje": "Debe agregar al menos una forma de cobro.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Crear",
+  "mensaje": "El campo \"Caja\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Crear",
+  "mensaje": "El campo \"Cuenta a cobrar\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Crear",
+  "mensaje": "El campo \"Factura\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Crear",
+  "mensaje": "El monto de cada forma de cobro debe ser mayor a 0.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "cobranza",
+  "accion": "Editar",
+  "mensaje": "La cobranza ya está anulada o no se encontró.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "condicion_venta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "condicion_venta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "condicion_venta",
+  "accion": "Crear",
+  "mensaje": "Ya existe una condición de venta \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "condicion_venta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "condicion_venta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "condicion_venta",
+  "accion": "Editar",
+  "mensaje": "Ya existe una condición de venta \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "'En consulta' se registra con 'Iniciar consulta', no con una corrección.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "Debe seleccionar al menos una especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El especialista no tiene esa especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El motivo de la corrección es obligatorio.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El slot indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El slot ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El turno de esta cita ya no está libre (lo tomó otra cita o se quitó de la agenda). Agende una cita nueva.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El turno indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El turno seleccionado no corresponde al especialista de la cita",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya pasó; elija un turno futuro",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "Estado '{…}' no encontrado",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "La cita indicada no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "La cita sigue abierta: use las acciones normales (Editar o cambiar estado).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "Matrícula es obligatoria para especialistas",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "No hay cambios para guardar.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "No se puede editar una cita en estado '{…}'",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "Stock insuficiente para registrar este insumo.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "Ya existe un especialista registrado con la matrícula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "Ya existe una persona registrada con la cédula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "",
+  "mensaje": "{…} tiene {…} cita(s) pendiente(s) (próxima: {…}). Cancélelas o reagéndelas con otro especialista antes de darlo de baja.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe indicar tipo ESTUDIO o ANALISIS.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción del tratamiento\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Diagnóstico\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Especialidad de destino\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha de inicio\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha de la orden\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha de la receta\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha del certificado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Insumo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo de derivación\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo de la consulta\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo del certificado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Signo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Síntoma\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Tipo de certificado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Tipo de procedimiento\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Tipo de tratamiento\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "El informante debe ser uno de: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "Indique la dosis en cada ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "Indique la frecuencia en cada ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "La cantidad debe ser mayor a cero.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "La orden debe tener al menos un ítem de estudio o análisis.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "La receta debe tener al menos un medicamento.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "No se puede iniciar una consulta para una cita en estado \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "Seleccione el medicamento en cada ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "Seleccione el tipo de análisis en cada ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Crear",
+  "mensaje": "Seleccione el tipo de estudio en cada ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Estado de la consulta\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Fecha de la consulta\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consulta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Motivo de la consulta\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Sede\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Crear",
+  "mensaje": "Ya existe un consultorio \"{…}\" en esa sede.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Sede\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "consultorio",
+  "accion": "Editar",
+  "mensaje": "Ya existe un consultorio \"{…}\" en esa sede.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Crear",
+  "mensaje": "El tipo de depósito debe ser uno de: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Crear",
+  "mensaje": "Ya existe un depósito \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Editar",
+  "mensaje": "El tipo de depósito debe ser uno de: {…}.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "deposito",
+  "accion": "Editar",
+  "mensaje": "Ya existe un depósito \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Crear",
+  "mensaje": "El código CIE-10 no tiene un formato válido (ej. F32 o F32.1).",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Crear",
+  "mensaje": "Ya existe un diagnóstico \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Crear",
+  "mensaje": "Ya existe un diagnóstico con el código CIE-10 \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Editar",
+  "mensaje": "El código CIE-10 no tiene un formato válido (ej. F32 o F32.1).",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Editar",
+  "mensaje": "Ya existe un diagnóstico \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "diagnostico",
+  "accion": "Editar",
+  "mensaje": "Ya existe un diagnóstico con el código CIE-10 \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "empresa",
+  "accion": "",
+  "mensaje": "Ya existe una empresa configurada",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "empresa",
+  "accion": "Crear",
+  "mensaje": "Ya existe una empresa con el RUC/NIT \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "empresa",
+  "accion": "Crear",
+  "mensaje": "Ya existe una empresa configurada.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "empresa",
+  "accion": "Editar",
+  "mensaje": "Ya existe una empresa con el RUC/NIT \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_adherida",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_adherida",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_adherida",
+  "accion": "Crear",
+  "mensaje": "Ya existe una entidad adherida \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_adherida",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_adherida",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_adherida",
+  "accion": "Editar",
+  "mensaje": "Ya existe una entidad adherida \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_emisora",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_emisora",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_emisora",
+  "accion": "Crear",
+  "mensaje": "Ya existe una entidad emisora \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_emisora",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_emisora",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "entidad_emisora",
+  "accion": "Editar",
+  "mensaje": "Ya existe una entidad emisora \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "especialidad",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "especialidad",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "especialidad",
+  "accion": "Crear",
+  "mensaje": "Ya existe una especialidad \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "especialidad",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "especialidad",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "especialidad",
+  "accion": "Editar",
+  "mensaje": "Ya existe una especialidad \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "estado_factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "estado_factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "estado_factura",
+  "accion": "Crear",
+  "mensaje": "Ya existe un estado de factura \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "estado_factura",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "estado_factura",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "estado_factura",
+  "accion": "Editar",
+  "mensaje": "Ya existe un estado de factura \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "El descuento no puede ser negativo ni mayor al total de la factura.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "Elija la forma de cobro de la factura al contado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "La caja ya tiene una apertura activa (ID {…}).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "La factura debe tener al menos un ítem en el detalle.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "Las formas de cobro deben sumar el total de la factura.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "Monto fuera de rango para numero_a_letras: {…}",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "Para facturar al contado elija la caja donde entra el cobro.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "",
+  "mensaje": "Punto de expedición no encontrado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una descripción.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Condición de venta\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Estado de la factura\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha de la factura\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Paciente\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Precio de cada ítem\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Punto de expedición\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Timbrado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "El campo \"Tipo de comprobante\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "La caja elegida no está abierta. Ábrala en Estado de Caja antes de facturar al contado.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "La cantidad de cada ítem debe ser mayor a 0.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Crear",
+  "mensaje": "La factura debe tener al menos un ítem en el detalle.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Editar",
+  "mensaje": "Debe indicar el motivo de la anulación.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "factura",
+  "accion": "Editar",
+  "mensaje": "La factura ya está anulada o no se pudo anular.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "ficha",
+  "accion": "Crear",
+  "mensaje": "El contenido de la nota no puede estar vacío.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "ficha",
+  "accion": "Crear",
+  "mensaje": "No se pudo determinar el especialista. Verificá tu perfil.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Crear",
+  "mensaje": "El campo \"Código\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Crear",
+  "mensaje": "Ya existe una forma de cobro \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Crear",
+  "mensaje": "Ya existe una forma de cobro con código \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Editar",
+  "mensaje": "El campo \"Código\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Editar",
+  "mensaje": "Ya existe una forma de cobro \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "forma_cobro",
+  "accion": "Editar",
+  "mensaje": "Ya existe una forma de cobro con código \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "",
+  "mensaje": "Debe seleccionar al menos una especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "",
+  "mensaje": "Matrícula es obligatoria para especialistas",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "",
+  "mensaje": "Ya existe un especialista registrado con la matrícula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "",
+  "mensaje": "Ya existe una persona registrada con la cédula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "",
+  "mensaje": "{…} tiene {…} cita(s) pendiente(s) (próxima: {…}). Cancélelas o reagéndelas con otro especialista antes de darlo de baja.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "Debe seleccionar al menos una especialidad.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Apellido\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Cargo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Cédula\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Nombre\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Teléfono\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Crear",
+  "mensaje": "La matrícula es obligatoria para especialistas.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "Debe seleccionar al menos una especialidad.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "El campo \"Apellido\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "El campo \"Cargo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "El campo \"Cédula\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "El campo \"Nombre\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "El campo \"Teléfono\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "funcionario",
+  "accion": "Editar",
+  "mensaje": "La matrícula es obligatoria para especialistas.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "instrumento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "instrumento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "instrumento",
+  "accion": "Crear",
+  "mensaje": "Ya existe un instrumento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "instrumento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "instrumento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "instrumento",
+  "accion": "Editar",
+  "mensaje": "Ya existe un instrumento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Crear",
+  "mensaje": "El precio unitario no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Crear",
+  "mensaje": "El stock actual no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Crear",
+  "mensaje": "El stock mínimo no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Crear",
+  "mensaje": "Ya existe un insumo \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Editar",
+  "mensaje": "El precio unitario no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Editar",
+  "mensaje": "El stock actual no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Editar",
+  "mensaje": "El stock mínimo no puede ser negativo.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "insumo",
+  "accion": "Editar",
+  "mensaje": "Ya existe un insumo \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Tipo de ítem\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Crear",
+  "mensaje": "Ya existe un ítem con descripción \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y guiones.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Tipo de ítem\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "item_servicio",
+  "accion": "Editar",
+  "mensaje": "Ya existe un ítem con descripción \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "lista_espera",
+  "accion": "",
+  "mensaje": "Estado inválido. Valores permitidos: {…}.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "lista_espera",
+  "accion": "Crear",
+  "mensaje": "El campo \"Horario\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "lista_espera",
+  "accion": "Crear",
+  "mensaje": "El campo \"Paciente\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "marca_tarjeta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "marca_tarjeta",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "marca_tarjeta",
+  "accion": "Crear",
+  "mensaje": "Ya existe una marca de tarjeta \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "marca_tarjeta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "marca_tarjeta",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "marca_tarjeta",
+  "accion": "Editar",
+  "mensaje": "Ya existe una marca de tarjeta \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "medicamento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "medicamento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "medicamento",
+  "accion": "Crear",
+  "mensaje": "Ya existe un medicamento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "medicamento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "medicamento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "medicamento",
+  "accion": "Editar",
+  "mensaje": "Ya existe un medicamento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "menu",
+  "accion": "Editar",
+  "mensaje": "Cada cambio debe incluir id_pagina y visible.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "menu",
+  "accion": "Editar",
+  "mensaje": "No se recibieron cambios para guardar.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Crear",
+  "mensaje": "El campo \"Código\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Crear",
+  "mensaje": "Ya existe una moneda con código \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Editar",
+  "mensaje": "El campo \"Código\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "moneda",
+  "accion": "Editar",
+  "mensaje": "Ya existe una moneda con código \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "El descuento no puede ser negativo ni mayor al total de la factura.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "Elija la forma de cobro de la factura al contado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "La factura debe tener al menos un ítem en el detalle.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "La factura indicada no existe.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "Las formas de cobro deben sumar el total de la factura.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "Monto fuera de rango para numero_a_letras: {…}",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "Para facturar al contado elija la caja donde entra el cobro.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "",
+  "mensaje": "Punto de expedición no encontrado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una descripción.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "Crear",
+  "mensaje": "El campo \"Factura\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "Crear",
+  "mensaje": "La nota de crédito debe tener al menos un ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_credito",
+  "accion": "Editar",
+  "mensaje": "La nota ya está anulada o no se pudo anular.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "El descuento no puede ser negativo ni mayor al total de la factura.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "Elija la forma de cobro de la factura al contado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "La factura debe tener al menos un ítem en el detalle.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "La factura indicada no existe.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "Las formas de cobro deben sumar el total de la factura.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "Monto fuera de rango para numero_a_letras: {…}",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "Para facturar al contado elija la caja donde entra el cobro.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "",
+  "mensaje": "Punto de expedición no encontrado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una descripción.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "Crear",
+  "mensaje": "El campo \"Factura\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "Crear",
+  "mensaje": "El campo \"Motivo\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "Crear",
+  "mensaje": "La nota de débito debe tener al menos un ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "nota_debito",
+  "accion": "Editar",
+  "mensaje": "La nota ya está anulada o no se pudo anular.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "",
+  "mensaje": "Debe indicar el número de RUC.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "",
+  "mensaje": "Faltan campos obligatorios: nombre, apellido, cédula y fecha de nacimiento.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "",
+  "mensaje": "Historia clínica duplicada: {…}",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "",
+  "mensaje": "Tipo de documento inválido. Debe ser CI o RUC.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "",
+  "mensaje": "Ya existe una persona registrada con la cédula \"{…}\".",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Crear",
+  "mensaje": "El campo \"Apellido\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Crear",
+  "mensaje": "El campo \"Cédula\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha de nacimiento\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Crear",
+  "mensaje": "El campo \"Nombre\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Crear",
+  "mensaje": "El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Crear",
+  "mensaje": "No se pudo crear el paciente.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Editar",
+  "mensaje": "El campo \"Apellido\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Editar",
+  "mensaje": "El campo \"Cédula\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Editar",
+  "mensaje": "El campo \"Fecha de nacimiento\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Editar",
+  "mensaje": "El campo \"Nombre\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Editar",
+  "mensaje": "El nombre y el apellido solo pueden contener letras, espacios, guion y apóstrofe.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "paciente",
+  "accion": "Editar",
+  "mensaje": "No se pudo actualizar el paciente.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "RECEPCION",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "pedido",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una cantidad mayor a 0.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "pedido",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una descripción.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "pedido",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha del pedido\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "pedido",
+  "accion": "Crear",
+  "mensaje": "El campo \"Paciente\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "pedido",
+  "accion": "Crear",
+  "mensaje": "El pedido debe tener al menos un ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "pedido",
+  "accion": "Editar",
+  "mensaje": "Estado inválido.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "pei",
+  "accion": "Crear",
+  "mensaje": "Estado inválido. Debe ser ACTIVO o CERRADO.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "pei",
+  "accion": "Crear",
+  "mensaje": "No se pudo determinar el especialista. Verificá tu perfil.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "CLINICO",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "permisos",
+  "accion": "Editar",
+  "mensaje": "Cada cambio debe incluir id_modulo, id_accion y permitido.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "permisos",
+  "accion": "Editar",
+  "mensaje": "No se recibieron cambios para guardar.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "'En consulta' se registra con 'Iniciar consulta', no con una corrección.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El especialista no tiene esa especialidad",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El motivo de la corrección es obligatorio.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El plan de tratamiento (PEI) indicado no corresponde al paciente.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El presupuesto debe tener al menos un ítem.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El slot indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El slot ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El turno de esta cita ya no está libre (lo tomó otra cita o se quitó de la agenda). Agende una cita nueva.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El turno indicado no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El turno seleccionado no corresponde al especialista de la cita",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya no está disponible",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "El turno seleccionado ya pasó; elija un turno futuro",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "Estado '{…}' no encontrado",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "La cita indicada no existe",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "La cita sigue abierta: use las acciones normales (Editar o cambiar estado).",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "No hay cambios para guardar.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "No se encontró el presupuesto.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "No se puede editar una cita en estado '{…}'",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "",
+  "mensaje": "Solo se puede convertir en pedido un presupuesto aprobado.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una cantidad mayor a 0.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una descripción.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha del presupuesto\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "Crear",
+  "mensaje": "El campo \"Paciente\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "Crear",
+  "mensaje": "El presupuesto debe tener al menos un ítem.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "presupuesto",
+  "accion": "Editar",
+  "mensaje": "Estado inválido.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Crear",
+  "mensaje": "El campo \"Nombre del punto\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Crear",
+  "mensaje": "El campo \"Timbrado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Crear",
+  "mensaje": "El código debe tener 3 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Crear",
+  "mensaje": "El código es obligatorio (3 dígitos).",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Crear",
+  "mensaje": "Ya existe el código \"{…}\" para este timbrado.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Editar",
+  "mensaje": "El campo \"Código\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Editar",
+  "mensaje": "El campo \"Nombre\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Editar",
+  "mensaje": "El código debe tener 3 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Editar",
+  "mensaje": "Ya existe el código \"{…}\" para este timbrado.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "punto_expedicion",
+  "accion": "Eliminar / dar de baja",
+  "mensaje": "No se puede eliminar: tiene facturas asociadas.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "",
+  "mensaje": "El monto total de la recaudación debe ser mayor a cero.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "",
+  "mensaje": "La caja y el depósito son obligatorios.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "",
+  "mensaje": "No hay caja abierta. Debe abrir la caja antes de registrar una recaudación.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "",
+  "mensaje": "Recaudación no encontrada.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "",
+  "mensaje": "Solo se pueden depositar recaudaciones en estado PENDIENTE.",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "Crear",
+  "mensaje": "El campo \"Caja\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "Crear",
+  "mensaje": "El campo \"Depósito\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "Crear",
+  "mensaje": "El monto total debe ser mayor a cero.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "Editar",
+  "mensaje": "El campo \"Fecha de depósito\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "Editar",
+  "mensaje": "La recaudación ya está anulada o no se encontró.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "recaudacion",
+  "accion": "Editar",
+  "mensaje": "No se pudo marcar como depositada.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Crear",
+  "mensaje": "Cada ítem debe tener una descripción.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fecha de la remisión\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Crear",
+  "mensaje": "El campo \"Paciente\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Crear",
+  "mensaje": "La cantidad de cada ítem debe ser mayor a 0.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Crear",
+  "mensaje": "La remisión debe tener al menos un ítem en el detalle.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Editar",
+  "mensaje": "La remisión ya está anulada.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "remision",
+  "accion": "Editar",
+  "mensaje": "La remisión ya fue entregada o no se puede cambiar su estado.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN",
+   "VENTAS"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "",
+  "mensaje": "Ya existe una empresa configurada",
+  "origen": "regla de negocio",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Crear",
+  "mensaje": "El código de establecimiento SIFEN debe tener 3 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Crear",
+  "mensaje": "No hay una empresa configurada. Configure los datos de la empresa antes de crear sedes.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Crear",
+  "mensaje": "Ya existe una sede \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Crear",
+  "mensaje": "Ya existe una sede con el código de establecimiento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números y espacios.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Editar",
+  "mensaje": "El código de establecimiento SIFEN debe tener 3 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Editar",
+  "mensaje": "Ya existe una sede \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sede",
+  "accion": "Editar",
+  "mensaje": "Ya existe una sede con el código de establecimiento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "signo",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "signo",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "signo",
+  "accion": "Crear",
+  "mensaje": "Ya existe un signo \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "signo",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "signo",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "signo",
+  "accion": "Editar",
+  "mensaje": "Ya existe un signo \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sintoma",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sintoma",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sintoma",
+  "accion": "Crear",
+  "mensaje": "Ya existe un síntoma \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sintoma",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sintoma",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "sintoma",
+  "accion": "Editar",
+  "mensaje": "Ya existe un síntoma \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Crear",
+  "mensaje": "El campo \"Fechas de inicio y vencimiento\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Crear",
+  "mensaje": "El campo \"Número de timbrado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Crear",
+  "mensaje": "El código de establecimiento debe tener 3 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Crear",
+  "mensaje": "El número de timbrado debe tener 8 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Crear",
+  "mensaje": "La fecha de vencimiento debe ser mayor o igual a la de inicio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Crear",
+  "mensaje": "Ya existe un timbrado con número \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Editar",
+  "mensaje": "El campo \"Fechas\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Editar",
+  "mensaje": "El campo \"Número de timbrado\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Editar",
+  "mensaje": "El código de establecimiento debe tener 3 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Editar",
+  "mensaje": "El número de timbrado debe tener 8 dígitos numéricos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Editar",
+  "mensaje": "La fecha de vencimiento debe ser mayor o igual a la de inicio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Editar",
+  "mensaje": "Ya existe otro timbrado con número \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "timbrado",
+  "accion": "Eliminar / dar de baja",
+  "mensaje": "No se puede eliminar: tiene facturas asociadas.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_analisis",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_analisis",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_analisis",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de análisis \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_analisis",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_analisis",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_analisis",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de análisis \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_certificado_medico",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_certificado_medico",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_certificado_medico",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de certificado médico \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_certificado_medico",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_certificado_medico",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_certificado_medico",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de certificado médico \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_comprobante",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_comprobante",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_comprobante",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de comprobante \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_comprobante",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_comprobante",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_comprobante",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de comprobante \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_estudio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_estudio",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_estudio",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de estudio \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_estudio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_estudio",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_estudio",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de estudio \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_impuesto",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y el símbolo %.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_impuesto",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_impuesto",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de impuesto \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_impuesto",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios, puntos y el símbolo %.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_impuesto",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_impuesto",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de impuesto \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_item",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_item",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_item",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de ítem \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_item",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_item",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_item",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de ítem \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_procedimiento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_procedimiento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_procedimiento",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de procedimiento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_procedimiento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_procedimiento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_procedimiento",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de procedimiento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_tratamiento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_tratamiento",
+  "accion": "Crear",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_tratamiento",
+  "accion": "Crear",
+  "mensaje": "Ya existe un tipo de tratamiento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_tratamiento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" contiene caracteres no permitidos. Use solo letras, números, espacios y puntos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_tratamiento",
+  "accion": "Editar",
+  "mensaje": "El campo \"Descripción\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "tipo_tratamiento",
+  "accion": "Editar",
+  "mensaje": "Ya existe un tipo de tratamiento \"{…}\".",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Contraseña\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Funcionario\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Rol\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Crear",
+  "mensaje": "El campo \"Username\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Crear",
+  "mensaje": "Las contraseñas no coinciden.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Crear",
+  "mensaje": "No se pudo crear el usuario. Verifique que el username no exista o que el funcionario no tenga ya un usuario asignado.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Editar",
+  "mensaje": "El campo \"Username\" es obligatorio.",
+  "origen": "campo",
+  "roles": [
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Editar",
+  "mensaje": "Las contraseñas no coinciden.",
+  "origen": "campo",
+  "roles": [
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Editar",
+  "mensaje": "No se pudo actualizar el usuario. Verifique que el username no esté en uso.",
+  "origen": "campo",
+  "roles": [
+   "SUPERADMIN"
+  ]
+ },
+ {
+  "blueprint": "usuario",
+  "accion": "Editar",
+  "mensaje": "No se pudo resetear los intentos.",
+  "origen": "campo",
+  "roles": [
+   "ADMINISTRADOR",
+   "SUPERADMIN"
+  ]
+ }
+]

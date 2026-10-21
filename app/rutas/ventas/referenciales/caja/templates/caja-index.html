@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{# Ventana: Cajas (listado y gestión). Ruta: /caja-index. Roles: ADMINISTRADOR, SUPERADMIN. API: /api/v1/cajas. #}
 {% block titulo %}Cajas{% endblock %}
 {% block contenido %}
 <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
@@ -114,7 +115,7 @@
     $('#btnGuardar').on('click', () => {
       const id = $('#txtId').val();
       const desc = $('#txtDescripcion').val().trim();
-      if (!desc) { Swal.fire('Atención','La descripción es obligatoria.','warning'); return; }
+      if (!desc) { Swal.fire('Atención','El campo "Descripción" es obligatorio.','warning'); return; }
       const payload = {
         des_caja: desc,
         cod_caja: $('#txtCodigo').val().trim() || null,

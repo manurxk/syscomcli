@@ -2,10 +2,13 @@ from app.core.base_dao import BaseDAO
 
 
 class LibroVentasDao(BaseDAO):
+    """Acceso a datos de libro de ventas (consultas y escrituras en PostgreSQL)."""
+
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     def getLibroVentas(self, fecha_desde=None, fecha_hasta=None):
+        """Devuelve las facturas del período para el libro de ventas (rango de fechas)."""
         condiciones = []
         valores     = []
 
@@ -46,6 +49,7 @@ class LibroVentasDao(BaseDAO):
         return self.execute_query(sql, tuple(valores) if valores else None)
 
     def getResumenLibroVentas(self, fecha_desde=None, fecha_hasta=None):
+        """Devuelve el libro de ventas resumido en el período."""
         condiciones = []
         valores     = []
 
@@ -76,6 +80,7 @@ class LibroVentasDao(BaseDAO):
         return self.execute_query(sql, tuple(valores) if valores else None)
 
     def getTotalesLibroVentas(self, fecha_desde=None, fecha_hasta=None):
+        """Devuelve los totales generales del libro de ventas en el período."""
         condiciones = []
         valores     = []
 
