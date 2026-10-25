@@ -85,8 +85,8 @@ Agenda Médica
                 <h6 class="fw-bold mt-4 mb-2">Bloqueos vigentes</h6>
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light"><tr><th>Especialista</th><th>Desde</th><th>Hasta</th><th>Motivo</th><th></th></tr></thead>
-                        <tbody id="tbodyBloqueos"><tr><td colspan="5" class="text-center text-muted">Sin bloqueos</td></tr></tbody>
+                        <thead class="table-light"><tr><th>Especialista</th><th>Desde</th><th>Hasta</th><th>Motivo</th><th>Citas por reprogramar</th><th></th></tr></thead>
+                        <tbody id="tbodyBloqueos"><tr><td colspan="6" class="text-center text-muted">Sin bloqueos</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -256,7 +256,7 @@ Agenda Médica
             <div class="modal-body p-4">
                 <div class="alert alert-info mb-3">
                     <i class="fas fa-info-circle"></i>
-                    Cupos materializados dentro del horizonte rodante (próximos 15 días).
+                    Cupos materializados dentro del horizonte rodante (próximos 30 días).
                 </div>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover" id="tblSlots">
@@ -296,6 +296,9 @@ Agenda Médica
 {% endblock %}
 
 {% block js %}
+{# Un {% set %} de otro bloque no llega acá: se recalcula. #}
+{% set roles_usuario = session.get('roles', []) | map('upper') | list %}
+{% set solo_agenda_propia = not ('ADMINISTRADOR' in roles_usuario or 'SUPERADMIN' in roles_usuario or 'RECEPCION' in roles_usuario) %}
 <script>
     const CSRFToken = "{{ csrf_token() }}" || null;
     const SOLO_AGENDA_PROPIA = {{ 'true' if solo_agenda_propia else 'false' }};
@@ -777,12 +780,24 @@ Agenda Médica
     // ==========================================
     // BLOQUEOS (ausencias, feriados)
     // ==========================================
+    let bloqueosCargados = [];
+    $(document).on('click', '.btn-citas-bloqueo', function () {
+        const b = bloqueosCargados.find(x => x.id_bloqueo === String($(this).data('id')));
+        if (!b) return;
+        Swal.fire({ title: 'Citas por reprogramar', icon: 'warning', width: 640,
+            html: `<p class="mb-1">Estas citas caen dentro del bloqueo (${esc(b.motivo)}). Reprográmelas o cancélelas desde Citas.</p>${listaCitas(b.citas_afectadas)}` });
+    });
+
     const cargarBloqueos = () => {
         $.get('/api/v1/agenda-horarios/bloqueos', (response) => {
             const tbody = $('#tbodyBloqueos').empty();
             const filas = response.success ? response.data : [];
-            if (!filas.length) { tbody.html('<tr><td colspan="5" class="text-center text-muted">Sin bloqueos</td></tr>'); return; }
+            if (!filas.length) { tbody.html('<tr><td colspan="6" class="text-center text-muted">Sin bloqueos</td></tr>'); return; }
+            bloqueosCargados = filas;
             filas.forEach(b => tbody.append(`<tr><td>${esc(b.especialista)}</td><td>${esc(b.desde)}</td><td>${esc(b.hasta)}</td><td>${esc(b.motivo)}</td>
+                <td>${b.citas_afectadas.length
+                    ? `<button type="button" class="btn btn-sm btn-danger btn-citas-bloqueo" data-id="${esc(b.id_bloqueo)}"><i class="fas fa-triangle-exclamation me-1"></i>${b.citas_afectadas.length} ${b.citas_afectadas.length === 1 ? 'cita' : 'citas'}</button>`
+                    : '<span class="text-muted">—</span>'}</td>
                 <td class="text-end"><button type="button" class="btn btn-sm btn-outline-success btn-levantar" data-id="${esc(b.id_bloqueo)}">Levantar</button></td></tr>`));
         });
     };

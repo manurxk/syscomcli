@@ -563,6 +563,13 @@ CREATE TRIGGER trg_tratamientos_auditoria AFTER INSERT OR DELETE OR UPDATE ON pu
 CREATE TRIGGER trg_tratamientos_fecha_mod BEFORE UPDATE ON public.tratamientos FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
+-- Name: citas citas_id_tratamiento_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.citas
+    ADD CONSTRAINT citas_id_tratamiento_fkey FOREIGN KEY (id_tratamiento) REFERENCES public.tratamientos(id_tratamiento) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+--
 -- Name: insumos insumos_usuario_creacion_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 

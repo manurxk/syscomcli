@@ -267,109 +267,116 @@ class CitaDao(BaseDAO):
         return self.execute_query_one(sql, (id_cita,))
 
     def crearCita(self, datos, usuario_creacion):
-        """Reserva un slot disponible y crea la cita en una sola transacción.
+        """Reserva un slot disponible y crea la cita en una sola transacción."""
+        return self.execute_transaction(lambda cur: self._crearCitaEnTransaccion(cur, datos, usuario_creacion))
 
-        El slot ya determina especialista/sede/consultorio/horario; usa
-        SELECT...FOR UPDATE para evitar que dos solicitudes reserven el mismo
-        slot en una carrera (mismo criterio que el comentario de slots_agenda).
-        """
+    def crearCitasTratamiento(self, id_tratamiento, lista_datos, usuario_creacion):
+        """Crea todas las citas de una tanda del plan de tratamiento en una sola transacción: si una falla
+        (turno ya tomado, vencido), no queda ninguna. Devuelve los id_cita creados, en el orden recibido."""
+        def _crear_todas(cur):
+            return [self._crearCitaEnTransaccion(cur, {**d, 'id_tratamiento': id_tratamiento}, usuario_creacion)
+                    for d in lista_datos]
+        return self.execute_transaction(_crear_todas)
 
-        def _crear(cur):
-            cur.execute(
-                f"""
-                SELECT id_slot_agenda, id_sede, id_consultorio, id_especialista,
-                       slot_inicio, slot_fin, estado_slot, {self.SQL_TURNO_VENCIDO} AS vencido
-                FROM slots_agenda
-                WHERE id_slot_agenda = %s
-                FOR UPDATE
-                """,
-                (datos["id_slot_agenda"],),
-            )
-            slot = cur.fetchone()
-            if slot is None:
-                raise ValueError("El slot indicado no existe")
+    def _crearCitaEnTransaccion(self, cur, datos, usuario_creacion):
+        """Reserva el slot (SELECT...FOR UPDATE, así dos solicitudes no reservan el mismo en una carrera) y crea
+        la cita con el cursor de una transacción ya abierta. El slot ya determina especialista, sede,
+        consultorio y horario."""
+        cur.execute(
+            f"""
+            SELECT id_slot_agenda, id_sede, id_consultorio, id_especialista,
+                   slot_inicio, slot_fin, estado_slot, {self.SQL_TURNO_VENCIDO} AS vencido
+            FROM slots_agenda
+            WHERE id_slot_agenda = %s
+            FOR UPDATE
+            """,
+            (datos["id_slot_agenda"],),
+        )
+        slot = cur.fetchone()
+        if slot is None:
+            raise ValueError("El slot indicado no existe")
 
-            (id_slot_agenda, id_sede, id_consultorio, id_especialista,
-             slot_inicio, slot_fin, estado_slot, vencido) = slot
+        (id_slot_agenda, id_sede, id_consultorio, id_especialista,
+         slot_inicio, slot_fin, estado_slot, vencido) = slot
 
-            if estado_slot != "DISPONIBLE":
-                raise ValueError("El slot ya no está disponible")
-            if vencido:
-                raise ValueError("El turno seleccionado ya pasó; elija un turno futuro")
+        if estado_slot != "DISPONIBLE":
+            raise ValueError("El slot ya no está disponible")
+        if vencido:
+            raise ValueError("El turno seleccionado ya pasó; elija un turno futuro")
 
-            id_especialidad = datos.get("id_especialidad")
-            if id_especialidad:
-                cur.execute(
-                    """
-                    SELECT 1 FROM especialista_especialidades
-                    WHERE id_especialista = %s AND id_especialidad = %s
-                      AND est_especialista_especialidad = TRUE
-                    """,
-                    (id_especialista, id_especialidad),
-                )
-                if cur.fetchone() is None:
-                    raise ValueError("El especialista no tiene esa especialidad")
-
-            cur.execute(
-                "SELECT id_estado_cita FROM estados_citas WHERE cod_estado_cita = 'AGENDADA'"
-            )
-            id_estado_inicial = cur.fetchone()[0]
-
+        id_especialidad = datos.get("id_especialidad")
+        if id_especialidad:
             cur.execute(
                 """
-                INSERT INTO citas (
-                    id_paciente, id_especialista, id_especialidad, id_sede, id_consultorio,
-                    id_slot_agenda, id_estado_cita, cita_inicio, cita_fin, modalidad,
-                    cita_es_primera_vez, tipo_cita, cita_numero_sesion, motivo, observaciones,
-                    usuario_creacion
-                )
-                VALUES (
-                    %(id_paciente)s, %(id_especialista)s, %(id_especialidad)s, %(id_sede)s,
-                    %(id_consultorio)s, %(id_slot_agenda)s, %(id_estado_inicial)s,
-                    %(cita_inicio)s, %(cita_fin)s, %(modalidad)s, %(cita_es_primera_vez)s,
-                    %(tipo_cita)s, %(cita_numero_sesion)s, %(motivo)s, %(observaciones)s, %(usuario_creacion)s
-                )
-                RETURNING id_cita
+                SELECT 1 FROM especialista_especialidades
+                WHERE id_especialista = %s AND id_especialidad = %s
+                  AND est_especialista_especialidad = TRUE
                 """,
-                {
-                    "id_paciente": datos["id_paciente"],
-                    "id_especialista": id_especialista,
-                    "id_especialidad": id_especialidad,
-                    "id_sede": id_sede,
-                    "id_consultorio": id_consultorio,
-                    "id_slot_agenda": id_slot_agenda,
-                    "id_estado_inicial": id_estado_inicial,
-                    "cita_inicio": slot_inicio,
-                    "cita_fin": slot_fin,
-                    "modalidad": datos.get("modalidad", "PRESENCIAL"),
-                    "cita_es_primera_vez": datos.get("cita_es_primera_vez", True),
-                    "tipo_cita": datos.get("tipo_cita", "PRIMERA_VEZ"),
-                    "cita_numero_sesion": self._numero_sesion(
-                        cur, datos["id_paciente"], datos.get("tipo_cita", "PRIMERA_VEZ"), slot_inicio),
-                    "motivo": datos.get("motivo"),
-                    "observaciones": datos.get("observaciones"),
-                    "usuario_creacion": usuario_creacion,
-                },
+                (id_especialista, id_especialidad),
             )
-            id_cita = cur.fetchone()[0]
+            if cur.fetchone() is None:
+                raise ValueError("El especialista no tiene esa especialidad")
 
-            cur.execute(
-                "UPDATE slots_agenda SET estado_slot = 'RESERVADO' WHERE id_slot_agenda = %s",
-                (id_slot_agenda,),
+        cur.execute(
+            "SELECT id_estado_cita FROM estados_citas WHERE cod_estado_cita = 'AGENDADA'"
+        )
+        id_estado_inicial = cur.fetchone()[0]
+
+        cur.execute(
+            """
+            INSERT INTO citas (
+                id_paciente, id_especialista, id_especialidad, id_sede, id_consultorio,
+                id_slot_agenda, id_estado_cita, cita_inicio, cita_fin, modalidad,
+                cita_es_primera_vez, tipo_cita, cita_numero_sesion, motivo, observaciones,
+                usuario_creacion, id_tratamiento
             )
-
-            cur.execute(
-                """
-                INSERT INTO citas_log_estados
-                    (id_cita, id_estado_anterior, id_estado_nuevo, motivo_cambio, usuario_cambio)
-                VALUES (%s, NULL, %s, 'Creación de cita', %s)
-                """,
-                (id_cita, id_estado_inicial, usuario_creacion),
+            VALUES (
+                %(id_paciente)s, %(id_especialista)s, %(id_especialidad)s, %(id_sede)s,
+                %(id_consultorio)s, %(id_slot_agenda)s, %(id_estado_inicial)s,
+                %(cita_inicio)s, %(cita_fin)s, %(modalidad)s, %(cita_es_primera_vez)s,
+                %(tipo_cita)s, %(cita_numero_sesion)s, %(motivo)s, %(observaciones)s, %(usuario_creacion)s,
+                %(id_tratamiento)s
             )
+            RETURNING id_cita
+            """,
+            {
+                "id_paciente": datos["id_paciente"],
+                "id_especialista": id_especialista,
+                "id_especialidad": id_especialidad,
+                "id_sede": id_sede,
+                "id_consultorio": id_consultorio,
+                "id_slot_agenda": id_slot_agenda,
+                "id_estado_inicial": id_estado_inicial,
+                "cita_inicio": slot_inicio,
+                "cita_fin": slot_fin,
+                "modalidad": datos.get("modalidad", "PRESENCIAL"),
+                "cita_es_primera_vez": datos.get("cita_es_primera_vez", True),
+                "tipo_cita": datos.get("tipo_cita", "PRIMERA_VEZ"),
+                "cita_numero_sesion": self._numero_sesion(
+                    cur, datos["id_paciente"], datos.get("tipo_cita", "PRIMERA_VEZ"), slot_inicio),
+                "motivo": datos.get("motivo"),
+                "observaciones": datos.get("observaciones"),
+                "usuario_creacion": usuario_creacion,
+                "id_tratamiento": datos.get("id_tratamiento"),
+            },
+        )
+        id_cita = cur.fetchone()[0]
 
-            return id_cita
+        cur.execute(
+            "UPDATE slots_agenda SET estado_slot = 'RESERVADO' WHERE id_slot_agenda = %s",
+            (id_slot_agenda,),
+        )
 
-        return self.execute_transaction(_crear)
+        cur.execute(
+            """
+            INSERT INTO citas_log_estados
+                (id_cita, id_estado_anterior, id_estado_nuevo, motivo_cambio, usuario_cambio)
+            VALUES (%s, NULL, %s, 'Creación de cita', %s)
+            """,
+            (id_cita, id_estado_inicial, usuario_creacion),
+        )
+
+        return id_cita
 
     def getLogEstados(self, id_cita):
         """Devuelve el historial de cambios de estado de la cita."""
@@ -479,7 +486,8 @@ class CitaDao(BaseDAO):
                 UPDATE citas
                 SET id_especialidad = %s, modalidad = %s, cita_es_primera_vez = %s, tipo_cita = %s,
                     cita_numero_sesion = %s, motivo = %s, observaciones = %s,
-                    usuario_modificacion = %s
+                    usuario_modificacion = %s,
+                    id_tratamiento = CASE WHEN %s = 'TRATAMIENTO' THEN id_tratamiento ELSE NULL END
                 WHERE id_cita = %s
                 """,
                 (
@@ -491,6 +499,7 @@ class CitaDao(BaseDAO):
                     datos.get("motivo"),
                     datos.get("observaciones"),
                     usuario_modificacion,
+                    datos.get("tipo_cita", "PRIMERA_VEZ"),
                     id_cita,
                 ),
             )

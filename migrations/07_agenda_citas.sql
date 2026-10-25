@@ -115,9 +115,11 @@ CREATE TABLE public.citas (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     tipo_cita character varying(20) DEFAULT 'PRIMERA_VEZ'::character varying NOT NULL,
+    id_tratamiento integer,
     CONSTRAINT chk_citas_modalidad CHECK (((modalidad)::text = ANY (ARRAY[('PRESENCIAL'::character varying)::text, ('TELEMEDICINA'::character varying)::text, ('DOMICILIO'::character varying)::text]))),
     CONSTRAINT chk_citas_rango CHECK ((cita_fin > cita_inicio)),
-    CONSTRAINT chk_citas_tipo_cita CHECK (((tipo_cita)::text = ANY ((ARRAY['PRIMERA_VEZ'::character varying, 'SEGUIMIENTO'::character varying, 'TRATAMIENTO'::character varying])::text[])))
+    CONSTRAINT chk_citas_tipo_cita CHECK (((tipo_cita)::text = ANY ((ARRAY['PRIMERA_VEZ'::character varying, 'SEGUIMIENTO'::character varying, 'TRATAMIENTO'::character varying])::text[]))),
+    CONSTRAINT chk_citas_tratamiento_tipo CHECK (((id_tratamiento IS NULL) OR ((tipo_cita)::text = 'TRATAMIENTO'::text)))
 );
 
 --
@@ -125,6 +127,12 @@ CREATE TABLE public.citas (
 --
 
 COMMENT ON TABLE public.citas IS 'Paciente y especialista quedan fijos al reprogramar (decisión de diseño: cambiarlos complicaría paciente_profesional/recordatorios/historial). Reprogramar libera el slot viejo y reserva el nuevo. cod_origen_cita (MANUAL/DERIVACION) se agrega en Fase C cuando exista derivaciones, vía ALTER TABLE — no se agrega ahora para no anticipar una dependencia que todavía no existe.';
+
+--
+-- Name: COLUMN citas.id_tratamiento; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.citas.id_tratamiento IS 'Plan de tratamiento al que pertenece la cita (solo tipo TRATAMIENTO). Lo completa el plan de sesiones del especialista al confirmar una tanda; NULL en las demás citas.';
 
 --
 -- Name: citas_id_cita_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -507,6 +515,12 @@ CREATE INDEX idx_citas_paciente ON public.citas USING btree (id_paciente);
 --
 
 CREATE INDEX idx_citas_slot ON public.citas USING btree (id_slot_agenda);
+
+--
+-- Name: idx_citas_tratamiento; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_citas_tratamiento ON public.citas USING btree (id_tratamiento) WHERE (id_tratamiento IS NOT NULL);
 
 --
 -- Name: idx_lista_espera_agenda; Type: INDEX; Schema: public; Owner: -

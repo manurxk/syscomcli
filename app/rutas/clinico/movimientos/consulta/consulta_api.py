@@ -1,5 +1,9 @@
+from datetime import date, timedelta
+
 from flask import Blueprint, request, jsonify, current_app as app, session
+from app.dao.agendamiento.agenda_horarios.AgendaHorariosDao import AgendaHorariosDao
 from app.dao.clinico.movimientos.consulta.ConsultaDao import ConsultaDao
+from app.dao.clinico.movimientos.tratamiento.TratamientoDao import TratamientoDao
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
 from app.dao.agendamiento.cita.CitaDao import CitaDao
 from app.auth.utils.decorators import role_required
@@ -178,4 +182,63 @@ def deleteConsulta(id_consulta):
         return jsonify({'success': False, 'error': 'No se encontró la consulta con el ID proporcionado.'}), 404
     except Exception as e:
         app.logger.error(f"Error al desactivar consulta: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+# ----------------------------------------------------------------------
+# Próximo control: el especialista agenda en su propia agenda una cita de Seguimiento del paciente de la consulta.
+# Recepción la ve como cualquier otra cita (Citas, calendario, recordatorio). Reusa CitaDao.crearCita.
+# ----------------------------------------------------------------------
+
+def _consultaPropia(id_consulta):
+    """(consulta, error): la consulta es del especialista logueado."""
+    id_funcionario = session.get('id_funcionario')
+    id_especialista = CitaDao().getEspecialistaPorFuncionario(id_funcionario) if id_funcionario else None
+    consulta = TratamientoDao().getContextoConsulta(id_consulta)
+    if not consulta or not id_especialista or consulta['id_especialista'] != id_especialista:
+        return None, ('No se encontró la consulta con el ID proporcionado.', 404)
+    return consulta, None
+
+
+@consultaapi.route('/consultas/<int:id_consulta>/proximo-control/turnos', methods=['GET'])
+@role_required("CLINICO")
+def getTurnosProximoControl(id_consulta):
+    """GET: turnos libres del especialista de la consulta, de hoy hasta donde hay turnos generados."""
+    try:
+        consulta, error = _consultaPropia(id_consulta)
+        if error:
+            return jsonify({'success': False, 'error': error[0]}), error[1]
+        hoy = date.today()
+        hasta = hoy + timedelta(days=AgendaHorariosDao.HORIZONTE_DIAS_DEFAULT)
+        turnos = CitaDao().getSlotsDisponibles(consulta['id_especialista'], None, hoy.isoformat(), hasta.isoformat())
+        return jsonify({'success': True, 'data': turnos, 'id_especialista': consulta['id_especialista'], 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener los turnos del próximo control: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@consultaapi.route('/consultas/<int:id_consulta>/proximo-control', methods=['POST'])
+@role_required("CLINICO")
+def addProximoControl(id_consulta):
+    """POST: crea la cita de Seguimiento (201) en un turno libre del propio especialista. Recibe id_slot_agenda y motivo."""
+    data = request.get_json() or {}
+    id_slot = data.get('id_slot_agenda')
+    if not isinstance(id_slot, int):
+        return jsonify({'success': False, 'error': msg_obligatorio('Turno')}), 400
+    try:
+        consulta, error = _consultaPropia(id_consulta)
+        if error:
+            return jsonify({'success': False, 'error': error[0]}), error[1]
+        if TratamientoDao().getEspecialistaDeSlots([id_slot]).get(id_slot) != consulta['id_especialista']:
+            return jsonify({'success': False, 'error': 'El turno debe ser de tu propia agenda.'}), 400
+        id_cita = CitaDao().crearCita({
+            'id_paciente': consulta['id_paciente'], 'id_slot_agenda': id_slot, 'modalidad': 'PRESENCIAL',
+            'tipo_cita': 'SEGUIMIENTO', 'cita_es_primera_vez': False,
+            'motivo': (data.get('motivo') or '').strip() or 'Control',
+        }, usuario_creacion=session.get('id_usuario'))
+        return jsonify({'success': True, 'data': {'id_cita': id_cita}, 'error': None}), 201
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error al agendar el próximo control: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500

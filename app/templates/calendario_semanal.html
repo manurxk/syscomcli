@@ -3,7 +3,10 @@
    - datos(desde, hasta): Promise de { citas, horarios, slots } (slots puede ser null) o null si todavía no hay especialista elegido.
      Formatos: los de /api/v1/citas, /api/v1/agenda-horarios y /api/v1/citas/slots-disponibles.
    - alTocarHueco(slot): si se pasa, los turnos libres se pueden tocar; si no, el calendario es de solo lectura.
-   - urlEditar(cita): si se pasa, el detalle de una cita editable muestra «Editar / reprogramar». #}
+   - textoAgendar: texto del botón del turno libre (por defecto «Agregar nueva cita»).
+   - urlEditar(cita): si se pasa, el detalle de una cita editable muestra «Editar / reprogramar».
+   - propuestas(): lista de [{ fecha: 'AAAA-MM-DD', ini: 'HH:MM', fin: 'HH:MM', titulo, detalle, conflicto }] para dibujar sesiones
+     propuestas (todavía sin guardar) encima de la agenda; las de conflicto salen en rojo. Plan de tratamiento por tandas. #}
 <style>
   .cal-semanal .cal-wrap { overflow-x: auto; }
   .cal-semanal .cal { display: grid; border: 1px solid var(--bs-border-color); border-radius: .5rem; overflow: hidden; background: var(--bs-body-bg); min-width: 760px; }
@@ -29,6 +32,8 @@
   .cal-semanal .ev-EN_CONSULTA { border-color: #ffc107; background: #fff8e1; }
   .cal-semanal .ev-COMPLETADA  { border-color: #198754; background: #e8f5ee; }
   .cal-semanal .ev-AUSENTE     { border-color: #6c757d; background: #f1f3f5; color: #6c757d; }
+  .cal-semanal .ev-prop { border: 2px dashed #4338ca; border-left-width: 4px; background: #eef2ff; color: #3730a3; cursor: default; }
+  .cal-semanal .ev-conflicto { border: 2px solid #dc3545; border-left-width: 4px; background: #fdecee; color: #842029; cursor: default; }
   .cal-semanal .ahora { position: absolute; left: 0; right: 0; height: 2px; background: #dc3545; z-index: 3; }
   .cal-semanal .leyenda span { display: inline-flex; align-items: center; gap: .3rem; margin-right: .9rem; font-size: .8rem; white-space: nowrap; }
   .cal-semanal .leyenda i { width: .8rem; height: .8rem; display: inline-block; border-radius: .2rem; border-left: 4px solid; }
@@ -109,10 +114,11 @@
       const horarios = (datos.horarios || []).filter(h => h.est_agenda_horario);
       const slots = datos.slots || [];
       citasSemana = (datos.citas || []).filter(c => c.cod_estado_cita !== 'CANCELADA');
+      const propuestas = cfg.propuestas ? cfg.propuestas() : [];
 
       const vigente = (h, d) => (!h.fec_desde || h.fec_desde <= iso(d)) && (!h.fec_hasta || h.fec_hasta >= iso(d));
       const horariosDe = (d) => horarios.filter(h => h.id_dia_semana === idDia(d) && vigente(h, d));
-      const conDomingo = horariosDe(sumar(lunes, 6)).length || slots.some(s => fecha(s.slot_inicio) === hasta) || citasSemana.some(c => fecha(c.cita_inicio) === hasta);
+      const conDomingo = horariosDe(sumar(lunes, 6)).length || slots.some(s => fecha(s.slot_inicio) === hasta) || citasSemana.some(c => fecha(c.cita_inicio) === hasta) || (cfg.propuestas ? cfg.propuestas() : []).some(p => p.fecha === hasta);
       const dias = Array.from({ length: conDomingo ? 7 : 6 }, (_, i) => sumar(lunes, i));
 
       // Rango de horas: lo que cubren los horarios de atención de la semana (y cualquier cita o turno que se salga)
@@ -121,6 +127,7 @@
       dias.forEach(d => horariosDe(d).forEach(h => abarcar(aMin(h.hora_inicio), aMin(h.hora_fin))));
       citasSemana.forEach(c => abarcar(aMin(hora(c.cita_inicio)), aMin(hora(c.cita_fin))));
       slots.forEach(s => abarcar(aMin(hora(s.slot_inicio)), aMin(hora(s.slot_fin))));
+      propuestas.forEach(p => abarcar(aMin(p.ini), aMin(p.fin)));
       if (fin === 0) { ini = 8 * 60; fin = 18 * 60; aviso.innerHTML = '<div class="alert alert-light border small py-2">No hay horarios de atención cargados para esta semana.</div>'; }
       ini = Math.floor(ini / 60) * 60; fin = Math.ceil(fin / 60) * 60;
       const alto = (fin - ini) / 60 * ALTO, y = (m) => (m - ini) / 60 * ALTO;
@@ -155,6 +162,10 @@
           col += `<div class="evento ev-${esc(c.cod_estado_cita)}" role="button" tabindex="0" style="left:calc(${k * 100 / n}% + 3px);width:calc(${100 / n}% - 6px);top:${y(a) + 2}px;height:${Math.max(y(b) - y(a) - 4, 22)}px" data-cita="${c.id_cita}"><b>${hora(c.cita_inicio)} ${esc(nombre)}</b>${esc(tipo)}</div>`;
         });
 
+        propuestas.filter(p => p.fecha === iso(d)).forEach(p => {
+          col += `<div class="evento ${p.conflicto ? 'ev-conflicto' : 'ev-prop'}" style="left:3px;right:3px;top:${y(aMin(p.ini)) + 2}px;height:${Math.max(y(aMin(p.fin)) - y(aMin(p.ini)) - 4, 22)}px"><b>${p.ini} ${esc(p.titulo)}</b>${esc(p.detalle || '')}</div>`;
+        });
+
         const ahora = new Date(), mm = ahora.getHours() * 60 + ahora.getMinutes();
         if (iso(d) === iso(ahora) && mm >= ini && mm <= fin) col += `<div class="ahora" style="top:${y(mm)}px"></div>`;
         h += col + '</div>';
@@ -185,7 +196,7 @@
         <div class="mb-2">${DIAS[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} · ${hora(s.slot_inicio)} a ${hora(s.slot_fin)}${s.des_consultorio ? ' · ' + esc(s.des_consultorio) : ''}</div>
         <span class="badge text-bg-success">Disponible</span>${s.es_sobreturno ? ' <span class="badge text-bg-danger">Sobreturno</span>' : ''}`;
       document.getElementById('modalCalCitaPie').innerHTML =
-        '<button type="button" class="btn btn-success btn-sm" id="btnCalNuevaCita"><i class="fas fa-calendar-plus me-1"></i>Agregar nueva cita</button>' +
+        '<button type="button" class="btn btn-success btn-sm" id="btnCalNuevaCita"><i class="fas fa-calendar-plus me-1"></i>' + (cfg.textoAgendar || 'Agregar nueva cita') + '</button>' +
         '<button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>';
       document.getElementById('btnCalNuevaCita').addEventListener('click', () => cfg.alTocarHueco(s));
       new bootstrap.Modal(document.getElementById('modalCalCita')).show();
@@ -209,6 +220,13 @@
       new bootstrap.Modal(document.getElementById('modalCalCita')).show();
     }
 
-    return { pintar };
+    // Abre la semana que contiene la fecha (AAAA-MM-DD)
+    function irA(f) {
+      const d = new Date(f + 'T00:00:00');
+      lunes = sumar(d, -((d.getDay() + 6) % 7));
+      return pintar();
+    }
+
+    return { pintar, irA };
   }
 </script>

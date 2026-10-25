@@ -287,9 +287,14 @@ def _fecha_hora(valor):
 @agendahorariosapi.route('/agenda-horarios/bloqueos', methods=['GET'])
 @role_required(*ROLES_GESTION_AGENDA)
 def getBloqueosAgenda():
-    """GET: lista los bloqueos de agenda; admite filtro por especialista."""
+    """GET: lista los bloqueos de agenda; admite filtro por especialista. Cada bloqueo trae `citas_afectadas`:
+    las citas abiertas que siguen dentro del rango (para reprogramarlas o cancelarlas)."""
     try:
-        data = AgendaHorariosDao().getBloqueos(request.args.get('id_especialista', None, type=int))
+        dao = AgendaHorariosDao()
+        data = dao.getBloqueos(request.args.get('id_especialista', None, type=int))
+        for b in data:
+            b['citas_afectadas'] = dao.getCitasEnRango(
+                b['id_especialista'], datetime.fromisoformat(b.pop('desde_iso')), datetime.fromisoformat(b.pop('hasta_iso')))
         return jsonify({'success': True, 'data': data, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener bloqueos de agenda: {str(e)}")

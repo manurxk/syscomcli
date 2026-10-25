@@ -15,6 +15,7 @@ Atender Consulta
           <div class="page-header-subtitle">Paciente, especialista y fecha quedan fijos: vienen de la cita de origen</div>
         </div>
         <div class="col-12 col-xl-auto mt-4">
+          <button type="button" class="btn btn-warning btn-sm shadow-sm me-1 btn-ir-plan" id="btnProximoControl" data-titulo="Próximo control" data-url="{{ url_for('consulta.proximoControl', id_consulta=id_consulta) }}"><i class="fas fa-calendar-check me-1"></i> Agendar próximo control</button>
           <a href="{{ url_for('consulta.consultaIndex') }}" class="btn btn-light btn-sm shadow-sm">
             <i class="fas fa-arrow-left me-1"></i> Volver al Listado
           </a>
@@ -140,7 +141,25 @@ Atender Consulta
     </div>
   </div>
 
-  <!-- SECCIÓN 4: REGISTRO CLÍNICO DE LA CONSULTA -->
+  <!-- SECCIÓN 4: PLAN DE TRATAMIENTO (pantalla aparte: tratamiento y sus sesiones por tandas) -->
+  <div class="card mb-4 border-0 shadow-sm" id="cardPlanTratamiento" style="display:none;">
+    <div class="card-header bg-light d-flex align-items-center">
+      <h6 class="mb-0 fw-bold text-primary">Plan de tratamiento</h6>
+      <div class="ms-auto">
+        <button type="button" class="btn btn-sm btn-primary btn-agregar-registro" data-tipo="tratamientos"><i class="fas fa-calendar-plus me-1"></i>Crear plan de tratamiento</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0">
+          <thead class="table-light"><tr><th>Tipo</th><th>Descripción</th><th>Fecha inicio</th><th>Sesiones</th><th>Estado</th><th>Obs.</th><th></th></tr></thead>
+          <tbody id="tbody-tratamientos"><tr><td colspan="7" class="text-muted text-center">Sin planes de tratamiento</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 5: REGISTRO CLÍNICO DE LA CONSULTA -->
   <div class="card mb-4 border-0 shadow-sm" id="cardRegistroClinico" style="display:none;">
     <div class="card-header bg-light">
       <h6 class="mb-0 fw-bold text-warning">Registro Clínico de la Consulta</h6>
@@ -208,19 +227,6 @@ Atender Consulta
           <table class="table table-sm table-bordered mb-0">
             <thead class="table-light"><tr><th>Insumo</th><th>Cantidad</th><th>Obs.</th><th></th></tr></thead>
             <tbody id="tbody-insumos"><tr><td colspan="4" class="text-muted text-center">Sin registros</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="border rounded p-3 mb-3">
-        <div class="d-flex align-items-center mb-2">
-          <h6 class="mb-0 fw-bold flex-grow-1">Tratamientos</h6>
-          <button type="button" class="btn btn-sm btn-outline-primary btn-agregar-registro" data-tipo="tratamientos">+ Agregar</button>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light"><tr><th>Tipo</th><th>Descripción</th><th>Fecha inicio</th><th>Sesiones</th><th>Estado</th><th>Obs.</th><th></th></tr></thead>
-            <tbody id="tbody-tratamientos"><tr><td colspan="7" class="text-muted text-center">Sin registros</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -871,27 +877,15 @@ Atender Consulta
         registro_observaciones: $('#ri_observaciones').val() || null
       })
     },
+    // Sin ventana de alta: «+ Agregar» y el botón de cada fila abren la pantalla del plan de tratamiento
     tratamientos: {
-      catalogUrl: '/api/v1/tipos-tratamientos', activeField: 'est_tipo_tratamiento',
-      catalogLabel: 'Tipo de tratamiento', idKeyRow: 'id_tratamiento', optLabel: d => d.des_tipo_tratamiento,
-      fields: ['desc', 'objetivos', 'fecha_inicio', 'numero_sesiones', 'frecuencia_sesiones', 'duracion', 'observaciones'],
-      descLabel: 'Descripción del tratamiento', requiredFields: [{ id: 'ri_desc', label: 'La descripción' }, { id: 'ri_fecha_inicio', label: 'La fecha de inicio' }],
-      deleteUrl: id => `/api/v1/tratamientos/${id}`,
+      idKeyRow: 'id_tratamiento', deleteUrl: id => `/api/v1/tratamientos/${id}`,
+      planUrl: id => `{{ url_for('consulta.tratamientoPlan', id_tratamiento=0) }}`.replace(/0$/, id),
       cols: row => [
         row.des_tipo_tratamiento, row.des_tratamiento, row.tratamiento_fecha_inicio,
-        row.numero_sesiones ? `${row.numero_sesiones} (${row.frecuencia_sesiones || '-'})` : '-',
+        row.numero_sesiones ? `${row.sesiones_agendadas} de ${row.numero_sesiones}${row.frecuencia_sesiones ? ` (${row.frecuencia_sesiones})` : ''}` : (row.sesiones_agendadas ? `${row.sesiones_agendadas} agendadas` : '-'),
         row.tratamiento_estado, row.tratamiento_observaciones || '-'
-      ],
-      buildPayload: () => ({
-        id_tipo_tratamiento: parseInt($('#ri_catalogo').val()),
-        des_tratamiento: $('#ri_desc').val().trim(),
-        tratamiento_objetivos: $('#ri_objetivos').val() || null,
-        tratamiento_fecha_inicio: $('#ri_fecha_inicio').val(),
-        numero_sesiones: $('#ri_numero_sesiones').val() ? parseInt($('#ri_numero_sesiones').val()) : null,
-        frecuencia_sesiones: $('#ri_frecuencia_sesiones').val() || null,
-        duracion_sesion: $('#ri_duracion').val() ? parseInt($('#ri_duracion').val()) : null,
-        tratamiento_observaciones: $('#ri_observaciones').val() || null
-      })
+      ]
     },
     certificados: {
       catalogUrl: '/api/v1/tipos-certificados-medicos', activeField: 'est_tipo_certificado_medico',
@@ -944,7 +938,8 @@ Atender Consulta
           tbody.html(data.data.map(row => {
             const cols = cfg.cols(row).map(c => `<td>${c}</td>`).join('');
             const imprimir = cfg.pdfUrl ? botonImprimir(cfg.pdfUrl(row[cfg.idKeyRow])) : '';
-            return `<tr>${cols}<td class="text-center">${imprimir}
+            const plan = cfg.planUrl ? botonPlan(cfg.planUrl(row[cfg.idKeyRow])) : '';
+            return `<tr>${cols}<td class="text-center text-nowrap">${plan}${imprimir}
               <button type="button" class="btn btn-sm btn-outline-danger btn-borrar-registro" data-tipo="${tipo}" data-id="${row[cfg.idKeyRow]}">&times;</button>
             </td></tr>`;
           }).join(''));
@@ -961,6 +956,7 @@ Atender Consulta
   const abrirModalRegistro = () => {
     $('.btn-agregar-registro').on('click', function () {
       const tipo = $(this).data('tipo');
+      if (tipo === 'tratamientos') { irAlPlan(`{{ url_for('consulta.tratamientoPlanNuevo', id_consulta=0) }}`.replace(/0$/, idConsultaEdit)); return; }
       const cfg = REGISTRO_CONFIG[tipo];
 
       $('#ri_tipo').val(tipo);
@@ -1067,6 +1063,19 @@ Atender Consulta
   // ==========================================
   // IMPRESIÓN de orden, receta y certificado (PDF: ORDEN.html, RECETA.html, CERTIFICADO.html)
   // ==========================================
+  const botonPlan = (url) =>
+    `<button type="button" class="btn btn-sm btn-outline-primary me-1 btn-ir-plan" data-url="${url}" title="Plan de sesiones: agendar las citas de este tratamiento"><i class="fas fa-calendar-plus"></i></button>`;
+
+  // El plan de tratamiento es otra pantalla: lo escrito en la consulta y no guardado se perdería
+  const irAlPlan = (url, titulo = 'Plan de tratamiento') => {
+    Swal.fire({
+      title: titulo,
+      text: 'Vas a salir de la consulta. Guardá antes lo que hayas escrito; los registros agregados ya están guardados.',
+      icon: 'info', showCancelButton: true, confirmButtonText: 'Continuar', cancelButtonText: 'Quedarme'
+    }).then(r => { if (r.isConfirmed) window.location.href = url; });
+  };
+  $(document).on('click', '.btn-ir-plan', function () { irAlPlan($(this).data('url'), $(this).data('titulo') || undefined); });
+
   const botonImprimir = (url) =>
     `<a class="btn btn-sm btn-outline-secondary me-1" href="${url}" target="_blank" rel="noopener" title="Imprimir"><i class="fas fa-print"></i></a>`;
 
@@ -1418,8 +1427,13 @@ Atender Consulta
           if (data.success && datos.consulta_estado === 'FINALIZADA') {
             // Consulta terminada: queda guardada, el botón no se vuelve a habilitar y se vuelve a Mi Agenda
             btn.html('<i class="fas fa-check"></i> Consulta finalizada');
-            Swal.fire({ icon: 'success', title: 'Consulta finalizada', text: 'La consulta quedó guardada. Volvés a Mi Agenda.', timer: 1800, showConfirmButton: false })
-              .then(irAMiAgenda);
+            Swal.fire({
+              icon: 'success', title: 'Consulta finalizada', text: 'La consulta quedó guardada. ¿Querés agendar el próximo control del paciente?',
+              showCancelButton: true, confirmButtonText: 'Agendar control', cancelButtonText: 'Ahora no, volver a Mi Agenda', allowOutsideClick: false
+            }).then(r => {
+              if (r.isConfirmed) window.location.href = `{{ url_for('consulta.proximoControl', id_consulta=0) }}`.replace(/0$/, idConsultaEdit) + '?volver=agenda';
+              else irAMiAgenda();
+            });
           } else if (data.success) {
             liberar();
             Swal.fire({ icon: 'success', title: 'Consulta guardada', timer: 1500, showConfirmButton: false });
@@ -1478,6 +1492,7 @@ Atender Consulta
               const clase = ESTADOS_CITA_BADGE[d.cita_estado_cod] || 'border border-secondary text-secondary';
               $('#infoEstadoCita').attr('class', `badge ${clase}`).text(d.cita_estado_des);
             }
+            $('#cardPlanTratamiento').show();
             $('#cardRegistroClinico').show();
             cargarTodosRegistros();
             cargarOrdenes();

@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+{# Ventana: Plan de tratamiento (alta del tratamiento y sesiones por tandas). Rutas: /clinico/consulta/tratamiento-plan/nuevo/<id_consulta> (tratamiento nuevo) y /clinico/consulta/tratamiento-plan/<id_tratamiento>. Rol: CLINICO. Reemplaza a la ventana «Agregar tipo de tratamiento» de la consulta. API: /api/v1/tratamientos/<id>/plan, /plan/proponer, /plan/confirmar, /api/v1/mi-agenda/citas-semana, /api/v1/agenda-horarios. Prototipo: docs/prototipos/tratamiento_plan.html #}
+
+{% block titulo %}Plan de tratamiento{% endblock %}
+
+{% block contenido %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+  <div class="container-fluid px-4">
+    <div class="page-header-content pt-4">
+      <div class="row align-items-center justify-content-between">
+        <div class="col-auto mt-4">
+          <h1 class="page-header-title">Plan de tratamiento</h1>
+          <div class="page-header-subtitle">Agendá las sesiones por tandas: primero se proponen en el calendario y recién al confirmar se crean las citas</div>
+        </div>
+        <div class="col-12 col-xl-auto mt-4">
+          <a href="#" id="lnkVolver" class="btn btn-light btn-sm shadow-sm"><i class="fas fa-arrow-left me-1"></i> Volver a la consulta</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-n10">
+  <div class="row g-3">
+
+    <!-- Columna izquierda: plan, frecuencia y avance -->
+    <div class="col-xl-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">1. Plan</h6></div>
+        <div class="card-body">
+          <div class="fw-bold fs-6" id="planPaciente">…</div>
+
+          <!-- Tratamiento nuevo: se indican sus datos; se crea al guardar el plan o al generar la primera tanda -->
+          <div id="planForm" class="d-none mt-2">
+            <div class="mb-2">
+              <label class="small mb-1" for="fTipo">Tipo de tratamiento <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" id="fTipo"><option value="">-- Seleccione --</option></select>
+            </div>
+            <div class="mb-2">
+              <label class="small mb-1" for="fDescripcion">Descripción del tratamiento <span class="text-danger">*</span></label>
+              <textarea class="form-control form-control-sm" id="fDescripcion" rows="2"></textarea>
+            </div>
+            <div class="mb-2">
+              <label class="small mb-1" for="fObjetivos">Objetivos</label>
+              <textarea class="form-control form-control-sm" id="fObjetivos" rows="2"></textarea>
+            </div>
+            <div class="mb-2">
+              <label class="small mb-1" for="fTotal">N.º de sesiones del plan</label>
+              <input type="number" class="form-control form-control-sm" id="fTotal" min="1" max="200" placeholder="Total del tratamiento">
+            </div>
+            <div class="mb-2">
+              <label class="small mb-1" for="fObservaciones">Observaciones</label>
+              <textarea class="form-control form-control-sm" id="fObservaciones" rows="2"></textarea>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btnGuardarPlan"><i class="fas fa-floppy-disk me-1"></i>Guardar plan sin agendar</button>
+          </div>
+
+          <!-- Tratamiento ya creado: resumen y avance -->
+          <div id="planResumen" class="d-none">
+            <div class="d-flex align-items-center gap-2">
+              <div class="text-body-secondary" id="planTipo"></div>
+              <span class="badge ms-auto" id="planEstado"></span>
+            </div>
+            <div class="small mt-1" id="planDescripcion"></div>
+            <div class="small text-body-secondary mt-1" id="planFrecuencia"></div>
+            <hr>
+            <div class="d-flex justify-content-between small mb-1"><span>Sesiones agendadas</span><b id="txtAvance"></b></div>
+            <div class="progress mb-0" style="height:.6rem"><div class="progress-bar bg-success" id="barraAvance" style="width:0"></div></div>
+            <div class="d-flex flex-wrap gap-2 mt-3" id="planAcciones">
+              <button type="button" class="btn btn-sm btn-outline-success btn-estado" data-estado="FINALIZADO"><i class="fas fa-flag-checkered me-1"></i>Finalizar plan</button>
+              <button type="button" class="btn btn-sm btn-outline-warning btn-estado" data-estado="SUSPENDIDO"><i class="fas fa-pause me-1"></i>Suspender</button>
+              <button type="button" class="btn btn-sm btn-outline-primary btn-estado" data-estado="ACTIVO"><i class="fas fa-rotate-left me-1"></i>Reactivar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3 d-flex align-items-center">
+          <h6 class="m-0 fw-bold">2. Frecuencia semanal</h6>
+          <span class="badge text-bg-light border ms-auto" id="vecesSemana"></span>
+        </div>
+        <div class="card-body">
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="small mb-1" for="txtCantidad">Sesiones de esta tanda</label>
+              <input type="number" class="form-control form-control-sm" id="txtCantidad" min="1" value="8">
+            </div>
+            <div class="col-6">
+              <label class="small mb-1" for="txtInicio" id="lblInicio">Inicia el</label>
+              <input type="date" class="form-control form-control-sm" id="txtInicio">
+            </div>
+          </div>
+          <div class="small text-body-secondary mb-2">Marcá los días y la hora de cada uno (1, 2 o 3 veces por semana). Solo aparecen tus días de atención.</div>
+          <div class="d-grid gap-2" id="diasFrecuencia"></div>
+          <div class="small text-body-secondary mt-3">
+            <i class="fas fa-circle-info me-1"></i>Una tanda llega hasta <b id="txtTope">15</b> sesiones o hasta el <b id="txtHorizonte"></b>, que es hasta donde hay turnos generados.
+          </div>
+          <button type="button" class="btn btn-primary w-100 mt-3" id="btnGenerar"><i class="fas fa-wand-magic-sparkles me-1"></i>Generar tanda</button>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">Sesiones ya agendadas</h6></div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light"><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+            <tbody id="tbodyAgendadas"><tr><td colspan="4" class="text-center text-body-secondary py-3">Todavía no hay sesiones agendadas.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-body small text-body-secondary">Para mover o cancelar una sesión ya agendada, pedíselo a recepción: cada sesión se reprograma por separado y las demás quedan donde están.</div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: vista previa -->
+    <div class="col-xl-8">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3 d-flex flex-wrap align-items-center gap-2">
+          <h6 class="m-0 fw-bold">3. Cómo quedaría en tu agenda</h6>
+          <span class="badge text-bg-warning d-none" id="insigniaBorrador">Propuesta sin guardar</span>
+          <div class="leyenda small ms-auto d-flex flex-wrap gap-3">
+            <span><i class="d-inline-block rounded-1 me-1" style="width:.8rem;height:.8rem;border:2px dashed #4338ca;background:#eef2ff"></i>Propuesta</span>
+            <span><i class="d-inline-block rounded-1 me-1" style="width:.8rem;height:.8rem;border:2px solid #dc3545;background:#fdecee"></i>Conflicto</span>
+          </div>
+        </div>
+        <div class="card-body"><div id="calPlan"></div></div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">4. Sesiones de la tanda</h6></div>
+        <div id="avisoTanda"></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Estado</th><th class="text-end">Acción</th></tr></thead>
+            <tbody id="tbodyTanda"><tr><td colspan="5" class="text-center text-body-secondary py-4">Todavía no hay una tanda propuesta.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-body d-flex align-items-center gap-2">
+          <span class="small" id="pieTanda"></span>
+          <button type="button" class="btn btn-success ms-auto" id="btnConfirmar" disabled><i class="fas fa-check me-1"></i>Confirmar tanda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'calendario_semanal.html' %}
+{% endblock %}
+
+{% block js %}
+<script>
+  const CSRFToken = "{{ csrf_token() }}" || null;
+  let ID_TRATAMIENTO = {{ id_tratamiento if id_tratamiento else 'null' }};   // null: tratamiento nuevo, todavía sin crear
+  const ID_CONSULTA = {{ id_consulta if id_consulta else 'null' }};
+  const ID_ESPECIALISTA = {{ id_especialista if id_especialista else 'null' }};
+  const PACIENTE = {{ (paciente or '') | tojson }};
+  const HORIZONTE_DIAS = {{ horizonte_dias if horizonte_dias else 30 }};
+  const URL_CONSULTA = "{{ url_for('consulta.consultaAgregar', id_consulta=0) }}";
+  const URL_PLAN = "{{ url_for('consulta.tratamientoPlan', id_tratamiento=0) }}";
+  const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const ESTADO_CITA = { AGENDADA: 'info', CONFIRMADA: 'primary', EN_CONSULTA: 'warning', COMPLETADA: 'success', AUSENTE: 'secondary', CANCELADA: 'danger' };
+
+  const $id = (i) => document.getElementById(i);
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const aMin = (h) => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+  const deMin = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const fechaDe = (f) => new Date(f + 'T00:00:00');
+  const corta = (f) => { const d = fechaDe(f); return `${DIAS[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`; };
+  const idDia = (f) => { const n = fechaDe(f).getDay(); return n === 0 ? 7 : n; };   // 1 = lunes … 7 = domingo, como dias_semana
+  const sumarDias = (f, n) => { const d = fechaDe(f); d.setDate(d.getDate() + n); return iso(d); };
+
+  let plan = null;          // GET /tratamientos/<id>/plan
+  let horarios = [];        // horarios de atención del especialista
+  let propuesta = [];       // sesiones de la tanda, todavía sin guardar
+  let pedidas = 0;
+  let cal = null;
+  const cacheCitas = new Map();
+
+  const dur = (dia, hora) => {
+    const h = horarios.find(x => x.id_dia_semana === dia && aMin(x.hora_inicio.slice(0, 5)) <= aMin(hora) && aMin(hora) < aMin(x.hora_fin.slice(0, 5)));
+    return h ? h.duracion_turno_min : 60;
+  };
+
+  // ---------- Plan y avance ----------
+  const pintarPlan = () => {
+    const nuevo = ID_TRATAMIENTO == null;
+    $id('planPaciente').textContent = plan.paciente;
+    $id('planForm').classList.toggle('d-none', !nuevo);
+    $id('planResumen').classList.toggle('d-none', nuevo);
+    $id('lblInicio').textContent = nuevo ? 'Inicia el' : 'Próxima tanda desde';
+    if (!nuevo) {
+      $id('planTipo').textContent = plan.tipo;
+      $id('planDescripcion').textContent = plan.descripcion || '';
+      $id('planFrecuencia').textContent = plan.frecuencia ? `Frecuencia: ${plan.frecuencia}` : '';
+      const eb = { ACTIVO: ['success', 'Activo'], SUSPENDIDO: ['warning', 'Suspendido'], FINALIZADO: ['secondary', 'Finalizado'] }[plan.estado];
+      $id('planEstado').className = `badge text-bg-${eb[0]} ms-auto`; $id('planEstado').textContent = eb[1];
+      document.querySelectorAll('.btn-estado').forEach(b => {
+        const pasos = { ACTIVO: ['FINALIZADO', 'SUSPENDIDO'], SUSPENDIDO: ['ACTIVO', 'FINALIZADO'], FINALIZADO: ['ACTIVO'] }[plan.estado];
+        b.classList.toggle('d-none', !pasos.includes(b.dataset.estado));
+      });
+      $id('txtAvance').textContent = plan.total ? `${plan.agendadas} de ${plan.total}` : `${plan.agendadas}`;
+      $id('barraAvance').style.width = plan.total ? Math.min(100, plan.agendadas / plan.total * 100) + '%' : '0';
+    }
+    $id('txtTope').textContent = plan.max_tanda;
+    $id('txtHorizonte').textContent = corta(plan.horizonte_hasta);
+    $id('lnkVolver').href = URL_CONSULTA.replace(/0$/, plan.id_consulta);
+    const tope = plan.restantes == null ? plan.max_tanda : Math.min(plan.max_tanda, plan.restantes);
+    $id('txtCantidad').max = tope;
+    if (!$id('txtCantidad').value || +$id('txtCantidad').value > tope) $id('txtCantidad').value = Math.max(1, Math.min(8, tope));
+    const inactivo = ID_TRATAMIENTO != null && plan.estado !== 'ACTIVO';
+    $id('btnGenerar').disabled = tope < 1 || inactivo;
+    $id('btnGenerar').innerHTML = plan.agendadas
+      ? '<i class="fas fa-forward me-1"></i>Generar siguiente tanda'
+      : '<i class="fas fa-wand-magic-sparkles me-1"></i>Generar tanda';
+    if (inactivo) avisar(`El plan está ${plan.estado.toLowerCase()}: reactivalo para agendar más sesiones.`, 'warning');
+    else if (tope < 1) avisar('El plan ya tiene todas sus sesiones agendadas.', 'success');
+
+    $id('tbodyAgendadas').innerHTML = plan.sesiones.length
+      ? plan.sesiones.map(s => `<tr class="${s.valida ? '' : 'text-body-secondary'}"><td class="fw-bold">${s.valida ? (s.cita_numero_sesion || '') : '—'}</td>
+          <td>${corta(s.cita_inicio.slice(0, 10))}</td><td>${s.cita_inicio.slice(11)}</td>
+          <td><span class="badge text-bg-${ESTADO_CITA[s.cod_estado_cita] || 'light'}">${esc(s.des_estado_cita)}</span></td></tr>`).join('')
+      : '<tr><td colspan="4" class="text-center text-body-secondary py-3">Todavía no hay sesiones agendadas.</td></tr>';
+  };
+
+  const avisar = (txt, tipo) => { $id('avisoTanda').innerHTML = `<div class="alert alert-${tipo} border-0 rounded-0 mb-0 small py-2">${txt}</div>`; };
+
+  // ---------- Frecuencia ----------
+  const pintarDias = () => {
+    const hoy = iso(new Date());
+    const vigentes = horarios.filter(h => h.est_agenda_horario && (!h.fec_hasta || h.fec_hasta >= hoy));
+    const dias = [...new Set(vigentes.map(h => h.id_dia_semana))].sort((a, b) => a - b);
+    if (!dias.length) { $id('diasFrecuencia').innerHTML = '<div class="alert alert-light border small mb-0">No tenés horarios de atención cargados. Pedile a recepción que los cargue en Agenda Médica.</div>'; return; }
+    $id('diasFrecuencia').innerHTML = dias.map(dia => {
+      const horas = new Set();
+      vigentes.filter(h => h.id_dia_semana === dia).forEach(h => {
+        for (let m = aMin(h.hora_inicio.slice(0, 5)); m + h.duracion_turno_min <= aMin(h.hora_fin.slice(0, 5)); m += h.duracion_turno_min) horas.add(deMin(m));
+      });
+      return `<div class="border rounded p-2 d-flex align-items-center gap-2 dia-frec" data-dia="${dia}">
+        <div class="form-check m-0 me-auto"><input class="form-check-input chk-dia" type="checkbox" id="dia${dia}">
+        <label class="form-check-label fw-semibold" for="dia${dia}">${DIAS[dia % 7]}</label></div>
+        <select class="form-select form-select-sm w-auto sel-hora" disabled>${[...horas].sort().map(h => `<option>${h}</option>`).join('')}</select></div>`;
+    }).join('');
+    document.querySelectorAll('.chk-dia').forEach(c => c.addEventListener('change', () => {
+      const caja = c.closest('.dia-frec');
+      caja.classList.toggle('border-primary', c.checked);
+      caja.querySelector('.sel-hora').disabled = !c.checked;
+      actualizarVeces();
+    }));
+    actualizarVeces();
+  };
+  const frecuencia = () => [...document.querySelectorAll('.dia-frec')].filter(c => c.querySelector('.chk-dia').checked)
+    .map(c => ({ dia: +c.dataset.dia, hora: c.querySelector('.sel-hora').value }));
+  const actualizarVeces = () => { const n = frecuencia().length; $id('vecesSemana').textContent = n + (n === 1 ? ' vez por semana' : ' veces por semana'); };
+
+  // ---------- Tanda ----------
+  const conflictos = () => propuesta.filter(s => !s.ok).length;
+  const renumerar = () => propuesta.forEach((s, i) => { s.numero = plan.agendadas + i + 1; });
+
+  const pintarTanda = () => {
+    $id('insigniaBorrador').classList.toggle('d-none', !propuesta.length);
+    if (!propuesta.length) {
+      $id('tbodyTanda').innerHTML = '<tr><td colspan="5" class="text-center text-body-secondary py-4">Todavía no hay una tanda propuesta.</td></tr>';
+      $id('btnConfirmar').disabled = true; $id('pieTanda').textContent = '';
+      return;
+    }
+    const usados = new Set(propuesta.filter(s => s.ok).map(s => s.id_slot_agenda));
+    $id('tbodyTanda').innerHTML = propuesta.map((s, i) => {
+      const libres = s.ok ? [] : s.alternativas.filter(a => !usados.has(a.id_slot_agenda));
+      const mover = libres.length ? `<select class="form-select form-select-sm w-auto sel-mover" data-i="${i}"><option value="">Mover a…</option>${libres.map(a => `<option value="${a.id_slot_agenda}">${a.hora}</option>`).join('')}</select>` : '';
+      return `<tr class="${s.ok ? '' : 'table-danger'}"><td class="fw-bold">${s.numero}</td><td>${corta(s.fecha)}</td>
+        <td>${s.hora}${s.movida ? ' <span class="badge text-bg-info">movida</span>' : ''}</td>
+        <td>${s.ok ? '<span class="text-success"><i class="fas fa-check me-1"></i>Con cupo</span>' : `<span class="text-danger"><i class="fas fa-triangle-exclamation me-1"></i>${esc(s.motivo)}</span>`}</td>
+        <td class="text-end"><div class="d-flex gap-1 justify-content-end">${mover}<button type="button" class="btn btn-sm btn-outline-secondary btn-quitar" data-i="${i}" title="Quitar esta sesión"><i class="fas fa-xmark"></i></button></div></td></tr>`;
+    }).join('');
+    document.querySelectorAll('.sel-mover').forEach(e => e.addEventListener('change', () => {
+      const s = propuesta[+e.dataset.i], a = s.alternativas.find(x => String(x.id_slot_agenda) === e.value);
+      if (!a) return;
+      Object.assign(s, { ok: true, motivo: null, id_slot_agenda: a.id_slot_agenda, hora: a.hora, movida: true });
+      refrescarTanda();
+    }));
+    document.querySelectorAll('.btn-quitar').forEach(e => e.addEventListener('click', () => {
+      propuesta.splice(+e.dataset.i, 1); pedidas--; renumerar(); refrescarTanda();
+    }));
+    const malas = conflictos();
+    if (malas) avisar(`${malas} ${malas === 1 ? 'sesión tiene' : 'sesiones tienen'} conflicto. Movela a otra hora del mismo día o quitala para poder confirmar.`, 'danger');
+    else if (propuesta.length < pedidas) avisar(`Con esta frecuencia, los turnos generados (hasta el ${corta(plan.horizonte_hasta)}) alcanzan para ${propuesta.length} sesiones. Las que faltan se agendan en la siguiente tanda.`, 'warning');
+    else $id('avisoTanda').innerHTML = '';
+    $id('btnConfirmar').disabled = malas > 0;
+    $id('pieTanda').textContent = malas ? '' : `${propuesta.length} sesiones listas · del ${corta(propuesta[0].fecha)} al ${corta(propuesta[propuesta.length - 1].fecha)}`;
+  };
+  const refrescarTanda = () => { pintarTanda(); cal.pintar(); };
+
+  // «Martes y viernes», «Lunes, miércoles y viernes»: la frecuencia del tratamiento sale de los días elegidos
+  const textoFrecuencia = () => {
+    const n = frecuencia().map(f => DIAS[f.dia % 7].toLowerCase());
+    if (!n.length) return null;
+    const t = n.length === 1 ? n[0] : `${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}`;
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  };
+
+  // Crea el tratamiento de la consulta (si todavía no existe). La pantalla pasa al modo «plan existente».
+  const crearPlan = async () => {
+    if (!$id('fTipo').value) { Swal.fire('Falta el tipo', 'Elegí el tipo de tratamiento.', 'warning'); return false; }
+    if (!$id('fDescripcion').value.trim()) { Swal.fire('Falta la descripción', 'Escribí la descripción del tratamiento.', 'warning'); return false; }
+    const total = $id('fTotal').value ? parseInt($id('fTotal').value) : null;
+    if (total !== null && total < 1) { Swal.fire('Sesiones', 'El número de sesiones debe ser 1 o más.', 'warning'); return false; }
+    const resp = await fetch(`/api/v1/consultas/${ID_CONSULTA}/tratamientos`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({
+        id_tipo_tratamiento: parseInt($id('fTipo').value), des_tratamiento: $id('fDescripcion').value.trim(),
+        tratamiento_objetivos: $id('fObjetivos').value.trim() || null, tratamiento_fecha_inicio: $id('txtInicio').value,
+        numero_sesiones: total, frecuencia_sesiones: textoFrecuencia(),
+        tratamiento_observaciones: $id('fObservaciones').value.trim() || null
+      })
+    });
+    const data = await resp.json();
+    if (!data.success) { Swal.fire('No se guardó el plan', data.error || '', 'error'); return false; }
+    ID_TRATAMIENTO = data.data.id_tratamiento;
+    history.replaceState(null, '', URL_PLAN.replace(/0$/, ID_TRATAMIENTO));
+    await cargarPlan();
+    return true;
+  };
+
+  const guardarPlan = async () => {
+    if (!(await crearPlan())) return;
+    await Swal.fire('Plan guardado', 'El tratamiento quedó indicado en la consulta. Podés agendar sus sesiones cuando quieras.', 'success');
+    window.location.href = URL_CONSULTA.replace(/0$/, plan.id_consulta);
+  };
+
+  const generar = async () => {
+    const dias = frecuencia();
+    if (!dias.length) { Swal.fire('Falta la frecuencia', 'Marcá al menos un día de la semana.', 'warning'); return; }
+    if (ID_TRATAMIENTO == null) {
+      const total = parseInt($id('fTotal').value) || null;
+      if (total && +$id('txtCantidad').value > total) { Swal.fire('Sesiones', `El plan tiene ${total} sesiones: la tanda no puede tener ${$id('txtCantidad').value}.`, 'warning'); return; }
+      if (!(await crearPlan())) return;
+    }
+    const resp = await fetch(`/api/v1/tratamientos/${ID_TRATAMIENTO}/plan/proponer`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({ fecha_inicio: $id('txtInicio').value, cantidad: +$id('txtCantidad').value, dias })
+    });
+    const data = await resp.json();
+    if (!data.success) { Swal.fire('No se pudo generar la tanda', data.error || '', 'error'); return; }
+    propuesta = data.data.sesiones; pedidas = data.data.pedidas;
+    pintarTanda();
+    if (propuesta.length) cal.irA(propuesta[0].fecha); else cal.pintar();
+  };
+
+  const confirmar = async () => {
+    const r = await Swal.fire({
+      title: 'Confirmar tanda',
+      html: `Se van a crear <b>${propuesta.length} citas</b> de tipo <b>Tratamiento</b> (#${propuesta[0].numero} a #${propuesta[propuesta.length - 1].numero}) para <b>${esc(plan.paciente)}</b>.<br><small class="text-body-secondary">Cada cita queda «Agendada» y recepción la ve en su calendario; cada una se puede reprogramar o cancelar por separado.</small>`,
+      icon: 'question', showCancelButton: true, confirmButtonText: 'Crear citas', cancelButtonText: 'Volver'
+    });
+    if (!r.isConfirmed) return;
+    $id('btnConfirmar').disabled = true;
+    const resp = await fetch(`/api/v1/tratamientos/${ID_TRATAMIENTO}/plan/confirmar`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({ sesiones: propuesta.map(s => ({ id_slot_agenda: s.id_slot_agenda })) })
+    });
+    const data = await resp.json();
+    if (!data.success) {
+      Swal.fire('No se crearon las citas', `${data.error || ''} No se guardó ninguna cita: generá la tanda de nuevo.`, 'error');
+      $id('btnConfirmar').disabled = false; return;
+    }
+    const ultima = propuesta[propuesta.length - 1].fecha;
+    Swal.fire('Tanda confirmada', `Se crearon ${data.data.id_citas.length} citas.`, 'success');
+    propuesta = []; cacheCitas.clear();
+    await cargarPlan();
+    $id('txtInicio').value = sumarDias(ultima, 1);
+    pintarTanda(); cal.pintar();
+  };
+
+  // ---------- Finalizar / suspender / reactivar ----------
+  const TEXTO_ESTADO = {
+    FINALIZADO: ['Finalizar el plan', 'El tratamiento queda finalizado con fecha de fin de hoy. Se puede reabrir después.', 'Plan finalizado'],
+    SUSPENDIDO: ['Suspender el plan', 'El tratamiento queda suspendido: no se pueden agendar más sesiones hasta reactivarlo.', 'Plan suspendido'],
+    ACTIVO: ['Reactivar el plan', 'El tratamiento vuelve a estar activo y se pueden agendar más sesiones.', 'Plan reactivado']
+  };
+  const cambiarEstado = async (estado) => {
+    const [titulo, texto, exito] = TEXTO_ESTADO[estado];
+    let cancelar = false;
+    if (estado !== 'ACTIVO' && plan.futuras > 0) {
+      const r = await Swal.fire({
+        title: titulo, icon: 'question', showDenyButton: true, showCancelButton: true,
+        html: `${texto}<br><br>Hay <b>${plan.futuras} ${plan.futuras === 1 ? 'sesión agendada' : 'sesiones agendadas'}</b> que todavía no ocurrieron. ¿Qué hacemos con ${plan.futuras === 1 ? 'ella' : 'ellas'}?`,
+        confirmButtonText: 'Cancelarlas', denyButtonText: 'Dejarlas agendadas', cancelButtonText: 'Volver'
+      });
+      if (r.isDismissed) return;
+      cancelar = r.isConfirmed;
+    } else {
+      const r = await Swal.fire({ title: titulo, text: texto, icon: 'question', showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'Volver' });
+      if (!r.isConfirmed) return;
+    }
+    const resp = await fetch(`/api/v1/tratamientos/${ID_TRATAMIENTO}/estado`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+      body: JSON.stringify({ estado, cancelar_futuras: cancelar })
+    });
+    const data = await resp.json();
+    if (!data.success) { Swal.fire('No se pudo cambiar el estado', data.error || '', 'error'); return; }
+    propuesta = []; cacheCitas.clear();
+    await cargarPlan(); pintarTanda(); cal.pintar();
+    const extra = data.data.canceladas ? ` Se cancelaron ${data.data.canceladas} sesiones.` : '';
+    const fallo = data.data.fallidas ? ` No se pudieron cancelar ${data.data.fallidas}: revisalas con recepción.` : '';
+    Swal.fire(exito, (extra + fallo).trim() || undefined, data.data.fallidas ? 'warning' : 'success');
+  };
+  document.addEventListener('click', (e) => { const b = e.target.closest('.btn-estado'); if (b) cambiarEstado(b.dataset.estado); });
+
+  // ---------- Carga ----------
+  const cargarPlan = async () => {
+    const data = await (await fetch(`/api/v1/tratamientos/${ID_TRATAMIENTO}/plan`)).json();
+    if (!data.success) { Swal.fire('Error', data.error || 'No se pudo cargar el plan.', 'error'); return false; }
+    plan = data.data; pintarPlan(); return true;
+  };
+
+  const iniciar = async () => {
+    if (ID_TRATAMIENTO == null) {
+      // Tratamiento nuevo: todavía no hay plan en la base; se arma uno provisorio con lo que ya se sabe de la consulta
+      const hasta = new Date(); hasta.setDate(hasta.getDate() + HORIZONTE_DIAS);
+      plan = { paciente: PACIENTE, id_especialista: ID_ESPECIALISTA, id_consulta: ID_CONSULTA, agendadas: 0, total: null, restantes: null,
+               max_tanda: 15, horizonte_hasta: iso(hasta), sesiones: [] };
+      pintarPlan();
+      const tipos = await (await fetch('/api/v1/tipos-tratamientos')).json();
+      $id('fTipo').innerHTML = '<option value="">-- Seleccione --</option>' +
+        (tipos.success ? tipos.data.filter(t => t.est_tipo_tratamiento).map(t => `<option value="${t.id_tipo_tratamiento}">${esc(t.des_tipo_tratamiento)}</option>`).join('') : '');
+    } else if (!(await cargarPlan())) return;
+    const rh = await (await fetch(`/api/v1/agenda-horarios?id_especialista=${plan.id_especialista}`)).json();
+    horarios = rh.success ? rh.data : [];
+    pintarDias();
+    const validas = (plan.sesiones || []).filter(s => s.valida);
+    $id('txtInicio').min = iso(new Date());
+    $id('txtInicio').value = validas.length ? sumarDias(validas[validas.length - 1].cita_inicio.slice(0, 10), 1) : iso(new Date());
+
+    cal = CalendarioSemanal($id('calPlan'), {
+      mensajeVacio: 'Tu usuario no tiene un perfil de especialista vinculado.',
+      datos: async (desde, hasta) => {
+        const clave = `${desde}|${hasta}`;
+        if (!cacheCitas.has(clave)) {
+          const rc = await (await fetch(`/api/v1/mi-agenda/citas-semana?desde=${desde}&hasta=${hasta}`)).json();
+          if (!rc.success) throw new Error(rc.error);
+          cacheCitas.set(clave, rc);
+        }
+        const rc = cacheCitas.get(clave);
+        if (rc.sin_especialista) return null;
+        return { citas: rc.data, horarios, slots: null };
+      },
+      propuestas: () => propuesta.map(s => ({
+        fecha: s.fecha, ini: s.hora, fin: deMin(aMin(s.hora) + dur(idDia(s.fecha), s.hora)),
+        titulo: plan.paciente, detalle: s.ok ? `Tratamiento #${s.numero}` : s.motivo, conflicto: !s.ok
+      }))
+    });
+    cal.pintar();
+  };
+
+  $id('btnGenerar').addEventListener('click', generar);
+  $id('btnGuardarPlan').addEventListener('click', guardarPlan);
+  $id('btnConfirmar').addEventListener('click', confirmar);
+  document.addEventListener('DOMContentLoaded', iniciar);
+</script>
+{% endblock %}

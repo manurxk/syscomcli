@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático del PLAN DE TRATAMIENTO con agendamiento por TANDAS — SYSCLIN
+    Se abre con doble clic, no necesita Flask. Datos de ejemplo, fechas relativas a hoy.
+
+    Qué muestra (pantalla del especialista, se llega desde la consulta):
+    1. Datos del plan: paciente, tipo, sesiones totales del plan, duración y sesiones por tanda.
+    2. Frecuencia: se marcan los días de atención del especialista (1, 2 o 3 veces por semana) y la hora de cada uno.
+    3. «Generar tanda»: propone las próximas sesiones sobre el calendario SIN guardar nada. Una tanda llega hasta
+       el máximo de sesiones por tanda (8 por defecto) o hasta donde existen turnos generados (30 días desde hoy), lo que ocurra primero.
+    4. Conflictos (feriado, horario ocupado, fuera de horario): la sesión se marca en rojo con el motivo; se mueve a otra
+       hora del mismo día o se quita. No se puede confirmar con conflictos sin resolver.
+    5. «Confirmar tanda»: crea las citas de tipo Tratamiento (#1, #2…). Después aparece «Generar siguiente tanda»
+       para las sesiones que faltan del plan.
+
+    Los cupos se validan por sesión (cada fecha tiene que tener cupo); el total del plan es solo el objetivo clínico.
+    La barra oscura de arriba NO es parte del diseño. Sidebar y topbar no se dibujan.
+    Bootstrap 5.3.7 y Font Awesome 6.1.1 (los mismos de base.html), fuente Nunito.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Plan de tratamiento - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --bs-body-font-family: 'Nunito', system-ui, sans-serif; --bs-primary: #4338ca; --bs-primary-rgb: 67,56,202; }
+        body { background: #f4f6f9; }
+        .demo-bar { background: #1f2937; color: #e5e7eb; font-size: .85rem; }
+        .page-header { background: linear-gradient(135deg, #3f3fc4 0%, #4b3fb8 100%); color: #fff; padding-bottom: 7rem; }
+        .page-header .sub { color: rgba(255,255,255,.75); }
+        .container-pull { margin-top: -6rem; }
+        .btn-primary { --bs-btn-bg: #4338ca; --bs-btn-border-color: #4338ca; --bs-btn-hover-bg: #3730a3; --bs-btn-hover-border-color: #3730a3; }
+
+        .dia-check { border: 1px solid var(--bs-border-color); border-radius: .5rem; padding: .5rem .65rem; background: #fff; }
+        .dia-check.on { border-color: #4338ca; background: #f5f6ff; }
+        .dia-check.off { background: #f8f9fa; color: #adb5bd; }
+        .progreso { height: .6rem; }
+
+        /* Calendario */
+        .cal-wrap { overflow-x: auto; }
+        .cal { display: grid; border: 1px solid var(--bs-border-color); border-radius: .5rem; overflow: hidden; background: #fff; min-width: 640px; }
+        .cal-cab { background: #f8f9fa; border-bottom: 1px solid var(--bs-border-color); padding: .5rem .25rem; text-align: center; font-weight: 700; font-size: .85rem; }
+        .cal-cab small { display: block; font-weight: 400; color: #6c757d; }
+        .cal-horas { border-right: 1px solid var(--bs-border-color); }
+        .cal-horas div { font-size: .72rem; color: #6c757d; text-align: right; padding-right: .35rem; transform: translateY(-.55em); }
+        .cal-dia { position: relative; border-right: 1px solid #eee; }
+        .cal-dia:last-child { border-right: 0; }
+        .linea-hora { position: absolute; left: 0; right: 0; border-top: 1px solid #eee; }
+        .bloque-atencion { position: absolute; left: 0; right: 0; background: rgba(25,135,84,.06); border-left: 3px solid rgba(25,135,84,.3); }
+        .bloque-feriado { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, #f1f3f5, #f1f3f5 8px, #e9ecef 8px, #e9ecef 16px); color: #6c757d; font-size: .75rem; text-align: center; padding-top: 40%; z-index: 1; }
+        .evento { position: absolute; left: 3px; right: 3px; border-radius: .35rem; padding: .15rem .35rem; font-size: .76rem; line-height: 1.15; overflow: hidden; border-left: 4px solid; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+        .evento b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ev-otra   { border-color: #6c757d; background: #f1f3f5; color: #495057; }
+        .ev-prop   { border: 2px dashed #4338ca; border-left-width: 4px; background: #eef2ff; color: #3730a3; }
+        .ev-conf   { border-color: #198754; background: #e8f5ee; color: #14532d; }
+        .ev-conflicto { border: 2px solid #dc3545; border-left-width: 4px; background: #fdecee; color: #842029; }
+        .leyenda span { display: inline-flex; align-items: center; gap: .3rem; margin-right: .9rem; font-size: .8rem; white-space: nowrap; }
+        .leyenda i { width: .8rem; height: .8rem; display: inline-block; border-radius: .2rem; border-left: 4px solid; }
+        .fila-conflicto { background: #fdecee; }
+        .insignia { font-size: .72rem; }
+    </style>
+</head>
+<body>
+
+<div class="demo-bar py-2">
+    <div class="container-xl d-flex flex-wrap align-items-center gap-3">
+        <strong>Demo</strong>
+        <span>Probá: elegí los días, tocá «Generar tanda», resolvé los conflictos en rojo y confirmá. Después generá la siguiente tanda.</span>
+        <button class="btn btn-sm btn-outline-light ms-auto" id="btnReiniciar"><i class="fas fa-rotate-left me-1"></i>Reiniciar demo</button>
+    </div>
+</div>
+
+<header class="page-header pt-4">
+    <div class="container-xl px-4 pt-3">
+        <h1 class="h2 fw-bold mb-1">Plan de tratamiento</h1>
+        <div class="sub">Agendá las sesiones del tratamiento por tandas: primero se proponen en el calendario y recién al confirmar se crean las citas.</div>
+    </div>
+</header>
+
+<div class="container-xl px-4 container-pull pb-5">
+    <div class="row g-3">
+
+        <!-- ═══ Columna izquierda: plan y frecuencia ═══ -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">1. Datos del plan</h6></div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label class="small mb-1">Paciente</label>
+                        <input class="form-control form-control-sm" value="Mateo Joaquín Insfrán" disabled>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small mb-1">Tipo de tratamiento</label>
+                        <select class="form-select form-select-sm" id="tipoTrat">
+                            <option>Terapia cognitivo-conductual</option>
+                            <option>Estimulación cognitiva</option>
+                            <option>Rehabilitación neuropsicológica</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="small mb-1">Sesiones del plan</label>
+                            <input type="number" class="form-control form-control-sm" id="sesionesPlan" value="24" min="1" max="60">
+                        </div>
+                        <div class="col-6">
+                            <label class="small mb-1">Duración (min)</label>
+                            <select class="form-select form-select-sm" id="duracion">
+                                <option>30</option><option selected>60</option><option>90</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="small mb-1">Sesiones por tanda</label>
+                            <input type="number" class="form-control form-control-sm" id="porTanda" value="8" min="1" max="15">
+                        </div>
+                        <div class="col-6">
+                            <label class="small mb-1">Inicia el</label>
+                            <input type="date" class="form-control form-control-sm" id="fechaInicio">
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="small mb-1">Objetivos</label>
+                        <textarea class="form-control form-control-sm" rows="2">Mejorar la atención sostenida y la regulación emocional.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-body py-3 d-flex align-items-center">
+                    <h6 class="m-0 fw-bold">2. Frecuencia semanal</h6>
+                    <span class="badge text-bg-light border ms-auto" id="vecesSemana"></span>
+                </div>
+                <div class="card-body">
+                    <div class="small text-body-secondary mb-2">Marcá los días y la hora de cada uno. Solo aparecen tus días de atención.</div>
+                    <div class="d-grid gap-2" id="diasFrecuencia"></div>
+                    <div class="small text-body-secondary mt-3">
+                        <i class="fas fa-circle-info me-1"></i>Una tanda llega hasta <b id="txtTope">8</b> sesiones o hasta <b>30 días desde hoy</b> (hasta donde hay turnos generados), lo que ocurra primero.
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" id="btnGenerar"><i class="fas fa-wand-magic-sparkles me-1"></i>Generar tanda</button>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">Avance del plan</h6></div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between small mb-1"><span>Agendadas</span><b id="txtAvance"></b></div>
+                    <div class="progress progreso mb-3"><div class="progress-bar bg-success" id="barraAvance"></div></div>
+                    <div id="resumenTandas" class="small"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Columna derecha: vista previa ═══ -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-body py-3 d-flex flex-wrap align-items-center gap-2">
+                    <h6 class="m-0 fw-bold">3. Cómo quedaría en tu agenda</h6>
+                    <span class="badge text-bg-warning ms-2 d-none" id="insigniaBorrador">Propuesta sin guardar</span>
+                    <div class="btn-group btn-group-sm ms-auto">
+                        <button class="btn btn-outline-secondary" id="semAnt"><i class="fas fa-chevron-left"></i></button>
+                        <button class="btn btn-outline-secondary" id="semPrimera">Primera sesión</button>
+                        <button class="btn btn-outline-secondary" id="semSig"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between mb-2">
+                        <b id="tituloSemana"></b>
+                        <div class="leyenda">
+                            <span><i style="border-color:#6c757d;background:#f1f3f5"></i>Otras citas</span>
+                            <span><i style="border:2px dashed #4338ca;background:#eef2ff"></i>Propuesta</span>
+                            <span><i style="border-color:#dc3545;background:#fdecee"></i>Conflicto</span>
+                            <span><i style="border-color:#198754;background:#e8f5ee"></i>Confirmada</span>
+                        </div>
+                    </div>
+                    <div class="cal-wrap"><div class="cal" id="cal"></div></div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-body py-3 d-flex align-items-center">
+                    <h6 class="m-0 fw-bold">4. Sesiones de la tanda <span class="fw-normal text-body-secondary" id="subTanda"></span></h6>
+                </div>
+                <div id="avisoTanda"></div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light"><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Estado</th><th class="text-end">Acción</th></tr></thead>
+                        <tbody id="tbodySesiones"><tr><td colspan="5" class="text-center text-body-secondary py-4">Todavía no hay una tanda propuesta.</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-body d-flex align-items-center gap-2">
+                    <span class="small" id="pieTanda"></span>
+                    <button class="btn btn-success ms-auto" id="btnConfirmar" disabled><i class="fas fa-check me-1"></i>Confirmar tanda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmación -->
+<div class="modal fade" id="modalConfirmar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header"><h6 class="modal-title fw-bold">Confirmar tanda</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="cuerpoConfirmar"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Volver</button>
+                <button class="btn btn-success btn-sm" id="btnConfirmarOk">Crear citas</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+const $ = id => document.getElementById(id);
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const HORIZONTE_DIAS = 30;                           // turnos generados desde hoy (AgendaHorariosDao.HORIZONTE_DIAS_DEFAULT)
+const H = 56, H0 = 8, H1 = 19;                       // alto por hora, hora inicial y final del calendario
+const sumar = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const corta = d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+const aMin = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+const deMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const lunesDe = d => sumar(d, -((d.getDay() + 6) % 7));
+
+const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+const base = sumar(lunesDe(hoy), 7);                 // lunes de la semana que viene
+
+// Horario de atención del especialista (como gferreira) y datos de ejemplo
+const ATENCION = { 2: [['09:00', '17:00']], 3: [['11:00', '19:00']], 5: [['11:00', '19:00']] };
+const FERIADO = iso(sumar(base, 25));                // un viernes de la cuarta semana
+function otrasCitas(d) {
+    const dow = d.getDay(), n = Math.round((d - base) / 864e5), l = [];
+    if (dow === 3) { l.push(['11:00', 60, 'Patricia N. Ayala'], ['14:00', 60, 'Hugo R. Escobar']); }
+    if (dow === 2) { l.push(['14:00', 60, 'Lucía Fernández']); }
+    if (dow === 5) { l.push(['13:00', 60, 'Hugo R. Escobar']); }
+    if (n === 8)  { l.push(['10:00', 60, 'Marcos Villalba']); }
+    if (n === 18) { l.push(['11:00', 60, 'Sofía Benítez']); }
+    return l.map(([h, dur, p]) => ({ ini: aMin(h), fin: aMin(h) + dur, txt: p }));
+}
+
+// Estado de la demo
+let est;
+function reiniciar() {
+    est = { agendadas: 0, tandas: [], confirmadas: [], propuesta: [], semana: base, tandaN: 1 };
+    $('fechaInicio').value = iso(base);
+    dibujarFrecuencia();
+    refrescar();
+}
+
+function dibujarFrecuencia() {
+    const por = { 2: '10:00', 5: '11:00' };
+    $('diasFrecuencia').innerHTML = [1, 2, 3, 4, 5, 6].map(dow => {
+        const tramos = ATENCION[dow];
+        if (!tramos) return `<div class="dia-check off d-flex align-items-center"><span class="me-auto">${DIAS[dow]}</span><small>sin horario de atención</small></div>`;
+        const [ini, fin] = tramos[0], op = [];
+        for (let m = aMin(ini); m + 60 <= aMin(fin); m += 60) op.push(deMin(m));
+        const sel = por[dow];
+        return `<div class="dia-check ${sel ? 'on' : ''} d-flex align-items-center gap-2" data-dow="${dow}">
+            <div class="form-check m-0 me-auto"><input class="form-check-input chk-dia" type="checkbox" id="d${dow}" ${sel ? 'checked' : ''}>
+            <label class="form-check-label fw-semibold" for="d${dow}">${DIAS[dow]}</label></div>
+            <select class="form-select form-select-sm w-auto sel-hora" ${sel ? '' : 'disabled'}>${op.map(h => `<option ${h === sel ? 'selected' : ''}>${h}</option>`).join('')}</select></div>`;
+    }).join('');
+    document.querySelectorAll('.chk-dia').forEach(c => c.addEventListener('change', () => {
+        const caja = c.closest('.dia-check');
+        caja.classList.toggle('on', c.checked);
+        caja.querySelector('.sel-hora').disabled = !c.checked;
+        actualizarVeces();
+    }));
+    actualizarVeces();
+}
+const frecuencia = () => [...document.querySelectorAll('.dia-check.on')].map(c => ({ dow: +c.dataset.dow, hora: c.querySelector('.sel-hora').value }));
+function actualizarVeces() { const n = frecuencia().length; $('vecesSemana').textContent = n + (n === 1 ? ' vez por semana' : ' veces por semana'); }
+
+// Estado de una sesión frente a la agenda
+function evaluar(s) {
+    const d = s.fecha, ini = aMin(s.hora), fin = ini + s.dur;
+    if (iso(d) === FERIADO) return 'Feriado: la clínica no atiende';
+    const tr = ATENCION[d.getDay()];
+    if (!tr || !tr.some(([a, b]) => aMin(a) <= ini && fin <= aMin(b))) return 'Fuera de tu horario de atención';
+    const choca = (a, b) => ini < b && a < fin;
+    if (otrasCitas(d).some(c => choca(c.ini, c.fin))) return 'Sin cupo: horario ocupado';
+    const mias = [...est.confirmadas, ...est.propuesta].filter(x => x !== s && iso(x.fecha) === iso(d));
+    if (mias.some(x => choca(aMin(x.hora), aMin(x.hora) + x.dur))) return 'Se superpone con otra sesión del plan';
+    return null;
+}
+function horasLibres(s) {
+    const d = s.fecha, tr = ATENCION[d.getDay()] || [], l = [];
+    if (iso(d) === FERIADO) return l;
+    const orig = s.hora;
+    tr.forEach(([a, b]) => { for (let m = aMin(a); m + s.dur <= aMin(b); m += 60) { s.hora = deMin(m); if (!evaluar(s)) l.push(s.hora); } });
+    s.hora = orig;
+    return l;
+}
+
+function generar() {
+    const frec = frecuencia();
+    if (!frec.length) { avisar('Marcá al menos un día de la semana.', 'warning'); return; }
+    const total = +$('sesionesPlan').value, dur = +$('duracion').value;
+    const faltan = total - est.agendadas;
+    if (faltan <= 0) { avisar('El plan ya tiene todas sus sesiones agendadas.', 'success'); return; }
+    const n = Math.min(faltan, +$('porTanda').value);
+    const inicio = new Date($('fechaInicio').value + 'T00:00:00'), fin = sumar(hoy, HORIZONTE_DIAS);
+    const lista = [];
+    for (let d = new Date(inicio); d <= fin && lista.length < n; d = sumar(d, 1)) {
+        frec.filter(f => f.dow === d.getDay()).forEach(f => { if (lista.length < n) lista.push({ fecha: new Date(d), hora: f.hora, dur, mov: false }); });
+    }
+    lista.forEach((s, i) => s.num = est.agendadas + i + 1);
+    est.propuesta = lista;
+    est.pedidas = n;
+    if (lista.length) est.semana = lunesDe(lista[0].fecha);
+    refrescar();
+}
+
+function avisar(txt, tipo) { $('avisoTanda').innerHTML = `<div class="alert alert-${tipo} border-0 rounded-0 mb-0 small py-2">${txt}</div>`; }
+
+function refrescar() {
+    const total = +$('sesionesPlan').value;
+    $('txtTope').textContent = $('porTanda').value;
+    $('txtAvance').textContent = `${est.agendadas} de ${total}`;
+    $('barraAvance').style.width = Math.min(100, est.agendadas / total * 100) + '%';
+    $('resumenTandas').innerHTML = est.tandas.length
+        ? est.tandas.map((t, i) => `<div class="d-flex justify-content-between border-top py-1"><span>Tanda ${i + 1}</span><span>#${t.desde} a #${t.hasta} · ${corta(t.ini)} al ${corta(t.fin)}</span></div>`).join('')
+        : '<span class="text-body-secondary">Todavía no se confirmó ninguna tanda.</span>';
+    $('btnGenerar').innerHTML = est.agendadas ? '<i class="fas fa-forward me-1"></i>Generar siguiente tanda' : '<i class="fas fa-wand-magic-sparkles me-1"></i>Generar tanda';
+    tablaSesiones();
+    calendario();
+}
+
+function tablaSesiones() {
+    const p = est.propuesta, malas = p.filter(s => evaluar(s)).length;
+    $('insigniaBorrador').classList.toggle('d-none', !p.length);
+    $('subTanda').textContent = p.length ? `· Tanda ${est.tandaN}` : '';
+    if (!p.length) {
+        $('tbodySesiones').innerHTML = '<tr><td colspan="5" class="text-center text-body-secondary py-4">Todavía no hay una tanda propuesta.</td></tr>';
+        $('btnConfirmar').disabled = true; $('pieTanda').textContent = '';
+        if (est.agendadas && est.agendadas < +$('sesionesPlan').value) avisar(`Tanda ${est.tandaN - 1} confirmada. Faltan ${+$('sesionesPlan').value - est.agendadas} sesiones: generá la siguiente tanda cuando quieras.`, 'success');
+        else if (!est.agendadas) $('avisoTanda').innerHTML = '';
+        return;
+    }
+    $('tbodySesiones').innerHTML = p.map((s, i) => {
+        const motivo = evaluar(s), libres = motivo ? horasLibres(s) : [];
+        const accion = motivo
+            ? `<div class="d-flex gap-1 justify-content-end">${libres.length ? `<select class="form-select form-select-sm w-auto sel-mover" data-i="${i}"><option value="">Mover a…</option>${libres.map(h => `<option>${h}</option>`).join('')}</select>` : ''}<button class="btn btn-sm btn-outline-danger btn-quitar" data-i="${i}" title="Quitar esta sesión"><i class="fas fa-xmark"></i></button></div>`
+            : `<button class="btn btn-sm btn-outline-secondary btn-quitar" data-i="${i}" title="Quitar esta sesión"><i class="fas fa-xmark"></i></button>`;
+        return `<tr class="${motivo ? 'fila-conflicto' : ''}"><td class="fw-bold">${s.num}</td><td>${DIAS[s.fecha.getDay()]} ${corta(s.fecha)}</td><td>${s.hora}${s.mov ? ' <span class="badge text-bg-info insignia">movida</span>' : ''}</td>
+            <td>${motivo ? `<span class="text-danger"><i class="fas fa-triangle-exclamation me-1"></i>${motivo}</span>` : '<span class="text-success"><i class="fas fa-check me-1"></i>Con cupo</span>'}</td><td class="text-end">${accion}</td></tr>`;
+    }).join('');
+    $('tbodySesiones').querySelectorAll('.sel-mover').forEach(e => e.addEventListener('change', () => { if (e.value) { p[+e.dataset.i].hora = e.value; p[+e.dataset.i].mov = true; refrescar(); } }));
+    $('tbodySesiones').querySelectorAll('.btn-quitar').forEach(e => e.addEventListener('click', () => { p.splice(+e.dataset.i, 1); est.pedidas--; p.forEach((s, k) => s.num = est.agendadas + k + 1); refrescar(); }));
+    const faltaHoriz = p.length < est.pedidas;
+    if (malas) avisar(`${malas} ${malas === 1 ? 'sesión tiene' : 'sesiones tienen'} conflicto. Movela a otra hora del mismo día o quitala para poder confirmar.`, 'danger');
+    else if (faltaHoriz) avisar(`Con esta frecuencia, los turnos generados (hasta ${corta(sumar(hoy, HORIZONTE_DIAS))}) alcanzan para ${p.length} sesiones. Las que faltan se agendan en la siguiente tanda.`, 'warning');
+    else $('avisoTanda').innerHTML = '';
+    $('btnConfirmar').disabled = malas > 0 || !p.length;
+    $('pieTanda').textContent = malas ? '' : `${p.length} sesiones listas · del ${corta(p[0].fecha)} al ${corta(p[p.length - 1].fecha)}`;
+}
+
+function calendario() {
+    const lun = est.semana, dias = [0, 1, 2, 3, 4, 5].map(i => sumar(lun, i));
+    $('tituloSemana').textContent = `Semana del ${DIAS[1]} ${corta(dias[0])} al ${DIAS[6]} ${corta(dias[5])}`;
+    const cal = $('cal'), alto = (H1 - H0) * H;
+    cal.style.gridTemplateColumns = '52px repeat(6, 1fr)';
+    let h = '<div class="cal-cab"></div>' + dias.map(d => `<div class="cal-cab ${iso(d) === iso(hoy) ? 'text-primary' : ''}">${DIAS[d.getDay()]}<small>${corta(d)}</small></div>`).join('');
+    h += `<div class="cal-horas" style="height:${alto}px">${Array.from({ length: H1 - H0 }, (_, i) => `<div style="height:${H}px">${String(H0 + i).padStart(2, '0')}:00</div>`).join('')}</div>`;
+    h += dias.map(d => {
+        let c = `<div class="cal-dia" style="height:${alto}px">` + Array.from({ length: H1 - H0 }, (_, i) => `<div class="linea-hora" style="top:${i * H}px"></div>`).join('');
+        const pos = (ini, fin) => `top:${(ini - H0 * 60) / 60 * H}px;height:${(fin - ini) / 60 * H - 2}px`;
+        if (iso(d) === FERIADO) c += '<div class="bloque-feriado"><i class="fas fa-flag me-1"></i>Feriado</div>';
+        else (ATENCION[d.getDay()] || []).forEach(([a, b]) => c += `<div class="bloque-atencion" style="${pos(aMin(a), aMin(b))}"></div>`);
+        otrasCitas(d).forEach(x => c += `<div class="evento ev-otra" style="${pos(x.ini, x.fin)}"><b>${deMin(x.ini)} ${x.txt}</b></div>`);
+        est.confirmadas.filter(s => iso(s.fecha) === iso(d)).forEach(s => c += `<div class="evento ev-conf" style="${pos(aMin(s.hora), aMin(s.hora) + s.dur)}"><b>${s.hora} Mateo J. Insfrán</b>Tratamiento #${s.num}</div>`);
+        est.propuesta.filter(s => iso(s.fecha) === iso(d)).forEach(s => {
+            const mal = evaluar(s);
+            c += `<div class="evento ${mal ? 'ev-conflicto' : 'ev-prop'}" style="${pos(aMin(s.hora), aMin(s.hora) + s.dur)}"><b>${s.hora} Mateo J. Insfrán</b>${mal ? mal : 'Tratamiento #' + s.num}</div>`;
+        });
+        return c + '</div>';
+    }).join('');
+    cal.innerHTML = h;
+}
+
+function confirmar() {
+    const p = est.propuesta;
+    $('cuerpoConfirmar').innerHTML = `<p class="mb-2">Se van a crear <b>${p.length} citas</b> de tipo <b>Tratamiento</b> (#${p[0].num} a #${p[p.length - 1].num}) para <b>Mateo Joaquín Insfrán</b>, del ${corta(p[0].fecha)} al ${corta(p[p.length - 1].fecha)}.</p>
+        <ul class="small text-body-secondary mb-0"><li>Cada cita queda como «Agendada» y recepción la ve en su calendario.</li><li>El paciente recibe un recordatorio por cada cita, como siempre.</li><li>Cada cita se puede reprogramar o cancelar por separado.</li></ul>`;
+    bootstrap.Modal.getOrCreateInstance($('modalConfirmar')).show();
+}
+function crearCitas() {
+    const p = est.propuesta;
+    est.tandas.push({ desde: p[0].num, hasta: p[p.length - 1].num, ini: p[0].fecha, fin: p[p.length - 1].fecha });
+    est.confirmadas.push(...p);
+    est.agendadas += p.length;
+    est.propuesta = [];
+    est.tandaN++;
+    $('fechaInicio').value = iso(sumar(p[p.length - 1].fecha, 1));
+    bootstrap.Modal.getOrCreateInstance($('modalConfirmar')).hide();
+    refrescar();
+}
+
+$('btnGenerar').addEventListener('click', generar);
+$('btnConfirmar').addEventListener('click', confirmar);
+$('btnConfirmarOk').addEventListener('click', crearCitas);
+$('btnReiniciar').addEventListener('click', reiniciar);
+$('semAnt').addEventListener('click', () => { est.semana = sumar(est.semana, -7); calendario(); });
+$('semSig').addEventListener('click', () => { est.semana = sumar(est.semana, 7); calendario(); });
+$('semPrimera').addEventListener('click', () => { const s = est.propuesta[0] || est.confirmadas[0]; est.semana = s ? lunesDe(s.fecha) : base; calendario(); });
+['sesionesPlan', 'porTanda'].forEach(id => $(id).addEventListener('change', refrescar));
+reiniciar();
+</script>
+</body>
+</html>

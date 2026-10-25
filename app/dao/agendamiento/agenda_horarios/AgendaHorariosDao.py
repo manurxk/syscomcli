@@ -9,7 +9,7 @@ from app.core.base_dao import BaseDAO
 class AgendaHorariosDao(BaseDAO):
     """Acceso a datos de los horarios de agenda de los especialistas, sus turnos (slots) y bloqueos."""
 
-    HORIZONTE_DIAS_DEFAULT = 15
+    HORIZONTE_DIAS_DEFAULT = 30
 
     # Un sobreturno es un turno creado a mano (crearSobreturno guarda quién lo creó); los que genera el sistema
     # (_generarSlots) tienen usuario_creacion vacío. No se usa "fuera de la grilla": un turno viejo que queda
@@ -325,7 +325,7 @@ class AgendaHorariosDao(BaseDAO):
     # ------------------------------------------------------------------
     # Bloqueos de un especialista (ausencias, feriados): agenda_horarios.bloqueos (JSONB).
     # El bloqueo se graba en todas las agendas del especialista, así la generación de turnos lo aplica
-    # también a los días que todavía no se generaron (horizonte de 15 días).
+    # también a los días que todavía no se generaron (horizonte de 30 días).
     # ------------------------------------------------------------------
 
     def _bloqueosDelEspecialista(self, cur, id_especialista):
@@ -343,6 +343,7 @@ class AgendaHorariosDao(BaseDAO):
                    p.per_nombre || ' ' || p.per_apellido AS especialista,
                    TO_CHAR((b->>'desde')::timestamp, 'DD/MM/YYYY HH24:MI') AS desde,
                    TO_CHAR((b->>'hasta')::timestamp, 'DD/MM/YYYY HH24:MI') AS hasta,
+                   b->>'desde' AS desde_iso, b->>'hasta' AS hasta_iso,
                    b->>'motivo' AS motivo
             FROM agenda_horarios ah
             CROSS JOIN LATERAL jsonb_array_elements(ah.bloqueos) b
