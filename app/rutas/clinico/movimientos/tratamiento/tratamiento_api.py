@@ -6,7 +6,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 tratamientoapi = Blueprint('tratamientoapi', __name__)
 
-ROLES_TRATAMIENTO = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_TRATAMIENTO = ("ADMINISTRADOR", "CLINICO")
 
 
 @tratamientoapi.route('/consultas/<int:id_consulta>/tratamientos', methods=['GET'])

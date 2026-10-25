@@ -1,5 +1,5 @@
 -- 11_referenciales_ventas.sql — Referenciales de ventas
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -327,7 +327,7 @@ CREATE TABLE public.tipos_impuestos (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_tipos_impuestos_calc CHECK (((tipo_calculo)::text = ANY ((ARRAY['PORCENTAJE'::character varying, 'MONTO_FIJO'::character varying])::text[])))
+    CONSTRAINT chk_tipos_impuestos_calc CHECK (((tipo_calculo)::text = ANY (ARRAY[('PORCENTAJE'::character varying)::text, ('MONTO_FIJO'::character varying)::text])))
 );
 
 --

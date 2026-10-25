@@ -1,5 +1,5 @@
 -- 05_sedes_clinica.sql — Empresa, sedes y consultorios
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -96,11 +96,14 @@ CREATE TABLE public.empresa (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     horario_atencion_tramos jsonb,
-    CONSTRAINT chk_empresa_ambiente_sifen CHECK (((ambiente_sifen)::text = ANY ((ARRAY['PRUEBA'::character varying, 'PRODUCCION'::character varying])::text[]))),
+    max_funcionarios_activos smallint DEFAULT 15 NOT NULL,
+    max_usuarios_activos smallint DEFAULT 10 NOT NULL,
+    CONSTRAINT chk_empresa_ambiente_sifen CHECK (((ambiente_sifen)::text = ANY (ARRAY[('PRUEBA'::character varying)::text, ('PRODUCCION'::character varying)::text]))),
     CONSTRAINT chk_empresa_email CHECK (((email)::text ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'::text)),
     CONSTRAINT chk_empresa_horario_tramos CHECK (((horario_atencion_tramos IS NULL) OR (jsonb_typeof(horario_atencion_tramos) = 'object'::text))),
     CONSTRAINT chk_empresa_ruc_len CHECK (((length((ruc_nit)::text) >= 6) AND (length((ruc_nit)::text) <= 20))),
-    CONSTRAINT chk_empresa_tipo_contribuyente CHECK (((tipo_contribuyente)::text = ANY ((ARRAY['PERSONA_FISICA'::character varying, 'PERSONA_JURIDICA'::character varying, 'EAS'::character varying])::text[])))
+    CONSTRAINT chk_empresa_tipo_contribuyente CHECK (((tipo_contribuyente)::text = ANY (ARRAY[('PERSONA_FISICA'::character varying)::text, ('PERSONA_JURIDICA'::character varying)::text, ('EAS'::character varying)::text]))),
+    CONSTRAINT chk_empresa_topes CHECK (((max_funcionarios_activos >= 1) AND (max_usuarios_activos >= 1) AND (max_usuarios_activos <= max_funcionarios_activos)))
 );
 
 --
@@ -150,6 +153,18 @@ COMMENT ON COLUMN public.empresa.codigo_seguridad_contribuyente IS 'Código de s
 --
 
 COMMENT ON COLUMN public.empresa.horario_atencion_tramos IS 'Horario de atencion en tramos por dia: {"<id_dia_semana>": [["HH:MM","HH:MM"], ...]}; dia sin clave = cerrado. Lo usan las alertas de auditoria (fuera de horario). Lo valida EmpresaDao al guardar.';
+
+--
+-- Name: COLUMN empresa.max_funcionarios_activos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.empresa.max_funcionarios_activos IS 'Tope de funcionarios activos a la vez. Lo fija el Superadministrador.';
+
+--
+-- Name: COLUMN empresa.max_usuarios_activos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.empresa.max_usuarios_activos IS 'Tope de usuarios activos con funcionario a la vez (no cuenta al Superadministrador). No puede superar al de funcionarios.';
 
 --
 -- Name: empresa_id_empresa_seq; Type: SEQUENCE; Schema: public; Owner: -

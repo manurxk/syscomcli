@@ -14,7 +14,7 @@ PESTANAS = ('resumen', 'agendamiento', 'consultorio', 'ventas')
 # Pestañas que abre cada rol
 PESTANAS_POR_ROL = {
     'ADMINISTRADOR': ('resumen', 'agendamiento', 'consultorio', 'ventas'),
-    'SUPERADMIN': ('resumen', 'agendamiento', 'ventas'),      # sin Consultorio (datos clínicos)
+    'SUPERADMIN': ('resumen',),      # soporte: solo el resumen, sin datos de pacientes ni de ventas
     'RECEPCION': ('agendamiento',),
     'VENTAS': ('ventas',),
     'CLINICO': ('agendamiento', 'consultorio'),
@@ -23,9 +23,9 @@ PESTANAS_POR_ROL = {
 # Roles que ven a todos los especialistas en cada pestaña; los demás roles con acceso ven solo lo propio
 ROLES_VEN_TODOS = {
     'resumen': ('ADMINISTRADOR', 'SUPERADMIN'),
-    'agendamiento': ('ADMINISTRADOR', 'SUPERADMIN', 'RECEPCION'),
+    'agendamiento': ('ADMINISTRADOR', 'RECEPCION'),
     'consultorio': ('ADMINISTRADOR',),
-    'ventas': ('ADMINISTRADOR', 'SUPERADMIN', 'VENTAS'),
+    'ventas': ('ADMINISTRADOR', 'VENTAS'),
 }
 
 ROLES_PANTALLA_REPORTES = tuple(PESTANAS_POR_ROL)

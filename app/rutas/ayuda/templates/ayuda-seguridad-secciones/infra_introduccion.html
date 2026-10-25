@@ -1,0 +1,24 @@
+<p>Este manual explica cómo <strong>operar la infraestructura</strong> de Sysclin: los contenedores, la configuración, la base de datos, el acceso por HTTPS, los backups y la solución de problemas. Está escrito para quien administra el servidor (soporte técnico); el administrador del consultorio no lo necesita para su trabajo diario.</p>
+<p>No incluye las políticas de seguridad, que están en el <strong>Manual de seguridad</strong>, ni el uso de las pantallas, que explica el <strong>Manual de usuario</strong> (botón de Ayuda).</p>
+
+<h4>Qué encontrará en cada capítulo</h4>
+<table class="datos">
+    <tr><th>Capítulo</th><th>Para qué sirve</th></tr>
+    <tr><td>Componentes del sistema</td><td>Qué contenedores hay, qué hace cada uno y cuáles son los archivos importantes</td></tr>
+    <tr><td>Configuración (.env)</td><td>Ver y cambiar la configuración sin exponer los secretos</td></tr>
+    <tr><td>Manejo de contenedores</td><td>Comandos de uso diario, cómo reactivar el sistema y las tareas programadas</td></tr>
+    <tr><td>Base de datos</td><td>Usuarios y contraseñas de la base, y cómo aplicar migraciones</td></tr>
+    <tr><td>HTTPS, red y despliegue</td><td>Certificados, exposición de puertos y cómo desplegar en el servidor</td></tr>
+    <tr><td>Backups y restauración</td><td>Copias cifradas, prueba de restauración y recuperación de emergencia</td></tr>
+    <tr><td>Gestión de vulnerabilidades</td><td>Buscar y aplicar actualizaciones de las dependencias</td></tr>
+    <tr><td>Solución de problemas</td><td>Síntomas frecuentes, su causa y qué hacer</td></tr>
+    <tr><td>Anexo A</td><td>El contenido vigente de los scripts y archivos de configuración</td></tr>
+</table>
+
+<h4>Convenciones de este manual</h4>
+<ul>
+    <li>Los comandos se ejecutan en <strong>PowerShell</strong>, desde la <strong>carpeta raíz del proyecto</strong> (<code>syscomcli</code>), salvo que se indique otra cosa. Los marcados como <code>bash</code> son para el servidor Linux.</li>
+    <li>Donde aparece <code>&lt;algo&gt;</code>, se reemplaza por el valor real, sin los signos <code>&lt; &gt;</code>.</li>
+    <li>El texto que empieza con <strong>Nota:</strong> es información a tener en cuenta; el que empieza con <strong>Advertencia:</strong>, una acción que puede causar pérdida de datos o corte del servicio.</li>
+    <li>Las contraseñas y claves no aparecen en este manual: viven en el <code>.env</code>, que no se publica.</li>
+</ul>

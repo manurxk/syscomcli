@@ -1,0 +1,28 @@
+<p>El sistema guarda <strong>historias clínicas, datos personales de los pacientes y la facturación</strong>. Es información sensible: si llega a manos equivocadas puede perjudicar a los pacientes y a la clínica. Por eso Sysclin tiene protecciones que funcionan solas y algunas reglas que dependen de cada persona que lo usa.</p>
+<p>Este manual explica, sin términos técnicos, <strong>qué hace el sistema para proteger los datos</strong> y <strong>qué debe hacer usted</strong> para que esas protecciones funcionen. El uso de las pantallas lo explica el Manual de usuario, y la operación del servidor, el Manual de infraestructura.</p>
+
+<h4>Cómo está organizado</h4>
+<table class="datos">
+    <tr><th>Capítulos</th><th>Para quién</th><th>Qué contienen</th></tr>
+    <tr><td>Cómo ingresar de forma segura, Su contraseña, Qué puede ver cada persona, Su sesión y su computadora, Cómo cuidar la información, Validación de los datos y Si algo no está bien</td><td>Todo el personal</td><td>Lo que debe hacer cada persona para que las protecciones funcionen</td></tr>
+    <tr><td>Copias de respaldo, Calendario de tareas y Qué hacer ante un incidente</td><td>Administrador</td><td>Tareas de seguridad de quien administra el sistema</td></tr>
+    <tr><td>Reglas de validación por módulo</td><td>Administrador y soporte técnico</td><td>Las reglas y los avisos que muestra el sistema en cada pantalla</td></tr>
+    <tr><td>Objetivo y alcance, Seguridad de la aplicación, Auditoría y Riesgos aceptados</td><td>Soporte técnico</td><td>Políticas y controles técnicos</td></tr>
+</table>
+<p class="importante">Los recuadros <strong>Nota</strong> señalan reglas que hay que cumplir siempre; los recuadros <strong>Advertencia</strong>, acciones que pueden causar pérdida de datos o un problema de seguridad.</p>
+
+<h4>Lo que el sistema hace por usted</h4>
+<p>Estas protecciones están siempre activas; no tiene que hacer nada para que funcionen:</p>
+<table class="datos">
+    <tr><th>Protección</th><th>Qué significa en la práctica</th></tr>
+    <tr><td>Contraseñas protegidas</td><td>Las contraseñas se guardan cifradas. <strong>Nadie puede verlas</strong>, ni siquiera el administrador o el soporte técnico</td></tr>
+    <tr><td>Código por correo</td><td>Además de la contraseña, el sistema envía a su correo un código para entrar. Aunque alguien conozca su contraseña, sin su correo no puede ingresar</td></tr>
+    <tr><td>Bloqueo automático</td><td>Si alguien intenta adivinar su contraseña, la cuenta se bloquea 30 minutos después de 5 intentos; si sigue fallando, 1 hora; y después solo un administrador puede desbloquearla. Le llega un correo de aviso</td></tr>
+    <tr><td>Freno por equipo</td><td>Si desde un mismo equipo se fallan 10 ingresos en 15 minutos, el sistema frena los intentos desde ese equipo</td></tr>
+    <tr><td>Acceso por rol</td><td>Cada persona ve solo lo que necesita para su trabajo</td></tr>
+    <tr><td>Cierre automático</td><td>Si el sistema queda 20 minutos sin uso, cierra la sesión solo</td></tr>
+    <tr><td>Registro de actividad</td><td>El sistema anota quién ingresó y quién creó, modificó o anuló cada dato, con fecha y hora. Ese registro no se puede modificar ni borrar</td></tr>
+    <tr><td>Nada se borra</td><td>Los usuarios se desactivan y los documentos importantes se anulan indicando el motivo, así siempre queda el historial. La historia clínica se conserva</td></tr>
+    <tr><td>Copias de respaldo</td><td>Cada 24 horas se guarda una copia cifrada de toda la información, y se conservan las de los últimos 14 días</td></tr>
+    <tr><td>Alertas al administrador</td><td>El sistema avisa por correo de las anulaciones y de los cambios hechos fuera del horario de atención, y envía un informe semanal los lunes</td></tr>
+</table>

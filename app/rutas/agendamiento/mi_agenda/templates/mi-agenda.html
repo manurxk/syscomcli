@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{# Quien puede crear citas (Administrador) puede agendar desde el calendario; el especialista, en solo lectura #}
+{% set puede_agendar = 'ADMINISTRADOR' in (session.get('roles', []) | map('upper') | list) %}
 {# Ventana: Mi Agenda — Citas del Día (pantalla). Ruta: /mi-agenda. Roles: ADMINISTRADOR, SUPERADMIN, CLINICO. API: /api/v1/mi-agenda, /api/v1/citas. #}
 
 {% block titulo %}Mi Agenda — Citas del Día{% endblock %}
@@ -18,6 +20,13 @@
 </header>
 
 <div class="container-fluid px-4 mt-n10">
+
+  <ul class="nav nav-pills mb-3 bg-white rounded p-2 shadow-sm d-inline-flex position-relative" id="pestanasAgenda">
+    <li class="nav-item"><button type="button" class="nav-link active" data-tab="hoy"><i class="far fa-calendar-check me-1"></i>Citas de hoy</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-tab="semana"><i class="far fa-calendar-days me-1"></i>Semana</button></li>
+  </ul>
+
+  <div id="tabHoy">
 
   <div class="row gx-4 mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -106,8 +115,24 @@
       </div>
     </div>
   </div>
+  </div><!-- /tabHoy -->
+
+  <div id="tabSemana" class="d-none">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        {% if puede_agendar %}
+        <div class="alert alert-light border small py-2"><i class="fas fa-hand-pointer me-1"></i>Tocá un hueco libre para ver el turno y agregar una cita ahí; tocá una cita para ver el detalle.</div>
+        {% else %}
+        <div class="alert alert-light border small py-2"><i class="fas fa-eye me-1"></i>Es de solo lectura: ves tus citas y tus horarios de atención. Las citas las agenda recepción.</div>
+        {% endif %}
+        <div id="calMiAgenda"></div>
+      </div>
+    </div>
+  </div>
 
 </div>
+
+{% include 'calendario_semanal.html' %}
 
 <style>
   .motivo-text {
@@ -186,9 +211,10 @@
             <div class="fw-semibold">${escapeHtml(c.paciente_nombre)} ${escapeHtml(c.paciente_apellido)}</div>
             ${c.paciente_telefono ? `<div class="text-muted small"><i class="fas fa-phone fa-xs me-1"></i>${escapeHtml(c.paciente_telefono)}</div>` : ''}` },
         { data: 'pac_historia_clinica', render: (data) => escapeHtml(data) || '—' },
-        { data: null, render: (data, type, c) => c.cita_es_primera_vez
-            ? 'Primera Vez'
-            : `Seguimiento${c.cita_numero_sesion ? ' #' + c.cita_numero_sesion : ''}` },
+        { data: null, render: (data, type, c) => {
+            const tipo = { PRIMERA_VEZ: 'Primera Vez', SEGUIMIENTO: 'Seguimiento', TRATAMIENTO: 'Tratamiento' }[c.tipo_cita] || (c.cita_es_primera_vez ? 'Primera Vez' : 'Seguimiento');
+            return c.tipo_cita === 'PRIMERA_VEZ' ? tipo : `${tipo}${c.cita_numero_sesion ? ' #' + c.cita_numero_sesion : ''}`;
+          } },
         { data: 'cita_motivo', render: (data) => data
             ? `<span class="motivo-text" title="${escapeHtml(data)}">${escapeHtml(data)}</span>`
             : '<span class="text-muted">—</span>' },
@@ -252,6 +278,45 @@
   });
 
   $('#btnRefrescar').on('click', cargarCitas);
+
+  // ── Semana: calendario de solo lectura con las citas y los horarios del propio especialista ──
+  let calendarioSemana = null;
+  // Agendar desde el calendario solo lo puede hacer quien puede crear citas (Administrador); el especialista ve su agenda en solo lectura
+  const PUEDE_AGENDAR = {{ 'true' if puede_agendar else 'false' }};
+  let idEspecialistaPropio = null;
+
+  const crearCalendarioSemana = () => CalendarioSemanal(document.getElementById('calMiAgenda'), {
+    mensajeVacio: 'Tu usuario no tiene un perfil de especialista vinculado.',
+    datos: async (desde, hasta) => {
+      const rc = await (await fetch(`/api/v1/mi-agenda/citas-semana?desde=${desde}&hasta=${hasta}`)).json();
+      if (!rc.success) throw new Error(rc.error);
+      if (rc.sin_especialista) return null;
+      idEspecialistaPropio = rc.id_especialista;
+      const rh = await (await fetch(`/api/v1/agenda-horarios?id_especialista=${rc.id_especialista}`)).json();
+      let slots = null;
+      if (PUEDE_AGENDAR) {
+        const rs = await (await fetch(`/api/v1/citas/slots-disponibles?id_especialista=${rc.id_especialista}&desde=${desde}&hasta=${hasta}`)).json();
+        slots = rs.success ? rs.data : [];
+      }
+      return { citas: rc.data, horarios: rh.success ? rh.data : [], slots };
+    },
+    alTocarHueco: PUEDE_AGENDAR ? (slot) => {
+      window.location.href = `{{ url_for('cita.citaAgregar') }}?id_especialista=${idEspecialistaPropio}&fecha=${slot.slot_inicio.split(' ')[0]}&id_slot=${slot.id_slot_agenda}`;
+    } : undefined,
+    nombreEspecialista: PUEDE_AGENDAR ? () => 'Mi agenda' : undefined
+  });
+
+  $('#pestanasAgenda').on('click', '[data-tab]', function () {
+    const tab = $(this).data('tab');
+    $('#pestanasAgenda .nav-link').removeClass('active');
+    $(this).addClass('active');
+    $('#tabHoy').toggleClass('d-none', tab !== 'hoy');
+    $('#tabSemana').toggleClass('d-none', tab !== 'semana');
+    if (tab === 'semana') {
+      if (!calendarioSemana) calendarioSemana = crearCalendarioSemana();
+      calendarioSemana.pintar();
+    }
+  });
 
   $(document).ready(function () {
     initTablaAgenda();

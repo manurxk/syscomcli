@@ -1,7 +1,6 @@
 <h4>Roles de la aplicación</h4>
 <table class="datos">
     <tr><th>Rol</th><th>Alcance</th></tr>
-    <tr><td>Super Administrador (<code>SUPERADMIN</code>)</td><td>Configuración técnica del sistema y baja de usuarios. No participa de la gestión clínica</td></tr>
     <tr><td>Administrador (<code>ADMINISTRADOR</code>)</td><td>Usuarios, permisos, menú, accesos, auditoría y desbloqueo de cuentas</td></tr>
     <tr><td>Recepción (<code>RECEPCION</code>)</td><td>Agenda, citas, lista de espera, pacientes</td></tr>
     <tr><td>Clínico (<code>CLINICO</code>)</td><td>Consultas, historia clínica, recetas, órdenes, PEI, derivaciones</td></tr>
@@ -10,8 +9,8 @@
 <ul>
     <li><strong>Mínimo privilegio</strong>: cada usuario recibe solo el rol que necesita. El menú se arma por rol: qué páginas ve cada rol se configura en <strong>Seguridad → Menú</strong>, y qué acciones puede hacer, en <strong>Seguridad → Permisos</strong>.</li>
     <li>El alta de usuarios la hace un administrador; <strong>no existe autoregistro ni ingreso con redes sociales</strong>.</li>
-    <li>La baja la hace el Super Administrador. La cuenta se <strong>desactiva</strong>, no se borra, para conservar su rastro en la auditoría; queda registrada como <code>RECORD_DELETE</code>.</li>
-    <li>Para ver exactamente qué ve cada rol, el inicio del administrador tiene el botón <span class="btn-ref">Manuales por rol</span>.</li>
+    <li>La baja la hace el Administrador. La cuenta se <strong>desactiva</strong>, no se borra, para conservar su rastro en la auditoría; queda registrada como <code>RECORD_DELETE</code>.</li>
+    <li>Para ver exactamente qué ve cada rol, el inicio del administrador tiene el botón <span class="btn-ref">Manual de usuario</span>, que permite elegir el rol.</li>
 </ul>
 
 <h4>Roles de la base de datos</h4>

@@ -7,6 +7,7 @@ from app.auth.utils.decorators import role_required
 from app.core.base_dao import BaseDAO
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
+from app.utils.soporte import ocultar_soporte, es_usuario_soporte, es_superadmin_sesion
 
 accesoapi = Blueprint('accesoapi', __name__)
 
@@ -18,7 +19,7 @@ _dao = BaseDAO(db_name_env="DB_NAME_NUEVA")
 def getUsuariosConEstadoAcceso():
     """GET: usuarios con su estado de acceso."""
     try:
-        data = AccesoDao().getUsuariosConEstadoAcceso()
+        data = ocultar_soporte(AccesoDao().getUsuariosConEstadoAcceso())
         return jsonify({'success': True, 'data': data, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener estado de acceso: {str(e)}")
@@ -29,6 +30,8 @@ def getUsuariosConEstadoAcceso():
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getSesionesPorUsuario(id_usuario):
     """GET: sesiones del usuario."""
+    if not es_superadmin_sesion() and es_usuario_soporte(id_usuario):
+        return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
     try:
         data = AccesoDao().getSesionesPorUsuario(id_usuario)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -42,8 +45,8 @@ def getSesionesPorUsuario(id_usuario):
 def cerrarSesion(id_sesion):
     """DELETE: cierra la sesión indicada."""
     try:
-        fila = _dao.execute_query_one("SELECT token_sesion FROM sesiones WHERE id_sesion = %s", (id_sesion,))
-        if not fila:
+        fila = _dao.execute_query_one("SELECT token_sesion, id_usuario FROM sesiones WHERE id_sesion = %s", (id_sesion,))
+        if not fila or (not es_superadmin_sesion() and es_usuario_soporte(fila['id_usuario'])):
             return jsonify({'success': False, 'error': 'Sesión no encontrada'}), 404
 
         exitoso = AuthService.cerrar_sesion(fila['token_sesion'], tipo_cierre='ADMIN_FORCE')
@@ -61,6 +64,8 @@ def cerrarSesion(id_sesion):
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def desbloquearUsuario(id_usuario):
     """POST: desbloquea la cuenta del usuario y la vuelve a nivel 0."""
+    if not es_superadmin_sesion() and es_usuario_soporte(id_usuario):
+        return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
     try:
         ok = UsuarioDao().resetearIntentos(id_usuario, usuario_modificacion=session.get('id_usuario'))
         if not ok:
@@ -82,6 +87,8 @@ def desbloquearUsuario(id_usuario):
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def revocarMfa(id_usuario):
     """POST: revoca el MFA configurado del usuario."""
+    if not es_superadmin_sesion() and es_usuario_soporte(id_usuario):
+        return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
     try:
         AccesoDao().revocarMfa(id_usuario, usuario_modificacion=session.get('id_usuario'))
         app.logger.info(f"MFA revocado para usuario {id_usuario} por {session.get('usu_nick')}")

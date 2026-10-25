@@ -94,6 +94,7 @@ class CobranzaDao(BaseDAO):
                 cd.id_entidad_emisora,
                 cd.numero_cheque,
                 cd.numero_tarjeta,
+                cd.numero_transferencia,
                 cd.numero_cuotas,
                 cd.monto_cobrado,
                 cd.observaciones,
@@ -246,14 +247,18 @@ class CobranzaDao(BaseDAO):
 
         # 5. INSERT cobranza_detalle (una fila por forma de cobro)
         for d in detalles:
+            cur.execute("SELECT cod_forma_cobro FROM formas_cobro WHERE id_forma_cobro = %s", (d['id_forma_cobro'],))
+            forma = cur.fetchone()
+            if forma and 'TRANSFERENCIA' in (forma[0] or '').upper() and not (d.get('numero_transferencia') or '').strip():
+                raise ValueError('Indique el N° de transferencia / comprobante.')
             cur.execute("""
                 INSERT INTO cobranza_detalle(
                     id_cobranza, id_forma_cobro, id_marca_tarjeta,
                     id_entidad_adherida, id_entidad_emisora,
-                    numero_cheque, numero_tarjeta, numero_cuotas,
+                    numero_cheque, numero_tarjeta, numero_transferencia, numero_cuotas,
                     monto_cobrado, observaciones
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 id_cobranza,
                 d['id_forma_cobro'],
@@ -262,6 +267,7 @@ class CobranzaDao(BaseDAO):
                 d.get('id_entidad_emisora') or None,
                 d.get('numero_cheque') or None,
                 d.get('numero_tarjeta') or None,
+                (d.get('numero_transferencia') or '').strip() or None,
                 d.get('numero_cuotas') or 1,
                 redondear(d['monto_cobrado'], decimales),
                 d.get('observaciones') or None,

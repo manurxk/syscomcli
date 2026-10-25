@@ -1,5 +1,5 @@
 -- 06_referenciales_agendamiento_clinico.sql — Referenciales de agendamiento y clínicos
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -102,7 +102,7 @@ CREATE TABLE public.estados_citas (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_estados_citas_cod CHECK (((cod_estado_cita)::text = ANY ((ARRAY['AGENDADA'::character varying, 'CONFIRMADA'::character varying, 'EN_CONSULTA'::character varying, 'COMPLETADA'::character varying, 'AUSENTE'::character varying, 'CANCELADA'::character varying])::text[])))
+    CONSTRAINT chk_estados_citas_cod CHECK (((cod_estado_cita)::text = ANY (ARRAY[('AGENDADA'::character varying)::text, ('CONFIRMADA'::character varying)::text, ('EN_CONSULTA'::character varying)::text, ('COMPLETADA'::character varying)::text, ('AUSENTE'::character varying)::text, ('CANCELADA'::character varying)::text])))
 );
 
 --

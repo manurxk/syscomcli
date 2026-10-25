@@ -29,6 +29,7 @@ def verificar_sesion_mejorada():
         "login.logout",
         "login.verificar_mfa",
         "login.vincular_correo",
+        "login.cambiar_password_obligatorio",
         "login.recuperar_password",
         "login.resetear_password",
         "login.cambiar_idioma",

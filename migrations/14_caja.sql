@@ -1,5 +1,5 @@
 -- 14_caja.sql — Caja, depósitos y recaudaciones
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -43,8 +43,8 @@ CREATE TABLE public.aperturas_cierre_caja (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT chk_acc_estado CHECK (((est_apertura_cierre)::text = ANY ((ARRAY['A'::character varying, 'C'::character varying])::text[]))),
-    CONSTRAINT chk_acc_tipo_op CHECK (((tipo_operacion)::text = ANY ((ARRAY['APERTURA'::character varying, 'CIERRE'::character varying])::text[])))
+    CONSTRAINT chk_acc_estado CHECK (((est_apertura_cierre)::text = ANY (ARRAY[('A'::character varying)::text, ('C'::character varying)::text]))),
+    CONSTRAINT chk_acc_tipo_op CHECK (((tipo_operacion)::text = ANY (ARRAY[('APERTURA'::character varying)::text, ('CIERRE'::character varying)::text])))
 );
 
 --
@@ -84,7 +84,7 @@ CREATE TABLE public.arqueos_caja (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_arqueos_estado CHECK (((est_arqueo)::text = ANY ((ARRAY['CONCILIADO'::character varying, 'CON_DIFERENCIA'::character varying])::text[])))
+    CONSTRAINT chk_arqueos_estado CHECK (((est_arqueo)::text = ANY (ARRAY[('CONCILIADO'::character varying)::text, ('CON_DIFERENCIA'::character varying)::text])))
 );
 
 --
@@ -122,7 +122,7 @@ CREATE TABLE public.cajas (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT chk_cajas_estado CHECK (((caja_estado)::text = ANY ((ARRAY['ABIERTA'::character varying, 'CERRADA'::character varying])::text[]))),
+    CONSTRAINT chk_cajas_estado CHECK (((caja_estado)::text = ANY (ARRAY[('ABIERTA'::character varying)::text, ('CERRADA'::character varying)::text]))),
     CONSTRAINT chk_cajas_saldo_inicial CHECK ((caja_saldo_inicial >= (0)::numeric))
 );
 
@@ -162,7 +162,7 @@ CREATE TABLE public.depositos (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_depositos_tipo CHECK (((tipo_deposito)::text = ANY ((ARRAY['BANCO'::character varying, 'CUENTA_CORRIENTE'::character varying, 'CAJA_AHORRO'::character varying, 'BILLETERA_DIGITAL'::character varying])::text[])))
+    CONSTRAINT chk_depositos_tipo CHECK (((tipo_deposito)::text = ANY (ARRAY[('BANCO'::character varying)::text, ('CUENTA_CORRIENTE'::character varying)::text, ('CAJA_AHORRO'::character varying)::text, ('BILLETERA_DIGITAL'::character varying)::text])))
 );
 
 --
@@ -206,7 +206,7 @@ CREATE TABLE public.recaudaciones (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT recaudaciones_est_recaudacion_check CHECK (((est_recaudacion)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'DEPOSITADA'::character varying, 'ANULADA'::character varying])::text[])))
+    CONSTRAINT recaudaciones_est_recaudacion_check CHECK (((est_recaudacion)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('DEPOSITADA'::character varying)::text, ('ANULADA'::character varying)::text])))
 );
 
 --

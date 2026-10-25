@@ -1,5 +1,5 @@
 -- 10_ordenes_recetas_certificados.sql — Órdenes, recetas y certificados
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -44,7 +44,7 @@ CREATE TABLE public.certificados_medicos (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_certificados_estado CHECK (((certificado_estado)::text = ANY ((ARRAY['VIGENTE'::character varying, 'ANULADO'::character varying])::text[])))
+    CONSTRAINT chk_certificados_estado CHECK (((certificado_estado)::text = ANY (ARRAY[('VIGENTE'::character varying)::text, ('ANULADO'::character varying)::text])))
 );
 
 --
@@ -90,7 +90,7 @@ CREATE TABLE public.orden_detalle (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     CONSTRAINT chk_orden_detalle_catalogo CHECK (((((tipo_orden)::text = 'ESTUDIO'::text) AND (id_tipo_estudio IS NOT NULL) AND (id_tipo_analisis IS NULL)) OR (((tipo_orden)::text = 'ANALISIS'::text) AND (id_tipo_analisis IS NOT NULL) AND (id_tipo_estudio IS NULL)))),
-    CONSTRAINT chk_orden_detalle_tipo CHECK (((tipo_orden)::text = ANY ((ARRAY['ESTUDIO'::character varying, 'ANALISIS'::character varying])::text[])))
+    CONSTRAINT chk_orden_detalle_tipo CHECK (((tipo_orden)::text = ANY (ARRAY[('ESTUDIO'::character varying)::text, ('ANALISIS'::character varying)::text])))
 );
 
 --
@@ -142,7 +142,7 @@ CREATE TABLE public.ordenes (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_ordenes_estado CHECK (((orden_estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'EN_PROCESO'::character varying, 'COMPLETADA'::character varying, 'ANULADA'::character varying])::text[])))
+    CONSTRAINT chk_ordenes_estado CHECK (((orden_estado)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('EN_PROCESO'::character varying)::text, ('COMPLETADA'::character varying)::text, ('ANULADA'::character varying)::text])))
 );
 
 --

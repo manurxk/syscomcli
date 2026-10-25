@@ -40,33 +40,35 @@ class AyudaService:
 
         return buffer.getvalue()
 
-    def manual_seguridad_docx(self, secciones, scripts, fecha):
-        """Manual de seguridad en Word, con el formato estándar (manual_word_service)."""
+    def manual_tecnico_docx(self, partes, anexos, scripts, fecha, datos):
+        """Manual técnico (seguridad o infraestructura) en Word, con el formato estándar (manual_word_service)."""
         # Import local: si falta python-docx, falla solo esta descarga y no el arranque de la app
         from app.services import manual_word_service
-        return manual_word_service.manual_seguridad(
+        return manual_word_service.manual_tecnico(
             raiz=os.path.abspath(os.path.join(app.root_path, '..')),
-            dir_secciones=os.path.join(app.root_path, 'rutas', 'ayuda', 'templates'),
-            secciones=secciones,
+            partes=partes,
+            anexos=anexos,
+            scripts=scripts,
+            logo=os.path.join(app.root_path, 'static', 'img', 'sys_logo.png'),
+            fecha=fecha,
+            datos=datos)
+
+    def manual_tecnico_pdf(self, partes, anexos, scripts, fecha, datos):
+        """PDF exportado del mismo Word con LibreOffice: el PDF y el Word quedan iguales."""
+        from app.services import manual_word_service
+        return manual_word_service.docx_a_pdf(self.manual_tecnico_docx(partes, anexos, scripts, fecha, datos))
+
+    def manual_sistema_docx(self, partes, scripts, fecha):
+        """Manual del sistema (guías de uso + seguridad) en Word, con el formato estándar (manual_word_service)."""
+        from app.services import manual_word_service
+        return manual_word_service.manual_sistema(
+            partes=partes,
+            raiz=os.path.abspath(os.path.join(app.root_path, '..')),
             scripts=scripts,
             logo=os.path.join(app.root_path, 'static', 'img', 'sys_logo.png'),
             fecha=fecha)
 
-    def manual_seguridad_pdf(self, secciones, scripts, fecha):
+    def manual_sistema_pdf(self, partes, scripts, fecha):
         """PDF exportado del mismo Word con LibreOffice: el PDF y el Word quedan iguales."""
         from app.services import manual_word_service
-        return manual_word_service.docx_a_pdf(self.manual_seguridad_docx(secciones, scripts, fecha))
-
-    def manual_guia_docx(self, secciones_html, perfil, fecha):
-        """Guía de uso (manual de usuario) en Word, con el formato estándar (manual_word_service)."""
-        from app.services import manual_word_service
-        return manual_word_service.manual_guia(
-            secciones_html=secciones_html,
-            perfil=perfil,
-            logo=os.path.join(app.root_path, 'static', 'img', 'sys_logo.png'),
-            fecha=fecha)
-
-    def manual_guia_pdf(self, secciones_html, perfil, fecha):
-        """PDF exportado del mismo Word con LibreOffice: el PDF y el Word quedan iguales."""
-        from app.services import manual_word_service
-        return manual_word_service.docx_a_pdf(self.manual_guia_docx(secciones_html, perfil, fecha))
+        return manual_word_service.docx_a_pdf(self.manual_sistema_docx(partes, scripts, fecha))

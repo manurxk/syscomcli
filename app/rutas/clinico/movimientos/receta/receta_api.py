@@ -9,7 +9,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 recetaapi = Blueprint('recetaapi', __name__)
 
-ROLES_RECETA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_RECETA = ("ADMINISTRADOR", "CLINICO")
 
 
 @recetaapi.route('/consultas/<int:id_consulta>/recetas', methods=['GET'])

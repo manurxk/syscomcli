@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </tr>
       `).join('');
       if (window.feather) feather.replace();
-      if ($.fn && $.fn.DataTable) $('#tbl').DataTable({ language: { url: '/static/datatables/es.json' }, pageLength: 20 });
+      if ($.fn && $.fn.DataTable) $('#tbl').DataTable({ language: { url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}" }, pageLength: 20 });
     })
     .catch(() => {
       tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center">Error al cargar pacientes.</td></tr>';

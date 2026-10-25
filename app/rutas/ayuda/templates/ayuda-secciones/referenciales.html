@@ -1,37 +1,18 @@
 <h3>Referenciales</h3>
-<p>Los referenciales son los catálogos que usa el resto del sistema: cargos, especialidades, sedes, consultorios, diagnósticos, medicamentos, monedas, formas de cobro, cajas y otros. Se cargan una vez y después aparecen como opciones en las demás pantallas. Esta pantalla muestra una tarjeta por catálogo; presione la tarjeta para entrar.</p>
+<p>Catálogos que usa el resto del sistema (cargos, especialidades, sedes, diagnósticos, medicamentos, monedas, formas de cobro, cajas y otros). Se cargan una vez y aparecen como opciones en las demás pantallas. Una tarjeta por catálogo.</p>
+<div class="par">
 {{ figura('referenciales/01_indice.jpg', 'Referenciales: una tarjeta por catálogo') }}
-
-<h4>¿Qué catálogos hay?</h4>
-<ul>
-    <li><strong>Personal y clínica</strong>: Cargos, Especialidades, Empresa, Sedes, Consultorios, Signos, Síntomas, Diagnósticos, Medicamentos, Tipos de Análisis, Tipos de Estudio, Tipos de Procedimiento, Tipos de Tratamiento, Tipos de Certificado Médico, Instrumentos e Insumos.</li>
-    <li><strong>Ventas</strong>: Ítems / Servicios, Monedas, Formas de Cobro, Condiciones de Venta, Tipos de Comprobante, Tipos de Impuesto, Tipos de Ítem, Marcas de Tarjeta, Entidades Adheridas, Entidades Emisoras, Estados de Factura, Cajas y Depósitos.</li>
-</ul>
-
-<h4>¿Cómo agrego un registro a un catálogo?</h4>
-{{ figura('referenciales/02_cargos.jpg', 'Nuevo Cargo: los números coinciden con los pasos') }}
+{{ figura('referenciales/02_cargos.jpg', 'Nuevo Cargo') }}
+</div>
 <ol>
     <li>Entre al catálogo desde su tarjeta.</li>
-    <li>Presione <span class="btn-ref">Agregar</span>. Se abre una ventana con los datos del registro.</li>
-    <li>Complete los datos. Los marcados con <strong>*</strong> son obligatorios.</li>
-    <li>Deje marcado <strong>Activo</strong> y presione <span class="btn-ref">Guardar</span>.</li>
+    <li>Presione <span class="btn-ref">Agregar</span>.</li>
+    <li>Complete los datos (los marcados con <strong>*</strong> son obligatorios).</li>
+    <li>Deje <strong>Activo</strong> y presione <span class="btn-ref">Guardar</span>.</li>
 </ol>
-<p>Todos los catálogos funcionan igual; cambian solo los datos de la ventana. Por ejemplo, en <strong>Cargos</strong> se marca <strong>Cargo clínico</strong> cuando el cargo es de un profesional que atiende pacientes.</p>
-
-<h4>¿Cómo corrijo o doy de baja un registro?</h4>
-<ol>
-    <li>Presione <span class="btn-ref">Editar</span> en la fila del registro.</li>
-    <li>Corrija lo necesario. Para darlo de baja, desmarque <strong>Activo</strong>.</li>
-    <li>Presione <span class="btn-ref">Guardar</span>.</li>
-</ol>
-<p class="importante">Los registros no se borran: se desactivan. Un registro inactivo deja de aparecer como opción nueva, pero lo que ya se cargó con él se conserva.</p>
-
-<h4>¿Cómo cargo los datos de la clínica?</h4>
-<p>La tarjeta <strong>Empresa</strong> abre la ficha de la clínica, que es una sola.</p>
-<ol>
-    <li>Presione <span class="btn-ref">Configurar</span>.</li>
-    <li>En <strong>Identificación Fiscal</strong>, complete RUC, DV, razón social y tipo de contribuyente (obligatorios), y si corresponde el nombre comercial y la actividad económica.</li>
-    <li>En <strong>Contacto y Ubicación</strong>, complete dirección, teléfono, celular y correo (obligatorios), y si corresponde la ciudad, el número de casa, el código postal y el sitio web.</li>
-    <li>En <strong>Horario de Atención</strong>, escriba el <strong>Texto publicado</strong>, que se muestra en pantallas y documentos. Después cargue los <strong>Tramos del horario</strong>: elija el día, la hora desde y hasta, y presione <span class="btn-ref">+ Añadir</span>. Un día puede tener varios tramos (por ejemplo, 07:00 a 12:00 y 13:00 a 19:00); un día sin tramos se toma como cerrado.</li>
-    <li>Presione <span class="btn-ref">Guardar</span>.</li>
-</ol>
+<ul>
+    <li><strong>Catálogos:</strong> personal y clínica (cargos, especialidades, sedes, consultorios, signos, síntomas, diagnósticos, medicamentos, tipos de análisis, estudio, procedimiento, tratamiento y certificado, instrumentos, insumos) y ventas (ítems, monedas, formas de cobro, condiciones, comprobantes, impuestos, marcas y entidades de tarjeta, estados de factura, cajas, depósitos).</li>
+    <li><strong>Editar o dar de baja:</strong> <span class="btn-ref">Editar</span>, y para la baja desmarque <strong>Activo</strong>. No se borran: lo ya cargado se conserva.</li>
+    <li><strong>Empresa:</strong> ficha única de la clínica (<span class="btn-ref">Configurar</span>): RUC y razón social, contacto y <strong>Horario de Atención</strong> por tramos (un día sin tramos es cerrado).</li>
+    <li>En <strong>Cargos</strong>, marque <strong>Cargo clínico</strong> si es de un profesional que atiende.</li>
+</ul>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático de la pantalla REGISTRAR NUEVA CITA, tal como quedaría — SYSCLIN
+    Se abre con doble clic, no necesita Flask. Datos de ejemplo, fechas relativas a hoy.
+    Reproduce la distribución actual de app/rutas/agendamiento/cita/templates/cita-agregar.html
+    (cabecera, tarjetas con título de color, Registro rápido) y cambia solo dos cosas:
+
+    1. PACIENTE: se escribe en el propio campo (nombre, apellido, cédula o historia clínica) y el sistema sugiere.
+       Sin botón "Buscar" ni modal con tabla. Si no hay resultados aparece el botón "Agregar paciente nuevo",
+       que abre el Registro rápido con lo escrito ya cargado.
+    2. TURNO: arriba de todo se dice la PRÓXIMA DISPONIBILIDAD del especialista con FECHA y HORA, y un botón
+       para usarla. Debajo, los siguientes cupos libres y la fecha por si se quiere otra. El botón
+       "Días y horarios de atención" muestra cuándo atiende.
+
+    Probá: escribí "gla" o "6387" (aparece), después "zzz" (no aparece: sale el botón de paciente nuevo).
+    Bootstrap 5.3.7 y Font Awesome 6.1.1 (los mismos de base.html), fuente Nunito.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registrar Nueva Cita - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --bs-body-font-family: 'Nunito', system-ui, sans-serif; --bs-primary: #4338ca; --bs-primary-rgb: 67,56,202; }
+        body { background: #f4f6f9; }
+        .page-header { background: linear-gradient(135deg, #3f3fc4 0%, #4b3fb8 100%); color: #fff; padding-bottom: 7rem; }
+        .page-header .page-header-subtitle { color: rgba(255,255,255,.75); }
+        .container-pull { margin-top: -6rem; }
+        .btn-primary { --bs-btn-bg: #4338ca; --bs-btn-border-color: #4338ca; --bs-btn-hover-bg: #3730a3; --bs-btn-hover-border-color: #3730a3; --bs-btn-disabled-bg: #4338ca; --bs-btn-disabled-border-color: #4338ca; }
+        .sugerencias { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; max-height: 280px; overflow-y: auto; display: none; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); }
+        .sugerencias .list-group-item { cursor: pointer; }
+        .tipo-cita-card { border: 2px solid #e9ecef; transition: all .2s ease; cursor: pointer; }
+        .tipo-cita-card:hover { border-color: #007bff; }
+        .tipo-cita-card.selected { border-color: #007bff; background-color: #f8f9fa; }
+        .chip-turno { border: 1px solid #17a2b8; border-radius: 50rem; padding: .5rem 1.1rem; background: #fff; color: #17a2b8; cursor: pointer; transition: all .2s ease; font-weight: 500; }
+        .chip-turno:hover { background: #e7f8fa; }
+        .chip-turno.selected { background: #17a2b8; color: #fff; }
+        .chip-proximo { border: 1px solid #198754; border-radius: .5rem; padding: .4rem .8rem; background: #fff; color: #198754; cursor: pointer; line-height: 1.2; text-align: left; }
+        .chip-proximo:hover { background: #e8f5ee; }
+        .chip-proximo.selected { background: #198754; color: #fff; }
+        .chip-proximo small { display: block; opacity: .8; }
+        .nota-prototipo { background: #fff8e1; border: 1px dashed #e0a800; color: #6b5300; font-size: .85rem; }
+    </style>
+</head>
+<body>
+
+<header class="page-header pt-4">
+    <div class="container-xl px-4">
+        <div class="row align-items-center justify-content-between pt-3">
+            <div class="col-auto">
+                <h1 class="h2 fw-bold mb-1">Registrar Nueva Cita</h1>
+                <div class="page-header-subtitle">Complete los datos para agendar una cita médica</div>
+            </div>
+            <div class="col-12 col-xl-auto mt-3 mt-xl-0">
+                <a href="#" class="btn btn-light btn-sm shadow-sm"><i class="fas fa-arrow-left me-1"></i> Volver al Listado</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 container-pull pb-5">
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <div class="nota-prototipo rounded p-2 mb-3"><i class="fas fa-flask me-1"></i>Prototipo: lo nuevo está en las tarjetas <strong>Información del Paciente</strong> y <strong>Turno Disponible</strong>.</div>
+
+            <!-- SECCIÓN 1: PACIENTE -->
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-light"><h6 class="mb-0 fw-bold text-primary">Información del Paciente</h6></div>
+                <div class="card-body">
+                    <div id="bloqueBuscar">
+                        <label class="fw-semibold mb-1" for="txtPaciente">Paciente <span class="text-danger">*</span></label>
+                        <div class="position-relative">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" class="form-control" id="txtPaciente" placeholder="Escriba nombre, apellido, cédula o historia clínica…" autocomplete="off">
+                            </div>
+                            <div class="list-group sugerencias" id="sugPaciente"></div>
+                        </div>
+                        <small class="form-text text-muted">Empiece a escribir y elija al paciente de la lista. Si no está registrado, podrá agregarlo desde ahí.</small>
+                    </div>
+
+                    <div id="infoPaciente" style="display:none;">
+                        <div class="alert alert-primary border-0 mb-0">
+                            <div class="row align-items-center">
+                                <div class="col-lg-4 col-md-6 mb-2 mb-lg-0"><small class="text-muted d-block">Nombre</small><strong id="infoPacNombre"></strong></div>
+                                <div class="col-lg-2 col-md-6 mb-2 mb-lg-0"><small class="text-muted d-block">CI</small><strong id="infoPacCedula"></strong></div>
+                                <div class="col-lg-2 col-md-6 mb-2 mb-lg-0"><small class="text-muted d-block">HC</small><strong id="infoPacHC"></strong></div>
+                                <div class="col-lg-2 col-md-6 mb-2 mb-lg-0"><small class="text-muted d-block">Teléfono</small><strong id="infoPacTelefono"></strong></div>
+                                <div class="col-lg-2 text-lg-end"><button type="button" class="btn btn-outline-primary btn-sm" id="btnCambiarPac"><i class="fas fa-repeat me-1"></i>Cambiar</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: ESPECIALISTA -->
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-light"><h6 class="mb-0 fw-bold text-success">Especialista y Especialidad</h6></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <label class="fw-semibold">Especialista <span class="text-danger">*</span></label>
+                            <select class="form-select" id="selectEspecialista"></select>
+                            <small class="form-text text-muted">Seleccione el especialista de la lista</small>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <label class="fw-semibold">Especialidad</label>
+                            <select class="form-select" id="selectEspecialidad" disabled><option>-- Primero seleccione un especialista --</option></select>
+                            <small class="form-text text-muted">Opcional, filtra el turno por especialidad</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: TURNO DISPONIBLE -->
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-light d-flex align-items-center">
+                    <h6 class="mb-0 fw-bold text-info">Turno Disponible</h6>
+                    <button type="button" class="btn btn-outline-info btn-sm ms-auto d-none" id="btnAyudaHorario"><i class="fas fa-circle-question me-1"></i>Días y horarios de atención</button>
+                </div>
+                <div class="card-body">
+                    <div id="mensajeSeleccioneEspecialista" class="alert alert-secondary mb-0">Seleccione un especialista para ver los turnos disponibles.</div>
+
+                    <div id="bloqueTurnos" class="d-none">
+                        <!-- Próxima disponibilidad: fecha y hora -->
+                        <div class="alert alert-success border-0 d-flex flex-wrap align-items-center justify-content-between gap-2" id="avisoProxima">
+                            <div>
+                                <div class="small text-uppercase fw-bold mb-1"><i class="fas fa-calendar-check me-1"></i>Próxima disponibilidad</div>
+                                <div class="fs-5 fw-bold" id="proxFecha"></div>
+                                <div id="proxHora"></div>
+                            </div>
+                            <button type="button" class="btn btn-success" id="btnUsarProxima">Usar este turno</button>
+                        </div>
+                        <div id="sinProxima" class="alert alert-warning d-none">Este especialista no tiene cupos libres en los próximos 45 días.</div>
+
+                        <div class="small fw-semibold mb-2">Otros cupos cercanos</div>
+                        <div class="d-flex flex-wrap gap-2 mb-4" id="chipsProximos"></div>
+
+                        <div class="form-group">
+                            <label class="fw-semibold">¿Prefiere otra fecha?</label>
+                            <input type="date" class="form-control" id="txtFechaCita" style="max-width:220px;">
+                            <small class="form-text text-muted">Elija una fecha para ver los horarios disponibles de ese día.</small>
+                        </div>
+                        <div id="msgDia" class="mt-2"></div>
+                        <input type="hidden" id="id_slot_agenda">
+                        <div id="contenedorCupos" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4: DETALLES -->
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-light"><h6 class="mb-0 fw-bold text-warning">Detalles de la Consulta</h6></div>
+                <div class="card-body">
+                    <label class="d-block mb-3 fw-semibold">Tipo de Consulta <span class="text-danger">*</span></label>
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3"><div class="card tipo-cita-card" data-tipo="primera_vez"><div class="card-body text-center p-3"><div class="fs-2">👤</div><h6 class="card-title mb-0">Primera Vez</h6></div></div></div>
+                        <div class="col-lg-3 col-md-6 mb-3"><div class="card tipo-cita-card" data-tipo="seguimiento"><div class="card-body text-center p-3"><div class="fs-2">✅</div><h6 class="card-title mb-0">Seguimiento</h6></div></div></div>
+                        <div class="col-lg-3 col-md-6 mb-3"><div class="card tipo-cita-card" data-tipo="tratamiento"><div class="card-body text-center p-3"><div class="fs-2">🧩</div><h6 class="card-title mb-0">Tratamiento</h6></div></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-4 col-md-6"><div id="grupoNumeroSesion" style="display:none;"><label class="fw-semibold">Número de Sesión</label><input type="number" class="form-control" id="txtNumeroSesion" min="1"></div></div>
+                        <div class="col-lg-4 col-md-6"><label class="fw-semibold">Modalidad</label><select class="form-select"><option>Presencial</option><option>Telemedicina</option><option>Domicilio</option></select></div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-lg-6"><label class="fw-semibold">Motivo de Consulta <span class="text-danger">*</span></label><textarea class="form-control" rows="3" placeholder="Describa el motivo de la consulta..."></textarea></div>
+                        <div class="col-lg-6"><label class="fw-semibold">Observaciones</label><textarea class="form-control" rows="3" placeholder="Observaciones adicionales..."></textarea></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a href="#" class="btn btn-secondary me-2">Cancelar</a>
+                <button type="button" class="btn btn-success" id="btnGuardarCita"><i class="fas fa-save"></i> <span>Guardar Cita</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ayuda: días y horarios de atención -->
+<div class="modal fade" id="modalAyuda" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="ayudaTitulo"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <table class="table table-sm mb-2"><thead class="table-light"><tr><th>Día</th><th>Horario de atención</th><th>Consultorio</th></tr></thead><tbody id="ayudaCuerpo"></tbody></table>
+                <div class="small text-muted">Cada turno dura 60 minutos. Los días sin horario el especialista no atiende.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Registro rápido de paciente (el que ya existe), ahora con lo escrito cargado -->
+<div class="modal fade" id="modalRegistroRapido" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom"><h5 class="modal-title fw-bold">Registro Rápido de Paciente</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-4">
+                <form id="formRegistroRapido">
+                    <div class="row">
+                        <div class="col-md-6"><label class="fw-semibold">Nombre <span class="text-danger">*</span></label><input type="text" class="form-control" id="txtNombreRapido" required></div>
+                        <div class="col-md-6"><label class="fw-semibold">Apellido <span class="text-danger">*</span></label><input type="text" class="form-control" id="txtApellidoRapido" required></div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6"><label class="fw-semibold">Cédula <span class="text-danger">*</span></label><input type="text" class="form-control" id="txtCedulaRapido" required></div>
+                        <div class="col-md-6"><label class="fw-semibold">Teléfono</label><input type="tel" class="form-control" id="txtTelefonoRapido" placeholder="Ej: 0991000123"></div>
+                    </div>
+                    <div class="mt-3"><label class="fw-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label><input type="date" class="form-control" id="txtFechaNacimientoRapido" required></div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarRapido">Registrar y Continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+const $ = id => document.getElementById(id);
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const ESPECIALISTAS = [
+    { id: 1, nombre: 'Lic. Ana Núñez - Psicología', horario: { 1: ['08:00', '12:00', 'Consultorio 1'], 2: ['08:00', '12:00', 'Consultorio 1'], 3: ['08:00', '12:00', 'Consultorio 1'], 4: ['08:00', '12:00', 'Consultorio 1'], 5: ['08:00', '12:00', 'Consultorio 1'] } },
+    { id: 2, nombre: 'Lic. Marcos Báez - Fonoaudiología', horario: { 1: ['14:00', '18:00', 'Consultorio 2'], 2: ['08:00', '12:00', 'Consultorio 2'], 3: ['14:00', '18:00', 'Consultorio 2'], 4: ['08:00', '12:00', 'Consultorio 2'], 5: ['14:00', '18:00', 'Consultorio 2'] } }
+];
+const PACIENTES = [
+    { id: 6, nombre: 'Valentina Sofía Giménez Amarilla', ci: '6956038', hc: 'HC-0006', tel: '0991000006', consultas: 2, tratamiento: false },
+    { id: 5, nombre: 'Gladys Mabel Rolón Martínez', ci: '6623905', hc: 'HC-0005', tel: '0991000005', consultas: 5, tratamiento: true },
+    { id: 3, nombre: 'Hugo Ramón Escobar Vera', ci: '6387529', hc: 'HC-0003', tel: '0991000003', consultas: 0, tratamiento: false },
+    { id: 12, nombre: 'Armando Ramirez', ci: '6814403', hc: 'HC-0012', tel: '0991000012', consultas: 0, tratamiento: false }
+];
+const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+const sumar = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const corta = d => `${DIAS[d.getDay()].slice(0, 3)} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+const larga = d => `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+const aMin = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+const deMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+// Citas ya agendadas (ocupan turnos)
+const OCUPADOS = [[0, '08:00', 1], [0, '09:00', 1], [0, '10:00', 1], [1, '08:00', 1], [1, '09:00', 1], [2, '08:00', 1], [0, '14:00', 2], [0, '15:00', 2]]
+    .map(([d, h, e]) => ({ f: iso(sumar(hoy, d)), h, e }));
+
+function turnosDelDia(esp, fecha) {
+    const h = esp.horario[fecha.getDay()];
+    if (!h) return { atiende: false, libres: [], total: 0 };
+    const ahora = new Date(), esHoy = iso(fecha) === iso(ahora), libres = []; let total = 0;
+    for (let m = aMin(h[0]); m + 60 <= aMin(h[1]); m += 60) {
+        total++;
+        if (OCUPADOS.some(o => o.e === esp.id && o.f === iso(fecha) && aMin(o.h) === m)) continue;
+        if (esHoy && m <= ahora.getHours() * 60 + ahora.getMinutes()) continue;
+        libres.push({ fecha, ini: deMin(m), fin: deMin(m + 60), consultorio: h[2] });
+    }
+    return { atiende: true, libres, total };
+}
+function proximos(esp, cant, desde = hoy) {
+    const res = [];
+    for (let i = 0; i < 45 && res.length < cant; i++) res.push(...turnosDelDia(esp, sumar(desde, i)).libres);
+    return res.slice(0, cant);
+}
+
+/* ── Paciente: se escribe y sugiere ───────────────────────────────────────── */
+let paciente = null, esp = null, turno = null;
+const txt = $('txtPaciente'), panel = $('sugPaciente');
+const sinAcentos = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function mostrarSugerencias() {
+    const q = sinAcentos(txt.value.trim());
+    if (q.length < 2) { panel.style.display = 'none'; return; }
+    const res = PACIENTES.filter(p => sinAcentos(`${p.nombre} ${p.ci} ${p.hc}`).includes(q)).slice(0, 8);
+    panel.innerHTML = '';
+    res.forEach(p => {
+        const a = document.createElement('a');
+        a.className = 'list-group-item list-group-item-action';
+        a.innerHTML = `<div class="fw-semibold">${p.nombre}</div><div class="small text-muted">CI ${p.ci} · ${p.hc} · Tel. ${p.tel}</div>`;
+        a.addEventListener('mousedown', e => { e.preventDefault(); elegirPaciente(p); });
+        panel.appendChild(a);
+    });
+    if (!res.length) {
+        const d = document.createElement('div');
+        d.className = 'list-group-item';
+        d.innerHTML = `<div class="small text-muted mb-2">No se encontró ningún paciente con «<span id="textoBuscado"></span>».</div>
+            <button type="button" class="btn btn-success btn-sm w-100" id="btnNuevoPac"><i class="fas fa-user-plus me-1"></i>Agregar paciente nuevo</button>`;
+        panel.appendChild(d);
+        d.querySelector('#textoBuscado').textContent = txt.value.trim();
+        d.querySelector('#btnNuevoPac').addEventListener('mousedown', e => { e.preventDefault(); abrirRegistroRapido(); });
+    }
+    panel.style.display = 'block';
+}
+txt.addEventListener('input', mostrarSugerencias);
+txt.addEventListener('focus', mostrarSugerencias);
+txt.addEventListener('blur', () => setTimeout(() => { panel.style.display = 'none'; }, 150));
+
+function elegirPaciente(p) {
+    paciente = p; panel.style.display = 'none';
+    $('bloqueBuscar').style.display = 'none'; $('infoPaciente').style.display = '';
+    $('infoPacNombre').textContent = p.nombre; $('infoPacCedula').textContent = p.ci;
+    $('infoPacHC').textContent = p.hc; $('infoPacTelefono').textContent = p.tel;
+    elegirTipo(p.consultas === 0 ? 'primera_vez' : (p.tratamiento ? 'tratamiento' : 'seguimiento'));
+}
+$('btnCambiarPac').onclick = () => { paciente = null; $('infoPaciente').style.display = 'none'; $('bloqueBuscar').style.display = ''; txt.value = ''; txt.focus(); };
+
+function abrirRegistroRapido() {
+    const t = txt.value.trim();
+    $('formRegistroRapido').reset();
+    if (/^[\d.\-]+$/.test(t)) $('txtCedulaRapido').value = t;           // lo escrito son números: es la cédula
+    else { const partes = t.split(/\s+/); $('txtNombreRapido').value = partes.slice(0, Math.ceil(partes.length / 2)).join(' '); $('txtApellidoRapido').value = partes.slice(Math.ceil(partes.length / 2)).join(' '); }
+    panel.style.display = 'none';
+    new bootstrap.Modal($('modalRegistroRapido')).show();
+}
+$('btnGuardarRapido').onclick = () => {
+    const f = $('formRegistroRapido'); if (!f.checkValidity()) { f.reportValidity(); return; }
+    bootstrap.Modal.getInstance($('modalRegistroRapido')).hide();
+    elegirPaciente({ id: 99, nombre: `${$('txtNombreRapido').value} ${$('txtApellidoRapido').value}`, ci: $('txtCedulaRapido').value, hc: 'Se asigna al guardar', tel: $('txtTelefonoRapido').value || 'N/A', consultas: 0, tratamiento: false });
+};
+
+/* ── Especialista y turno ─────────────────────────────────────────────────── */
+$('selectEspecialista').innerHTML = '<option value="">-- Seleccione un especialista --</option>' + ESPECIALISTAS.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+$('selectEspecialista').onchange = ev => {
+    esp = ESPECIALISTAS.find(e => e.id === +ev.target.value) || null; turno = null;
+    $('selectEspecialidad').disabled = !esp;
+    $('selectEspecialidad').innerHTML = esp ? '<option value="">-- Todas --</option>' : '<option>-- Primero seleccione un especialista --</option>';
+    $('btnAyudaHorario').classList.toggle('d-none', !esp);
+    $('mensajeSeleccioneEspecialista').classList.toggle('d-none', !!esp);
+    $('bloqueTurnos').classList.toggle('d-none', !esp);
+    if (!esp) return;
+    const prox = proximos(esp, 7);
+    $('avisoProxima').classList.toggle('d-none', !prox.length); $('sinProxima').classList.toggle('d-none', !!prox.length);
+    $('chipsProximos').innerHTML = '';
+    if (prox.length) {
+        const p = prox[0];
+        $('proxFecha').textContent = larga(p.fecha);
+        $('proxHora').innerHTML = `a las <strong>${p.ini} hs</strong> (${p.ini} – ${p.fin}) · ${p.consultorio}`;
+        $('btnUsarProxima').onclick = () => elegirTurno(p);
+        prox.slice(1).forEach(t => {
+            const b = document.createElement('button'); b.type = 'button'; b.className = 'chip-proximo'; b.dataset.k = iso(t.fecha) + t.ini;
+            b.innerHTML = `<strong>${corta(t.fecha)}</strong><small>${t.ini} hs · ${t.consultorio}</small>`;
+            b.onclick = () => elegirTurno(t); $('chipsProximos').appendChild(b);
+        });
+        $('txtFechaCita').value = iso(p.fecha); pintarDia();
+    }
+};
+function elegirTurno(t) {
+    turno = t; $('txtFechaCita').value = iso(t.fecha); pintarDia();
+    document.querySelectorAll('.chip-proximo').forEach(c => c.classList.toggle('selected', c.dataset.k === iso(t.fecha) + t.ini));
+}
+$('txtFechaCita').onchange = () => { turno = null; pintarDia(); };
+$('txtFechaCita').min = iso(hoy);
+
+function pintarDia() {
+    if (!esp || !$('txtFechaCita').value) return;
+    const f = new Date($('txtFechaCita').value + 'T00:00:00'), r = turnosDelDia(esp, f), cont = $('contenedorCupos'), msg = $('msgDia');
+    cont.innerHTML = ''; msg.innerHTML = '';
+    if (f < hoy) { msg.innerHTML = '<div class="alert alert-warning mb-0">Esa fecha ya pasó. Elija una fecha desde hoy.</div>'; return; }
+    if (!r.atiende) msg.innerHTML = `<div class="alert alert-warning mb-0"><strong>El especialista no atiende los ${DIAS[f.getDay()].toLowerCase()}.</strong> Atiende ${Object.keys(esp.horario).map(d => DIAS[d].toLowerCase()).join(', ')}.</div>`;
+    else if (!r.libres.length) msg.innerHTML = `<div class="alert alert-warning mb-0"><strong>${larga(f)}: sin turnos libres</strong> (${r.total} de ${r.total} ocupados). Pruebe con los cupos cercanos de arriba.</div>`;
+    else msg.innerHTML = `<div class="small text-muted">${r.libres.length} turno(s) libre(s) el ${larga(f)} · ${r.libres[0].consultorio}</div>`;
+    r.libres.forEach(t => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'chip-turno' + (turno && turno.ini === t.ini && iso(turno.fecha) === iso(t.fecha) ? ' selected' : '');
+        b.textContent = `${t.ini} - ${t.fin}`; b.onclick = () => { turno = t; pintarDia(); }; cont.appendChild(b);
+    });
+}
+$('btnAyudaHorario').onclick = () => {
+    $('ayudaTitulo').textContent = `Horarios de ${esp.nombre}`;
+    $('ayudaCuerpo').innerHTML = [1, 2, 3, 4, 5, 6].map(d => { const h = esp.horario[d];
+        return `<tr><td>${DIAS[d]}</td>${h ? `<td>${h[0]} a ${h[1]}</td><td>${h[2]}</td>` : '<td colspan="2" class="text-muted">No atiende</td>'}</tr>`; }).join('');
+    new bootstrap.Modal($('modalAyuda')).show();
+};
+
+/* ── Tipo de consulta ─────────────────────────────────────────────────────── */
+function elegirTipo(t) {
+    document.querySelectorAll('.tipo-cita-card').forEach(c => c.classList.toggle('selected', c.dataset.tipo === t));
+    $('grupoNumeroSesion').style.display = t === 'primera_vez' ? 'none' : '';
+    if (paciente && t !== 'primera_vez') $('txtNumeroSesion').value = paciente.consultas + 1;
+}
+document.querySelectorAll('.tipo-cita-card').forEach(c => c.onclick = () => elegirTipo(c.dataset.tipo));
+$('btnGuardarCita').onclick = function () { this.disabled = true; this.querySelector('span').textContent = 'Guardando…'; };
+</script>
+</body>
+</html>

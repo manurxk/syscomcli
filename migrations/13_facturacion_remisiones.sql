@@ -1,9 +1,9 @@
 -- 13_facturacion_remisiones.sql — Facturación, notas de crédito/débito y remisiones
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
--- Tablas: timbrados, puntos_expedicion, facturas, factura_detalle, notas_credito, nota_credito_detalle, notas_debito, nota_debito_detalle, remisiones, remision_detalle.
+-- Tablas: timbrados, puntos_expedicion, facturas, factura_detalle, facturas_borrador, notas_credito, nota_credito_detalle, notas_debito, nota_debito_detalle, remisiones, remision_detalle.
 -- Incluye también las claves foráneas de módulos anteriores que apuntan a estas tablas.
 -- Orden: 00 a 18, uno por uno (manual del administrador, "Crear la base desde cero"):
 --   docker exec syscomcli_bd psql -U postgres -d <base_nueva> -q -v ON_ERROR_STOP=1 -f /tmp/13_facturacion_remisiones.sql
@@ -113,6 +113,38 @@ COMMENT ON COLUMN public.facturas.codigo_sifen IS 'CDC devuelto por SIFEN. Vací
 COMMENT ON COLUMN public.facturas.motivo_anulacion IS 'Motivo con el que se anulo la factura (lo carga sp_anular_factura; obligatorio). Vacio en las anuladas antes del 2026-10-20.';
 
 --
+-- Name: facturas_borrador; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.facturas_borrador (
+    id_factura_borrador integer NOT NULL,
+    id_paciente integer,
+    datos jsonb NOT NULL,
+    fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
+    usuario_creacion integer,
+    fecha_modificacion timestamp without time zone,
+    usuario_modificacion integer
+);
+
+--
+-- Name: facturas_borrador_id_factura_borrador_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.facturas_borrador_id_factura_borrador_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: facturas_borrador_id_factura_borrador_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.facturas_borrador_id_factura_borrador_seq OWNED BY public.facturas_borrador.id_factura_borrador;
+
+--
 -- Name: facturas_id_factura_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -215,7 +247,7 @@ CREATE TABLE public.notas_credito (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT notas_credito_est_nota_credito_check CHECK (((est_nota_credito)::text = ANY ((ARRAY['REGISTRADA'::character varying, 'ANULADA'::character varying])::text[])))
+    CONSTRAINT notas_credito_est_nota_credito_check CHECK (((est_nota_credito)::text = ANY (ARRAY[('REGISTRADA'::character varying)::text, ('ANULADA'::character varying)::text])))
 );
 
 --
@@ -263,7 +295,7 @@ CREATE TABLE public.notas_debito (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT notas_debito_est_nota_debito_check CHECK (((est_nota_debito)::text = ANY ((ARRAY['REGISTRADA'::character varying, 'ANULADA'::character varying])::text[])))
+    CONSTRAINT notas_debito_est_nota_debito_check CHECK (((est_nota_debito)::text = ANY (ARRAY[('REGISTRADA'::character varying)::text, ('ANULADA'::character varying)::text])))
 );
 
 --
@@ -377,7 +409,7 @@ CREATE TABLE public.remisiones (
     fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     usuario_modificacion integer,
     fecha_modificacion timestamp without time zone,
-    CONSTRAINT remisiones_est_remision_check CHECK (((est_remision)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'ENTREGADA'::character varying, 'ANULADA'::character varying])::text[])))
+    CONSTRAINT remisiones_est_remision_check CHECK (((est_remision)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('ENTREGADA'::character varying)::text, ('ANULADA'::character varying)::text])))
 );
 
 --
@@ -467,6 +499,12 @@ ALTER TABLE ONLY public.factura_detalle ALTER COLUMN id_factura_detalle SET DEFA
 ALTER TABLE ONLY public.facturas ALTER COLUMN id_factura SET DEFAULT nextval('public.facturas_id_factura_seq'::regclass);
 
 --
+-- Name: facturas_borrador id_factura_borrador; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facturas_borrador ALTER COLUMN id_factura_borrador SET DEFAULT nextval('public.facturas_borrador_id_factura_borrador_seq'::regclass);
+
+--
 -- Name: nota_credito_detalle id_nota_credito_detalle; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -520,6 +558,13 @@ ALTER TABLE ONLY public.timbrados ALTER COLUMN id_timbrado SET DEFAULT nextval('
 
 ALTER TABLE ONLY public.factura_detalle
     ADD CONSTRAINT factura_detalle_pkey PRIMARY KEY (id_factura_detalle);
+
+--
+-- Name: facturas_borrador facturas_borrador_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facturas_borrador
+    ADD CONSTRAINT facturas_borrador_pkey PRIMARY KEY (id_factura_borrador);
 
 --
 -- Name: facturas facturas_factura_numero_key; Type: CONSTRAINT; Schema: public; Owner: -
@@ -625,6 +670,12 @@ ALTER TABLE ONLY public.timbrados
 
 ALTER TABLE ONLY public.timbrados
     ADD CONSTRAINT timbrados_pkey PRIMARY KEY (id_timbrado);
+
+--
+-- Name: facturas_borrador tg_facturas_borrador_fmod; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_facturas_borrador_fmod BEFORE UPDATE ON public.facturas_borrador FOR EACH ROW EXECUTE FUNCTION public.fn_set_fecha_modificacion();
 
 --
 -- Name: facturas tg_facturas_fmod; Type: TRIGGER; Schema: public; Owner: -
@@ -744,6 +795,27 @@ ALTER TABLE ONLY public.factura_detalle
 
 ALTER TABLE ONLY public.factura_detalle
     ADD CONSTRAINT factura_detalle_id_tipo_item_fkey FOREIGN KEY (id_tipo_item) REFERENCES public.tipos_items(id_tipo_item);
+
+--
+-- Name: facturas_borrador facturas_borrador_id_paciente_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facturas_borrador
+    ADD CONSTRAINT facturas_borrador_id_paciente_fkey FOREIGN KEY (id_paciente) REFERENCES public.pacientes(id_paciente);
+
+--
+-- Name: facturas_borrador facturas_borrador_usuario_creacion_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facturas_borrador
+    ADD CONSTRAINT facturas_borrador_usuario_creacion_fkey FOREIGN KEY (usuario_creacion) REFERENCES public.usuarios(id_usuario);
+
+--
+-- Name: facturas_borrador facturas_borrador_usuario_modificacion_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facturas_borrador
+    ADD CONSTRAINT facturas_borrador_usuario_modificacion_fkey FOREIGN KEY (usuario_modificacion) REFERENCES public.usuarios(id_usuario);
 
 --
 -- Name: facturas facturas_id_condicion_venta_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -

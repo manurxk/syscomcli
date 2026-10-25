@@ -6,7 +6,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 derivacionapi = Blueprint('derivacionapi', __name__)
 
-ROLES_DERIVACION = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_DERIVACION = ("ADMINISTRADOR", "CLINICO")
 
 
 @derivacionapi.route('/consultas/<int:id_consulta>/derivaciones', methods=['GET'])

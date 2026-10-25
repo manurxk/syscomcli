@@ -1,0 +1,10 @@
+{# Capítulos «Validaciones de…» del manual de seguridad: avisos de cada pantalla de un módulo. Variable: pantallas (de _validaciones_por_grupo en ayuda_routes.py) #}
+{% for p in pantallas %}
+<h4>{{ p.pantalla }}</h4>
+<table class="datos">
+    <tr><th style="width: 22%">Cuándo</th><th>Aviso que muestra el sistema</th><th style="width: 24%">Tipo</th></tr>
+    {% for f in p.filas %}
+    <tr><td>{{ f.cuando }}</td><td>{{ f.mensaje }}</td><td>{{ f.tipo }}</td></tr>
+    {% endfor %}
+</table>
+{% endfor %}

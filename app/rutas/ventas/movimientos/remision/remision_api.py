@@ -8,7 +8,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 remisionapi = Blueprint('remisionapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @remisionapi.route('/remisiones', methods=['GET'])
@@ -88,7 +88,7 @@ def entregarRemision(id_remision):
 
 
 @remisionapi.route('/remisiones/<int:id_remision>/anular', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR")
 @permiso_requerido("VENTAS", "ELIMINAR")
 def anularRemision(id_remision):
     """PUT: anula la remisión."""

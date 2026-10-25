@@ -7,8 +7,8 @@
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
-          <h1 class="page-header-title">Nueva Factura</h1>
-          <div class="page-header-subtitle">Emisión de comprobante de venta</div>
+          <h1 class="page-header-title">Nueva Factura <span class="badge bg-warning text-dark align-middle fs-6 d-none" id="badgeBorrador">BORRADOR</span></h1>
+          <div class="page-header-subtitle">Emisión de comprobante de venta · <span id="lblBorrador">se guarda sola como borrador</span></div>
         </div>
         <div class="col-auto mt-4">
           <a class="btn btn-outline-light btn-sm" href="{{ url_for('factura.facturaIndex') }}">Volver al Listado</a>
@@ -83,6 +83,17 @@
             <button type="button" class="btn btn-outline-secondary btn-sm" id="btnGuardarDocumentoFiscal">
               Guardar documento
             </button>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-5">
+            <label class="small mb-1" for="txtCorreoPaciente">Correo para enviar la factura</label>
+            <input class="form-control form-control-sm" type="email" id="txtCorreoPaciente" placeholder="paciente@correo.com" autocomplete="off">
+            <div class="form-text" id="ayudaCorreoPaciente"></div>
+          </div>
+          <div class="col-md-3">
+            <label class="small mb-1" for="txtTelefonoPaciente">Teléfono</label>
+            <input class="form-control form-control-sm" type="text" id="txtTelefonoPaciente" placeholder="0991000000" autocomplete="off">
           </div>
         </div>
       </div>
@@ -204,6 +215,10 @@
               <option value="">— Seleccionar —</option>
             </select>
           </div>
+          <div class="col-md-4 campo-transferencia d-none">
+            <label class="fw-semibold">N° de transferencia / comprobante <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtNroTransferencia" placeholder="N° que figura en el comprobante del banco" maxlength="50">
+          </div>
         </div>
       </div>
     </div>
@@ -214,12 +229,10 @@
         <h6 class="m-0 fw-bold text-success d-flex align-items-center gap-2">
           <i data-feather="list" class="icon-sm"></i> Ítems del Detalle
         </h6>
-        <button type="button" class="btn btn-success btn-sm ms-auto" id="btnAgregarItem">
-          <i data-feather="plus" class="icon-xs me-1"></i> Agregar ítem
-        </button>
+        <span class="small text-muted ms-auto">Buscá el servicio en la fila de abajo y presioná <kbd>Enter</kbd> para agregarlo.</span>
       </div>
       <div class="card-body p-0">
-        <div class="table-responsive">
+        <div style="overflow: visible;">
           <table class="table table-sm table-hover table-bordered align-middle mb-0" id="tblDetalle">
             <thead class="table-light">
               <tr>
@@ -232,9 +245,26 @@
               </tr>
             </thead>
             <tbody id="tbodyDetalle">
-              <tr id="filaVacia"><td colspan="7" class="text-center text-muted py-3">Sin ítems. Hacé clic en "Agregar ítem".</td></tr>
+              <tr id="filaVacia"><td colspan="7" class="text-center text-muted py-3">Sin ítems. Buscá un servicio en la fila de abajo.</td></tr>
             </tbody>
             <tfoot>
+              <!-- Carga del ítem en la propia tabla (sin modal): siempre debajo de los ítems ya cargados -->
+              <tr class="fila-carga-item">
+                <td class="position-relative">
+                  <input type="text" class="form-control form-control-sm" id="itemDesc" placeholder="Buscar servicio o producto… (ej: sesión)" autocomplete="off">
+                  <div class="list-group" id="sugerenciasItem"></div>
+                </td>
+                <td><input type="number" class="form-control form-control-sm text-center" id="itemCant" value="1" min="1"></td>
+                <td><input type="number" class="form-control form-control-sm text-end" id="itemPrecio" value="0" min="0"></td>
+                <td>
+                  <select class="form-select form-select-sm" id="selItemImpuesto">
+                    <option value="0" data-porc="0">Exento (0%)</option>
+                  </select>
+                </td>
+                <td><input type="number" class="form-control form-control-sm text-end" id="itemDesc2" value="0" min="0" placeholder="Desc. ítem" title="Descuento del ítem (Gs.)"></td>
+                <td class="text-end text-muted" id="itemTotalPrevio">Gs. 0</td>
+                <td><button type="button" class="btn btn-success btn-sm w-100" id="btnAgregarItem" title="Agregar ítem"><i data-feather="plus" class="icon-xs"></i></button></td>
+              </tr>
               <tr class="table-light">
                 <td colspan="4" class="text-end fw-bold">Subtotal (base)</td>
                 <td class="text-end" id="footIva">Gs. 0</td>
@@ -261,7 +291,8 @@
           </div>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-2">
-          <a class="btn btn-secondary" href="{{ url_for('factura.facturaIndex') }}">Cancelar</a>
+          <button type="button" class="btn btn-outline-danger me-auto d-none" id="btnDescartarBorrador">Descartar borrador</button>
+          <a class="btn btn-secondary" href="{{ url_for('factura.facturaIndex') }}">Salir (queda como borrador)</a>
           <button type="button" class="btn btn-primary" id="btnEmitir">Emitir Factura</button>
         </div>
       </div>
@@ -270,54 +301,11 @@
   </div><!-- /contenedor-factura -->
 </div>
 
-<!-- Modal Agregar Ítem -->
-<div class="modal fade" id="modalItem" tabindex="-1" data-bs-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header border-bottom">
-        <h5 class="modal-title fw-bold">Agregar Ítem</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="editIdx" value="-1">
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="fw-semibold">Descripción <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="itemDesc" placeholder="Servicio o producto">
-          </div>
-          <div class="col-md-4">
-            <label class="fw-semibold">Cantidad <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" id="itemCant" value="1" min="1">
-          </div>
-          <div class="col-md-8">
-            <label class="fw-semibold">Precio c/IVA (Gs.) <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" id="itemPrecio" value="0" min="0">
-          </div>
-          <div class="col-md-6">
-            <label class="fw-semibold">IVA %</label>
-            <select class="form-select" id="selItemImpuesto">
-              <option value="0" data-porc="0">Exento (0%)</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="fw-semibold">Descuento ítem (Gs.)</label>
-            <input type="number" class="form-control" id="itemDesc2" value="0" min="0">
-          </div>
-          <div class="col-12">
-            <label class="fw-semibold">Ítem de catálogo (opcional)</label>
-            <select class="form-select" id="selItemServicio">
-              <option value="">Sin ítem de catálogo</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer border-top">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-success btn-sm" id="btnConfirmarItem">Agregar</button>
-      </div>
-    </div>
-  </div>
-</div>
+<style>
+  #sugerenciasItem { position:absolute; bottom:100%; left:0; right:0; z-index:1050; max-height:260px; overflow-y:auto; display:none; box-shadow:0 .5rem 1rem rgba(0,0,0,.15); }
+  #sugerenciasItem .list-group-item { cursor:pointer; }
+  .fila-carga-item td { background:#f8f9ff; }
+</style>
 
 <script>
 const API_FAC  = '/api/v1/facturas';
@@ -389,6 +377,7 @@ function quitarItem(i) {
   detalles.splice(i, 1);
   renderTabla();
   recalcular();
+  programarGuardadoBorrador();
 }
 
 // Autocomplete paciente
@@ -417,6 +406,8 @@ document.getElementById('txtBuscarPaciente').addEventListener('input', function(
         document.getElementById('btnSeleccionarPaciente').dataset.hc = p.pac_historia_clinica;
         document.getElementById('btnSeleccionarPaciente').dataset.tipoDocumento = p.per_tipo_documento || 'CI';
         document.getElementById('btnSeleccionarPaciente').dataset.ruc = p.per_ruc || '';
+        document.getElementById('btnSeleccionarPaciente').dataset.correo = p.per_correo || '';
+        document.getElementById('btnSeleccionarPaciente').dataset.telefono = p.per_telefono || '';
         lista.style.display = 'none';
       });
       lista.appendChild(a);
@@ -432,10 +423,47 @@ document.getElementById('btnSeleccionarPaciente').addEventListener('click', func
   document.getElementById('selTipoDocumentoFactura').value = this.dataset.tipoDocumento || 'CI';
   document.getElementById('selTipoDocumentoFactura').dispatchEvent(new Event('change'));
   document.getElementById('txtRucFactura').value = this.dataset.ruc || '';
+  correoOriginal = this.dataset.correo || '';
+  telefonoOriginal = this.dataset.telefono || '';
+  document.getElementById('txtCorreoPaciente').value = correoOriginal;
+  document.getElementById('txtTelefonoPaciente').value = telefonoOriginal;
+  avisoCorreoPaciente();
   document.getElementById('card-busqueda').style.display = 'none';
   document.getElementById('contenedor-factura').style.display = '';
   feather.replace();
 });
+
+// Correo y teléfono del paciente: se guardan en su ficha al emitir la factura
+let correoOriginal = '', telefonoOriginal = '';
+
+function avisoCorreoPaciente() {
+  const el = document.getElementById('ayudaCorreoPaciente');
+  const actual = document.getElementById('txtCorreoPaciente').value.trim();
+  if (!correoOriginal && !actual) {
+    el.className = 'form-text text-warning-emphasis';
+    el.textContent = 'El paciente no tiene correo registrado. Si lo cargás acá, se guarda en su ficha.';
+  } else if (actual !== correoOriginal) {
+    el.className = 'form-text';
+    el.textContent = 'Se guarda en la ficha del paciente al emitir.';
+  } else {
+    el.textContent = '';
+  }
+}
+document.getElementById('txtCorreoPaciente').addEventListener('input', avisoCorreoPaciente);
+
+async function guardarContactoPaciente(idPaciente, csrf) {
+  const correo = document.getElementById('txtCorreoPaciente').value.trim();
+  const telefono = document.getElementById('txtTelefonoPaciente').value.trim();
+  if (correo === correoOriginal && telefono === telefonoOriginal) return { ok: true };
+  const r = await fetch(`${API_PAC}/${idPaciente}/contacto`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body: JSON.stringify({ correo, telefono })
+  });
+  const j = await r.json();
+  if (j.success) { correoOriginal = correo; telefonoOriginal = telefono; }
+  return { ok: !!j.success, error: j.error };
+}
 
 // Tipo de documento (CI/RUC) del paciente, editable desde la propia pantalla de factura
 document.getElementById('selTipoDocumentoFactura').addEventListener('change', function() {
@@ -498,59 +526,103 @@ document.getElementById('selTimbrado').addEventListener('change', async function
 
 document.getElementById('txtDescuento').addEventListener('input', recalcular);
 
-// Abrir modal ítem
-document.getElementById('btnAgregarItem').addEventListener('click', () => {
-  document.getElementById('editIdx').value = -1;
-  document.getElementById('itemDesc').value = '';
-  document.getElementById('itemCant').value = 1;
-  document.getElementById('itemPrecio').value = 0;
-  document.getElementById('itemDesc2').value = 0;
-  document.getElementById('selItemServicio').value = '';
-  new bootstrap.Modal(document.getElementById('modalItem')).show();
-});
+// ── Carga de ítems en la propia tabla (sin modal) ──────────────────────────
+let catalogoItems = [];
+const itemEl = id => document.getElementById(id);
 
-// Autocompletar desde catálogo de ítems
-document.getElementById('selItemServicio').addEventListener('change', function() {
-  const opt = this.options[this.selectedIndex];
-  if (!opt.value) return;
-  document.getElementById('itemDesc').value = opt.dataset.desc || opt.textContent;
-  document.getElementById('itemPrecio').value = opt.dataset.precio || 0;
-});
+function porcentajeImpuestoSel() {
+  const sel = itemEl('selItemImpuesto');
+  return parseFloat(sel.options[sel.selectedIndex].dataset.porc || 0);
+}
 
-document.getElementById('btnConfirmarItem').addEventListener('click', () => {
-  const desc = document.getElementById('itemDesc').value.trim();
-  const cant = parseInt(document.getElementById('itemCant').value) || 1;
-  const precio = parseInt(document.getElementById('itemPrecio').value) || 0;
-  const dscto = parseInt(document.getElementById('itemDesc2').value) || 0;
-  const selImp = document.getElementById('selItemImpuesto');
-  const porc = parseFloat(selImp.options[selImp.selectedIndex].dataset.porc || 0);
+function totalPrevioItem() {
+  const total = (parseInt(itemEl('itemPrecio').value) || 0) * (parseInt(itemEl('itemCant').value) || 0) - (parseInt(itemEl('itemDesc2').value) || 0);
+  itemEl('itemTotalPrevio').textContent = 'Gs. ' + fmt(Math.max(total, 0));
+}
+['itemCant', 'itemPrecio', 'itemDesc2'].forEach(id => itemEl(id).addEventListener('input', totalPrevioItem));
+
+let itemCatalogoElegido = null;
+
+function seleccionarExento() {
+  const sel = itemEl('selItemImpuesto');
+  const exento = Array.from(sel.options).find(o => parseFloat(o.dataset.porc || 0) === 0);
+  if (exento) sel.value = exento.value;
+}
+
+function mostrarSugerenciasItem() {
+  const q = itemEl('itemDesc').value.trim().toLowerCase();
+  const lista = itemEl('sugerenciasItem');
+  const res = catalogoItems.filter(i => !q || i.des_item_servicio.toLowerCase().includes(q)).slice(0, 8);
+  lista.innerHTML = res.length ? '' : '<div class="list-group-item small text-muted">Sin resultados: se agrega como ítem libre.</div>';
+  res.forEach(i => {
+    const a = document.createElement('a');
+    a.className = 'list-group-item list-group-item-action';
+    a.innerHTML = `<div class="d-flex justify-content-between"><span class="fw-semibold">${i.des_item_servicio}</span><span>Gs. ${fmt(i.item_precio_unitario)}</span></div>`;
+    a.addEventListener('mousedown', e => {
+      e.preventDefault();
+      elegirItemCatalogo(i);
+      lista.style.display = 'none';
+    });
+    lista.appendChild(a);
+  });
+  lista.style.display = 'block';
+}
+
+function elegirItemCatalogo(i) {
+  itemCatalogoElegido = i;
+  itemEl('itemDesc').value = i.des_item_servicio;
+  itemEl('itemPrecio').value = parseInt(i.item_precio_unitario) || 0;
+  // El impuesto del catálogo si lo tiene; un ítem sin impuesto en el catálogo es Exento
+  if (i.id_tipo_impuesto) itemEl('selItemImpuesto').value = i.id_tipo_impuesto;
+  else seleccionarExento();
+  totalPrevioItem();
+  itemEl('itemCant').focus();
+  itemEl('itemCant').select();
+}
+
+itemEl('itemDesc').addEventListener('input', () => { itemCatalogoElegido = null; mostrarSugerenciasItem(); });
+itemEl('itemDesc').addEventListener('focus', mostrarSugerenciasItem);
+itemEl('itemDesc').addEventListener('blur', () => setTimeout(() => { itemEl('sugerenciasItem').style.display = 'none'; }, 120));
+
+function agregarItem() {
+  const desc = itemEl('itemDesc').value.trim();
+  const cant = parseInt(itemEl('itemCant').value) || 0;
+  const precio = parseInt(itemEl('itemPrecio').value) || 0;
+  const dscto = parseInt(itemEl('itemDesc2').value) || 0;
+  const selImp = itemEl('selItemImpuesto');
+  const porc = porcentajeImpuestoSel();
   const id_tipo_impuesto = selImp.value ? parseInt(selImp.value) : null;
-  const id_item_servicio = document.getElementById('selItemServicio').value || null;
 
-  if (!desc) { alert('El campo "Descripción" es obligatorio.'); return; }
-  if (cant <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
-  if (precio < 0) { alert('El precio no puede ser negativo.'); return; }
+  if (!desc) { Swal.fire('Atención', 'Buscá el servicio o escribí la descripción del ítem.', 'warning'); itemEl('itemDesc').focus(); return; }
+  if (cant <= 0) { Swal.fire('Atención', 'La cantidad debe ser mayor a 0.', 'warning'); return; }
+  if (precio <= 0) { Swal.fire('Atención', 'Indicá el precio del ítem.', 'warning'); itemEl('itemPrecio').focus(); return; }
 
-  const calc = calcItem(precio, cant, porc, dscto);
-  const item = {
+  detalles.push({
     item_descripcion: desc,
     item_cantidad: cant,
     item_precio_con_iva: precio,
     impuesto_porcentaje: porc,
     item_descuento: dscto,
     id_tipo_impuesto: id_tipo_impuesto,
-    id_item_servicio: id_item_servicio ? parseInt(id_item_servicio) : null,
-    ...calc
-  };
+    id_item_servicio: itemCatalogoElegido ? itemCatalogoElegido.id_item_servicio : null,
+    ...calcItem(precio, cant, porc, dscto)
+  });
 
-  const idx = parseInt(document.getElementById('editIdx').value);
-  if (idx >= 0) detalles[idx] = item;
-  else detalles.push(item);
-
-  bootstrap.Modal.getInstance(document.getElementById('modalItem')).hide();
+  itemCatalogoElegido = null;
+  itemEl('itemDesc').value = '';
+  itemEl('itemCant').value = 1;
+  itemEl('itemPrecio').value = 0;
+  itemEl('itemDesc2').value = 0;
+  totalPrevioItem();
   renderTabla();
   recalcular();
-});
+  programarGuardadoBorrador();
+  itemEl('itemDesc').focus();
+}
+
+itemEl('btnAgregarItem').addEventListener('click', agregarItem);
+['itemDesc', 'itemCant', 'itemPrecio', 'itemDesc2'].forEach(id =>
+  itemEl(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); agregarItem(); } }));
 
 // ── Cobro de la factura al contado ─────────────────────────────────────────
 // Mismos catálogos y campos extra por forma de cobro que cobranza-agregar.html.
@@ -645,6 +717,7 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
     codigo_sifen: document.getElementById('txtCodigoSifen').value.trim() || null,
     observaciones: document.getElementById('txtObservaciones').value.trim() || null,
     id_pedido: parseInt(document.getElementById('txtIdPedido').value) || null,
+    id_factura_borrador: idBorrador,
     detalles: detalles.map(d => ({
       item_descripcion: d.item_descripcion,
       item_cantidad: d.item_cantidad,
@@ -661,6 +734,9 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
     const idForma = document.getElementById('selFormaCobro').value;
     if (!idCaja) { alert('Elegí la caja donde entra el cobro. Si no aparece ninguna, abrí la caja en Estado de Caja.'); return; }
     if (!idForma) { alert('Elegí la forma de cobro.'); return; }
+    const nroTransferencia = document.getElementById('txtNroTransferencia').value.trim();
+    const codForma = (document.getElementById('selFormaCobro').selectedOptions[0].dataset.cod || '');
+    if (codForma.includes('TRANSFERENCIA') && !nroTransferencia) { alert('Indicá el N° de transferencia / comprobante.'); return; }
     // El monto lo fija el servidor: el total de la factura.
     body.cobro = {
       id_caja: parseInt(idCaja),
@@ -671,6 +747,7 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
         id_entidad_emisora: document.getElementById('selEntidadEmisora').value || null,
         numero_cheque: document.getElementById('txtNroCheque').value.trim() || null,
         numero_tarjeta: document.getElementById('txtNroTarjeta').value.trim() || null,
+        numero_transferencia: codForma.includes('TRANSFERENCIA') ? nroTransferencia : null,
         numero_cuotas: parseInt(document.getElementById('txtNroCuotas').value) || 1,
         monto_cobrado: 0,
       }]
@@ -678,7 +755,19 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
   }
 
   const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  // Una sola emisión por clic: el botón queda bloqueado hasta que el servidor responda
+  const btnEmitir = document.getElementById('btnEmitir');
+  if (btnEmitir.disabled) return;
+  const textoEmitir = btnEmitir.innerHTML;
+  btnEmitir.disabled = true;
+  btnEmitir.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Emitiendo...';
+  // Mientras se emite no se guarda el borrador: el servidor lo elimina al emitir
+  clearTimeout(borradorTimer);
+  borradorBloqueado = true;
+  const liberarEmitir = () => { btnEmitir.disabled = false; btnEmitir.innerHTML = textoEmitir; borradorBloqueado = false; };
   try {
+    const contacto = await guardarContactoPaciente(idPaciente, csrf);
+    if (!contacto.ok) { alert(contacto.error || 'No se pudo guardar el correo del paciente.'); liberarEmitir(); return; }
     const r = await fetch(API_FAC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
@@ -689,11 +778,132 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
       window.location.href = "{{ url_for('factura.facturaIndex') }}";
     } else {
       alert(j.error || 'Error al emitir la factura.');
+      liberarEmitir();
     }
   } catch (e) {
     alert('Error de conexión al emitir la factura.');
+    liberarEmitir();
   }
 });
+
+// ── Borrador: la factura se guarda sola mientras se completa ───────────────
+// Un borrador no consume número de factura ni timbrado: recién al emitir nace el comprobante.
+const CAMPOS_BORRADOR = [
+  'selTipoDocumentoFactura', 'txtRucFactura', 'txtCorreoPaciente', 'txtTelefonoPaciente',
+  'selTimbrado', 'selPuntoExpedicion', 'selTipoComprobante', 'selCondicionVenta', 'selMoneda',
+  'txtFechaFactura', 'txtIdPedido', 'txtDescuento', 'txtCodigoSifen', 'txtObservaciones',
+  'selCajaCobro', 'selFormaCobro', 'selMarcaTarjeta', 'selEntidadAdherida', 'selEntidadEmisora',
+  'txtNroCheque', 'txtNroTarjeta', 'txtNroCuotas', 'txtNroTransferencia'
+];
+let idBorrador = null, borradorTimer = null, borradorBloqueado = false;
+const csrfToken = () => document.querySelector('meta[name="csrf-token"]').content;
+
+function marcarBorrador(texto) {
+  document.getElementById('lblBorrador').textContent = texto;
+  document.getElementById('badgeBorrador').classList.toggle('d-none', !idBorrador);
+  document.getElementById('btnDescartarBorrador').classList.toggle('d-none', !idBorrador);
+}
+
+function programarGuardadoBorrador() {
+  if (borradorBloqueado || !document.getElementById('hidIdPaciente').value) return;
+  marcarBorrador('guardando borrador…');
+  clearTimeout(borradorTimer);
+  borradorTimer = setTimeout(guardarBorrador, 1500);
+}
+
+async function guardarBorrador() {
+  if (borradorBloqueado) return;
+  const idPaciente = document.getElementById('hidIdPaciente').value;
+  if (!idPaciente) return;
+  const datos = { campos: {}, detalles, correo_original: correoOriginal, telefono_original: telefonoOriginal,
+    paciente_ui: {
+      nombre: document.getElementById('lblPacienteNombre').textContent,
+      cedula: document.getElementById('lblPacienteCedula').textContent,
+      hc: document.getElementById('lblHistoriaClinica').textContent
+    } };
+  CAMPOS_BORRADOR.forEach(id => { datos.campos[id] = document.getElementById(id).value; });
+  try {
+    const url = idBorrador ? `${API_FAC}-borrador/${idBorrador}` : `${API_FAC}-borrador`;
+    const r = await fetch(url, {
+      method: idBorrador ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      body: JSON.stringify({ id_paciente: parseInt(idPaciente), datos })
+    });
+    const j = await r.json();
+    if (j.success) {
+      if (!idBorrador) idBorrador = j.data.id_factura_borrador;
+      marcarBorrador('borrador guardado ' + new Date().toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' }));
+    } else {
+      // 404: el borrador ya no existe (se emitió o lo descartaron desde otra ventana)
+      if (r.status === 404) { idBorrador = null; borradorBloqueado = true; }
+      marcarBorrador(j.error || 'no se pudo guardar el borrador');
+    }
+  } catch (e) {
+    marcarBorrador('sin conexión: el borrador no se guardó');
+  }
+}
+
+document.getElementById('contenedor-factura').addEventListener('input', programarGuardadoBorrador);
+document.getElementById('contenedor-factura').addEventListener('change', programarGuardadoBorrador);
+document.getElementById('btnSeleccionarPaciente').addEventListener('click', programarGuardadoBorrador);
+
+document.getElementById('btnDescartarBorrador').addEventListener('click', async () => {
+  const ok = await Swal.fire({ title: '¿Descartar el borrador?', text: 'Se pierde lo cargado y no se puede recuperar.',
+    icon: 'warning', showCancelButton: true, confirmButtonText: 'Descartar', cancelButtonText: 'Volver' });
+  if (!ok.isConfirmed) return;
+  borradorBloqueado = true;
+  clearTimeout(borradorTimer);
+  if (idBorrador) await fetch(`${API_FAC}-borrador/${idBorrador}`, { method: 'DELETE', headers: { 'X-CSRFToken': csrfToken() } });
+  window.location.href = "{{ url_for('factura.facturaIndex') }}";
+});
+
+// Espera a que un combo cargado por la API tenga la opción pedida (timbrado → puntos de expedición)
+async function esperarOpcion(sel, valor) {
+  for (let i = 0; i < 30 && !Array.from(sel.options).some(o => o.value === String(valor)); i++) {
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+async function retomarBorrador(id) {
+  const r = await fetch(`${API_FAC}-borrador/${id}`);
+  const j = await r.json();
+  if (!j.success) { Swal.fire('Error', j.error || 'No se pudo abrir el borrador.', 'error'); return; }
+  const d = j.data.datos || {}, c = d.campos || {}, el = x => document.getElementById(x);
+  borradorBloqueado = true;               // no guardar mientras se restauran los campos
+  idBorrador = j.data.id_factura_borrador;
+
+  el('hidIdPaciente').value = j.data.id_paciente;
+  const ui = d.paciente_ui || {};
+  el('lblPacienteNombre').textContent = ui.nombre || '—';
+  el('lblPacienteCedula').textContent = ui.cedula || '—';
+  el('lblHistoriaClinica').textContent = ui.hc || '—';
+  correoOriginal = d.correo_original || '';
+  telefonoOriginal = d.telefono_original || '';
+  el('card-busqueda').style.display = 'none';
+  el('contenedor-factura').style.display = '';
+
+  el('selTipoDocumentoFactura').value = c.selTipoDocumentoFactura || 'CI';
+  el('selTipoDocumentoFactura').dispatchEvent(new Event('change'));
+  if (c.selTimbrado) {
+    el('selTimbrado').value = c.selTimbrado;
+    el('selTimbrado').dispatchEvent(new Event('change'));
+    await esperarOpcion(el('selPuntoExpedicion'), c.selPuntoExpedicion);
+  }
+  // El orden importa: condición y moneda definen qué cajas se ofrecen; la forma de cobro, qué campos se ven
+  ['selCondicionVenta', 'selMoneda'].forEach(id => { if (c[id]) el(id).value = c[id]; });
+  actualizarCardCobro();
+  filtrarCajasPorMoneda();
+  CAMPOS_BORRADOR.filter(id => !['selTipoDocumentoFactura', 'selTimbrado', 'selCondicionVenta', 'selMoneda'].includes(id))
+    .forEach(id => { if (c[id] !== undefined && c[id] !== null) el(id).value = c[id]; });
+  el('selFormaCobro').dispatchEvent(new Event('change'));
+
+  detalles = (d.detalles || []).map(x => ({ ...x, ...calcItem(x.item_precio_con_iva, x.item_cantidad, x.impuesto_porcentaje, x.item_descuento) }));
+  renderTabla();
+  recalcular();
+  avisoCorreoPaciente();
+  borradorBloqueado = false;
+  marcarBorrador('borrador retomado');
+}
 
 // Carga inicial de selectores
 async function inicializar() {
@@ -760,6 +970,8 @@ async function inicializar() {
     if (t.es_moneda_local) o.selected = true;
     selMon.appendChild(o);
   });
+  // La moneda recién quedó elegida: recién ahora se puede filtrar las cajas por moneda
+  filtrarCajasPorMoneda();
 
   // Estados factura — inyectar hidden select (oculto, siempre EMITIDA)
   const selEF = document.createElement('select');
@@ -774,7 +986,7 @@ async function inicializar() {
   });
   document.getElementById('contenedor-factura').appendChild(selEF);
 
-  // Tipos de impuesto para modal
+  // Tipos de impuesto de la fila de carga
   const selTI = document.getElementById('selItemImpuesto');
   selTI.innerHTML = '';
   (rTI.data || []).forEach(t => {
@@ -784,20 +996,16 @@ async function inicializar() {
     o.textContent = `${t.des_tipo_impuesto} (${t.porcentaje_impuesto || 0}%)`;
     selTI.appendChild(o);
   });
+  seleccionarExento();
 
-  // Ítems de catálogo
-  const selIS = document.getElementById('selItemServicio');
-  selIS.innerHTML = '<option value="">Sin ítem de catálogo</option>';
-  (rIS.data || []).filter(i => i.est_item_servicio).forEach(i => {
-    const o = document.createElement('option');
-    o.value = i.id_item_servicio;
-    o.textContent = i.des_item_servicio;
-    o.dataset.desc = i.des_item_servicio;
-    o.dataset.precio = i.precio_venta || 0;
-    selIS.appendChild(o);
-  });
+  // Ítems de catálogo (buscador de la fila de carga)
+  catalogoItems = (rIS.data || []).filter(i => i.est_item_servicio);
 }
 
-inicializar();
+// Se llega con ?borrador=<id> desde el listado de facturas ("Retomar")
+inicializar().then(() => {
+  const id = new URLSearchParams(window.location.search).get('borrador');
+  if (id) retomarBorrador(id);
+});
 </script>
 {% endblock %}

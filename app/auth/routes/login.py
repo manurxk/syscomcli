@@ -3,6 +3,8 @@ from datetime import date, datetime
 from flask import Blueprint, render_template, session, \
     request, redirect, url_for, flash, current_app as app
 from app.auth.services.auth_service import AuthService
+from app.auth.utils.password_validator import validar_politica_password
+from app.dao.auth.auth_dao import AuthDao
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
 from app.dao.agendamiento.cita.CitaDao import CitaDao
@@ -150,11 +152,14 @@ def login():
             ip_origen=request.remote_addr
         )
 
-        # Verificar si requiere cambio de password
-        if datos_usuario and 'requiere_cambio_password' in datos_usuario:
-            flash('Debe cambiar su contraseña antes de continuar', 'warning')
-            # Redirigir a página de cambio de contraseña
-            # return redirect(url_for('auth.cambiar_password'))
+        # Contraseña correcta, pero debe cambiarla (generada por el administrador o vencida):
+        # no hay sesión todavía, solo el usuario pendiente de cambio
+        if datos_usuario and (datos_usuario.get('requiere_cambio_password') or datos_usuario.get('password_expirada')):
+            session['cambio_pendiente_id_usuario'] = datos_usuario['id_usuario']
+            session['cambio_pendiente_nick'] = datos_usuario['usu_nick']
+            flash(mensaje, 'info')
+            return _aplicar_recordarme(redirect(url_for('login.cambiar_password_obligatorio')),
+                                       usuario_nombre, recordar)
 
         flash(mensaje, 'danger')
         return redirect(url_for('login.login'))
@@ -162,6 +167,60 @@ def login():
     # si es GET
     usuario_recordado = request.cookies.get(COOKIE_RECORDAR_USUARIO, '')
     return render_template('login.html', usuario_recordado=usuario_recordado)
+
+
+@logmod.route('/login/cambiar-password', methods=['GET', 'POST'])
+def cambiar_password_obligatorio():
+    """Cambio de contraseña obligatorio en el primer ingreso (la generó el administrador) o cuando
+    venció. Se llega desde el login, con la contraseña actual ya verificada (ver AuthService.login,
+    pasos 5 y 6); todavía no hay sesión."""
+    id_usuario = session.get('cambio_pendiente_id_usuario')
+    nick = session.get('cambio_pendiente_nick')
+    if not id_usuario or not nick:
+        flash('Inicie sesión nuevamente', 'warning')
+        return redirect(url_for('login.login'))
+
+    if request.method == 'POST':
+        actual = request.form.get('password_actual') or ''
+        nueva = request.form.get('password_nueva') or ''
+        confirmacion = request.form.get('password_confirmacion') or ''
+
+        if nueva != confirmacion:
+            flash('La nueva contraseña y su confirmación no coinciden', 'danger')
+            return redirect(url_for('login.cambiar_password_obligatorio'))
+        if nueva == actual:
+            flash('La nueva contraseña debe ser distinta de la actual', 'danger')
+            return redirect(url_for('login.cambiar_password_obligatorio'))
+
+        usuario = AuthService.buscar_usuario_seguridad(nick)
+        if not usuario:
+            flash('Inicie sesión nuevamente', 'warning')
+            return redirect(url_for('login.login'))
+
+        valido, mensaje = validar_politica_password(password=nueva, usuario_data=usuario, username=nick)
+        if not valido:
+            flash(mensaje, 'danger')
+            return redirect(url_for('login.cambiar_password_obligatorio'))
+
+        exitoso, mensaje = AuthDao().cambiar_password(
+            id_usuario=id_usuario, password_actual=actual, password_nueva=nueva,
+            password_hash_actual=usuario['usu_clave'])
+        if not exitoso:
+            flash(mensaje, 'danger')
+            return redirect(url_for('login.cambiar_password_obligatorio'))
+
+        AuditoriaDao().registrar_evento(
+            id_usuario=id_usuario,
+            accion=AuditAccion.PASSWORD_CHANGE,
+            detalle="Cambio de contraseña obligatorio en el ingreso",
+            ip_origen=request.remote_addr
+        )
+        session.pop('cambio_pendiente_id_usuario', None)
+        session.pop('cambio_pendiente_nick', None)
+        flash('Contraseña actualizada. Ingrese con su nueva contraseña.', 'info')
+        return redirect(url_for('login.login'))
+
+    return render_template('cambiar-password.html', usuario=nick)
 
 
 @logmod.route('/login/recuperar-password', methods=['GET'])
@@ -267,10 +326,10 @@ def cambiar_idioma(codigo):
 
 
 ROLES_DASHBOARD_META = [
-    {'cod': 'ADMINISTRADOR', 'label': 'Administrador', 'icon': 'fa-gauge-high', 'color': '#7c3aed'},
-    {'cod': 'CLINICO', 'label': 'Clínico', 'icon': 'fa-stethoscope', 'color': '#9333ea'},
-    {'cod': 'RECEPCION', 'label': 'Recepción', 'icon': 'fa-headset', 'color': '#6b21a8'},
-    {'cod': 'VENTAS', 'label': 'Ventas', 'icon': 'fa-cash-register', 'color': '#5b21b6'},
+    {'cod': 'ADMINISTRADOR', 'label': 'Administrador', 'icon': 'fa-gauge-high', 'color': '#3f3dc4'},
+    {'cod': 'CLINICO', 'label': 'Clínico', 'icon': 'fa-stethoscope', 'color': '#0e7490'},
+    {'cod': 'RECEPCION', 'label': 'Recepción', 'icon': 'fa-headset', 'color': '#0f766e'},
+    {'cod': 'VENTAS', 'label': 'Ventas', 'icon': 'fa-cash-register', 'color': '#475569'},
 ]
 
 
@@ -288,10 +347,14 @@ def _citas_por_estado(fecha, id_especialista=None):
     return {f['estado']: f['cantidad'] for f in filas}
 
 
-def _panel_administrador(hoy, moneda):
-    panel = {'citas': {}, 'citas_total': 0, 'ventas': {}, 'cajas_abiertas': 0, 'cajas_total': 0,
+def _panel_administrador(hoy, moneda, soporte=False):
+    """Cifras del día para el Administrador. La cuenta de soporte (Superadministrador) no ve datos de pacientes ni de
+    ventas: recibe el panel vacío, marcado con 'soporte'."""
+    panel = {'soporte': soporte, 'citas': {}, 'citas_total': 0, 'ventas': {}, 'cajas_abiertas': 0, 'cajas_total': 0,
              'cxc': {}, 'vencidas': [], 'seguridad': {}, 'recordatorios_pendientes': 0,
              'lista_espera': 0, 'consultas_abiertas': 0}
+    if soporte:
+        return panel
     try:
         reporte_dao = ReporteDao()
         panel['citas'] = _citas_por_estado(hoy)
@@ -409,12 +472,15 @@ def _construir_datos_dashboard(roles):
     codigos_visibles |= {r for r in roles if r in ('CLINICO', 'RECEPCION', 'VENTAS')}
 
     roles_visibles = [r for r in ROLES_DASHBOARD_META if r['cod'] in codigos_visibles]
+    if 'ADMINISTRADOR' not in roles and 'SUPERADMIN' in roles:   # cuenta de soporte: su propio banner
+        roles_visibles = [dict(r, label='de soporte', icon='fa-screwdriver-wrench', color='#475569')
+                          if r['cod'] == 'ADMINISTRADOR' else r for r in roles_visibles]
     hoy = date.today().isoformat()
     moneda = _moneda_local()
     data_por_rol = {}
 
     if 'ADMINISTRADOR' in codigos_visibles:
-        data_por_rol['ADMINISTRADOR'] = _panel_administrador(hoy, moneda)
+        data_por_rol['ADMINISTRADOR'] = _panel_administrador(hoy, moneda, soporte='ADMINISTRADOR' not in roles)
     if 'CLINICO' in codigos_visibles:
         data_por_rol['CLINICO'] = _panel_clinico(hoy)
     if 'RECEPCION' in codigos_visibles:

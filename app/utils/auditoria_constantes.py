@@ -170,14 +170,14 @@ def get_label(accion: str) -> str:
 #   "detalle": el listado de cambios de todos los usuarios, con el dato anterior y el nuevo;
 #   "propios": lo mismo, pero solo los cambios que hizo el usuario de la sesión;
 #   "resumen": solo cantidades (cambios por tabla, operación y día, anulaciones), sin registros ni usuarios.
-# Los datos clínicos solo los ven Clínico (los suyos) y Administrador (todos); el Superadministrador no.
+# Los datos clínicos solo los ven Clínico (los suyos) y Administrador (todos); el Superadministrador (soporte) solo ve Seguridad.
 # Decisiones del usuario, 2026-10-18 y 2026-10-19 (docs/taller_programacion/09_plan_auditoria_triggers.md, paso 5).
 
 MODULOS_AUDITORIA = ("CLINICO", "AGENDAMIENTO", "VENTAS", "SEGURIDAD")
 
 ALCANCE_CAMBIOS_POR_ROL: dict[str, dict[str, str]] = {
     "ADMINISTRADOR": {m: "detalle" for m in MODULOS_AUDITORIA},
-    "SUPERADMIN":    {"AGENDAMIENTO": "detalle", "VENTAS": "detalle", "SEGURIDAD": "detalle"},
+    "SUPERADMIN":    {"SEGURIDAD": "detalle"},   # soporte: sin datos de pacientes ni de ventas
     "RECEPCION":     {"AGENDAMIENTO": "detalle"},
     "CLINICO":       {"CLINICO": "propios"},
     "VENTAS":        {"VENTAS": "resumen"},

@@ -1,0 +1,18 @@
+<p>Una copia de respaldo es una copia de toda la información del sistema, guardada aparte. Si el servidor se rompe, lo roban o los datos se dañan, con la copia se recupera todo hasta un día antes como máximo.</p>
+
+<h4>Cómo funciona</h4>
+<ul>
+    <li>Se hace <strong>automáticamente cada 24 horas</strong>, y una más cada vez que arranca el servicio de respaldo.</li>
+    <li>Cada copia se guarda <strong>cifrada</strong>: sin la clave privada nadie puede leerla, ni siquiera quien se lleve el servidor.</li>
+    <li>Se conservan las copias de los <strong>últimos 14 días</strong>; las más viejas se borran solas.</li>
+    <li>Antes de cada migración, actualización o despliegue, el soporte técnico hace además una copia manual.</li>
+</ul>
+
+<h4>Lo que depende de usted</h4>
+<ul>
+    <li><strong>La clave privada de respaldo y su contraseña.</strong> Guárdelas por separado y fuera del servidor (por ejemplo, un USB y un gestor de contraseñas). Sin ellas, ninguna copia se puede recuperar. Conviene tener dos copias de la clave privada en lugares distintos.</li>
+    <li><strong>Una copia fuera del equipo.</strong> Se recomienda copiar los respaldos una vez por semana a un disco externo o a la nube. Como están cifrados, pueden guardarse en la nube sin exponer datos.</li>
+    <li><strong>La prueba de restauración.</strong> Pida al soporte técnico que pruebe la recuperación de una copia <strong>una vez por mes</strong>, y antes de cada entrega o despliegue.</li>
+</ul>
+<p class="importante">Una copia que nunca se probó no se sabe si sirve. La prueba de restauración se hace sobre una base de prueba y no toca los datos reales.</p>
+<p>Los comandos para hacer una copia manual, probar y restaurar están en el Manual de infraestructura, capítulo «Backups y restauración».</p>

@@ -103,8 +103,7 @@
             <label class="small mb-1" for="txtCiudad">Ciudad de Residencia</label>
             <input type="hidden" id="id_ciudad">
             <input class="form-control" id="txtCiudad" type="text" placeholder="Escriba para buscar..."
-              autocomplete="off">
-            <div class="list-group ciudad-sugerencias" id="sugerenciasCiudad"></div>
+              autocomplete="off" list="listCiudades">
           </div>
           <div class="col-md-4 mb-3 mb-md-0">
             <label class="small mb-1 text-muted" for="txtDepartamento">Departamento</label>
@@ -120,8 +119,8 @@
             <label class="small mb-1" for="txtCiudad_nacimiento">Ciudad de Nacimiento</label>
             <input type="hidden" id="id_ciudad_nacimiento">
             <input class="form-control" id="txtCiudad_nacimiento" type="text" placeholder="Escriba para buscar..."
-              autocomplete="off">
-            <div class="list-group ciudad-sugerencias" id="sugerenciasCiudadNacimiento"></div>
+              autocomplete="off" list="listCiudades">
+            <datalist id="listCiudades"></datalist>
           </div>
           <div class="col-md-4">
             <label class="small mb-1 text-muted" for="txtDepartamentoNacimiento">Departamento de Nacimiento</label>
@@ -655,20 +654,12 @@
       .catch(err => console.error('❌ Error cargando departamento/país de la ciudad:', err));
   };
 
-  // Vincula un input de texto con un dropdown de sugerencias filtradas del cache de ciudades
-  const bindCiudadTypeahead = (selectorInput, selectorHiddenId, selectorSugerencias, selectorDepartamento, selectorPais) => {
+  // Vincula un input de texto con el datalist nativo de ciudades; al elegir una ciudad exacta
+  // se fija el id y se consultan departamento y país
+  const bindCiudadTypeahead = (selectorInput, selectorHiddenId, selectorDepartamento, selectorPais) => {
     const $input = $(selectorInput);
     const $hidden = $(selectorHiddenId);
-    const $sugerencias = $(selectorSugerencias);
-
-    const ocultarSugerencias = () => $sugerencias.hide().empty();
-
-    const seleccionarCiudad = (ciudad) => {
-      $input.val(ciudad.descripcion);
-      $hidden.val(ciudad.id);
-      cargarDepartamentoYPaisDeCiudad(ciudad.id, selectorDepartamento, selectorPais);
-      ocultarSugerencias();
-    };
+    const datalist = document.getElementById('listCiudades');
 
     $input.on('input', function () {
       const termino = normalizarTexto($(this).val());
@@ -679,7 +670,7 @@
       $(selectorPais).val('');
 
       if (termino.length < 2) {
-        ocultarSugerencias();
+        datalist.innerHTML = '';
         return;
       }
 
@@ -687,36 +678,20 @@
         .filter(c => normalizarTexto(c.descripcion).includes(termino))
         .slice(0, MAX_SUGERENCIAS_CIUDAD);
 
-      if (coincidencias.length === 0) {
-        $sugerencias.html('<div class="list-group-item text-muted small">Sin coincidencias</div>').show();
-        return;
-      }
+      datalist.innerHTML = coincidencias
+        .map(c => `<option value="${c.descripcion}"></option>`).join('');
 
-      const html = coincidencias.map(c =>
-        `<button type="button" class="list-group-item list-group-item-action" data-id="${c.id}" data-descripcion="${c.descripcion}">${c.descripcion}</button>`
-      ).join('');
-      $sugerencias.html(html).show();
-    });
-
-    $sugerencias.on('click', '.list-group-item-action', function () {
-      seleccionarCiudad({ id: $(this).data('id'), descripcion: $(this).data('descripcion') });
-    });
-
-    $input.on('blur', function () {
-      // Pequeño delay para permitir que el click en una sugerencia se procese antes de ocultar
-      setTimeout(ocultarSugerencias, 150);
-    });
-
-    $input.on('focus', function () {
-      if ($(this).val().length >= 2 && $sugerencias.children().length > 0) {
-        $sugerencias.show();
+      const exacta = ciudadesCache.find(c => normalizarTexto(c.descripcion) === termino);
+      if (exacta) {
+        $hidden.val(exacta.id);
+        cargarDepartamentoYPaisDeCiudad(exacta.id, selectorDepartamento, selectorPais);
       }
     });
   };
 
   const bindCiudadSearch = () => {
-    bindCiudadTypeahead('#txtCiudad', '#id_ciudad', '#sugerenciasCiudad', '#txtDepartamento', '#txtPais');
-    bindCiudadTypeahead('#txtCiudad_nacimiento', '#id_ciudad_nacimiento', '#sugerenciasCiudadNacimiento', '#txtDepartamentoNacimiento', '#txtPaisNacimiento');
+    bindCiudadTypeahead('#txtCiudad', '#id_ciudad', '#txtDepartamento', '#txtPais');
+    bindCiudadTypeahead('#txtCiudad_nacimiento', '#id_ciudad_nacimiento', '#txtDepartamentoNacimiento', '#txtPaisNacimiento');
   };
 
   // ==========================================

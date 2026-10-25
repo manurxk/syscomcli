@@ -1,4 +1,5 @@
 from app.core.base_dao import BaseDAO
+from app.dao.agendamiento.cita.CitaDao import sql_numero_sesion
 
 
 class FichaDao(BaseDAO):
@@ -169,9 +170,11 @@ class FichaDao(BaseDAO):
 
     def getConsultasRecientes(self, id_paciente, limite=10):
         """Devuelve las últimas consultas del paciente (hasta `limite`)."""
-        sql = """
+        sql = f"""
             SELECT
                 c.id_consulta,
+                cit.tipo_cita,
+                {sql_numero_sesion('cit')} AS numero_sesion,
                 c.consulta_fecha,
                 c.consulta_motivo,
                 c.consulta_estado,
@@ -185,6 +188,7 @@ class FichaDao(BaseDAO):
                  WHERE rp.id_consulta = c.id_consulta AND rp.est_registro_procedimiento = TRUE
                 ) AS total_procedimientos
             FROM consultas c
+            LEFT JOIN citas cit ON cit.id_cita = c.id_cita
             JOIN especialistas e ON c.id_especialista = e.id_especialista
             JOIN funcionarios f ON e.id_funcionario = f.id_funcionario
             JOIN personas pe ON f.id_persona = pe.id_persona
@@ -195,6 +199,8 @@ class FichaDao(BaseDAO):
         filas = self.execute_query(sql, (id_paciente, limite))
         return [{
             'id_consulta': f['id_consulta'],
+            'tipo_cita': f['tipo_cita'],
+            'numero_sesion': f['numero_sesion'],
             'fecha': f['consulta_fecha'].strftime('%d/%m/%Y %H:%M') if f['consulta_fecha'] else None,
             'motivo': f['consulta_motivo'],
             'estado': f['consulta_estado'],
@@ -343,9 +349,11 @@ class FichaDao(BaseDAO):
 
     def getProximasCitas(self, id_paciente, limite=5):
         """Devuelve las próximas citas del paciente (hasta `limite`)."""
-        sql = """
+        sql = f"""
             SELECT
                 cit.id_cita,
+                cit.tipo_cita,
+                {sql_numero_sesion('cit')} AS numero_sesion,
                 cit.cita_inicio,
                 cit.cita_fin,
                 cit.motivo,
@@ -370,6 +378,8 @@ class FichaDao(BaseDAO):
         filas = self.execute_query(sql, (id_paciente, limite))
         return [{
             'id_cita': f['id_cita'],
+            'tipo_cita': f['tipo_cita'],
+            'numero_sesion': f['numero_sesion'],
             'fecha': f['cita_inicio'].strftime('%d/%m/%Y') if f['cita_inicio'] else None,
             'hora_inicio': f['cita_inicio'].strftime('%H:%M') if f['cita_inicio'] else None,
             'hora_fin': f['cita_fin'].strftime('%H:%M') if f['cita_fin'] else None,

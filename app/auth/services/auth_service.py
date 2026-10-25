@@ -500,8 +500,9 @@ class AuthService:
 
             return False, {}, f"Contraseña incorrecta. Intentos restantes: {intentos_restantes}"
 
-        # 5. Verificar si requiere cambio de contraseña (solo si no tiene password_nunca_expira)
-        if not usuario.get('password_nunca_expira') and usuario.get('requiere_cambio_password'):
+        # 5. Verificar si requiere cambio de contraseña (marca explícita: la generó el administrador;
+        # se aplica aunque la clave "nunca expire", que solo afecta al vencimiento por antigüedad)
+        if usuario.get('requiere_cambio_password'):
             AuthService.registrar_intento_login(
                 usuario_intentado=usuario_nombre,
                 id_usuario=id_usuario,

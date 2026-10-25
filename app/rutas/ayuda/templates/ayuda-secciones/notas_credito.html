@@ -1,23 +1,20 @@
 <h3>Notas de Crédito</h3>
-<p>La nota de crédito corrige a la baja una factura ya emitida: una devolución, un descuento que no se aplicó o un cobro de más. Se anota sola en el Libro de Ventas.</p>
-
-<h4>¿Cómo hago una nota de crédito?</h4>
+<p>Corrige a la baja una factura emitida: devolución, descuento no aplicado o cobro de más. Se anota sola en el Libro de Ventas.</p>
+<div class="par">
 {{ figura('notas_credito/01_listado.jpg', 'Notas de Crédito: ① Nueva Nota de Crédito') }}
-{{ figura('notas_credito/02_nueva.jpg', 'Nueva Nota de Crédito: ② elija la factura y presione Seleccionar y continuar') }}
+{{ figura('notas_credito/02_nueva.jpg', 'Nueva Nota de Crédito: ② factura y Seleccionar y continuar') }}
+</div>
 <ol>
     <li>Presione <span class="btn-ref">Nueva Nota de Crédito</span>.</li>
-    <li>Elija la <strong>Factura</strong> que va a corregir y presione <span class="btn-ref">Seleccionar y continuar</span>. Se muestran el paciente, el número y el total de la factura.</li>
-    <li>Escriba el <strong>Motivo</strong> (es obligatorio). Por ejemplo: "Devolución de un producto" o "Descuento no aplicado".</li>
-    <li>Elija el tipo de comprobante. El código CDC y el número de timbrado SIFEN son opcionales.</li>
-    <li>Presione <span class="btn-ref">Agregar ítem</span> por cada concepto que se descuenta: descripción, cantidad y precio unitario. Presione <span class="btn-ref">Agregar</span>.</li>
+    <li>Elija la <strong>Factura</strong> y presione <span class="btn-ref">Seleccionar y continuar</span>.</li>
+    <li>Escriba el <strong>Motivo</strong> (obligatorio).</li>
+    <li>Elija el tipo de comprobante (CDC y timbrado SIFEN son opcionales).</li>
+    <li><span class="btn-ref">Agregar ítem</span> por cada concepto que se descuenta: descripción, cantidad y precio.</li>
     <li>Presione <span class="btn-ref">Guardar Nota de Crédito</span>.</li>
 </ol>
-<h4>¿Qué pasa con la deuda del paciente?</h4>
-<p>Si la factura tiene saldo pendiente de pago, la nota de crédito lo descuenta sola en su <strong>Cuenta a Cobrar</strong>. Si con eso la deuda llega a cero, la cuenta queda como cobrada.</p>
-<p class="importante">La nota de crédito no puede ser mayor a lo que falta pagar de la factura. Si el paciente ya pagó y hay que devolverle dinero, esa devolución se hace fuera del sistema.</p>
-
-<h4>¿Cómo imprimo una nota de crédito?</h4>
-<p>En la lista, abra el detalle de la nota y presione <span class="btn-ref">Ver PDF</span>. Sale con el mismo formato que la factura (KuDE), con la factura que corrige y el motivo.</p>
-
-<h4>¿Cómo anulo una nota de crédito?</h4>
-<p>En la lista, abra el detalle de la nota y presione <span class="btn-ref">Anular</span>. El monto que había descontado vuelve a sumarse a la deuda.</p>
+<ul>
+    <li><strong>Efecto:</strong> descuenta sola el saldo de la Cuenta a Cobrar; si llega a cero, queda cobrada.</li>
+    <li><strong>Imprimir:</strong> detalle de la fila y <span class="btn-ref">Ver PDF</span>.</li>
+    <li><strong>Anular:</strong> detalle y <span class="btn-ref">Anular</span>; el monto vuelve a la deuda.</li>
+</ul>
+<p class="importante">No puede superar lo que falta pagar de la factura. Devolver dinero ya cobrado se hace fuera del sistema.</p>

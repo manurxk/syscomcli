@@ -4,6 +4,19 @@ from app.core.base_dao import BaseDAO
 from app.dao.agendamiento.agenda_horarios.AgendaHorariosDao import AgendaHorariosDao
 
 
+def sql_numero_sesion(alias='c'):
+    """Número de sesión de una cita de Seguimiento o Tratamiento, para usar en un SELECT sobre `citas <alias>`.
+    Una cuenta por tipo: 1 + las citas válidas (no canceladas ni ausentes) del mismo paciente y tipo que la
+    preceden por fecha. Primera vez no lleva número. Se calcula al leer, así no se desordena si se cancela o
+    reprograma una cita del medio."""
+    return f"""CASE WHEN {alias}.tipo_cita = 'PRIMERA_VEZ' THEN NULL ELSE (
+                SELECT COUNT(*) + 1 FROM citas c2
+                JOIN estados_citas e2 ON e2.id_estado_cita = c2.id_estado_cita
+                WHERE c2.id_paciente = {alias}.id_paciente AND c2.tipo_cita = {alias}.tipo_cita AND c2.est_cita = TRUE
+                  AND e2.cod_estado_cita NOT IN ('CANCELADA', 'AUSENTE')
+                  AND c2.cita_inicio < {alias}.cita_inicio AND c2.id_cita <> {alias}.id_cita) END"""
+
+
 class CitaDao(BaseDAO):
 
     # Los cambios de estado los valida sp_cambiar_estado_cita (con fn_transicion_cita_valida):
@@ -17,6 +30,8 @@ class CitaDao(BaseDAO):
 
     # Mismo margen que getSlotsDisponibles: un turno que empezó hace más de 10 minutos ya no se reserva
     SQL_TURNO_VENCIDO = "slot_inicio < (now() AT TIME ZONE 'America/Asuncion') - INTERVAL '10 minutes'"
+
+    SQL_NUMERO_SESION = sql_numero_sesion('c')
 
     def __init__(self):
         super().__init__(db_name_env="DB_NAME_NUEVA")
@@ -79,15 +94,50 @@ class CitaDao(BaseDAO):
         fila = self.execute_query_one(sql, (id_funcionario,))
         return fila['id_especialista'] if fila else None
 
+    def _numero_sesion(self, cur, id_paciente, tipo_cita, inicio=None, excluir_id=None):
+        """Número de sesión que corresponde a una cita de ese tipo (ver SQL_NUMERO_SESION); None para Primera vez.
+        Sin `inicio` cuenta todas las citas anteriores: es el número de la próxima cita."""
+        if tipo_cita == "PRIMERA_VEZ":
+            return None
+        cur.execute(
+            """
+            SELECT COUNT(*) FROM citas c2
+            JOIN estados_citas e2 ON e2.id_estado_cita = c2.id_estado_cita
+            WHERE c2.id_paciente = %s AND c2.tipo_cita = %s AND c2.est_cita = TRUE
+              AND e2.cod_estado_cita NOT IN ('CANCELADA', 'AUSENTE')
+              AND (%s IS NULL OR c2.cita_inicio < %s)
+              AND (%s IS NULL OR c2.id_cita <> %s)
+            """,
+            (id_paciente, tipo_cita, inicio, inicio, excluir_id, excluir_id),
+        )
+        return cur.fetchone()[0] + 1
+
+    def calcularNumeroSesion(self, id_paciente, tipo_cita, inicio=None, excluir_id_cita=None):
+        """Número de sesión de la cita que se está por agendar o editar (lo usa la pantalla de cita)."""
+        return self.execute_transaction(lambda cur: self._numero_sesion(cur, id_paciente, tipo_cita, inicio, excluir_id_cita))
+
+    def contarCitasPrevias(self, id_paciente, excluir_id_cita=None):
+        """Citas del paciente que cuentan como historial: no canceladas ni ausentes. Se usa para exigir que la
+        primera cita de un paciente sea de Primera vez."""
+        sql = """
+            SELECT COUNT(*) AS total
+            FROM citas c
+            JOIN estados_citas ec ON ec.id_estado_cita = c.id_estado_cita
+            WHERE c.id_paciente = %s AND c.est_cita = TRUE
+              AND ec.cod_estado_cita NOT IN ('CANCELADA', 'AUSENTE')
+              AND (%s IS NULL OR c.id_cita <> %s)
+        """
+        return self.execute_query_one(sql, (id_paciente, excluir_id_cita, excluir_id_cita))['total']
+
     def getCitasHoyByEspecialista(self, id_especialista):
         """Citas del día actual para un especialista — usada por la vista 'Mi Agenda'."""
-        sql = """
+        sql = f"""
             SELECT c.id_cita, c.id_paciente, pp.per_nombre AS paciente_nombre,
                    pp.per_apellido AS paciente_apellido, pp.per_telefono AS paciente_telefono,
                    p.pac_historia_clinica,
                    TO_CHAR(c.cita_inicio, 'HH24:MI') AS cita_hora_inicio,
                    TO_CHAR(c.cita_fin, 'HH24:MI') AS cita_hora_fin,
-                   c.cita_es_primera_vez, c.cita_numero_sesion, c.motivo AS cita_motivo,
+                   c.cita_es_primera_vez, c.tipo_cita, {self.SQL_NUMERO_SESION} AS cita_numero_sesion, c.motivo AS cita_motivo,
                    c.id_estado_cita, ec.cod_estado_cita, ec.des_estado_cita
             FROM citas c
             JOIN pacientes p ON c.id_paciente = p.id_paciente
@@ -116,9 +166,11 @@ class CitaDao(BaseDAO):
             SELECT sa.id_slot_agenda, sa.id_especialista, sa.id_sede, sa.id_consultorio,
                    TO_CHAR(sa.slot_inicio, 'YYYY-MM-DD HH24:MI') AS slot_inicio,
                    TO_CHAR(sa.slot_fin, 'YYYY-MM-DD HH24:MI') AS slot_fin,
+                   co.des_consultorio,
                    {AgendaHorariosDao.SQL_ES_SOBRETURNO} AS es_sobreturno
             FROM slots_agenda sa
             JOIN agenda_horarios ah ON ah.id_agenda_horario = sa.id_agenda_horario AND ah.est_agenda_horario = TRUE
+            JOIN consultorios co ON co.id_consultorio = sa.id_consultorio
             WHERE sa.estado_slot = 'DISPONIBLE'
               AND sa.slot_inicio >= (now() AT TIME ZONE 'America/Asuncion') - INTERVAL '10 minutes'
               AND (%(id_especialista)s IS NULL OR sa.id_especialista = %(id_especialista)s)
@@ -154,7 +206,7 @@ class CitaDao(BaseDAO):
                    c.id_sede, s.des_sede, c.id_consultorio, co.des_consultorio,
                    TO_CHAR(c.cita_inicio, 'YYYY-MM-DD HH24:MI') AS cita_inicio,
                    TO_CHAR(c.cita_fin, 'YYYY-MM-DD HH24:MI') AS cita_fin,
-                   c.modalidad, c.cita_es_primera_vez, c.cita_numero_sesion,
+                   c.modalidad, c.cita_es_primera_vez, c.tipo_cita, {self.SQL_NUMERO_SESION} AS cita_numero_sesion,
                    c.motivo, c.observaciones,
                    c.id_estado_cita, ec.cod_estado_cita, ec.des_estado_cita,
                    {self.SQL_ES_PASADA} AS es_pasada, {self.SQL_ES_FUTURA} AS es_futura,
@@ -187,7 +239,7 @@ class CitaDao(BaseDAO):
 
     def getCitaById(self, id_cita):
         """Devuelve la cita por su id, o None si no existe."""
-        sql = """
+        sql = f"""
             SELECT c.id_cita, c.id_paciente, pp.per_nombre AS paciente_nombre,
                    pp.per_apellido AS paciente_apellido, p.pac_historia_clinica,
                    c.id_especialista, pe.per_nombre AS especialista_nombre,
@@ -197,7 +249,7 @@ class CitaDao(BaseDAO):
                    c.id_slot_agenda,
                    TO_CHAR(c.cita_inicio, 'YYYY-MM-DD HH24:MI') AS cita_inicio,
                    TO_CHAR(c.cita_fin, 'YYYY-MM-DD HH24:MI') AS cita_fin,
-                   c.modalidad, c.cita_es_primera_vez, c.cita_numero_sesion,
+                   c.modalidad, c.cita_es_primera_vez, c.tipo_cita, {self.SQL_NUMERO_SESION} AS cita_numero_sesion,
                    c.motivo, c.observaciones, c.motivo_cancelacion,
                    c.id_estado_cita, ec.cod_estado_cita, ec.des_estado_cita
             FROM citas c
@@ -268,14 +320,14 @@ class CitaDao(BaseDAO):
                 INSERT INTO citas (
                     id_paciente, id_especialista, id_especialidad, id_sede, id_consultorio,
                     id_slot_agenda, id_estado_cita, cita_inicio, cita_fin, modalidad,
-                    cita_es_primera_vez, cita_numero_sesion, motivo, observaciones,
+                    cita_es_primera_vez, tipo_cita, cita_numero_sesion, motivo, observaciones,
                     usuario_creacion
                 )
                 VALUES (
                     %(id_paciente)s, %(id_especialista)s, %(id_especialidad)s, %(id_sede)s,
                     %(id_consultorio)s, %(id_slot_agenda)s, %(id_estado_inicial)s,
                     %(cita_inicio)s, %(cita_fin)s, %(modalidad)s, %(cita_es_primera_vez)s,
-                    %(cita_numero_sesion)s, %(motivo)s, %(observaciones)s, %(usuario_creacion)s
+                    %(tipo_cita)s, %(cita_numero_sesion)s, %(motivo)s, %(observaciones)s, %(usuario_creacion)s
                 )
                 RETURNING id_cita
                 """,
@@ -291,7 +343,9 @@ class CitaDao(BaseDAO):
                     "cita_fin": slot_fin,
                     "modalidad": datos.get("modalidad", "PRESENCIAL"),
                     "cita_es_primera_vez": datos.get("cita_es_primera_vez", True),
-                    "cita_numero_sesion": datos.get("cita_numero_sesion"),
+                    "tipo_cita": datos.get("tipo_cita", "PRIMERA_VEZ"),
+                    "cita_numero_sesion": self._numero_sesion(
+                        cur, datos["id_paciente"], datos.get("tipo_cita", "PRIMERA_VEZ"), slot_inicio),
                     "motivo": datos.get("motivo"),
                     "observaciones": datos.get("observaciones"),
                     "usuario_creacion": usuario_creacion,
@@ -415,10 +469,15 @@ class CitaDao(BaseDAO):
                     (id_cita, id_estado_actual, id_estado_actual, "Cita reprogramada", usuario_modificacion),
                 )
 
+            cur.execute("SELECT id_paciente, cita_inicio FROM citas WHERE id_cita = %s", (id_cita,))
+            id_paciente_cita, inicio_cita = cur.fetchone()
+            numero_sesion = self._numero_sesion(
+                cur, id_paciente_cita, datos.get("tipo_cita", "PRIMERA_VEZ"), inicio_cita, excluir_id=id_cita)
+
             cur.execute(
                 """
                 UPDATE citas
-                SET id_especialidad = %s, modalidad = %s, cita_es_primera_vez = %s,
+                SET id_especialidad = %s, modalidad = %s, cita_es_primera_vez = %s, tipo_cita = %s,
                     cita_numero_sesion = %s, motivo = %s, observaciones = %s,
                     usuario_modificacion = %s
                 WHERE id_cita = %s
@@ -427,7 +486,8 @@ class CitaDao(BaseDAO):
                     datos.get("id_especialidad"),
                     datos.get("modalidad", "PRESENCIAL"),
                     datos.get("cita_es_primera_vez", True),
-                    datos.get("cita_numero_sesion"),
+                    datos.get("tipo_cita", "PRIMERA_VEZ"),
+                    numero_sesion,
                     datos.get("motivo"),
                     datos.get("observaciones"),
                     usuario_modificacion,

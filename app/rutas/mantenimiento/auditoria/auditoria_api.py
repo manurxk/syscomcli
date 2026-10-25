@@ -4,6 +4,7 @@ from datetime import date
 from flask import Blueprint, request, jsonify, session, send_file, current_app as app
 
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
+from app.utils.soporte import etiquetar_soporte
 from app.services.informe_auditoria_service import (armar_informe, generar_pdf_informe, modulos_destinatario,
                                                     semana_anterior)
 from app.utils.auditoria_constantes import (AuditAccion, get_label, alcance_cambios,
@@ -46,6 +47,7 @@ def getCambiosDatos():
             por_pagina=request.args.get('por_pagina', 50, type=int),
             modulos_propios=propios, id_propio=id_propio,
         )
+        etiquetar_soporte(resultado.get('datos'))
         return jsonify({'success': True, 'data': resultado, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener cambios en datos: {str(e)}")
@@ -63,6 +65,7 @@ def getCambioDatos(id_cambio):
                                 (cambio['modulo'] in nivel['propios'] and id_propio and cambio['id_usuario'] == id_propio))
         if not permitido:
             return jsonify({'success': False, 'error': 'No tiene permiso para ver este cambio.'}), 403
+        etiquetar_soporte([cambio])
         return jsonify({'success': True, 'data': cambio, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener el cambio {id_cambio}: {str(e)}")
@@ -146,6 +149,7 @@ def getEventosAuditoria():
 
         for evento in resultado['datos']:
             evento['accion_label'] = get_label(evento['accion'])
+        etiquetar_soporte(resultado['datos'])
 
         return jsonify({'success': True, 'data': resultado, 'error': None}), 200
     except Exception as e:
@@ -167,6 +171,7 @@ def getIntentosAcceso():
             por_pagina=request.args.get('por_pagina', 50, type=int),
             id_usuario=request.args.get('id_usuario', None, type=int),
         )
+        etiquetar_soporte(resultado.get('datos'))
         return jsonify({'success': True, 'data': resultado, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener intentos de acceso: {str(e)}")
@@ -201,6 +206,7 @@ def getSolicitudesRecuperacionGlobal():
             por_pagina=request.args.get('por_pagina', 50, type=int),
             id_usuario=request.args.get('id_usuario', None, type=int),
         )
+        etiquetar_soporte(resultado.get('datos'))
         return jsonify({'success': True, 'data': resultado, 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al obtener solicitudes de recuperación: {str(e)}")

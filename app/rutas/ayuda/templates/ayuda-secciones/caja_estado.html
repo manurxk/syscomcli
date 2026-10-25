@@ -1,24 +1,15 @@
 <h3>Estado de Caja</h3>
-<p>Aquí se abre la caja al empezar el día y se cierra al terminar. Cada caja aparece como una tarjeta que dice si está <strong>Abierta</strong> o <strong>Cerrada</strong>.</p>
-<p class="importante">Sin una caja abierta no se puede facturar al contado ni registrar cobranzas ni recaudaciones.</p>
-
-<h4>¿Cómo abro la caja?</h4>
+<p>Se abre la caja al empezar el día y se cierra al terminar. Cada caja es una tarjeta que dice si está <strong>Abierta</strong> o <strong>Cerrada</strong>.</p>
 {{ figura('caja_estado/01_estado.jpg', 'Estado de Cajas: cada caja con su estado y su botón') }}
 <ol>
-    <li>En la tarjeta de la caja, presione <span class="btn-ref">Abrir Caja</span>.</li>
-    <li>Elija la <strong>Moneda</strong> con la que va a trabajar esa caja. Por defecto viene la moneda local.</li>
-    <li>Escriba el <strong>Saldo Inicial</strong>: el dinero con que empieza la caja (el cambio). Si empieza vacía, deje 0.</li>
-    <li>Si quiere, escriba una observación y confirme.</li>
+    <li><strong>Abrir:</strong> en la tarjeta, <span class="btn-ref">Abrir Caja</span>.</li>
+    <li>Elija la <strong>Moneda</strong> de esa caja.</li>
+    <li>Escriba el <strong>Saldo Inicial</strong> (el cambio con que empieza; 0 si empieza vacía).</li>
+    <li>Escriba una observación si quiere y confirme.</li>
 </ol>
-<p>La tarjeta pasa a <strong>Abierta</strong> y muestra el saldo inicial, la hora de apertura y el usuario que la abrió.</p>
-
-<h4>¿Cómo cierro la caja?</h4>
-<ol>
-    <li>En la tarjeta de la caja, presione <span class="btn-ref">Cerrar Caja</span>.</li>
-    <li>Arriba se muestra el resumen que calcula el sistema: saldo inicial, efectivo cobrado, otros cobros (cheques, tarjetas y transferencias) y el <strong>Saldo Esperado</strong>.</li>
-    <li>Los montos por forma de cobro vienen cargados con lo que registró el sistema. Cuente el dinero y corrija los montos si lo que tiene en la mano es distinto.</li>
-    <li>Revise el <strong>Saldo Final</strong> (es obligatorio) y, si hubo diferencias, explíquelas en observaciones.</li>
-    <li>Presione <span class="btn-ref">Cerrar Caja</span>.</li>
-</ol>
-<p>El saldo esperado suma todo lo que entró a esa caja desde que se abrió: las facturas al contado y las cobranzas de cuentas a crédito.</p>
-<p>Si quiere controlar la caja sin cerrarla, use <strong>Arqueos de Caja</strong>.</p>
+<ul>
+    <li><strong>Cerrar:</strong> <span class="btn-ref">Cerrar Caja</span>. Se ve el resumen (saldo inicial, efectivo, otros cobros y <strong>Saldo Esperado</strong>).</li>
+    <li>Cuente el dinero y corrija los montos por forma de cobro si difieren; confirme el <strong>Saldo Final</strong> y explique cualquier diferencia.</li>
+    <li>Para controlar la caja sin cerrarla, use Arqueos de Caja.</li>
+</ul>
+<p class="importante">Sin caja abierta no se factura al contado ni se registran cobranzas ni recaudaciones.</p>

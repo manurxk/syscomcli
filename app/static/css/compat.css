@@ -54,7 +54,7 @@
 
 /* Color de marca sólido para page-header (antes gradiente azul→violeta) */
 .bg-gradient-primary-to-secondary {
-    background: #6900c7 !important;
+    background: #3f3dc4 !important;
     color: #fff;
 }
 
@@ -147,8 +147,8 @@
     color: #00bcd4 !important;
 }
 .bg-secondary-soft {
-    background-color: rgba(105, 0, 199, 0.12) !important;
-    color: #6900c7 !important;
+    background-color: rgba(63, 61, 196, 0.12) !important;
+    color: #3f3dc4 !important;
 }
 
 /* ============================================================
@@ -163,17 +163,17 @@
     border: 1px solid rgba(255, 165, 0, 0.15) !important;
 }
 .alert-soft-purple {
-    background-color: #f3e5f5 !important;
-    border: 1px solid rgba(111, 66, 193, 0.1) !important;
+    background-color: #e0e0f7 !important;
+    border: 1px solid rgba(63, 61, 196, 0.1) !important;
 }
 
 /* ============================================================
    COLOR PURPLE (no nativo de Bootstrap, usado en sección Especialista)
    ============================================================ */
-.text-purple { color: #6f42c1 !important; }
-.bg-purple { background-color: #6f42c1 !important; }
-.border-start-purple { border-left: 0.35rem solid #6f42c1 !important; }
-.border-purple { border-color: #6f42c1 !important; }
+.text-purple { color: #3f3dc4 !important; }
+.bg-purple { background-color: #3f3dc4 !important; }
+.border-start-purple { border-left: 0.35rem solid #3f3dc4 !important; }
+.border-purple { border-color: #3f3dc4 !important; }
 
 /* ============================================================
    CARD HEADER ACTIONS

@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 libroventasmod = Blueprint('libro_ventas', __name__, template_folder='templates')
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @libroventasmod.route('/libro-ventas-index')

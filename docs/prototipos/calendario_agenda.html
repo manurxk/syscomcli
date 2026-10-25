@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático del CALENDARIO SEMANAL para el especialista y para la recepcionista — SYSCLIN
+    Se abre con doble clic, no necesita Flask. Datos de ejemplo, fechas relativas a hoy.
+
+    Un solo calendario (la misma pieza) en dos pantallas:
+    1. MI AGENDA (especialista): pestañas «Citas de hoy» y «Semana». Ve solo su agenda y es de solo lectura.
+    2. CITAS (recepción y administrador): pestañas «Lista» y «Calendario». Elige el especialista; los huecos libres
+       se pueden tocar: abre «Registrar nueva cita» con el especialista, la fecha y la hora ya cargados.
+       Una cita se puede abrir para ver el detalle y editarla o reprogramarla.
+
+    Cada franja del calendario es una de estas cosas:
+    - Cita (color según el estado: agendada, confirmada, en consulta, completada, ausente).
+    - Hueco libre (verde claro): turno disponible del especialista. Solo se puede tocar en Citas.
+    - Fondo verde muy suave: horario de atención del especialista (sin turno libre, por ejemplo ya pasó).
+
+    La barra oscura de arriba NO es parte del diseño (cambia de pantalla). Sidebar y topbar no se dibujan.
+    Bootstrap 5.3.7 y Font Awesome 6.1.1 (los mismos de base.html), fuente Nunito.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Calendario de agenda - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --bs-body-font-family: 'Nunito', system-ui, sans-serif; --bs-primary: #4338ca; --bs-primary-rgb: 67,56,202; }
+        body { background: #f4f6f9; }
+        .demo-bar { background: #1f2937; color: #e5e7eb; font-size: .85rem; }
+        .page-header { background: linear-gradient(135deg, #3f3fc4 0%, #4b3fb8 100%); color: #fff; padding-bottom: 7rem; }
+        .page-header .sub { color: rgba(255,255,255,.75); }
+        .container-pull { margin-top: -6rem; }
+        .btn-primary { --bs-btn-bg: #4338ca; --bs-btn-border-color: #4338ca; --bs-btn-hover-bg: #3730a3; --bs-btn-hover-border-color: #3730a3; }
+        .nav-pills .nav-link { color: #4338ca; }
+        .nav-pills .nav-link.active { background: #4338ca; color: #fff; }
+
+        /* Calendario */
+        .cal-wrap { overflow-x: auto; }
+        .cal { display: grid; border: 1px solid var(--bs-border-color); border-radius: .5rem; overflow: hidden; background: #fff; min-width: 760px; }
+        .cal-cab { background: #f8f9fa; border-bottom: 1px solid var(--bs-border-color); padding: .5rem .25rem; text-align: center; font-weight: 700; font-size: .85rem; }
+        .cal-cab.hoy { background: #eef2ff; color: #4338ca; }
+        .cal-cab small { display: block; font-weight: 400; color: #6c757d; }
+        .cal-horas { border-right: 1px solid var(--bs-border-color); }
+        .cal-horas div { font-size: .72rem; color: #6c757d; text-align: right; padding-right: .35rem; transform: translateY(-.55em); }
+        .cal-dia { position: relative; border-right: 1px solid #eee; }
+        .cal-dia:last-child { border-right: 0; }
+        .cal-dia.hoy { background-color: #fafaff; }
+        .linea-hora { position: absolute; left: 0; right: 0; border-top: 1px solid #eee; }
+        .bloque-atencion { position: absolute; left: 0; right: 0; background: rgba(25,135,84,.06); border-left: 3px solid rgba(25,135,84,.3); }
+        .hueco { position: absolute; left: 3px; right: 3px; border: 1px dashed rgba(25,135,84,.55); background: rgba(25,135,84,.1); border-radius: .35rem; color: #198754; font-size: .74rem; padding: .15rem .4rem; z-index: 1; }
+        .hueco.tocable { cursor: pointer; }
+        .hueco.tocable:hover { background: rgba(25,135,84,.25); border-style: solid; }
+        .hueco span { opacity: 0; }
+        .hueco.tocable:hover span { opacity: 1; }
+        .evento { position: absolute; border-radius: .35rem; padding: .15rem .35rem; font-size: .76rem; line-height: 1.15; overflow: hidden; border-left: 4px solid; cursor: pointer; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+        .evento b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ev-AGENDADA    { border-color: #0dcaf0; background: #e7f9fd; }
+        .ev-CONFIRMADA  { border-color: #4338ca; background: #eef2ff; }
+        .ev-EN_CONSULTA { border-color: #ffc107; background: #fff8e1; }
+        .ev-COMPLETADA  { border-color: #198754; background: #e8f5ee; }
+        .ev-AUSENTE     { border-color: #6c757d; background: #f1f3f5; color: #6c757d; }
+        .ahora { position: absolute; left: 0; right: 0; height: 2px; background: #dc3545; z-index: 3; }
+        .leyenda span { display: inline-flex; align-items: center; gap: .3rem; margin-right: .9rem; font-size: .8rem; white-space: nowrap; }
+        .leyenda i { width: .8rem; height: .8rem; display: inline-block; border-radius: .2rem; border-left: 4px solid; }
+        .kpi { border-left: 4px solid; }
+    </style>
+</head>
+<body>
+
+<div class="demo-bar py-2">
+    <div class="container-xl d-flex flex-wrap align-items-center gap-3">
+        <strong>Demo</strong>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-light" id="verMiAgenda">Mi Agenda · Especialista</button>
+            <button class="btn btn-outline-light" id="verCitas">Citas · Recepción</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ MI AGENDA (especialista) ═══════════════ -->
+<section id="pantallaMiAgenda">
+    <header class="page-header pt-4">
+        <div class="container-xl px-4 pt-3">
+            <h1 class="h2 fw-bold mb-1">Mi Agenda</h1>
+            <div class="sub" id="subMiAgenda"></div>
+        </div>
+    </header>
+    <div class="container-xl px-4 container-pull pb-5">
+        <ul class="nav nav-pills mb-3 bg-white rounded p-2 shadow-sm d-inline-flex" id="pestanasMiAgenda">
+            <li class="nav-item"><button class="nav-link active" data-tab="hoy"><i class="far fa-calendar-check me-1"></i>Citas de hoy</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="semana"><i class="far fa-calendar-days me-1"></i>Semana</button></li>
+        </ul>
+
+        <div id="tabHoy">
+            <div class="row g-3 mb-3" id="kpis"></div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">Citas del día <span class="fw-normal text-body-secondary" id="fechaHoy"></span></h6></div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light"><tr><th>Hora</th><th>Paciente</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+                        <tbody id="tbodyHoy"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabSemana" class="d-none">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="alert alert-light border small py-2"><i class="fas fa-eye me-1"></i>Es de solo lectura: ves tus citas y tus horarios de atención. Las citas las agenda recepción.</div>
+                    <div class="cal-area" id="calMiAgenda"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════ CITAS (recepción) ═══════════════ -->
+<section id="pantallaCitas" class="d-none">
+    <header class="page-header pt-4">
+        <div class="container-xl px-4 pt-3">
+            <h1 class="h2 fw-bold mb-1">Gestión de Citas</h1>
+            <div class="sub">Administración y seguimiento de agendamientos médicos</div>
+        </div>
+    </header>
+    <div class="container-xl px-4 container-pull pb-5">
+        <ul class="nav nav-pills mb-3 bg-white rounded p-2 shadow-sm d-inline-flex" id="pestanasCitas">
+            <li class="nav-item"><button class="nav-link active" data-tab="lista"><i class="fas fa-list me-1"></i>Lista</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="calendario"><i class="far fa-calendar-days me-1"></i>Calendario</button></li>
+        </ul>
+
+        <div id="tabLista">
+            <div class="card shadow-sm">
+                <div class="card-header bg-body d-flex align-items-center"><span class="fw-bold">Lista de Citas</span><a class="btn btn-sm btn-primary ms-auto" href="#">Nueva Cita</a></div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light"><tr><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Especialista</th><th>Tipo</th><th>Estado</th></tr></thead>
+                        <tbody id="tbodyLista"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabCalendario" class="d-none">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+                        <div>
+                            <label class="small mb-1">Especialista</label>
+                            <select class="form-select" id="selEspCal" style="min-width:260px"></select>
+                        </div>
+                        <div class="small text-body-secondary pb-2"><i class="fas fa-hand-pointer me-1"></i>Tocá un hueco libre para agendar ahí: se abre «Registrar nueva cita» con el especialista, la fecha y la hora ya cargados.</div>
+                    </div>
+                    <div class="cal-area" id="calCitas"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Detalle de cita -->
+<div class="modal fade" id="modalCita" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header"><h6 class="modal-title fw-bold">Detalle de la cita</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="modalCitaCuerpo"></div>
+            <div class="modal-footer" id="modalCitaPie"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Simulación de «Registrar nueva cita» precargada -->
+<div class="modal fade" id="modalNueva" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header"><h6 class="modal-title fw-bold">Registrar Nueva Cita</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="text-body-secondary small mb-2">Así llega la recepcionista a la pantalla de cita nueva, sin elegir nada de esta parte:</p>
+                <div class="alert alert-success border-0 mb-2" id="nuevaTurno"></div>
+                <div class="small text-body-secondary">Solo falta elegir al paciente, el tipo de cita y el motivo.</div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+const $ = id => document.getElementById(id);
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const hoyBase = new Date(); hoyBase.setHours(0, 0, 0, 0);
+const sumar = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const corta = d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+const aMin = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+const deMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const lunesDe = d => sumar(d, -((d.getDay() + 6) % 7));
+// El calendario muestra de lunes a sábado: un domingo se abre directamente la semana que viene
+const semanaActual = () => hoyBase.getDay() === 0 ? sumar(hoyBase, 1) : lunesDe(hoyBase);
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const TIPO = { PRIMERA_VEZ: 'Primera Vez', SEGUIMIENTO: 'Seguimiento', TRATAMIENTO: 'Tratamiento' };
+const ESTADO = { AGENDADA: 'Agendada', CONFIRMADA: 'Confirmada', EN_CONSULTA: 'En consulta', COMPLETADA: 'Completada', AUSENTE: 'Ausente' };
+
+/* ── Datos de ejemplo ─────────────────────────────────────────────────────── */
+const ESPECIALISTAS = [
+    { id: 1, nombre: 'Lic. Ana Núñez', cons: 'Consultorio 1', horario: { 1: ['08:00', '12:00'], 2: ['08:00', '12:00'], 3: ['08:00', '12:00'], 4: ['08:00', '12:00'], 5: ['08:00', '12:00'] } },
+    { id: 2, nombre: 'Lic. Marcos Báez', cons: 'Consultorio 2', horario: { 1: ['14:00', '18:00'], 2: ['08:00', '12:00'], 3: ['14:00', '18:00'], 4: ['08:00', '12:00'], 5: ['14:00', '18:00'] } }
+];
+const CITAS = [
+    [0, '08:00', 1, 'Valentina Giménez', 'SEGUIMIENTO', 3, 'COMPLETADA'], [0, '09:00', 1, 'Gladys Rolón', 'TRATAMIENTO', 5, 'EN_CONSULTA'],
+    [0, '10:00', 1, 'Carlos Benítez', 'PRIMERA_VEZ', null, 'CONFIRMADA'], [1, '08:00', 1, 'Hugo Escobar', 'SEGUIMIENTO', 2, 'AGENDADA'],
+    [1, '09:00', 1, 'Patricia Ayala', 'TRATAMIENTO', 8, 'CONFIRMADA'], [2, '08:00', 1, 'Valentina Giménez', 'SEGUIMIENTO', 4, 'AGENDADA'],
+    [2, '10:00', 1, 'Armando Ramirez', 'PRIMERA_VEZ', null, 'AGENDADA'], [3, '11:00', 1, 'Gladys Rolón', 'TRATAMIENTO', 6, 'AGENDADA'],
+    [-1, '09:00', 1, 'Hugo Escobar', 'PRIMERA_VEZ', null, 'COMPLETADA'], [-2, '10:00', 1, 'Carlos Benítez', 'SEGUIMIENTO', 2, 'AUSENTE'],
+    [0, '14:00', 2, 'Hugo Escobar', 'PRIMERA_VEZ', null, 'CONFIRMADA'], [0, '15:00', 2, 'Patricia Ayala', 'TRATAMIENTO', 3, 'AGENDADA'],
+    [1, '15:00', 2, 'Gladys Rolón', 'TRATAMIENTO', 7, 'AGENDADA'], [2, '09:00', 2, 'Valentina Giménez', 'SEGUIMIENTO', 5, 'AGENDADA']
+].map(([d, h, esp, pac, tipo, ses, estado]) => ({ fecha: iso(sumar(hoyBase, d)), h, esp, pac, tipo, ses, estado }));
+
+/* ── Calendario (una sola pieza para las dos pantallas) ────────────────────── */
+function Calendario(raiz, cfg) {
+    // cfg: esp() -> especialista; tocable -> los huecos se pueden tocar; alTocarHueco(esp, fecha, hora); alTocarCita(cita)
+    let lunes = semanaActual();
+    raiz.innerHTML = `<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <div class="btn-group btn-group-sm"><button class="btn btn-outline-secondary" data-n="-1"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-outline-secondary" data-n="0">Esta semana</button><button class="btn btn-outline-secondary" data-n="1"><i class="fas fa-chevron-right"></i></button></div>
+        <div class="fw-bold rango"></div>
+        <div class="leyenda text-body-secondary">
+            <span><i style="border-color:#0dcaf0;background:#e7f9fd"></i>Agendada</span><span><i style="border-color:#4338ca;background:#eef2ff"></i>Confirmada</span>
+            <span><i style="border-color:#ffc107;background:#fff8e1"></i>En consulta</span><span><i style="border-color:#198754;background:#e8f5ee"></i>Completada</span>
+            <span><i style="border-color:rgba(25,135,84,.55);background:rgba(25,135,84,.12)"></i>Hueco libre</span></div></div>
+        <div class="cal-wrap"><div class="cal"></div></div>`;
+    raiz.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { lunes = b.dataset.n === '0' ? semanaActual() : sumar(lunes, 7 * +b.dataset.n); pintar(); });
+
+    function pintar() {
+        const esp = cfg.esp(), dias = [0, 1, 2, 3, 4, 5].map(i => sumar(lunes, i));
+        raiz.querySelector('.rango').textContent = `${DIAS[1]} ${corta(dias[0])} al ${DIAS[6]} ${corta(dias[5])}`;
+        const cal = raiz.querySelector('.cal');
+        const citas = CITAS.filter(c => c.esp === esp.id && c.estado !== 'CANCELADA');
+        // Rango de horas: solo lo que cubren los horarios de atención de esa semana (si no hay ninguno, de 8 a 18)
+        let ini = 24 * 60, fin = 0;
+        dias.forEach(d => { const h = esp.horario[d.getDay()]; if (h) { ini = Math.min(ini, aMin(h[0])); fin = Math.max(fin, aMin(h[1])); } });
+        if (fin === 0) { ini = 480; fin = 1080; }
+        ini = Math.floor(ini / 60) * 60; fin = Math.ceil(fin / 60) * 60;
+        const ALTO = 56, alto = (fin - ini) / 60 * ALTO, y = m => (m - ini) / 60 * ALTO;
+        cal.style.gridTemplateColumns = '52px repeat(6, minmax(110px, 1fr))';
+        let h = '<div class="cal-cab"></div>' + dias.map(d => `<div class="cal-cab ${iso(d) === iso(hoyBase) ? 'hoy' : ''}">${DIAS[d.getDay()]}<small>${corta(d)}</small></div>`).join('');
+        h += `<div class="cal-horas" style="height:${alto}px;position:relative">` + Array.from({ length: (fin - ini) / 60 }, (_, i) => `<div style="position:absolute;right:0;top:${i * ALTO}px;width:100%">${deMin(ini + i * 60)}</div>`).join('') + '</div>';
+        dias.forEach(d => {
+            let col = `<div class="cal-dia ${iso(d) === iso(hoyBase) ? 'hoy' : ''}" style="height:${alto}px">`;
+            for (let i = 1; i < (fin - ini) / 60; i++) col += `<div class="linea-hora" style="top:${i * ALTO}px"></div>`;
+            const hor = esp.horario[d.getDay()], delDia = citas.filter(c => c.fecha === iso(d));
+            if (hor) {
+                col += `<div class="bloque-atencion" style="top:${y(aMin(hor[0]))}px;height:${y(aMin(hor[1])) - y(aMin(hor[0]))}px"></div>`;
+                for (let m = aMin(hor[0]); m + 60 <= aMin(hor[1]); m += 60) {
+                    const ocupado = delDia.some(c => aMin(c.h) === m);
+                    const futuro = d > hoyBase || (iso(d) === iso(hoyBase) && m > new Date().getHours() * 60 + new Date().getMinutes());
+                    if (!ocupado && futuro) col += `<div class="hueco ${cfg.tocable ? 'tocable' : ''}" style="top:${y(m) + 2}px;height:${ALTO - 4}px" data-f="${iso(d)}" data-h="${deMin(m)}"><span>+ Nueva cita</span></div>`;
+                }
+            }
+            delDia.forEach(c => col += `<div class="evento ev-${c.estado}" style="left:3px;right:3px;top:${y(aMin(c.h)) + 2}px;height:${ALTO - 4}px" data-i="${CITAS.indexOf(c)}"><b>${c.h} ${esc(c.pac)}</b>${TIPO[c.tipo]}${c.ses ? ' #' + c.ses : ''}</div>`);
+            const ahora = new Date(), mm = ahora.getHours() * 60 + ahora.getMinutes();
+            if (iso(d) === iso(ahora) && mm >= ini && mm <= fin) col += `<div class="ahora" style="top:${y(mm)}px"></div>`;
+            h += col + '</div>';
+        });
+        cal.innerHTML = h;
+        cal.querySelectorAll('.evento').forEach(e => e.onclick = () => cfg.alTocarCita(CITAS[+e.dataset.i]));
+        if (cfg.tocable) cal.querySelectorAll('.hueco.tocable').forEach(e => e.onclick = () => cfg.alTocarHueco(esp, e.dataset.f, e.dataset.h));
+    }
+    return { pintar };
+}
+
+/* ── Mi Agenda (especialista: Lic. Ana Núñez) ─────────────────────────────── */
+const yo = ESPECIALISTAS[0];
+$('subMiAgenda').textContent = `${yo.nombre} · hoy ${DIAS[hoyBase.getDay()]} ${corta(hoyBase)}`;
+$('fechaHoy').textContent = `— ${DIAS[hoyBase.getDay()]} ${corta(hoyBase)}`;
+const deHoy = CITAS.filter(c => c.esp === yo.id && c.fecha === iso(hoyBase)).sort((a, b) => a.h.localeCompare(b.h));
+$('kpis').innerHTML = [['Total citas', deHoy.length, 'primary'], ['Confirmadas', deHoy.filter(c => c.estado === 'CONFIRMADA').length, 'success'],
+    ['En consulta', deHoy.filter(c => c.estado === 'EN_CONSULTA').length, 'warning'], ['Completadas', deHoy.filter(c => c.estado === 'COMPLETADA').length, 'info']]
+    .map(([t, n, c]) => `<div class="col-6 col-xl-3"><div class="card kpi border-${c} h-100"><div class="card-body py-3"><div class="small text-muted fw-bold text-uppercase">${t}</div><div class="h3 mb-0 fw-bold text-${c}">${n}</div></div></div></div>`).join('');
+$('tbodyHoy').innerHTML = deHoy.map(c => `<tr><td class="fw-semibold">${c.h}</td><td>${esc(c.pac)}</td><td>${TIPO[c.tipo]}${c.ses ? ' #' + c.ses : ''}</td>
+    <td><span class="badge text-bg-light border">${ESTADO[c.estado]}</span></td><td class="text-end">${c.estado === 'COMPLETADA' ? '' : `<button class="btn btn-sm btn-primary">${c.estado === 'EN_CONSULTA' ? 'Continuar' : 'Iniciar'}</button>`}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="text-center text-muted py-4">No tenés citas programadas para hoy.</td></tr>';
+
+function detalleCita(c, conEditar) {
+    const e = ESPECIALISTAS.find(x => x.id === c.esp);
+    $('modalCitaCuerpo').innerHTML = `<div class="fw-bold fs-6">${esc(c.pac)}</div><div class="text-body-secondary small mb-2">${c.fecha.split('-').reverse().join('/')} · ${c.h} · ${e.nombre} · ${e.cons}</div>
+        <span class="badge text-bg-light border">${ESTADO[c.estado]}</span> <span class="badge text-bg-primary">${TIPO[c.tipo]}${c.ses ? ' #' + c.ses : ''}</span>`;
+    $('modalCitaPie').innerHTML = conEditar ? '<a class="btn btn-primary btn-sm" href="#"><i class="fas fa-pen me-1"></i>Editar / reprogramar</a><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>'
+        : '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>';
+    new bootstrap.Modal($('modalCita')).show();
+}
+const calMiAgenda = Calendario($('calMiAgenda'), { esp: () => yo, tocable: false, alTocarCita: c => detalleCita(c, false) });
+$('pestanasMiAgenda').onclick = ev => {
+    const t = ev.target.closest('[data-tab]'); if (!t) return;
+    document.querySelectorAll('#pestanasMiAgenda .nav-link').forEach(b => b.classList.toggle('active', b === t));
+    $('tabHoy').classList.toggle('d-none', t.dataset.tab !== 'hoy'); $('tabSemana').classList.toggle('d-none', t.dataset.tab !== 'semana');
+    if (t.dataset.tab === 'semana') calMiAgenda.pintar();
+};
+
+/* ── Citas (recepción) ────────────────────────────────────────────────────── */
+$('selEspCal').innerHTML = ESPECIALISTAS.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+const calCitas = Calendario($('calCitas'), {
+    esp: () => ESPECIALISTAS.find(e => e.id === +$('selEspCal').value), tocable: true,
+    alTocarCita: c => detalleCita(c, true),
+    alTocarHueco: (esp, fecha, hora) => {
+        // En el sistema real: /agendamiento/citas/citas-agregar?id_especialista=..&fecha=..&id_slot=..
+        const f = new Date(fecha + 'T00:00:00');
+        $('nuevaTurno').innerHTML = `<strong>${esp.nombre}</strong><br>${DIAS[f.getDay()]} ${f.getDate()}/${f.getMonth() + 1}/${f.getFullYear()} a las <strong>${hora} hs</strong> · ${esp.cons}`;
+        new bootstrap.Modal($('modalNueva')).show();
+    }
+});
+$('selEspCal').onchange = () => calCitas.pintar();
+$('tbodyLista').innerHTML = CITAS.filter(c => c.estado !== 'AUSENTE').sort((a, b) => (a.fecha + a.h).localeCompare(b.fecha + b.h)).slice(0, 8).map(c => {
+    const e = ESPECIALISTAS.find(x => x.id === c.esp);
+    return `<tr><td>${c.fecha.split('-').reverse().join('/')}</td><td>${c.h}</td><td>${esc(c.pac)}</td><td>${e.nombre}</td><td>${TIPO[c.tipo]}${c.ses ? ' #' + c.ses : ''}</td><td><span class="badge text-bg-light border">${ESTADO[c.estado]}</span></td></tr>`;
+}).join('');
+$('pestanasCitas').onclick = ev => {
+    const t = ev.target.closest('[data-tab]'); if (!t) return;
+    document.querySelectorAll('#pestanasCitas .nav-link').forEach(b => b.classList.toggle('active', b === t));
+    $('tabLista').classList.toggle('d-none', t.dataset.tab !== 'lista'); $('tabCalendario').classList.toggle('d-none', t.dataset.tab !== 'calendario');
+    if (t.dataset.tab === 'calendario') calCitas.pintar();
+};
+
+/* ── Demo: cambio de pantalla ─────────────────────────────────────────────── */
+$('verMiAgenda').onclick = () => { $('pantallaMiAgenda').classList.remove('d-none'); $('pantallaCitas').classList.add('d-none'); };
+$('verCitas').onclick = () => { $('pantallaCitas').classList.remove('d-none'); $('pantallaMiAgenda').classList.add('d-none'); };
+</script>
+</body>
+</html>

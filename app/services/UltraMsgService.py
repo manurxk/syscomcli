@@ -417,27 +417,24 @@ class UltraMsgService:
             hora_formateada = str(hora)
         
         # Construir mensaje
-        mensaje = f"""🏥 *Recordatorio de Cita Médica*
+        mensaje = f"""*Recordatorio de cita médica*
 
-Hola {nombre},
+Estimado/a *{nombre}*, le recordamos que tiene una cita agendada:
 
-Le recordamos su cita:
-📅 Fecha: {fecha_formateada}
-🕐 Hora: {hora_formateada}
-👨‍⚕️ Profesional: {especialista}
-🩺 Especialidad: {especialidad}"""
-        
+Fecha: *{fecha_formateada}*
+Hora: *{hora_formateada}*
+Profesional: *{especialista}*
+Especialidad: {especialidad}"""
+
         if motivo:
-            mensaje += f"\n📋 Motivo: {motivo}"
-        
+            mensaje += f"\nMotivo: {motivo}"
+
         mensaje += """
 
-Por favor confirme su asistencia respondiendo:
-✅ SI - para confirmar
-❌ NO - para cancelar
+Le pedimos llegar con unos minutos de anticipación. Si no puede asistir, comuníquese con la clínica para reprogramar.
 
-¡Gracias!"""
-        
+Gracias."""
+
         return mensaje
     
     def enviar_notificacion_cita_creada_editada(self, telefono, nombre_paciente, cita_fecha, 
@@ -538,23 +535,20 @@ Por favor confirme su asistencia respondiendo:
         
         # Construir mensaje
         accion = "actualizada" if es_edicion else "creada"
-        emoji_accion = "✏️" if es_edicion else "✅"
-        
-        mensaje = f"""{emoji_accion} *Su Cita ha sido {accion.upper()}*
 
-Hola {nombre},
+        mensaje = f"""*Su cita ha sido {accion}*
 
-Su cita médica ha sido {accion} con los siguientes detalles:
+Estimado/a *{nombre}*, su cita médica fue {accion} con los siguientes datos:
 
-📅 *Fecha:* {fecha_formateada}
-🕐 *Hora:* {hora_formateada}
-👨‍⚕️ *Profesional:* {especialista}
-🩺 *Especialidad:* {especialidad}
-🏥 *Clínica:* {nombre_clinica}
+Fecha: *{fecha_formateada}*
+Hora: *{hora_formateada}*
+Profesional: *{especialista}*
+Especialidad: {especialidad}
+Clínica: {nombre_clinica}
 
-Recuerde que recibirá recordatorios automáticos 24 horas y 12 horas antes de su cita.
+Recibirá recordatorios automáticos 24 horas y 2 horas antes de su cita.
 
-¡Gracias por confiar en nosotros!"""
+Gracias por confiar en nosotros."""
         
         return mensaje
     

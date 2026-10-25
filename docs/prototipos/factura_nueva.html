@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático de NUEVA FACTURA — SYSCLIN
+    Se abre con doble clic, no necesita Flask. Datos de ejemplo.
+
+    Qué cambia respecto a app/rutas/ventas/movimientos/factura/templates/factura-agregar.html:
+    1. Sin modal de ítem: el ítem se busca y se carga en una fila fija sobre la tabla (como el buscador de pacientes).
+    2. Catálogo con PRECIO ESTÁNDAR: al elegir el ítem se completa el precio; la recepción puede corregirlo.
+    3. BORRADOR: la factura se guarda sola mientras se escribe. Al volver a entrar se ofrece retomarla.
+       En el sistema real: estado BORRADOR en facturas (sin número ni timbrado consumido hasta emitir).
+       Acá se simula con localStorage.
+    4. Consultas pendientes de facturar del paciente: solo fecha, especialista, tipo y estado (nada clínico).
+       Si la consulta no está cerrada se puede facturar: pasa a "Pendiente de observación" y se avisa al especialista.
+    5. Campo CORREO del paciente en la factura (si no tiene, se completa acá y se guarda en el paciente).
+    6. Caja: si no hay caja abierta en la moneda de la factura, el aviso dice por qué y lleva a Estado de Caja.
+
+    Bootstrap 5.3.7 y Font Awesome 6.1.1 (los mismos de base.html), fuente Nunito.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nueva factura - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --bs-body-font-family: 'Nunito', system-ui, sans-serif; --bs-primary: #4338ca; --bs-primary-rgb: 67,56,202; --bs-border-radius: .5rem; }
+        .btn-primary { --bs-btn-bg: #4338ca; --bs-btn-border-color: #4338ca; --bs-btn-hover-bg: #3730a3; --bs-btn-hover-border-color: #3730a3; --bs-btn-active-bg: #3730a3; --bs-btn-disabled-bg: #4338ca; --bs-btn-disabled-border-color: #4338ca; }
+        body { background: #f4f6f9; }
+        .num { font-variant-numeric: tabular-nums; }
+        .sugerencias { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; max-height: 260px; overflow-y: auto; display: none; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); }
+        .sugerencias .list-group-item { cursor: pointer; }
+        #sugItem { top: auto; bottom: 100%; }   /* el buscador de ítems está abajo: la lista se abre hacia arriba */
+        .fila-carga td { background: #f8f9ff; }
+        .barra-acciones { position: sticky; bottom: 0; z-index: 1020; background: #fff; border-top: 1px solid var(--bs-border-color); }
+        .paso { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #4338ca; color: #fff; font-size: .8rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+        .guardado-ok { color: var(--bs-success); }
+    </style>
+</head>
+<body>
+
+<div class="container-xl py-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Nueva factura <span class="badge text-bg-warning align-middle fs-6" id="badgeEstado">BORRADOR</span></h1>
+            <div class="text-body-secondary small">Emisión de comprobante de venta · se guarda sola como borrador</div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="small text-body-secondary" id="lblGuardado"><i class="fas fa-cloud me-1"></i>Sin cambios</span>
+            <a class="btn btn-outline-secondary btn-sm" href="#">Volver al listado</a>
+        </div>
+    </div>
+
+    <!-- Aviso de borrador pendiente -->
+    <div class="alert alert-warning d-none align-items-center justify-content-between gap-2" id="avisoBorrador">
+        <div><i class="fas fa-pen-to-square me-2"></i><strong>Tenés una factura en borrador</strong> <span id="avisoBorradorDetalle" class="text-body-secondary"></span></div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-warning" id="btnRetomar">Retomar</button>
+            <button class="btn btn-sm btn-outline-secondary" id="btnDescartarAviso">Descartar</button>
+        </div>
+    </div>
+
+    <!-- 1. Paciente -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3 d-flex align-items-center gap-2">
+            <span class="paso">1</span><h6 class="m-0 fw-bold">Paciente y datos fiscales</h6>
+        </div>
+        <div class="card-body">
+            <div id="bloqueBuscar">
+                <label class="small mb-1" for="txtPaciente">Nombre, apellido, cédula o historia clínica</label>
+                <div class="position-relative">
+                    <input class="form-control" id="txtPaciente" type="text" placeholder="Escriba para buscar…" autocomplete="off">
+                    <div class="list-group sugerencias" id="sugPaciente"></div>
+                </div>
+            </div>
+
+            <div id="bloquePaciente" class="d-none">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div>
+                        <div class="fw-bold fs-5" id="pNombre">—</div>
+                        <div class="small text-body-secondary"><span id="pCedula"></span> · HC <span id="pHc"></span></div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" id="btnCambiarPaciente"><i class="fas fa-repeat me-1"></i>Cambiar paciente</button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="small mb-1">Documento para la factura</label>
+                        <select class="form-select" id="selDoc"><option value="CI">Cédula de identidad</option><option value="RUC">RUC</option></select>
+                    </div>
+                    <div class="col-md-3 d-none" id="grpRuc">
+                        <label class="small mb-1">RUC (con dígito verificador)</label>
+                        <input class="form-control" id="txtRuc" placeholder="Ej: 1234567-8">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small mb-1">Correo para enviar la factura</label>
+                        <input class="form-control" type="email" id="txtCorreo" placeholder="paciente@correo.com">
+                        <div class="form-text" id="ayudaCorreo"></div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small mb-1">Teléfono</label>
+                        <input class="form-control" id="txtTel" placeholder="0991000000">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Consultas pendientes -->
+    <div class="card shadow-sm mb-3 d-none" id="cardConsultas">
+        <div class="card-header bg-body py-3 d-flex align-items-center gap-2">
+            <span class="paso">2</span><h6 class="m-0 fw-bold">Consultas pendientes de facturar</h6>
+            <span class="badge text-bg-secondary ms-1" id="contConsultas">0</span>
+            <span class="small text-body-secondary ms-auto">Solo se muestran datos administrativos, nunca contenido clínico.</span>
+        </div>
+        <div class="list-group list-group-flush" id="listaConsultas"></div>
+        <div class="card-footer bg-body small text-body-secondary d-none" id="notaConsultasAbiertas">
+            <i class="fas fa-bell text-warning me-1"></i>Las consultas sin cerrar se pueden facturar: pasan a <strong>Pendiente de observación</strong> y el especialista recibe la nota «Facturada, revisar».
+        </div>
+    </div>
+
+    <!-- 3. Datos de la factura -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3 d-flex align-items-center gap-2">
+            <span class="paso">3</span><h6 class="m-0 fw-bold">Datos de la factura</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3"><label class="small mb-1">Timbrado</label><select class="form-select"><option>12345678 — vigente hasta 31/12/2026</option></select></div>
+                <div class="col-md-3"><label class="small mb-1">Punto de expedición</label><select class="form-select"><option>001-001</option></select></div>
+                <div class="col-md-3"><label class="small mb-1">Tipo de comprobante</label><select class="form-select"><option>Factura</option></select></div>
+                <div class="col-md-3"><label class="small mb-1">Fecha</label><input class="form-control" type="date" id="txtFecha"></div>
+                <div class="col-md-3"><label class="small mb-1">Condición de venta</label>
+                    <select class="form-select" id="selCondicion"><option value="0">Contado</option><option value="30">Crédito 30 días</option></select></div>
+                <div class="col-md-3"><label class="small mb-1">Moneda</label>
+                    <select class="form-select" id="selMoneda"><option value="PYG">Guaraní (PYG)</option><option value="USD">Dólar (USD)</option></select></div>
+                <div class="col-md-6"><label class="small mb-1">Observaciones</label><input class="form-control" id="txtObs" placeholder="Opcional"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Ítems -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-body py-3 d-flex align-items-center gap-2">
+            <span class="paso">4</span><h6 class="m-0 fw-bold">Ítems</h6>
+            <span class="small text-body-secondary ms-auto">Buscá el servicio, ajustá si hace falta y presioná <kbd>Enter</kbd> para agregarlo.</span>
+        </div>
+        <div style="overflow: visible;">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Descripción</th>
+                        <th style="width:90px" class="text-center">Cant.</th>
+                        <th style="width:150px" class="text-end">Precio c/IVA</th>
+                        <th style="width:120px">IVA</th>
+                        <th style="width:130px" class="text-end">Descuento</th>
+                        <th style="width:140px" class="text-end">Total</th>
+                        <th style="width:90px"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyItems"></tbody>
+                <tfoot>
+                    <!-- Fila de carga: reemplaza al modal; queda siempre debajo de los ítems ya cargados -->
+                    <tr class="fila-carga">
+                        <td class="position-relative">
+                            <input class="form-control form-control-sm" id="iBuscar" placeholder="Buscar servicio o producto… (ej: sesión)" autocomplete="off">
+                            <div class="list-group sugerencias" id="sugItem"></div>
+                        </td>
+                        <td><input class="form-control form-control-sm text-center" id="iCant" type="number" min="1" value="1"></td>
+                        <td><input class="form-control form-control-sm text-end" id="iPrecio" type="number" min="0" value="0"></td>
+                        <td><select class="form-select form-select-sm" id="iIva"><option value="0">Exento</option><option value="5">5 %</option><option value="10">10 %</option></select></td>
+                        <td><input class="form-control form-control-sm text-end" id="iDesc" type="number" min="0" value="0"></td>
+                        <td class="text-end text-body-secondary num" id="iTotal">0</td>
+                        <td><button class="btn btn-success btn-sm w-100" id="btnAgregarItem"><i class="fas fa-plus"></i></button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="card-footer bg-body small text-body-secondary" id="ayudaPrecio"><i class="fas fa-tag me-1"></i>El precio estándar sale del catálogo. Si lo cambiás, queda anotado en la línea.</div>
+    </div>
+
+    <!-- 5. Cobro -->
+    <div class="card shadow-sm mb-3" id="cardCobro">
+        <div class="card-header bg-body py-3 d-flex align-items-center gap-2">
+            <span class="paso">5</span><h6 class="m-0 fw-bold">Cobro (venta al contado)</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger d-none mb-3" id="avisoCaja"></div>
+            <div class="row g-3" id="filaCobro">
+                <div class="col-md-4"><label class="small mb-1">Caja</label>
+                    <select class="form-select" id="selCaja"></select></div>
+                <div class="col-md-4"><label class="small mb-1">Forma de cobro</label>
+                    <select class="form-select" id="selForma"><option value="">— Seleccionar —</option><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option><option>Cheque</option></select></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="row justify-content-end">
+        <div class="col-md-5 col-lg-4">
+            <table class="table table-sm bg-body shadow-sm rounded">
+                <tr><td class="text-body-secondary">Subtotal (base sin IVA)</td><td class="text-end num" id="tSub">0</td></tr>
+                <tr><td class="text-body-secondary">IVA 5 %</td><td class="text-end num" id="tIva5">0</td></tr>
+                <tr><td class="text-body-secondary">IVA 10 %</td><td class="text-end num" id="tIva10">0</td></tr>
+                <tr><td class="text-body-secondary">Descuentos</td><td class="text-end num text-danger" id="tDesc">0</td></tr>
+                <tr class="table-primary"><td class="fw-bold">TOTAL A PAGAR</td><td class="text-end fw-bold fs-5 num" id="tTotal">0</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de acciones fija -->
+<div class="barra-acciones py-3">
+    <div class="container-xl d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <button class="btn btn-outline-danger" id="btnDescartar"><i class="fas fa-trash me-1"></i>Descartar borrador</button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" id="btnGuardarBorrador"><i class="fas fa-floppy-disk me-1"></i>Guardar borrador</button>
+            <button class="btn btn-primary" id="btnEmitir"><i class="fas fa-file-invoice me-1"></i>Emitir factura</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ── Datos de ejemplo ─────────────────────────────────────────────────────── */
+const PACIENTES = [
+    { id: 6, nombre: 'Valentina Sofía Giménez Amarilla', cedula: '6956038', hc: 'HC-0006', correo: 'valentina.gimenez@correo.com', tel: '0991000006' },
+    { id: 5, nombre: 'Gladys Mabel Rolón Martínez',      cedula: '6623905', hc: 'HC-0005', correo: '',                                 tel: '0991000005' },
+    { id: 3, nombre: 'Hugo Ramón Escobar Vera',          cedula: '6387529', hc: 'HC-0003', correo: 'hugo.escobar@correo.com',          tel: '0991000003' },
+    { id: 1, nombre: 'Carlos Alberto Benítez Duarte',    cedula: '6102845', hc: 'HC-0001', correo: '',                                 tel: '0991000001' }
+];
+const CONSULTAS = {
+    6: [{ id: 41, fecha: '23/10/2026', esp: 'Lic. A. Núñez',  tipo: 'Primera vez',  estado: 'CERRADA' },
+        { id: 44, fecha: '24/10/2026', esp: 'Lic. A. Núñez',  tipo: 'Seguimiento',  estado: 'EN CURSO' }],
+    5: [{ id: 42, fecha: '22/10/2026', esp: 'Lic. M. Báez',   tipo: 'Tratamiento',  estado: 'CERRADA' }],
+    3: [], 1: [{ id: 40, fecha: '22/10/2026', esp: 'Lic. A. Núñez', tipo: 'Primera vez', estado: 'CERRADA' }]
+};
+const CATALOGO = [
+    { id: 1, des: 'CONSULTA PSICOLOGICA',      precio: 150000, iva: 0 },
+    { id: 2, des: 'SESION DE PSICOTERAPIA',    precio: 120000, iva: 0 },
+    { id: 3, des: 'SESION DE NEUROPSICOLOGIA', precio: 180000, iva: 0 },
+    { id: 4, des: 'SESION DE FONOAUDIOLOGIA',  precio: 130000, iva: 0 },
+    { id: 5, des: 'SESION DE PSICOPEDAGOGIA',  precio: 110000, iva: 0 },
+    { id: 6, des: 'INFORME NEUROPSICOLOGICO',  precio: 300000, iva: 10 }
+];
+const CAJAS = [{ id: 1, des: 'CAJA PRINCIPAL', moneda: 'PYG', abierta: true }];
+
+/* ── Estado ───────────────────────────────────────────────────────────────── */
+const KEY = 'proto_factura_borrador';
+let st = { paciente: null, items: [], consultas: [], correo: '', tel: '', doc: 'CI', ruc: '', condicion: '0', moneda: 'PYG', fecha: '', obs: '', caja: '', forma: '' };
+let catSel = null, timer = null;
+const $ = id => document.getElementById(id);
+const gs = n => Math.round(n).toLocaleString('es-PY');
+
+/* ── Búsqueda genérica (mismo patrón para paciente e ítem) ────────────────── */
+function buscador(input, panel, fuente, pintar, elegir) {
+    const mostrar = () => {
+        const q = input.value.trim().toLowerCase();
+        const res = fuente().filter(x => !q || JSON.stringify(x).toLowerCase().includes(q)).slice(0, 8);
+        panel.innerHTML = res.length ? '' : '<div class="list-group-item text-body-secondary small">Sin resultados</div>';
+        res.forEach(x => {
+            const a = document.createElement('a');
+            a.className = 'list-group-item list-group-item-action';
+            a.innerHTML = pintar(x);
+            a.onmousedown = e => { e.preventDefault(); panel.style.display = 'none'; elegir(x); };
+            panel.appendChild(a);
+        });
+        panel.style.display = 'block';
+    };
+    input.addEventListener('input', mostrar);
+    input.addEventListener('focus', mostrar);
+    input.addEventListener('blur', () => setTimeout(() => panel.style.display = 'none', 120));
+}
+
+buscador($('txtPaciente'), $('sugPaciente'), () => PACIENTES,
+    p => `<div class="fw-semibold">${p.nombre}</div><div class="small text-body-secondary">CI ${p.cedula} · ${p.hc}</div>`,
+    p => { elegirPaciente(p); programarGuardado(); });
+
+buscador($('iBuscar'), $('sugItem'), () => CATALOGO,
+    c => `<div class="d-flex justify-content-between"><span class="fw-semibold">${c.des}</span><span class="num">Gs. ${gs(c.precio)}</span></div>
+          <div class="small text-body-secondary">${c.iva ? 'IVA ' + c.iva + ' %' : 'Exento'} · precio estándar</div>`,
+    c => { catSel = c; $('iBuscar').value = c.des; $('iPrecio').value = c.precio; $('iIva').value = c.iva; $('ayudaPrecio').innerHTML = `<i class="fas fa-tag me-1"></i>Precio estándar: Gs. ${gs(c.precio)}`; calcFila(); $('iCant').focus(); $('iCant').select(); });
+
+/* ── Paciente ─────────────────────────────────────────────────────────────── */
+function elegirPaciente(p) {
+    st.paciente = p.id;
+    st.correo = p.correo; st.tel = p.tel;
+    st.consultas = [];
+    pintarPaciente();
+}
+function pintarPaciente() {
+    const p = PACIENTES.find(x => x.id === st.paciente);
+    $('bloqueBuscar').classList.toggle('d-none', !!p);
+    $('bloquePaciente').classList.toggle('d-none', !p);
+    $('cardConsultas').classList.toggle('d-none', !p);
+    if (!p) return;
+    $('pNombre').textContent = p.nombre; $('pCedula').textContent = 'CI ' + p.cedula; $('pHc').textContent = p.hc;
+    $('txtCorreo').value = st.correo; $('txtTel').value = st.tel; $('selDoc').value = st.doc; $('txtRuc').value = st.ruc;
+    $('grpRuc').classList.toggle('d-none', st.doc !== 'RUC');
+    ayudaCorreo();
+    pintarConsultas();
+}
+function ayudaCorreo() {
+    const p = PACIENTES.find(x => x.id === st.paciente);
+    const el = $('ayudaCorreo');
+    if (p && !p.correo && !st.correo) { el.className = 'form-text text-warning-emphasis'; el.innerHTML = '<i class="fas fa-triangle-exclamation me-1"></i>El paciente no tiene correo registrado. Si lo cargás acá, se guarda en su ficha.'; }
+    else if (p && !p.correo) { el.className = 'form-text'; el.textContent = 'Se va a guardar en la ficha del paciente al emitir.'; }
+    else { el.className = 'form-text'; el.textContent = ''; }
+}
+
+/* ── Consultas pendientes ─────────────────────────────────────────────────── */
+function pintarConsultas() {
+    const lista = CONSULTAS[st.paciente] || [];
+    $('contConsultas').textContent = lista.length;
+    const cont = $('listaConsultas'); cont.innerHTML = '';
+    if (!lista.length) cont.innerHTML = '<div class="list-group-item text-body-secondary small">Este paciente no tiene consultas pendientes de facturar. Podés cargar ítems manualmente.</div>';
+    lista.forEach(c => {
+        const abierta = c.estado !== 'CERRADA';
+        const marcada = st.consultas.includes(c.id);
+        const row = document.createElement('label');
+        row.className = 'list-group-item d-flex align-items-center gap-3';
+        row.innerHTML = `<input class="form-check-input mt-0" type="checkbox" ${marcada ? 'checked' : ''}>
+            <div class="flex-grow-1"><div class="fw-semibold">${c.tipo} · ${c.fecha}</div><div class="small text-body-secondary">${c.esp} · consulta #${c.id}</div></div>
+            <span class="badge ${abierta ? 'text-bg-warning' : 'text-bg-success'}">${c.estado}</span>`;
+        row.querySelector('input').onchange = e => {
+            if (e.target.checked) st.consultas.push(c.id); else st.consultas = st.consultas.filter(x => x !== c.id);
+            $('notaConsultasAbiertas').classList.toggle('d-none', !st.consultas.some(id => lista.find(z => z.id === id && z.estado !== 'CERRADA')));
+            programarGuardado();
+        };
+        cont.appendChild(row);
+    });
+    $('notaConsultasAbiertas').classList.toggle('d-none', !st.consultas.some(id => lista.find(z => z.id === id && z.estado !== 'CERRADA')));
+}
+
+/* ── Ítems ────────────────────────────────────────────────────────────────── */
+const calcLinea = (cant, precio, desc) => Math.max(cant * precio - desc, 0);
+function calcFila() { $('iTotal').textContent = gs(calcLinea(+$('iCant').value || 0, +$('iPrecio').value || 0, +$('iDesc').value || 0)); }
+['iCant', 'iPrecio', 'iDesc'].forEach(i => $(i).addEventListener('input', calcFila));
+
+function agregarItem() {
+    const des = $('iBuscar').value.trim();
+    const cant = +$('iCant').value, precio = +$('iPrecio').value;
+    if (!des || cant < 1 || precio <= 0) { $('iBuscar').classList.add('is-invalid'); setTimeout(() => $('iBuscar').classList.remove('is-invalid'), 1200); return; }
+    st.items.push({ des, cant, precio, iva: +$('iIva').value, desc: +$('iDesc').value || 0, estandar: catSel ? catSel.precio : null });
+    catSel = null; $('iBuscar').value = ''; $('iCant').value = 1; $('iPrecio').value = 0; $('iDesc').value = 0; $('iIva').value = 0; calcFila();
+    $('ayudaPrecio').innerHTML = '<i class="fas fa-tag me-1"></i>El precio estándar sale del catálogo. Si lo cambiás, queda anotado en la línea.';
+    pintarItems(); $('iBuscar').focus(); programarGuardado();
+}
+$('btnAgregarItem').onclick = agregarItem;
+['iBuscar', 'iCant', 'iPrecio', 'iDesc'].forEach(i => $(i).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); agregarItem(); } }));
+
+function pintarItems() {
+    const tb = $('tbodyItems'); tb.innerHTML = '';
+    if (!st.items.length) tb.innerHTML = '<tr><td colspan="7" class="text-center text-body-secondary py-3">Todavía no hay ítems. Buscá un servicio en la fila de arriba.</td></tr>';
+    st.items.forEach((it, i) => {
+        const tr = document.createElement('tr');
+        const cambiado = it.estandar && it.estandar !== it.precio;
+        tr.innerHTML = `<td>${it.des}${cambiado ? ` <span class="badge text-bg-info ms-1" title="Precio estándar Gs. ${gs(it.estandar)}">precio modificado</span>` : ''}</td>
+            <td class="text-center"><input class="form-control form-control-sm text-center" type="number" min="1" value="${it.cant}"></td>
+            <td class="text-end num">${gs(it.precio)}</td><td>${it.iva ? it.iva + ' %' : 'Exento'}</td>
+            <td class="text-end num">${gs(it.desc)}</td><td class="text-end fw-semibold num">${gs(calcLinea(it.cant, it.precio, it.desc))}</td>
+            <td class="text-center"><button class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></button></td>`;
+        tr.querySelector('input').onchange = e => { it.cant = Math.max(+e.target.value || 1, 1); pintarItems(); programarGuardado(); };
+        tr.querySelector('button').onclick = () => { st.items.splice(i, 1); pintarItems(); programarGuardado(); };
+        tb.appendChild(tr);
+    });
+    totales();
+}
+function totales() {
+    let sub = 0, iva5 = 0, iva10 = 0, desc = 0, total = 0;
+    st.items.forEach(it => {
+        const t = calcLinea(it.cant, it.precio, it.desc); total += t; desc += it.desc;
+        const iva = it.iva === 10 ? t / 11 : it.iva === 5 ? t / 21 : 0;
+        if (it.iva === 10) iva10 += iva; else if (it.iva === 5) iva5 += iva;
+        sub += t - iva;
+    });
+    $('tSub').textContent = gs(sub); $('tIva5').textContent = gs(iva5); $('tIva10').textContent = gs(iva10);
+    $('tDesc').textContent = gs(desc); $('tTotal').textContent = 'Gs. ' + gs(total);
+}
+
+/* ── Cobro: la caja explica por qué no aparece ────────────────────────────── */
+function pintarCajas() {
+    const contado = $('selCondicion').value === '0';
+    $('cardCobro').classList.toggle('d-none', !contado);
+    const moneda = $('selMoneda').value;
+    const sel = $('selCaja'), aviso = $('avisoCaja');
+    const abiertas = CAJAS.filter(c => c.abierta);
+    const aptas = abiertas.filter(c => c.moneda === moneda);
+    sel.innerHTML = '<option value="">— Seleccionar caja abierta —</option>';
+    aptas.forEach(c => sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.des} (${c.moneda})</option>`));
+    if (aptas.length === 1) sel.value = aptas[0].id;
+    if (!abiertas.length) { aviso.classList.remove('d-none'); aviso.innerHTML = '<i class="fas fa-lock me-2"></i><strong>No hay ninguna caja abierta.</strong> Abrí la caja en <a href="#" class="alert-link">Estado de Caja</a> para poder cobrar al contado.'; }
+    else if (!aptas.length) { aviso.classList.remove('d-none'); aviso.innerHTML = `<i class="fas fa-coins me-2"></i><strong>No hay caja abierta en ${moneda}.</strong> Las cajas abiertas están en ${[...new Set(abiertas.map(c => c.moneda))].join(', ')}. Cambiá la moneda de la factura o abrí una caja en ${moneda} desde <a href="#" class="alert-link">Estado de Caja</a>.`; }
+    else aviso.classList.add('d-none');
+    if (st.caja) sel.value = st.caja;
+}
+
+/* ── Borrador (simulado con localStorage) ─────────────────────────────────── */
+function leerCampos() {
+    st.correo = $('txtCorreo').value; st.tel = $('txtTel').value; st.doc = $('selDoc').value; st.ruc = $('txtRuc').value;
+    st.condicion = $('selCondicion').value; st.moneda = $('selMoneda').value; st.fecha = $('txtFecha').value; st.obs = $('txtObs').value;
+    st.caja = $('selCaja').value; st.forma = $('selForma').value;
+}
+function programarGuardado() {
+    $('lblGuardado').innerHTML = '<i class="fas fa-pen me-1"></i>Cambios sin guardar…';
+    $('lblGuardado').classList.remove('guardado-ok');
+    clearTimeout(timer); timer = setTimeout(guardarBorrador, 1200);
+}
+function guardarBorrador() {
+    leerCampos();
+    if (!st.paciente && !st.items.length) return;
+    try { localStorage.setItem(KEY, JSON.stringify({ st, hora: new Date().toISOString() })); } catch (e) {}
+    const h = new Date().toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' });
+    $('lblGuardado').innerHTML = `<i class="fas fa-cloud-arrow-up me-1"></i>Borrador guardado ${h}`;
+    $('lblGuardado').classList.add('guardado-ok');
+}
+function limpiarTodo() {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    st = { paciente: null, items: [], consultas: [], correo: '', tel: '', doc: 'CI', ruc: '', condicion: '0', moneda: 'PYG', fecha: hoy(), obs: '', caja: '', forma: '' };
+    aplicar(); $('lblGuardado').innerHTML = '<i class="fas fa-cloud me-1"></i>Sin cambios'; $('lblGuardado').classList.remove('guardado-ok');
+}
+function aplicar() {
+    $('txtFecha').value = st.fecha || hoy(); $('txtObs').value = st.obs; $('selCondicion').value = st.condicion; $('selMoneda').value = st.moneda;
+    $('selForma').value = st.forma; $('txtPaciente').value = '';
+    pintarPaciente(); pintarItems(); pintarCajas();
+}
+const hoy = () => new Date().toISOString().slice(0, 10);
+
+$('btnGuardarBorrador').onclick = () => { guardarBorrador(); };
+$('btnDescartar').onclick = () => { if (confirm('¿Descartar este borrador? No se puede recuperar.')) limpiarTodo(); };
+$('btnEmitir').onclick = () => {
+    leerCampos();
+    const faltan = [];
+    if (!st.paciente) faltan.push('elegir el paciente');
+    if (!st.items.length) faltan.push('cargar al menos un ítem');
+    if (st.condicion === '0' && !st.caja) faltan.push('elegir una caja abierta');
+    if (st.condicion === '0' && !st.forma) faltan.push('elegir la forma de cobro');
+    if (faltan.length) { alert('Para emitir falta: ' + faltan.join(', ') + '.'); return; }
+    alert('Demo: acá se emite la factura, se descuenta el timbrado y se borra el borrador.' +
+          (st.consultas.length ? '\nLas consultas marcadas quedan facturadas; las que estaban sin cerrar pasan a «Pendiente de observación».' : ''));
+    limpiarTodo();
+};
+
+/* ── Eventos de campos ────────────────────────────────────────────────────── */
+['txtCorreo', 'txtTel', 'txtRuc', 'txtFecha', 'txtObs', 'selForma', 'selCaja'].forEach(i => $(i).addEventListener('input', () => { if (i === 'txtCorreo') { st.correo = $('txtCorreo').value; ayudaCorreo(); } programarGuardado(); }));
+$('selDoc').addEventListener('change', () => { $('grpRuc').classList.toggle('d-none', $('selDoc').value !== 'RUC'); programarGuardado(); });
+$('selCondicion').addEventListener('change', () => { pintarCajas(); programarGuardado(); });
+$('selMoneda').addEventListener('change', () => { st.caja = ''; pintarCajas(); programarGuardado(); });
+$('btnCambiarPaciente').onclick = () => { st.paciente = null; st.consultas = []; pintarPaciente(); programarGuardado(); $('txtPaciente').focus(); };
+
+/* ── Arranque: ofrecer retomar el borrador ────────────────────────────────── */
+let guardado = null;
+try { guardado = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+st.fecha = hoy(); aplicar();
+if (guardado) {
+    const p = PACIENTES.find(x => x.id === guardado.st.paciente);
+    const hora = new Date(guardado.hora).toLocaleString('es-PY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    $('avisoBorradorDetalle').textContent = `· ${p ? p.nombre : 'sin paciente'} · ${guardado.st.items.length} ítem(s) · guardado ${hora}`;
+    $('avisoBorrador').classList.remove('d-none'); $('avisoBorrador').classList.add('d-flex');
+    $('btnRetomar').onclick = () => { st = guardado.st; aplicar(); $('avisoBorrador').classList.add('d-none'); $('avisoBorrador').classList.remove('d-flex'); };
+    $('btnDescartarAviso').onclick = () => { try { localStorage.removeItem(KEY); } catch (e) {} $('avisoBorrador').classList.add('d-none'); $('avisoBorrador').classList.remove('d-flex'); };
+}
+</script>
+</body>
+</html>

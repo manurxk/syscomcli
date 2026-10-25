@@ -1,0 +1,21 @@
+{# Capítulo «Reglas de validación por módulo» del manual de seguridad. Variable: modulos (de _resumen_validaciones en ayuda_routes.py) #}
+<p>Por cada módulo hay dos tablas. La primera resume, pantalla por pantalla, los datos que no pueden quedar vacíos, los valores que no se pueden repetir y los caracteres que admite cada campo. La segunda lista los avisos propios de cada regla, sin repetirlos aunque aparezcan en varias pantallas. Los tipos de aviso y sus capturas están en el capítulo «Validación de los datos que se cargan».</p>
+{% for m in modulos %}
+<h4>{{ m.modulo }}</h4>
+{% if m.generales %}
+<table class="datos">
+    <tr><th>Pantalla</th><th>Campos obligatorios</th><th>Valor único</th><th>Caracteres que admite</th></tr>
+    {% for g in m.generales %}
+    <tr><td>{{ g.pantalla }}</td><td>{{ g.obligatorios }}</td><td>{{ 'Sí' if g.unico else '' }}</td><td>{{ g.caracteres }}</td></tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% if m.propios %}
+<table class="datos">
+    <tr><th>Aviso propio de la regla</th><th>Pantalla</th></tr>
+    {% for p in m.propios %}
+    <tr><td>{{ p.mensaje }}</td><td>{{ p.pantallas }}</td></tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% endfor %}

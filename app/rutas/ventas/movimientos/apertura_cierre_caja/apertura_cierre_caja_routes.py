@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 aperturacierrecajamod = Blueprint('apertura_cierre_caja', __name__, template_folder='templates')
 
-ROLES_CAJA = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_CAJA = ("ADMINISTRADOR", "VENTAS")
 
 
 @aperturacierrecajamod.route('/caja-estado')

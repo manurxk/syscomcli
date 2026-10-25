@@ -1,51 +1,23 @@
 <h3>Agenda Médica</h3>
-<p>En esta pantalla se cargan los días y horarios en que atiende cada especialista. Con estos horarios el sistema arma los turnos que después se ofrecen al registrar una cita.</p>
-
-<h4>¿Cómo veo los horarios de un especialista?</h4>
-<p>Elíjalo en la lista de arriba a la derecha. La tabla muestra, por cada horario, el día, la sede, el consultorio, las horas, la duración de cada turno, los turnos libres y si está activo.</p>
-
-<h4>¿Cómo cargo un horario?</h4>
-{{ figura('agenda_medica/01_listado.jpg', 'Agenda Médica: ① elija el especialista y presione Nuevo Horario') }}
-{{ figura('agenda_medica/02_nuevo_horario.jpg', 'Registrar Horario: los números coinciden con los pasos') }}
+<p>Días y horarios de atención de cada especialista. Con ellos el sistema arma los turnos (hasta 15 días adelante, de forma automática).</p>
+<div class="par">
+{{ figura('agenda_medica/01_listado.jpg', 'Agenda Médica: ① Nuevo Horario') }}
+{{ figura('agenda_medica/02_nuevo_horario.jpg', 'Registrar Horario') }}
+</div>
 <ol>
     <li>Elija el especialista y presione <span class="btn-ref">Nuevo Horario</span>.</li>
-    <li>Elija la <strong>Sede</strong> y después el <strong>Consultorio</strong>.</li>
-    <li>Elija el <strong>Día</strong> de la semana.</li>
-    <li>Escriba la <strong>Hora inicio</strong> y la <strong>Hora fin</strong> en formato de 24 horas, por ejemplo 08:00 y 12:00. También puede escribir 0800 y 1200.</li>
-    <li>Elija la <strong>Duración turno</strong>. El sistema le muestra cuántos turnos por día salen con esos datos.</li>
-    <li>Elija la <strong>Modalidad</strong> habitual (Presencial, Telemedicina o Domicilio).</li>
-    <li>Ponga la <strong>Fecha desde</strong>. Si el horario tiene fecha de fin, póngala en <strong>Fecha hasta</strong>; si no, marque <span class="btn-ref">Vigencia indefinida</span>.</li>
+    <li>Elija la <strong>Sede</strong> y el <strong>Consultorio</strong>.</li>
+    <li>Elija el <strong>Día</strong> de la semana (un horario por día).</li>
+    <li>Escriba <strong>Hora inicio</strong> y <strong>Hora fin</strong> en 24 horas (08:00 y 12:00).</li>
+    <li>Elija la <strong>Duración turno</strong>.</li>
+    <li>Elija la <strong>Modalidad</strong>: Presencial, Telemedicina o Domicilio.</li>
+    <li>Ponga <strong>Fecha desde</strong> y <strong>Fecha hasta</strong>, o marque <span class="btn-ref">Vigencia indefinida</span>.</li>
     <li>Presione <span class="btn-ref">Guardar</span>.</li>
 </ol>
-<p>Si el especialista atiende varios días, cargue un horario por cada día. Por ejemplo, uno para el lunes y otro para el miércoles.</p>
-<p class="importante">El sistema no deja guardar un horario que se cruce con otro del mismo especialista o del mismo consultorio en el mismo día.</p>
-
-<h4>¿Cómo cambio un horario?</h4>
-<ol>
-    <li>Presione el botón del lápiz en la fila del horario.</li>
-    <li>Haga los cambios y presione <span class="btn-ref">Guardar</span>.</li>
-</ol>
-<p class="importante">Las citas ya agendadas no cambian. Si al guardar quedan citas fuera del horario nuevo, el sistema las lista para que avise a los pacientes y las reprograme desde Citas. Si el horario queda fuera del horario de atención de la clínica, el sistema solo avisa: igual se puede guardar.</p>
-
-<h4>¿Cómo dejo de usar un horario?</h4>
-<p>Presione el botón del ojo y confirme. El horario queda inactivo, ya no se crean turnos nuevos y sus turnos libres dejan de ofrecerse al registrar una cita. Las citas que ya tenía se mantienen (el sistema las lista para reprogramarlas). Puede volver a activarlo con el mismo botón.</p>
-
-<h4>¿Hasta qué fecha se puede agendar?</h4>
-<p>Hasta 15 días hacia adelante. El sistema agrega los días nuevos solo, todos los días, así que no hace falta hacer nada.</p>
-<p>Para ver los turnos de un horario y si están libres o reservados, presione el botón del calendario.</p>
-
-<h4>¿Cómo bloqueo días en que el especialista no atiende?</h4>
-<p>Para una ausencia o un feriado:</p>
-<ol>
-    <li>Elija el especialista y presione <span class="btn-ref">Bloquear días</span>.</li>
-    <li>Indique desde cuándo y hasta cuándo, escriba el motivo y presione <span class="btn-ref">Bloquear</span>.</li>
-</ol>
-<p>El bloqueo vale para todos los horarios del especialista y sus turnos libres de ese rango dejan de ofrecerse. Si ya había citas reservadas, el sistema las lista para que las reprograme o cancele. Para quitarlo, presione <span class="btn-ref">Levantar</span> en la lista de bloqueos vigentes.</p>
-
-<h4>¿Cómo doy un sobreturno?</h4>
-<p>Un sobreturno es un turno extra para un caso urgente, en una hora que no está en el horario.</p>
-<ol>
-    <li>En el horario, ponga en <strong>% sobreturnos</strong> cuántos turnos extra se permiten por día (0 = no se permiten) y guarde.</li>
-    <li>En la fila del horario, presione el botón de sobreturno y elija la fecha y la hora.</li>
-    <li>El turno se reserva desde Citas como cualquier otro y aparece marcado como "sobreturno".</li>
-</ol>
+<ul>
+    <li><strong>Editar</strong> (lápiz): las citas ya agendadas no cambian; el sistema lista las que quedan fuera del horario nuevo.</li>
+    <li><strong>Desactivar</strong> (ojo): deja de crear turnos; se reactiva con el mismo botón.</li>
+    <li><strong>Bloquear días</strong>: ausencias o feriados, con motivo. <span class="btn-ref">Levantar</span> lo quita.</li>
+    <li><strong>Sobreturno</strong>: turno extra urgente, dentro del % de sobreturnos del horario.</li>
+</ul>
+<p class="importante">No se puede guardar un horario que se cruce con otro del mismo especialista o consultorio.</p>

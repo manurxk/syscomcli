@@ -6,8 +6,8 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 recaudacionapi = Blueprint('recaudacionapi', __name__)
 
-ROLES_VENTAS  = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
-ROLES_ADMIN   = ("ADMINISTRADOR", "SUPERADMIN")
+ROLES_VENTAS  = ("ADMINISTRADOR", "VENTAS")
+ROLES_ADMIN   = ("ADMINISTRADOR",)
 
 
 @recaudacionapi.route('/recaudaciones', methods=['GET'])

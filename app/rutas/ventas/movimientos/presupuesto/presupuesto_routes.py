@@ -5,7 +5,7 @@ presupuestomod = Blueprint('presupuesto', __name__, template_folder='templates')
 
 
 @presupuestomod.route('/presupuesto-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "LEER")
 def presupuestoIndex():
     """Página principal de presupuesto (listado y acciones)."""
@@ -13,7 +13,7 @@ def presupuestoIndex():
 
 
 @presupuestomod.route('/presupuesto-agregar')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "CREAR")
 def presupuestoAgregar():
     """Página del formulario para registrar presupuesto."""

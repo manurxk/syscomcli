@@ -8,7 +8,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 notacreditoapi = Blueprint('notacreditoapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @notacreditoapi.route('/notas-credito', methods=['GET'])
@@ -69,7 +69,7 @@ def addNotaCredito():
 
 
 @notacreditoapi.route('/notas-credito/<int:id_nota_credito>/anular', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR")
 @permiso_requerido("VENTAS", "ELIMINAR")
 def anularNotaCredito(id_nota_credito):
     """PUT: anula la nota de crédito."""

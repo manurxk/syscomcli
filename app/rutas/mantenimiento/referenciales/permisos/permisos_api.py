@@ -33,7 +33,9 @@ def getAcciones():
 @permisosapi.route('/permisos/roles/<int:id_rol>', methods=['GET'])
 @role_required("ADMINISTRADOR", "SUPERADMIN")
 def getMatrizPermisos(id_rol):
-    """GET: permisos por módulo y acción del rol."""
+    """GET: permisos por módulo y acción del rol. El rol de soporte (SUPERADMIN) no existe para quien no lo es."""
+    if 'SUPERADMIN' not in {r.upper() for r in session.get('roles', [])} and PermisoDao().getCodRol(id_rol) == 'SUPERADMIN':
+        return jsonify({'success': False, 'error': 'No se encontró el rol.'}), 404
     try:
         data = PermisoDao().getMatrizPermisos(id_rol)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
@@ -60,7 +62,7 @@ def guardarMatrizPermisos(id_rol):
     if 'SUPERADMIN' not in roles_sesion:
         cod_rol_objetivo = PermisoDao().getCodRol(id_rol)
         if cod_rol_objetivo == 'SUPERADMIN':
-            return jsonify({'success': False, 'error': 'Solo SUPERADMIN puede modificar los permisos del rol SUPERADMIN.'}), 403
+            return jsonify({'success': False, 'error': 'No se encontró el rol.'}), 404
 
     try:
         PermisoDao().guardarMatrizPermisos(id_rol, cambios, usuario_modificacion=session.get('id_usuario'))

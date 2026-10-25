@@ -47,13 +47,13 @@ Detalle de Usuario
         <div class="col-md-4 text-md-end">
           <div class="d-flex flex-md-column gap-2 justify-content-md-end">
             {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
-            {% if 'SUPERADMIN' in roles_usuario %}
+            {% if 'SUPERADMIN' in roles_usuario or 'ADMINISTRADOR' in roles_usuario %}
             <a href="{{ url_for('usuario.usuarioAgregar', id_usuario=id_usuario) }}" class="btn btn-outline-secondary btn-sm">Editar</a>
             {% endif %}
             <a href="{{ url_for('auditoria.auditoriaIndex', tab='accesos', usuario=id_usuario) }}" class="btn btn-outline-primary btn-sm">Ver en Auditoría</a>
             <button type="button" id="btnResetear" class="btn btn-outline-success btn-sm">Resetear intentos y desbloquear</button>
             <button type="button" id="btnRevocarMfa" class="btn btn-outline-warning btn-sm d-none">Revocar MFA</button>
-            {% if 'SUPERADMIN' in roles_usuario %}
+            {% if 'SUPERADMIN' in roles_usuario or 'ADMINISTRADOR' in roles_usuario %}
             <button type="button" id="btnDesactivar" class="btn btn-outline-danger btn-sm">Desactivar</button>
             {% endif %}
           </div>

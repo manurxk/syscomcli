@@ -21,13 +21,22 @@ class EmpresaDao(BaseDAO):
             SELECT e.id_empresa, e.ruc_nit, e.digito_verificador, e.razon_social, e.nombre_comercial,
                    e.tipo_contribuyente, e.id_ciudad, c.des_ciudad, e.direccion, e.numero_casa, e.codigo_postal,
                    e.telefono, e.celular, e.email, e.sitio_web, e.actividad_economica_principal,
-                   e.horario_atencion, e.horario_atencion_tramos, e.es_principal, e.est_empresa
+                   e.horario_atencion, e.horario_atencion_tramos, e.es_principal, e.est_empresa,
+                   e.max_funcionarios_activos, e.max_usuarios_activos
             FROM empresa e
             LEFT JOIN ciudades c ON c.id_ciudad = e.id_ciudad
             ORDER BY e.id_empresa
             LIMIT 1
         """
         return self.execute_query_one(sql)
+
+    def actualizarTopes(self, id_empresa, max_funcionarios, max_usuarios, usuario_modificacion=None):
+        """Fija los topes de funcionarios y usuarios activos (solo Superadministrador, ver empresa_api)."""
+        sql = """
+            UPDATE empresa SET max_funcionarios_activos = %s, max_usuarios_activos = %s, usuario_modificacion = %s
+            WHERE id_empresa = %s
+        """
+        return self.execute_query(sql, (max_funcionarios, max_usuarios, usuario_modificacion, id_empresa), commit=True) > 0
 
     def validarRuc(self, ruc_nit):
         """Misma regla que el check constraint chk_empresa_ruc_len: solo dígitos, 6 a 20 caracteres."""

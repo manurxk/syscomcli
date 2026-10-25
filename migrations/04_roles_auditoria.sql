@@ -1,5 +1,5 @@
 -- 04_roles_auditoria.sql — Roles, permisos, accesos y auditoría
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -38,7 +38,7 @@ CREATE TABLE public.accesos_sistema (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_accesos_resultado CHECK (((resultado)::text = ANY ((ARRAY['EXITOSO'::character varying, 'FALLIDO_CLAVE'::character varying, 'FALLIDO_BLOQUEADO'::character varying, 'FALLIDO_USUARIO_INEXISTENTE'::character varying, 'FALLIDO_SESIONES_MAXIMAS'::character varying])::text[])))
+    CONSTRAINT chk_accesos_resultado CHECK (((resultado)::text = ANY (ARRAY[('EXITOSO'::character varying)::text, ('FALLIDO_CLAVE'::character varying)::text, ('FALLIDO_BLOQUEADO'::character varying)::text, ('FALLIDO_USUARIO_INEXISTENTE'::character varying)::text, ('FALLIDO_SESIONES_MAXIMAS'::character varying)::text])))
 );
 
 --
@@ -78,7 +78,7 @@ CREATE TABLE public.acciones (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_acciones_cod CHECK (((cod_accion)::text = ANY ((ARRAY['LEER'::character varying, 'CREAR'::character varying, 'EDITAR'::character varying, 'ELIMINAR'::character varying])::text[])))
+    CONSTRAINT chk_acciones_cod CHECK (((cod_accion)::text = ANY (ARRAY[('LEER'::character varying)::text, ('CREAR'::character varying)::text, ('EDITAR'::character varying)::text, ('ELIMINAR'::character varying)::text])))
 );
 
 --
@@ -115,7 +115,7 @@ CREATE TABLE public.auditoria_sistema (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_auditoria_accion CHECK (((accion)::text = ANY ((ARRAY['LOGIN'::character varying, 'LOGOUT'::character varying, 'LOGIN_FAILED'::character varying, 'PROFILE_UPDATE'::character varying, 'RECORD_CREATE'::character varying, 'RECORD_UPDATE'::character varying, 'RECORD_DELETE'::character varying, 'PASSWORD_CHANGE'::character varying, 'REPORT_VIEW'::character varying, 'REPORT_EXPORT'::character varying, 'RATE_LIMIT'::character varying, 'ACCOUNT_LOCKED'::character varying, 'ACCOUNT_UNLOCKED'::character varying, 'ALERTA_ENVIADA'::character varying, 'INFORME_SEMANAL'::character varying])::text[])))
+    CONSTRAINT chk_auditoria_accion CHECK (((accion)::text = ANY (ARRAY[('LOGIN'::character varying)::text, ('LOGOUT'::character varying)::text, ('LOGIN_FAILED'::character varying)::text, ('PROFILE_UPDATE'::character varying)::text, ('RECORD_CREATE'::character varying)::text, ('RECORD_UPDATE'::character varying)::text, ('RECORD_DELETE'::character varying)::text, ('PASSWORD_CHANGE'::character varying)::text, ('REPORT_VIEW'::character varying)::text, ('REPORT_EXPORT'::character varying)::text, ('RATE_LIMIT'::character varying)::text, ('ACCOUNT_LOCKED'::character varying)::text, ('ACCOUNT_UNLOCKED'::character varying)::text, ('ALERTA_ENVIADA'::character varying)::text, ('INFORME_SEMANAL'::character varying)::text])))
 );
 
 --
@@ -159,8 +159,8 @@ CREATE TABLE public.auditoria_transacciones (
     roles character varying(200),
     ip_origen inet,
     fecha_cambio timestamp without time zone DEFAULT now() NOT NULL,
-    CONSTRAINT chk_auditoria_trans_modulo CHECK (((modulo)::text = ANY ((ARRAY['CLINICO'::character varying, 'AGENDAMIENTO'::character varying, 'VENTAS'::character varying, 'SEGURIDAD'::character varying])::text[]))),
-    CONSTRAINT chk_auditoria_trans_operacion CHECK (((operacion)::text = ANY ((ARRAY['INSERT'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying])::text[])))
+    CONSTRAINT chk_auditoria_trans_modulo CHECK (((modulo)::text = ANY (ARRAY[('CLINICO'::character varying)::text, ('AGENDAMIENTO'::character varying)::text, ('VENTAS'::character varying)::text, ('SEGURIDAD'::character varying)::text]))),
+    CONSTRAINT chk_auditoria_trans_operacion CHECK (((operacion)::text = ANY (ARRAY[('INSERT'::character varying)::text, ('UPDATE'::character varying)::text, ('DELETE'::character varying)::text])))
 );
 
 --
@@ -247,7 +247,7 @@ CREATE TABLE public.roles (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_roles_cod CHECK (((cod_rol)::text = ANY ((ARRAY['SUPERADMIN'::character varying, 'ADMINISTRADOR'::character varying, 'RECEPCION'::character varying, 'CLINICO'::character varying, 'VENTAS'::character varying])::text[])))
+    CONSTRAINT chk_roles_cod CHECK (((cod_rol)::text = ANY (ARRAY[('SUPERADMIN'::character varying)::text, ('ADMINISTRADOR'::character varying)::text, ('RECEPCION'::character varying)::text, ('CLINICO'::character varying)::text, ('VENTAS'::character varying)::text])))
 );
 
 --

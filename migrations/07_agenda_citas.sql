@@ -1,5 +1,5 @@
 -- 07_agenda_citas.sql — Agenda y citas
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -46,7 +46,7 @@ CREATE TABLE public.agenda_horarios (
     bloqueos jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT chk_agenda_horarios_bloqueos CHECK ((jsonb_typeof(bloqueos) = 'array'::text)),
     CONSTRAINT chk_agenda_horarios_duracion CHECK ((duracion_turno_min = ANY (ARRAY[10, 15, 20, 30, 45, 60, 90]))),
-    CONSTRAINT chk_agenda_horarios_modalidad CHECK (((modalidad_default)::text = ANY ((ARRAY['PRESENCIAL'::character varying, 'TELEMEDICINA'::character varying, 'DOMICILIO'::character varying])::text[]))),
+    CONSTRAINT chk_agenda_horarios_modalidad CHECK (((modalidad_default)::text = ANY (ARRAY[('PRESENCIAL'::character varying)::text, ('TELEMEDICINA'::character varying)::text, ('DOMICILIO'::character varying)::text]))),
     CONSTRAINT chk_agenda_horarios_overbooking CHECK (((porcentaje_overbooking >= 0) AND (porcentaje_overbooking <= 100))),
     CONSTRAINT chk_agenda_horarios_rango_fecha CHECK (((fec_hasta IS NULL) OR (fec_hasta >= fec_desde))),
     CONSTRAINT chk_agenda_horarios_rango_hora CHECK ((hora_fin > hora_inicio))
@@ -114,8 +114,10 @@ CREATE TABLE public.citas (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_citas_modalidad CHECK (((modalidad)::text = ANY ((ARRAY['PRESENCIAL'::character varying, 'TELEMEDICINA'::character varying, 'DOMICILIO'::character varying])::text[]))),
-    CONSTRAINT chk_citas_rango CHECK ((cita_fin > cita_inicio))
+    tipo_cita character varying(20) DEFAULT 'PRIMERA_VEZ'::character varying NOT NULL,
+    CONSTRAINT chk_citas_modalidad CHECK (((modalidad)::text = ANY (ARRAY[('PRESENCIAL'::character varying)::text, ('TELEMEDICINA'::character varying)::text, ('DOMICILIO'::character varying)::text]))),
+    CONSTRAINT chk_citas_rango CHECK ((cita_fin > cita_inicio)),
+    CONSTRAINT chk_citas_tipo_cita CHECK (((tipo_cita)::text = ANY ((ARRAY['PRIMERA_VEZ'::character varying, 'SEGUIMIENTO'::character varying, 'TRATAMIENTO'::character varying])::text[])))
 );
 
 --
@@ -197,7 +199,7 @@ CREATE TABLE public.lista_espera (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_lista_espera_estado CHECK (((estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'NOTIFICADO'::character varying, 'ACEPTADO'::character varying, 'EXPIRADO'::character varying, 'CANCELADO'::character varying])::text[])))
+    CONSTRAINT chk_lista_espera_estado CHECK (((estado)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('NOTIFICADO'::character varying)::text, ('ACEPTADO'::character varying)::text, ('EXPIRADO'::character varying)::text, ('CANCELADO'::character varying)::text])))
 );
 
 --
@@ -238,7 +240,7 @@ CREATE TABLE public.recordatorios (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_recordatorios_canal CHECK (((canal)::text = ANY ((ARRAY['WHATSAPP'::character varying, 'SMS'::character varying, 'EMAIL'::character varying, 'PUSH'::character varying])::text[]))),
+    CONSTRAINT chk_recordatorios_canal CHECK (((canal)::text = ANY (ARRAY[('WHATSAPP'::character varying)::text, ('SMS'::character varying)::text, ('EMAIL'::character varying)::text, ('PUSH'::character varying)::text]))),
     CONSTRAINT chk_recordatorios_minutos CHECK ((minutos_antes > 0))
 );
 
@@ -283,7 +285,7 @@ CREATE TABLE public.slots_agenda (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_slots_agenda_estado CHECK (((estado_slot)::text = ANY ((ARRAY['DISPONIBLE'::character varying, 'RESERVADO'::character varying, 'BLOQUEADO'::character varying, 'OBSOLETO'::character varying])::text[]))),
+    CONSTRAINT chk_slots_agenda_estado CHECK (((estado_slot)::text = ANY (ARRAY[('DISPONIBLE'::character varying)::text, ('RESERVADO'::character varying)::text, ('BLOQUEADO'::character varying)::text, ('OBSOLETO'::character varying)::text]))),
     CONSTRAINT chk_slots_agenda_rango CHECK ((slot_fin > slot_inicio))
 );
 

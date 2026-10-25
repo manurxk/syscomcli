@@ -1,22 +1,19 @@
 <h3>Notas de Débito</h3>
-<p>La nota de débito agrega un cargo a una factura ya emitida: por ejemplo, un servicio que se hizo y no se facturó, o intereses por atraso. Se anota sola en el Libro de Ventas.</p>
-
-<h4>¿Cómo hago una nota de débito?</h4>
+<p>Agrega un cargo a una factura emitida: un servicio no facturado o intereses por atraso. Se anota sola en el Libro de Ventas.</p>
+<div class="par">
 {{ figura('notas_debito/01_listado.jpg', 'Notas de Débito: ① Nueva Nota de Débito') }}
-{{ figura('notas_debito/02_nueva.jpg', 'Nueva Nota de Débito: ② elija la factura y presione Seleccionar y continuar') }}
+{{ figura('notas_debito/02_nueva.jpg', 'Nueva Nota de Débito: ② factura y Seleccionar y continuar') }}
+</div>
 <ol>
     <li>Presione <span class="btn-ref">Nueva Nota de Débito</span>.</li>
-    <li>Elija la <strong>Factura</strong> a la que se agrega el cargo y presione <span class="btn-ref">Seleccionar y continuar</span>.</li>
-    <li>Escriba el <strong>Motivo</strong> (es obligatorio).</li>
-    <li>Elija el tipo de comprobante. El código CDC y el número de timbrado SIFEN son opcionales.</li>
-    <li>Presione <span class="btn-ref">Agregar ítem</span> por cada cargo: descripción, cantidad y precio unitario. Presione <span class="btn-ref">Agregar</span>.</li>
+    <li>Elija la <strong>Factura</strong> y presione <span class="btn-ref">Seleccionar y continuar</span>.</li>
+    <li>Escriba el <strong>Motivo</strong> (obligatorio).</li>
+    <li>Elija el tipo de comprobante (CDC y timbrado SIFEN son opcionales).</li>
+    <li><span class="btn-ref">Agregar ítem</span> por cada cargo: descripción, cantidad y precio.</li>
     <li>Presione <span class="btn-ref">Guardar Nota de Débito</span>.</li>
 </ol>
-<h4>¿Qué pasa con la deuda del paciente?</h4>
-<p>El cargo se suma solo a la <strong>Cuenta a Cobrar</strong> de la factura, y después se cobra en Cobranzas como cualquier deuda. Si la factura ya estaba pagada, la cuenta vuelve a quedar con saldo pendiente por el monto de la nota.</p>
-
-<h4>¿Cómo imprimo una nota de débito?</h4>
-<p>En la lista, abra el detalle de la nota y presione <span class="btn-ref">Ver PDF</span>. Sale con el mismo formato que la factura (KuDE), con la factura a la que se agrega el cargo y el motivo.</p>
-
-<h4>¿Cómo anulo una nota de débito?</h4>
-<p>En la lista, abra el detalle de la nota y presione <span class="btn-ref">Anular</span>. El cargo se quita de la deuda.</p>
+<ul>
+    <li><strong>Efecto:</strong> el cargo se suma a la Cuenta a Cobrar y se cobra en Cobranzas; si la factura estaba pagada, vuelve a tener saldo.</li>
+    <li><strong>Imprimir:</strong> detalle de la fila y <span class="btn-ref">Ver PDF</span>.</li>
+    <li><strong>Anular:</strong> detalle y <span class="btn-ref">Anular</span>; el cargo se quita de la deuda.</li>
+</ul>

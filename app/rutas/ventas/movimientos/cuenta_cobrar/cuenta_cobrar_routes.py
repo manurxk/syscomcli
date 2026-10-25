@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 cuentacobrarmod = Blueprint('cuenta_cobrar', __name__, template_folder='templates')
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @cuentacobrarmod.route('/cuenta-cobrar-index')

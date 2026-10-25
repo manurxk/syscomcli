@@ -5,7 +5,7 @@ facturamod = Blueprint('factura', __name__, template_folder='templates')
 
 
 @facturamod.route('/factura-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "LEER")
 def facturaIndex():
     """Página principal de factura (listado y acciones)."""
@@ -13,7 +13,7 @@ def facturaIndex():
 
 
 @facturamod.route('/factura-agregar')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "CREAR")
 def facturaAgregar():
     """Página del formulario para registrar factura."""

@@ -1,5 +1,5 @@
 -- 15_cobranza_cxc.sql — Cuentas a cobrar, cobranzas y libro de ventas
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -35,7 +35,8 @@ CREATE TABLE public.cobranza_detalle (
     numero_tarjeta character varying(20),
     numero_cuotas smallint DEFAULT 1,
     monto_cobrado numeric(18,2) NOT NULL,
-    observaciones text
+    observaciones text,
+    numero_transferencia character varying(50)
 );
 
 --
@@ -75,7 +76,7 @@ CREATE TABLE public.cobranzas (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT cobranzas_est_cobranza_check CHECK (((est_cobranza)::text = ANY ((ARRAY['REGISTRADA'::character varying, 'ANULADA'::character varying])::text[])))
+    CONSTRAINT cobranzas_est_cobranza_check CHECK (((est_cobranza)::text = ANY (ARRAY[('REGISTRADA'::character varying)::text, ('ANULADA'::character varying)::text])))
 );
 
 --
@@ -161,7 +162,7 @@ CREATE TABLE public.libro_ventas (
     fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
     usuario_creacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT libro_ventas_tipo_comprobante_check CHECK (((tipo_comprobante)::text = ANY ((ARRAY['FACTURA'::character varying, 'NOTA_CREDITO'::character varying, 'NOTA_DEBITO'::character varying])::text[])))
+    CONSTRAINT libro_ventas_tipo_comprobante_check CHECK (((tipo_comprobante)::text = ANY (ARRAY[('FACTURA'::character varying)::text, ('NOTA_CREDITO'::character varying)::text, ('NOTA_DEBITO'::character varying)::text])))
 );
 
 --

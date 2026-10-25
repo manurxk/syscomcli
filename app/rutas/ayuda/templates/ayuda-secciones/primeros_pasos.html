@@ -1,0 +1,53 @@
+<h3>Primeros pasos</h3>
+<p>El sistema reúne la agenda de los profesionales, la atención clínica y la facturación. Se usa desde una computadora con un navegador actualizado (Chrome, Edge o Firefox), con el usuario y la contraseña que entrega el administrador y acceso al correo registrado, donde llega el código de verificación. Cada capítulo de este manual es un módulo del menú y cada pantalla explica sus pasos; los números ①②③ de las capturas coinciden con los pasos numerados. Las reglas de seguridad y los avisos de validación están en el Manual de seguridad.</p>
+
+<h4>Ingresar al sistema</h4>
+<div class="par-mini">
+{{ figura('acceso/01_ingreso.jpg', 'Pantalla de ingreso') }}
+{{ figura('seguridad/01_codigo.jpg', 'Código de verificación') }}
+</div>
+<ol>
+    <li>Abra la dirección del sistema que le indicó el administrador.</li>
+    <li>Escriba su <strong>usuario</strong> y <strong>contraseña</strong> y presione <span class="btn-ref">Ingresar</span>.</li>
+    <li>Si es su <strong>primer ingreso</strong> (o el administrador le restableció la contraseña), el sistema muestra «Cambie su contraseña»: escriba la temporal, elija una nueva (8 a 16 caracteres) y repítala; después ingrese con la nueva.</li>
+    <li>Si pide un código, búsquelo en su correo (6 números, valen 5 minutos), escríbalo y presione <span class="btn-ref">Verificar</span>.</li>
+    <li>Se abre el <strong>Inicio</strong>, con el resumen del día de su perfil.</li>
+</ol>
+<div class="par-mini">
+{{ figura('acceso/02_cambiar_password.jpg', 'Primer ingreso: cambio de la contraseña temporal') }}
+{{ figura('acceso/03_cambiar_password_aviso.jpg', 'Aviso si las contraseñas no coinciden') }}
+</div>
+<ul>
+    <li><strong>Olvidé mi contraseña:</strong> <span class="btn-ref">¿Olvidaste tu contraseña?</span>, escriba usuario y correo, <span class="btn-ref">Enviar enlace</span> y siga el enlace del correo.</li>
+    <li><strong>Cuenta bloqueada:</strong> tras varios errores se bloquea 30 minutos y luego 1 hora; después solo un administrador la desbloquea.</li>
+    <li><strong>Cerrar sesión:</strong> su nombre (arriba a la derecha) o el final del menú. Se cierra sola tras 20 minutos sin uso.</li>
+</ul>
+
+<h4>La pantalla principal</h4>
+<table class="datos">
+    <tr><th>Zona</th><th>Para qué sirve</th></tr>
+    <tr><td>Menú lateral</td><td>Las pantallas de su perfil, agrupadas por módulo; el cuadro <span class="btn-ref">Buscar en el menú</span> encuentra una por su nombre</td></tr>
+    <tr><td>Barra superior</td><td>Mostrar u ocultar el menú, botón <span class="btn-ref">?</span> de ayuda, tema claro u oscuro y su usuario con su rol</td></tr>
+    <tr><td>Área central</td><td>La pantalla en la que trabaja</td></tr>
+</table>
+<p>El botón <span class="btn-ref">?</span> abre este manual en la pantalla donde está y permite descargarlo. Si necesita una pantalla que no ve, pídasela al administrador.</p>
+
+<h4>Cómo se usan todas las pantallas</h4>
+<table class="datos">
+    <tr><th>Botón</th><th>Qué hace</th></tr>
+    <tr><td>Nuevo / Agregar</td><td>Abre el formulario vacío</td></tr>
+    <tr><td>Lápiz (Editar)</td><td>Abre el registro para corregirlo</td></tr>
+    <tr><td>Ojo (Ver)</td><td>Muestra el detalle sin modificarlo</td></tr>
+    <tr><td>Anular / Cancelar</td><td>Deja sin efecto un documento; pide confirmación y, a veces, un motivo</td></tr>
+    <tr><td>PDF / Excel</td><td>Genera el documento o listado</td></tr>
+    <tr><td>Buscar</td><td>Filtra la lista mientras escribe</td></tr>
+</table>
+<p class="importante">Los registros no se borran: se desactivan o se anulan, y queda constancia en la auditoría. Los campos con <strong>*</strong> son obligatorios.</p>
+
+<h4>Avisos de error al guardar</h4>
+<p>Si un dato falta o no cumple una regla, el sistema <strong>no guarda nada</strong>, muestra un aviso y conserva lo ya escrito. Lea el aviso: siempre dice qué corregir. Estos son los cinco tipos; las reglas de cada pantalla están en el Manual de seguridad.</p>
+{% for t in tipos %}
+{% if loop.index0 % 2 == 0 %}<div class="par-mini">{% endif %}
+{{ figura('mensajes/' ~ t.capturas[0][0], t.titulo ~ '. ' ~ t.hacer) }}
+{% if loop.index0 % 2 == 1 or loop.last %}</div>{% endif %}
+{% endfor %}

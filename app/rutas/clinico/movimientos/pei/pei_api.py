@@ -5,7 +5,7 @@ from app.auth.utils.decorators import role_required
 
 peiapi = Blueprint('peiapi', __name__)
 
-ROLES_PEI = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_PEI = ("ADMINISTRADOR", "CLINICO")
 
 
 def _resolver_id_especialista(id_especialista_body=None):

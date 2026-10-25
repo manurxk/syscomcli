@@ -6,7 +6,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 pedidoapi = Blueprint('pedidoapi', __name__)
 
-ROLES_PEDIDO = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_PEDIDO = ("ADMINISTRADOR", "VENTAS")
 
 
 @pedidoapi.route('/pedidos', methods=['GET'])

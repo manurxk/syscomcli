@@ -9,7 +9,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 presupuestoapi = Blueprint('presupuestoapi', __name__)
 
-ROLES_PRES = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_PRES = ("ADMINISTRADOR", "VENTAS")
 # CONVERTIDO no se asigna a mano: solo lo pone /convertir-pedido al crear el pedido.
 ESTADOS_VALIDOS = ('PENDIENTE', 'APROBADO', 'RECHAZADO', 'VENCIDO')
 

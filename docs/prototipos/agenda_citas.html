@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático de CITA NUEVA y MI AGENDA con calendario semanal — SYSCLIN
+    Se abre con doble clic, no necesita Flask. Datos de ejemplo, fechas relativas a hoy.
+
+    Qué cambia respecto a app/rutas/agendamiento/cita/templates/cita-agregar.html y mi_agenda/templates/mi-agenda.html:
+
+    CITA NUEVA
+    1. Al elegir el especialista aparece su PRÓXIMA DISPONIBILIDAD (fecha, hora, consultorio) y la fecha ya queda
+       elegida con los turnos de ese día. Si se quiere otra fecha, se carga a mano.
+    2. Chips con los PRÓXIMOS CUPOS LIBRES (varios días): un clic y queda elegido el día y la hora.
+    3. Si el día elegido no tiene turnos, se dice por qué (no atiende ese día / está completo) y se ofrecen los cupos más cercanos.
+    4. Botón de AYUDA: días y horarios de atención del especialista (tabla semanal).
+    5. TIPO DE CITA con tres opciones: Primera vez / Seguimiento / Tratamiento. Se sugiere según el historial del paciente
+       y el número de sesión se completa solo. (En la base: columna tipo_cita en citas; hoy solo existe cita_es_primera_vez.)
+    6. Guardar se bloquea al primer clic (no se puede guardar dos veces) y muestra el resultado con el siguiente paso.
+
+    MI AGENDA
+    1. El título aclara que la lista son las CITAS DEL DÍA.
+    2. Pestaña SEMANA: calendario semanal con las citas por estado y la disponibilidad del especialista de fondo.
+       Un clic en un hueco libre abre "Nueva cita" con especialista, fecha y hora ya cargados.
+    3. Clínico: solo su agenda, solo lectura (regla vigente). Administrador: elige el especialista.
+
+    La barra oscura de arriba NO es parte del diseño (cambia pantalla y rol). Sidebar y topbar no se dibujan:
+    lo que se rediseña es el contenido.
+    Bootstrap 5.3.7 y Font Awesome 6.1.1 (los mismos de base.html), fuente Nunito.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Citas y agenda - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --bs-body-font-family: 'Nunito', system-ui, sans-serif; --bs-primary: #4338ca; --bs-primary-rgb: 67,56,202; --bs-border-radius: .5rem; }
+        .btn-primary { --bs-btn-bg: #4338ca; --bs-btn-border-color: #4338ca; --bs-btn-hover-bg: #3730a3; --bs-btn-hover-border-color: #3730a3; --bs-btn-active-bg: #3730a3; --bs-btn-disabled-bg: #4338ca; --bs-btn-disabled-border-color: #4338ca; }
+        body { background: #f4f6f9; }
+        .demo-bar { background: #1f2937; color: #e5e7eb; font-size: .85rem; }
+        .demo-bar .btn { --bs-btn-padding-y: .15rem; }
+        .sugerencias { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; max-height: 260px; overflow-y: auto; display: none; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); }
+        .sugerencias .list-group-item { cursor: pointer; }
+        .paso { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #4338ca; color: #fff; font-size: .8rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+        .tipo-card { cursor: pointer; border: 2px solid var(--bs-border-color); transition: border-color .15s, background .15s; }
+        .tipo-card:hover { border-color: #a5b4fc; }
+        .tipo-card.activo { border-color: #4338ca; background: #eef2ff; }
+        .tipo-card.sugerido::after { content: 'Sugerido'; position: absolute; top: -.6rem; right: .6rem; background: #4338ca; color: #fff; font-size: .7rem; padding: .05rem .5rem; border-radius: 1rem; }
+        .chip-cupo { border: 1px solid var(--bs-border-color); background: #fff; border-radius: .5rem; padding: .35rem .7rem; font-size: .9rem; cursor: pointer; }
+        .chip-cupo:hover { border-color: #4338ca; }
+        .chip-cupo.activo { background: #4338ca; color: #fff; border-color: #4338ca; }
+        .chip-cupo small { display: block; font-size: .72rem; opacity: .75; }
+
+        /* Calendario semanal */
+        .cal { display: grid; grid-template-columns: 56px repeat(6, 1fr); border: 1px solid var(--bs-border-color); border-radius: .5rem; overflow: hidden; background: #fff; }
+        .cal-cab { background: #f8f9fa; border-bottom: 1px solid var(--bs-border-color); padding: .5rem .25rem; text-align: center; font-weight: 700; font-size: .85rem; }
+        .cal-cab.hoy { background: #eef2ff; color: #4338ca; }
+        .cal-cab small { display: block; font-weight: 400; color: #6c757d; }
+        .cal-horas { position: relative; border-right: 1px solid var(--bs-border-color); }
+        .cal-horas div { height: 56px; font-size: .72rem; color: #6c757d; text-align: right; padding-right: .35rem; transform: translateY(-.55em); }
+        .cal-dia { position: relative; border-right: 1px solid #eee; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 55px, #eee 55px, #eee 56px); }
+        .cal-dia:last-child { border-right: 0; }
+        .cal-dia.hoy { background-color: #fafaff; }
+        .bloque-atencion { position: absolute; left: 0; right: 0; background: rgba(25,135,84,.07); border-left: 3px solid rgba(25,135,84,.45); cursor: pointer; }
+        .bloque-atencion:hover { background: rgba(25,135,84,.16); }
+        .bloque-atencion span { font-size: .68rem; color: #198754; padding: .1rem .35rem; opacity: 0; }
+        .bloque-atencion:hover span { opacity: 1; }
+        .evento { position: absolute; left: 3px; right: 3px; border-radius: .35rem; padding: .15rem .35rem; font-size: .76rem; line-height: 1.15; overflow: hidden; border-left: 4px solid; cursor: pointer; z-index: 2; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+        .evento b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ev-AGENDADA   { border-color: #0dcaf0; background: #e7f9fd; }
+        .ev-CONFIRMADA { border-color: #4338ca; background: #eef2ff; }
+        .ev-EN_CONSULTA{ border-color: #ffc107; background: #fff8e1; }
+        .ev-COMPLETADA { border-color: #198754; background: #e8f5ee; }
+        .ev-nuevo      { outline: 3px solid #4338ca; animation: parpadeo 1.2s 3; }
+        @keyframes parpadeo { 50% { outline-color: transparent; } }
+        .ahora { position: absolute; left: 0; right: 0; height: 2px; background: #dc3545; z-index: 3; }
+        .leyenda span { display: inline-flex; align-items: center; gap: .3rem; margin-right: 1rem; font-size: .8rem; }
+        .leyenda i { width: .8rem; height: .8rem; display: inline-block; border-radius: .2rem; border-left: 4px solid; }
+    </style>
+</head>
+<body>
+
+<!-- Barra de demostración (no es parte del diseño) -->
+<div class="demo-bar py-2">
+    <div class="container-xl d-flex flex-wrap align-items-center gap-3">
+        <strong>Demo</strong>
+        <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-outline-light" id="verCita">Cita nueva</button>
+            <button class="btn btn-outline-light" id="verAgenda">Mi Agenda</button>
+        </div>
+        <label class="d-flex align-items-center gap-2">Rol
+            <select class="form-select form-select-sm" id="selRol" style="width:auto">
+                <option value="RECEPCION">Recepción</option>
+                <option value="CLINICO">Clínico (Lic. Ana Núñez)</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+            </select>
+        </label>
+    </div>
+</div>
+
+<div class="container-xl py-4">
+
+<!-- ═══════════════════════════ CITA NUEVA ═══════════════════════════ -->
+<section id="vistaCita">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Registrar nueva cita</h1>
+            <div class="text-body-secondary small">Elegí el paciente y el especialista: el sistema propone el primer turno libre.</div>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="#">Volver al listado</a>
+    </div>
+
+    <div id="formCita">
+        <!-- 1. Paciente -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body py-3 d-flex align-items-center gap-2"><span class="paso">1</span><h6 class="m-0 fw-bold">Paciente</h6></div>
+            <div class="card-body">
+                <div id="bloqueBuscar">
+                    <div class="position-relative">
+                        <input class="form-control" id="txtPaciente" placeholder="Nombre, apellido, cédula o historia clínica…" autocomplete="off">
+                        <div class="list-group sugerencias" id="sugPaciente"></div>
+                    </div>
+                    <div class="form-text">Escribí el nombre, apellido, cédula o historia clínica. Si no aparece, vas a poder agregarlo ahí mismo.</div>
+                </div>
+                <div id="bloquePaciente" class="d-none">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <div class="fw-bold fs-5" id="pNombre"></div>
+                            <div class="small text-body-secondary" id="pDatos"></div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnCambiarPac"><i class="fas fa-repeat me-1"></i>Cambiar</button>
+                    </div>
+                    <div class="small mt-2" id="pHistorial"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Especialista -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body py-3 d-flex align-items-center gap-2"><span class="paso">2</span><h6 class="m-0 fw-bold">Especialista</h6></div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="small mb-1">Especialista</label>
+                        <select class="form-select" id="selEsp"></select>
+                    </div>
+                    <div class="col-md-6 d-flex gap-2 align-items-end">
+                        <button class="btn btn-outline-primary d-none" id="btnAyudaHorario"><i class="fas fa-circle-question me-1"></i>¿Cuándo atiende?</button>
+                    </div>
+                </div>
+                <div class="alert alert-success d-none mt-3 mb-0 d-flex align-items-center justify-content-between gap-2" id="avisoProxima">
+                    <div><i class="fas fa-calendar-check me-2"></i><strong>Próxima disponibilidad:</strong> <span id="txtProxima"></span></div>
+                    <button class="btn btn-sm btn-success" id="btnUsarProxima">Usar este turno</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Turno -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body py-3 d-flex align-items-center gap-2"><span class="paso">3</span><h6 class="m-0 fw-bold">Fecha y turno</h6></div>
+            <div class="card-body">
+                <div id="avisoElegirEsp" class="alert alert-secondary mb-0">Elegí un especialista para ver sus turnos libres.</div>
+                <div id="bloqueTurnos" class="d-none">
+                    <div class="small fw-semibold mb-2">Próximos cupos libres</div>
+                    <div class="d-flex flex-wrap gap-2 mb-4" id="chipsProximos"></div>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="small mb-1">¿Otra fecha?</label>
+                            <input type="date" class="form-control" id="txtFecha">
+                        </div>
+                    </div>
+                    <div id="msgDia" class="mt-3"></div>
+                    <div class="d-flex flex-wrap gap-2 mt-3" id="chipsDia"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Tipo y detalle -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body py-3 d-flex align-items-center gap-2"><span class="paso">4</span><h6 class="m-0 fw-bold">Tipo de cita y detalle</h6></div>
+            <div class="card-body">
+                <div class="row g-3 mb-3" id="tiposCita">
+                    <div class="col-md-4"><div class="card tipo-card position-relative h-100" data-tipo="PRIMERA_VEZ"><div class="card-body text-center"><div class="fs-3">🆕</div><div class="fw-bold">Primera vez</div><div class="small text-body-secondary">Evaluación inicial. El paciente no tiene consultas previas.</div></div></div></div>
+                    <div class="col-md-4"><div class="card tipo-card position-relative h-100" data-tipo="SEGUIMIENTO"><div class="card-body text-center"><div class="fs-3">🔁</div><div class="fw-bold">Seguimiento</div><div class="small text-body-secondary">Control o continuación de un caso ya evaluado.</div></div></div></div>
+                    <div class="col-md-4"><div class="card tipo-card position-relative h-100" data-tipo="TRATAMIENTO"><div class="card-body text-center"><div class="fs-3">🧩</div><div class="fw-bold">Tratamiento</div><div class="small text-body-secondary">Sesión de un plan de tratamiento en curso.</div></div></div></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3" id="grpSesion"><label class="small mb-1">N.º de sesión</label><input class="form-control" type="number" id="txtSesion" min="1"><div class="form-text" id="ayudaSesion"></div></div>
+                    <div class="col-md-3"><label class="small mb-1">Modalidad</label><select class="form-select"><option>Presencial</option><option>Telemedicina</option><option>Domicilio</option></select></div>
+                    <div class="col-md-6"><label class="small mb-1">Motivo de la cita</label><input class="form-control" id="txtMotivo" placeholder="Ej: dificultades de atención en la escuela"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen + guardar -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div id="resumen" class="small text-body-secondary">Completá el paciente, el especialista y el turno para agendar.</div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-secondary" href="#">Cancelar</a>
+                    <button class="btn btn-success" id="btnGuardar" disabled><i class="fas fa-floppy-disk me-1"></i><span>Guardar cita</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultado (reemplaza al formulario, así no se puede guardar dos veces) -->
+    <div class="card shadow-sm d-none" id="resultado">
+        <div class="card-body text-center py-5">
+            <div class="display-6 text-success mb-2"><i class="fas fa-circle-check"></i></div>
+            <h2 class="h4 fw-bold">Cita agendada</h2>
+            <p class="text-body-secondary mb-4" id="resultadoTexto"></p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <button class="btn btn-primary" id="btnVerAgenda"><i class="fas fa-calendar-week me-1"></i>Ver en la agenda</button>
+                <button class="btn btn-outline-secondary" id="btnOtra">Agendar otra cita</button>
+                <a class="btn btn-outline-secondary" href="#">Ir al listado</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════ MI AGENDA ═══════════════════════════ -->
+<section id="vistaAgenda" class="d-none">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Mi Agenda</h1>
+            <div class="text-body-secondary small" id="subAgenda"></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <select class="form-select form-select-sm d-none" id="selEspAgenda" style="width:auto"></select>
+            <ul class="nav nav-pills" id="pestanas">
+                <li class="nav-item"><button class="nav-link active" data-vista="DIA">Citas de hoy</button></li>
+                <li class="nav-item"><button class="nav-link" data-vista="SEMANA">Semana</button></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="avisoSoloLectura" class="alert alert-light border small d-none"><i class="fas fa-eye me-1"></i>Agenda de solo lectura: ves tus citas y tus horarios de atención.</div>
+
+    <!-- Citas de hoy (lista) -->
+    <div id="vistaDia">
+        <div class="card shadow-sm">
+            <div class="card-header bg-body py-3 d-flex align-items-center">
+                <h6 class="m-0 fw-bold">Citas del día <span class="text-body-secondary fw-normal" id="fechaHoy"></span></h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Hora</th><th>Paciente</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+                    <tbody id="tbodyDia"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Semana (calendario) -->
+    <div id="vistaSemana" class="d-none">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" id="semAnt"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn btn-outline-secondary" id="semHoy">Esta semana</button>
+                <button class="btn btn-outline-secondary" id="semSig"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="fw-bold" id="rangoSemana"></div>
+            <div class="leyenda text-body-secondary">
+                <span><i style="border-color:#0dcaf0;background:#e7f9fd"></i>Agendada</span>
+                <span><i style="border-color:#4338ca;background:#eef2ff"></i>Confirmada</span>
+                <span><i style="border-color:#ffc107;background:#fff8e1"></i>En consulta</span>
+                <span><i style="border-color:#198754;background:#e8f5ee"></i>Completada</span>
+                <span><i style="border-color:rgba(25,135,84,.45);background:rgba(25,135,84,.12)"></i>Atiende (libre)</span>
+            </div>
+        </div>
+        <div class="cal" id="cal"></div>
+    </div>
+</section>
+
+</div>
+
+<!-- Ayuda de horarios -->
+<div class="modal fade" id="modalAyuda" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header"><h5 class="modal-title fw-bold" id="ayudaTitulo"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><table class="table table-sm mb-2"><thead class="table-light"><tr><th>Día</th><th>Horario de atención</th><th>Consultorio</th></tr></thead><tbody id="ayudaCuerpo"></tbody></table>
+                <div class="small text-body-secondary">Cada turno dura 60 minutos. Los días sin horario el especialista no atiende.</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Detalle de cita -->
+<div class="modal fade" id="modalCita" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header"><h6 class="modal-title fw-bold">Detalle de la cita</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="modalCitaCuerpo"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+/* ── Datos de ejemplo ─────────────────────────────────────────────────────── */
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const ESPECIALISTAS = [
+    { id: 1, nombre: 'Lic. Ana Núñez', especialidad: 'Psicología', horario: {
+        1: ['08:00', '12:00', 'Consultorio 1'], 2: ['08:00', '12:00', 'Consultorio 1'], 3: ['08:00', '12:00', 'Consultorio 1'],
+        4: ['08:00', '12:00', 'Consultorio 1'], 5: ['08:00', '12:00', 'Consultorio 1'] } },
+    { id: 2, nombre: 'Lic. Marcos Báez', especialidad: 'Fonoaudiología', horario: {
+        1: ['14:00', '18:00', 'Consultorio 2'], 2: ['08:00', '12:00', 'Consultorio 2'], 3: ['14:00', '18:00', 'Consultorio 2'],
+        4: ['08:00', '12:00', 'Consultorio 2'], 5: ['14:00', '18:00', 'Consultorio 2'] } }
+];
+const PACIENTES = [
+    { id: 6, nombre: 'Valentina Sofía Giménez Amarilla', ci: '6956038', hc: 'HC-0006', tel: '0991000006', consultas: 2, tratamiento: false, ultimaEsp: 1 },
+    { id: 5, nombre: 'Gladys Mabel Rolón Martínez', ci: '6623905', hc: 'HC-0005', tel: '0991000005', consultas: 5, tratamiento: true, ultimaEsp: 2 },
+    { id: 3, nombre: 'Hugo Ramón Escobar Vera', ci: '6387529', hc: 'HC-0003', tel: '0991000003', consultas: 0, tratamiento: false },
+    { id: 12, nombre: 'Armando Ramirez', ci: '6814403', hc: 'HC-0012', tel: '0991000012', consultas: 0, tratamiento: false }
+];
+const hoyBase = new Date(); hoyBase.setHours(0, 0, 0, 0);
+const sumarDias = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const fmtFecha = d => `${DIAS[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+const aMin = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+const deMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+// Citas de ejemplo (desplazamiento en días respecto de hoy)
+let CITAS = [
+    { d: 0, h: '08:00', esp: 1, pac: 'Valentina Giménez', tipo: 'SEGUIMIENTO', ses: 3, estado: 'COMPLETADA' },
+    { d: 0, h: '09:00', esp: 1, pac: 'Gladys Rolón', tipo: 'TRATAMIENTO', ses: 5, estado: 'EN_CONSULTA' },
+    { d: 0, h: '10:00', esp: 1, pac: 'Carlos Benítez', tipo: 'PRIMERA_VEZ', ses: null, estado: 'CONFIRMADA' },
+    { d: 1, h: '08:00', esp: 1, pac: 'Hugo Escobar', tipo: 'SEGUIMIENTO', ses: 2, estado: 'AGENDADA' },
+    { d: 1, h: '09:00', esp: 1, pac: 'Patricia Ayala', tipo: 'TRATAMIENTO', ses: 8, estado: 'CONFIRMADA' },
+    { d: 2, h: '08:00', esp: 1, pac: 'Valentina Giménez', tipo: 'SEGUIMIENTO', ses: 4, estado: 'AGENDADA' },
+    { d: 2, h: '10:00', esp: 1, pac: 'Armando Ramirez', tipo: 'PRIMERA_VEZ', ses: null, estado: 'AGENDADA' },
+    { d: 3, h: '11:00', esp: 1, pac: 'Gladys Rolón', tipo: 'TRATAMIENTO', ses: 6, estado: 'AGENDADA' },
+    { d: 0, h: '14:00', esp: 2, pac: 'Hugo Escobar', tipo: 'PRIMERA_VEZ', ses: null, estado: 'CONFIRMADA' },
+    { d: 0, h: '15:00', esp: 2, pac: 'Patricia Ayala', tipo: 'TRATAMIENTO', ses: 3, estado: 'AGENDADA' },
+    { d: 1, h: '15:00', esp: 2, pac: 'Gladys Rolón', tipo: 'TRATAMIENTO', ses: 7, estado: 'AGENDADA' }
+].map(c => ({ ...c, fecha: iso(sumarDias(hoyBase, c.d)) }));
+
+const TIPO_TXT = { PRIMERA_VEZ: 'Primera vez', SEGUIMIENTO: 'Seguimiento', TRATAMIENTO: 'Tratamiento' };
+const ESTADO_TXT = { AGENDADA: 'Agendada', CONFIRMADA: 'Confirmada', EN_CONSULTA: 'En consulta', COMPLETADA: 'Completada' };
+const $ = id => document.getElementById(id);
+
+/* ── Disponibilidad ───────────────────────────────────────────────────────── */
+function turnosDelDia(esp, fecha) {
+    const h = esp.horario[fecha.getDay()];
+    if (!h) return { atiende: false, libres: [], total: 0 };
+    const ocupadas = CITAS.filter(c => c.esp === esp.id && c.fecha === iso(fecha)).map(c => aMin(c.h));
+    const ahora = new Date(); const esHoy = iso(fecha) === iso(ahora);
+    const libres = []; let total = 0;
+    for (let m = aMin(h[0]); m + 60 <= aMin(h[1]); m += 60) {
+        total++;
+        if (ocupadas.includes(m)) continue;
+        if (esHoy && m <= ahora.getHours() * 60 + ahora.getMinutes()) continue;   // turno que ya pasó
+        libres.push({ fecha, hora: deMin(m), consultorio: h[2] });
+    }
+    return { atiende: true, libres, total };
+}
+function proximosCupos(esp, cantidad = 6, desde = hoyBase) {
+    const res = [];
+    for (let i = 0; i < 45 && res.length < cantidad; i++) res.push(...turnosDelDia(esp, sumarDias(desde, i)).libres);
+    return res.slice(0, cantidad);
+}
+
+/* ── Cita nueva ───────────────────────────────────────────────────────────── */
+let st = { pac: null, esp: null, turno: null, tipo: null };
+const espActual = () => ESPECIALISTAS.find(e => e.id === st.esp);
+
+function buscador(input, panel, fuente, pintar, elegir, vacio) {
+    const mostrar = () => {
+        const q = input.value.trim().toLowerCase();
+        const res = fuente().filter(x => !q || JSON.stringify(x).toLowerCase().includes(q)).slice(0, 8);
+        panel.innerHTML = res.length ? '' : (vacio ? vacio(input.value.trim()) : '<div class="list-group-item small text-body-secondary">Sin resultados</div>');
+        res.forEach(x => { const a = document.createElement('a'); a.className = 'list-group-item list-group-item-action'; a.innerHTML = pintar(x);
+            a.onmousedown = e => { e.preventDefault(); panel.style.display = 'none'; elegir(x); }; panel.appendChild(a); });
+        panel.style.display = 'block';
+    };
+    input.addEventListener('input', mostrar); input.addEventListener('focus', mostrar);
+    input.addEventListener('blur', () => setTimeout(() => panel.style.display = 'none', 120));
+}
+buscador($('txtPaciente'), $('sugPaciente'), () => PACIENTES,
+    p => `<div class="fw-semibold">${p.nombre}</div><div class="small text-body-secondary">CI ${p.ci} · ${p.hc}</div>`, elegirPaciente,
+    // Sin resultados por nombre, apellido, cédula o historia clínica: se ofrece registrar al paciente ahí mismo
+    q => `<div class="list-group-item">
+            <div class="small text-body-secondary mb-2">No se encontró ningún paciente con «${q.replace(/</g, '&lt;')}».</div>
+            <button type="button" class="btn btn-success btn-sm w-100" onmousedown="event.preventDefault(); registrarNuevo()"><i class="fas fa-user-plus me-1"></i>Agregar paciente nuevo</button>
+          </div>`);
+
+// En el sistema real abre el "Registro rápido de paciente" que ya existe, con lo escrito como punto de partida;
+// al guardarlo, el paciente queda elegido en la cita.
+function registrarNuevo() {
+    const texto = $('txtPaciente').value.trim();
+    const nuevo = { id: 99, nombre: texto || 'Paciente nuevo', ci: 'a completar', hc: 'HC nueva', tel: '—', consultas: 0, tratamiento: false };
+    PACIENTES.push(nuevo);
+    $('sugPaciente').style.display = 'none';
+    elegirPaciente(nuevo);
+}
+
+function elegirPaciente(p) {
+    st.pac = p;
+    $('bloqueBuscar').classList.add('d-none'); $('bloquePaciente').classList.remove('d-none');
+    $('pNombre').textContent = p.nombre; $('pDatos').textContent = `CI ${p.ci} · ${p.hc} · Tel. ${p.tel}`;
+    $('pHistorial').innerHTML = p.consultas === 0
+        ? '<span class="badge text-bg-primary">Paciente nuevo</span> No tiene consultas previas.'
+        : `<span class="badge text-bg-secondary">${p.consultas} consulta(s) previas</span>${p.tratamiento ? ' <span class="badge text-bg-info">En tratamiento</span>' : ''}`;
+    // Sugerencia: el mismo especialista de la última consulta
+    if (p.ultimaEsp && !st.esp) { $('selEsp').value = p.ultimaEsp; elegirEspecialista(p.ultimaEsp); }
+    sugerirTipo(); actualizar();
+}
+$('btnCambiarPac').onclick = () => { st.pac = null; $('bloqueBuscar').classList.remove('d-none'); $('bloquePaciente').classList.add('d-none'); $('txtPaciente').value = ''; $('txtPaciente').focus(); sugerirTipo(); actualizar(); };
+
+$('selEsp').innerHTML = '<option value="">— Elegí un especialista —</option>' + ESPECIALISTAS.map(e => `<option value="${e.id}">${e.nombre} · ${e.especialidad}</option>`).join('');
+$('selEsp').onchange = e => elegirEspecialista(+e.target.value || null);
+
+function elegirEspecialista(id) {
+    st.esp = id; st.turno = null;
+    const e = espActual();
+    $('btnAyudaHorario').classList.toggle('d-none', !e);
+    $('avisoProxima').classList.toggle('d-none', !e);
+    $('avisoElegirEsp').classList.toggle('d-none', !!e);
+    $('bloqueTurnos').classList.toggle('d-none', !e);
+    if (!e) { actualizar(); return; }
+    const prox = proximosCupos(e, 8);
+    if (!prox.length) { $('txtProxima').textContent = 'sin cupos en los próximos 45 días.'; $('btnUsarProxima').classList.add('d-none'); }
+    else {
+        $('btnUsarProxima').classList.remove('d-none');
+        $('txtProxima').textContent = `${fmtFecha(prox[0].fecha)} a las ${prox[0].hora} · ${prox[0].consultorio}`;
+        $('btnUsarProxima').onclick = () => elegirTurno(prox[0]);
+    }
+    $('chipsProximos').innerHTML = '';
+    prox.forEach(t => $('chipsProximos').appendChild(chip(t, `${fmtFecha(t.fecha)}`, t.hora)));
+    // La fecha ya queda elegida con el primer cupo libre; si quiere otra, la carga a mano
+    if (prox.length) { $('txtFecha').value = iso(prox[0].fecha); pintarDia(); }
+    sugerirTipo(); actualizar();
+}
+
+function chip(t, linea1, linea2) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip-cupo';
+    b.dataset.clave = iso(t.fecha) + t.hora;
+    b.innerHTML = `${linea2}<small>${linea1}</small>`;
+    b.onclick = () => elegirTurno(t);
+    if (st.turno && iso(st.turno.fecha) + st.turno.hora === b.dataset.clave) b.classList.add('activo');
+    return b;
+}
+function elegirTurno(t) {
+    st.turno = t; $('txtFecha').value = iso(t.fecha); pintarDia();
+    document.querySelectorAll('.chip-cupo').forEach(c => c.classList.toggle('activo', c.dataset.clave === iso(t.fecha) + t.hora));
+    actualizar();
+}
+$('txtFecha').onchange = () => { st.turno = null; pintarDia(); actualizar(); };
+
+function pintarDia() {
+    const e = espActual(); if (!e || !$('txtFecha').value) return;
+    const f = new Date($('txtFecha').value + 'T00:00:00');
+    const r = turnosDelDia(e, f), cont = $('chipsDia'), msg = $('msgDia');
+    cont.innerHTML = ''; msg.innerHTML = '';
+    if (f < hoyBase) { msg.innerHTML = '<div class="alert alert-warning mb-0">Esa fecha ya pasó. Elegí una fecha desde hoy.</div>'; return; }
+    if (!r.atiende) msg.innerHTML = `<div class="alert alert-warning mb-0"><strong>${e.nombre} no atiende los ${DIAS[f.getDay()].toLowerCase()}.</strong> Atiende ${diasAtencion(e)}. Elegí uno de los cupos de arriba.</div>`;
+    else if (!r.libres.length) {
+        const sig = proximosCupos(e, 3, sumarDias(f, 1));
+        msg.innerHTML = `<div class="alert alert-warning mb-0"><strong>El ${fmtFecha(f)} no tiene turnos libres</strong> (${r.total} de ${r.total} ocupados).${sig.length ? ' Más cercanos: ' + sig.map(t => `<a href="#" class="alert-link" data-c="${iso(t.fecha)}|${t.hora}">${fmtFecha(t.fecha)} ${t.hora}</a>`).join(' · ') : ''}</div>`;
+        msg.querySelectorAll('a[data-c]').forEach(a => a.onclick = ev => { ev.preventDefault(); const [d, h] = a.dataset.c.split('|'); elegirTurno({ fecha: new Date(d + 'T00:00:00'), hora: h, consultorio: e.horario[new Date(d + 'T00:00:00').getDay()][2] }); });
+    } else msg.innerHTML = `<div class="small text-body-secondary">${r.libres.length} turno(s) libre(s) el ${fmtFecha(f)} · ${r.libres[0].consultorio}</div>`;
+    r.libres.forEach(t => cont.appendChild(chip(t, r.libres[0].consultorio, t.hora)));
+}
+function diasAtencion(e) { return Object.keys(e.horario).map(d => DIAS[d].toLowerCase()).join(', '); }
+
+$('btnAyudaHorario').onclick = () => {
+    const e = espActual();
+    $('ayudaTitulo').textContent = `Horarios de ${e.nombre}`;
+    $('ayudaCuerpo').innerHTML = [1, 2, 3, 4, 5, 6].map(d => { const h = e.horario[d];
+        return `<tr><td>${DIAS[d]}</td>${h ? `<td>${h[0]} a ${h[1]}</td><td>${h[2]}</td>` : '<td colspan="2" class="text-body-secondary">No atiende</td>'}</tr>`; }).join('');
+    new bootstrap.Modal($('modalAyuda')).show();
+};
+
+/* Tipo de cita: se sugiere según el historial */
+function sugerirTipo() {
+    const p = st.pac; let sug = null;
+    if (p) sug = p.consultas === 0 ? 'PRIMERA_VEZ' : (p.tratamiento ? 'TRATAMIENTO' : 'SEGUIMIENTO');
+    document.querySelectorAll('.tipo-card').forEach(c => c.classList.toggle('sugerido', c.dataset.tipo === sug));
+    if (sug && !st.tipoManual) elegirTipo(sug);
+    if (!p) { st.tipo = null; document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('activo')); }
+}
+function elegirTipo(t) {
+    st.tipo = t;
+    document.querySelectorAll('.tipo-card').forEach(c => c.classList.toggle('activo', c.dataset.tipo === t));
+    const conSesion = t !== 'PRIMERA_VEZ';
+    $('grpSesion').classList.toggle('d-none', !conSesion);
+    if (conSesion && st.pac) { const n = st.pac.consultas + 1; $('txtSesion').value = n; $('ayudaSesion').textContent = `Sigue a la sesión ${n - 1}.`; }
+    actualizar();
+}
+document.querySelectorAll('.tipo-card').forEach(c => c.onclick = () => { st.tipoManual = true; elegirTipo(c.dataset.tipo); });
+
+function actualizar() {
+    const ok = st.pac && st.esp && st.turno && st.tipo;
+    $('btnGuardar').disabled = !ok;
+    $('resumen').innerHTML = ok
+        ? `<strong>${st.pac.nombre}</strong> con <strong>${espActual().nombre}</strong> · ${fmtFecha(st.turno.fecha)} ${st.turno.hora} · ${st.turno.consultorio} · ${TIPO_TXT[st.tipo]}`
+        : 'Completá el paciente, el especialista y el turno para agendar.';
+}
+
+$('btnGuardar').onclick = function () {
+    this.disabled = true;                                   // un solo clic: no se puede guardar dos veces
+    this.querySelector('span').textContent = 'Guardando…';
+    setTimeout(() => {
+        const t = st.turno;
+        CITAS.push({ d: 0, h: t.hora, esp: st.esp, pac: st.pac.nombre.split(' ').slice(0, 1).concat(st.pac.nombre.split(' ').slice(-2, -1)).join(' '),
+            tipo: st.tipo, ses: st.tipo === 'PRIMERA_VEZ' ? null : +$('txtSesion').value, estado: 'AGENDADA', fecha: iso(t.fecha), nueva: true });
+        $('formCita').classList.add('d-none'); $('resultado').classList.remove('d-none');
+        $('resultadoTexto').innerHTML = `<strong>${st.pac.nombre}</strong> con ${espActual().nombre}<br>${fmtFecha(t.fecha)} a las ${t.hora} · ${t.consultorio} · ${TIPO_TXT[st.tipo]}`;
+    }, 700);
+};
+$('btnOtra').onclick = () => { st = { pac: null, esp: null, turno: null, tipo: null }; location.reload(); };
+$('btnVerAgenda').onclick = () => { agenda.esp = st.esp; irAgenda('SEMANA', new Date(CITAS[CITAS.length - 1].fecha + 'T00:00:00')); };
+
+/* ── Mi Agenda ────────────────────────────────────────────────────────────── */
+let agenda = { vista: 'DIA', esp: 1, lunes: lunesDe(hoyBase) };
+function lunesDe(d) { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+const rol = () => $('selRol').value;
+
+function irAgenda(vista, fecha) {
+    $('vistaCita').classList.add('d-none'); $('vistaAgenda').classList.remove('d-none');
+    if (rol() === 'RECEPCION') $('selRol').value = 'ADMINISTRADOR';   // Recepción no tiene Mi Agenda: en la demo se pasa a Administrador
+    if (rol() === 'CLINICO') agenda.esp = 1;
+    if (fecha) agenda.lunes = lunesDe(fecha);
+    agenda.vista = vista; pintarAgenda(); window.scrollTo(0, 0);
+}
+
+function pintarAgenda() {
+    const clinico = rol() === 'CLINICO';
+    $('selEspAgenda').classList.toggle('d-none', clinico);
+    $('avisoSoloLectura').classList.toggle('d-none', !clinico);
+    $('selEspAgenda').innerHTML = ESPECIALISTAS.map(e => `<option value="${e.id}" ${e.id === agenda.esp ? 'selected' : ''}>${e.nombre}</option>`).join('');
+    document.querySelectorAll('#pestanas .nav-link').forEach(b => b.classList.toggle('active', b.dataset.vista === agenda.vista));
+    $('vistaDia').classList.toggle('d-none', agenda.vista !== 'DIA');
+    $('vistaSemana').classList.toggle('d-none', agenda.vista !== 'SEMANA');
+    const e = ESPECIALISTAS.find(x => x.id === agenda.esp);
+    $('subAgenda').textContent = agenda.vista === 'DIA' ? `Citas de hoy · ${e.nombre}` : `Semana · ${e.nombre}`;
+    $('fechaHoy').textContent = '— ' + fmtFecha(hoyBase);
+    pintarDia2(e); pintarSemana(e);
+}
+$('selEspAgenda').onchange = ev => { agenda.esp = +ev.target.value; pintarAgenda(); };
+$('pestanas').onclick = ev => { if (ev.target.dataset.vista) { agenda.vista = ev.target.dataset.vista; pintarAgenda(); } };
+$('semAnt').onclick = () => { agenda.lunes = sumarDias(agenda.lunes, -7); pintarAgenda(); };
+$('semSig').onclick = () => { agenda.lunes = sumarDias(agenda.lunes, 7); pintarAgenda(); };
+$('semHoy').onclick = () => { agenda.lunes = lunesDe(hoyBase); pintarAgenda(); };
+
+function pintarDia2(e) {
+    const lista = CITAS.filter(c => c.esp === e.id && c.fecha === iso(hoyBase)).sort((a, b) => a.h.localeCompare(b.h));
+    $('tbodyDia').innerHTML = lista.length ? lista.map(c => `<tr class="${c.nueva ? 'table-primary' : ''}"><td class="fw-semibold">${c.h}</td><td>${c.pac}</td>
+        <td>${TIPO_TXT[c.tipo]}${c.ses ? ' #' + c.ses : ''}</td><td><span class="badge text-bg-light border">${ESTADO_TXT[c.estado]}</span></td>
+        <td class="text-end">${rol() === 'CLINICO' && c.estado !== 'COMPLETADA' ? `<button class="btn btn-sm btn-primary">${c.estado === 'EN_CONSULTA' ? 'Continuar' : 'Iniciar'}</button>` : ''}</td></tr>`).join('')
+        : '<tr><td colspan="5" class="text-center text-body-secondary py-4">No hay citas programadas para hoy.</td></tr>';
+}
+
+const HORA_INI = 7, HORA_FIN = 19, ALTO = 56;
+function pintarSemana(e) {
+    const l = agenda.lunes, dias = [0, 1, 2, 3, 4, 5].map(i => sumarDias(l, i));
+    $('rangoSemana').textContent = `${fmtFecha(dias[0])} al ${fmtFecha(dias[5])}`;
+    let h = '<div class="cal-cab"></div>' + dias.map(d => `<div class="cal-cab ${iso(d) === iso(hoyBase) ? 'hoy' : ''}">${DIAS[d.getDay()]}<small>${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}</small></div>`).join('');
+    h += '<div class="cal-horas">' + Array.from({ length: HORA_FIN - HORA_INI }, (_, i) => `<div>${String(HORA_INI + i).padStart(2, '0')}:00</div>`).join('') + '</div>';
+    dias.forEach(d => {
+        let col = `<div class="cal-dia ${iso(d) === iso(hoyBase) ? 'hoy' : ''}" style="height:${(HORA_FIN - HORA_INI) * ALTO}px">`;
+        const hor = e.horario[d.getDay()];
+        if (hor) for (let m = aMin(hor[0]); m + 60 <= aMin(hor[1]); m += 60) {
+            const ocupada = CITAS.some(c => c.esp === e.id && c.fecha === iso(d) && aMin(c.h) === m);
+            if (!ocupada && d >= hoyBase) col += `<div class="bloque-atencion" style="top:${(m - HORA_INI * 60) / 60 * ALTO}px;height:${ALTO}px" data-f="${iso(d)}" data-h="${deMin(m)}"><span>${rol() === 'CLINICO' ? 'Libre' : '+ Nueva cita'}</span></div>`;
+            else if (!ocupada) col += `<div class="bloque-atencion" style="top:${(m - HORA_INI * 60) / 60 * ALTO}px;height:${ALTO}px;cursor:default;opacity:.4"></div>`;
+        }
+        CITAS.filter(c => c.esp === e.id && c.fecha === iso(d)).forEach((c, i) => {
+            col += `<div class="evento ev-${c.estado} ${c.nueva ? 'ev-nuevo' : ''}" style="top:${(aMin(c.h) - HORA_INI * 60) / 60 * ALTO + 1}px;height:${ALTO - 3}px" data-i="${CITAS.indexOf(c)}"><b>${c.h} ${c.pac}</b>${TIPO_TXT[c.tipo]}${c.ses ? ' #' + c.ses : ''}</div>`;
+        });
+        if (iso(d) === iso(new Date())) { const n = new Date(), m = n.getHours() * 60 + n.getMinutes(); if (m >= HORA_INI * 60 && m <= HORA_FIN * 60) col += `<div class="ahora" style="top:${(m - HORA_INI * 60) / 60 * ALTO}px"></div>`; }
+        h += col + '</div>';
+    });
+    $('cal').innerHTML = h;
+    $('cal').querySelectorAll('.evento').forEach(el => el.onclick = () => verCita(CITAS[+el.dataset.i]));
+    $('cal').querySelectorAll('.bloque-atencion[data-f]').forEach(el => el.onclick = () => {
+        if (rol() === 'CLINICO') return;                       // el clínico solo consulta
+        // En el sistema real: /citas-agregar?especialista=..&fecha=..&hora=..
+        $('vistaAgenda').classList.add('d-none'); $('vistaCita').classList.remove('d-none');
+        $('formCita').classList.remove('d-none'); $('resultado').classList.add('d-none');
+        $('selEsp').value = agenda.esp; elegirEspecialista(agenda.esp);
+        elegirTurno({ fecha: new Date(el.dataset.f + 'T00:00:00'), hora: el.dataset.h, consultorio: e.horario[new Date(el.dataset.f + 'T00:00:00').getDay()][2] });
+    });
+}
+function verCita(c) {
+    $('modalCitaCuerpo').innerHTML = `<div class="fw-bold">${c.pac}</div><div class="text-body-secondary small mb-2">${c.fecha.split('-').reverse().join('/')} · ${c.h}</div>
+        <div><span class="badge text-bg-light border">${ESTADO_TXT[c.estado]}</span> <span class="badge text-bg-primary">${TIPO_TXT[c.tipo]}${c.ses ? ' #' + c.ses : ''}</span></div>`;
+    new bootstrap.Modal($('modalCita')).show();
+}
+
+/* ── Demo: cambio de pantalla / rol ───────────────────────────────────────── */
+$('verCita').onclick = () => { $('vistaAgenda').classList.add('d-none'); $('vistaCita').classList.remove('d-none'); };
+$('verAgenda').onclick = () => irAgenda(agenda.vista);
+$('selRol').onchange = () => { if (rol() === 'CLINICO') agenda.esp = 1; if (!$('vistaAgenda').classList.contains('d-none')) pintarAgenda(); };
+$('txtFecha').min = iso(hoyBase);
+</script>
+</body>
+</html>

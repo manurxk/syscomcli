@@ -7,7 +7,7 @@ from app.auth.utils.decorators import role_required
 
 fichaapi = Blueprint('fichaapi', __name__)
 
-ROLES_FICHA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_FICHA = ("ADMINISTRADOR", "CLINICO")
 
 # Secciones que la plantilla FICHA.html realmente renderiza (ver ficha_html_pdf_service.py).
 SECCIONES_PDF = ('anamnesis', 'diagnosticos', 'tratamientos_activos', 'proximas_citas')

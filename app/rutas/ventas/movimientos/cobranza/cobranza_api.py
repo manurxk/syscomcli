@@ -8,7 +8,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 cobranzaapi = Blueprint('cobranzaapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @cobranzaapi.route('/cobranzas', methods=['GET'])
@@ -75,7 +75,7 @@ def addCobranza():
 
 
 @cobranzaapi.route('/cobranzas/<int:id_cobranza>/anular', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR")
 @permiso_requerido("VENTAS", "ELIMINAR")
 def anularCobranza(id_cobranza):
     """PUT: anula la cobranza."""

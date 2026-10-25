@@ -9,7 +9,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 ordenapi = Blueprint('ordenapi', __name__)
 
-ROLES_ORDEN = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_ORDEN = ("ADMINISTRADOR", "CLINICO")
 
 
 @ordenapi.route('/consultas/<int:id_consulta>/ordenes', methods=['GET'])

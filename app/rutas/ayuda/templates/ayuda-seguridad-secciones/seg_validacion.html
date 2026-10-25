@@ -1,0 +1,26 @@
+<p>Antes de guardar, el sistema revisa cada dato. Si algo no cumple una regla, <strong>no se guarda nada</strong> y aparece un aviso que dice qué corregir; lo que ya estaba escrito no se pierde. Los avisos son de pocos tipos y dicen lo mismo en todas las pantallas.</p>
+
+<h4>Cómo se controla: tres capas</h4>
+<table class="datos">
+    <tr><th>Capa</th><th>Qué hace</th></tr>
+    <tr><td>1. En la pantalla</td><td>Revisa los datos al presionar Guardar y avisa al instante. Es una ayuda para el usuario, pero no alcanza sola</td></tr>
+    <tr><td>2. En el servidor</td><td>Vuelve a revisar <strong>todos</strong> los datos, aunque la pantalla ya lo haya hecho. Es el control que no se puede saltear</td></tr>
+    <tr><td>3. En la base de datos</td><td>Controla los campos obligatorios y los valores únicos, como la cédula. Las consultas son <strong>parametrizadas</strong>: el dato nunca se mezcla con la instrucción SQL, lo que impide la inyección SQL. Además, todo formulario lleva protección contra formularios falsificados (CSRF)</td></tr>
+</table>
+
+<h4>Tipos de aviso</h4>
+<table class="datos">
+    <tr><th>Tipo</th><th>Cuándo aparece</th><th>Ejemplo del mensaje</th><th>Qué hacer</th></tr>
+    {% for t in tipos %}
+    <tr><td>{{ t.titulo }}</td><td>{{ t.significa }}</td><td>{{ t.ejemplo }}</td><td>{{ t.hacer }}</td></tr>
+    {% endfor %}
+</table>
+<p>Un aviso que no encaja en ninguno de estos tipos es una regla propia de la pantalla (por ejemplo, una cita sin turno libre o una caja que no está abierta). El aviso siempre dice qué falta.</p>
+
+<h4>Cómo se ven los avisos</h4>
+{% for t in tipos %}
+{% if loop.index0 % 2 == 0 %}<div class="par-mini">{% endif %}
+{{ figura('mensajes/' ~ t.capturas[0][0], t.titulo ~ ': ' ~ t.capturas[0][1]) }}
+{% if loop.index0 % 2 == 1 or loop.last %}</div>{% endif %}
+{% endfor %}
+<p>Las reglas y los avisos de cada pantalla, módulo por módulo, están en el capítulo «Reglas de validación por módulo».</p>

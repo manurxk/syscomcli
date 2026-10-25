@@ -1,31 +1,34 @@
-"""Tarea programada que envía los recordatorios pendientes (regla EMAIL
-1440min/120min creada al confirmar una cita, ver CitaDao.cambiarEstadoCita)
-por correo. El envío por WhatsApp (UltraMsg) queda como canal manual/relegado,
-disponible vía el botón de reenvío en la cita."""
+"""Tarea programada que envía los recordatorios pendientes (reglas 1440min/120min
+creadas al confirmar una cita, ver CitaDao.cambiarEstadoCita) por WhatsApp (UltraMsg).
+Requiere ULTRAMSG_INSTANCE_ID y ULTRAMSG_TOKEN en el .env."""
 from app import app
 from app.dao.agendamiento.recordatorio.RecordatorioDao import RecordatorioDao
-from app.services.EmailService import EmailService
+from app.services.UltraMsgService import UltraMsgService
 
 
 def procesar_recordatorios_pendientes():
     with app.app_context():
         recordatorio_dao = RecordatorioDao()
-        email_service = EmailService()
+        ultramsg_service = UltraMsgService()
+
+        if not ultramsg_service.client_available:
+            app.logger.error("Recordatorios no procesados: UltraMsg no está configurado.")
+            return {'total': 0, 'enviados': 0, 'fallidos': 0}
 
         pendientes = recordatorio_dao.getPendientesEnVentana(limite=100)
         estadisticas = {'total': len(pendientes), 'enviados': 0, 'fallidos': 0}
 
         for r in pendientes:
-            if not r['paciente_correo']:
+            if not r['paciente_telefono']:
                 estadisticas['fallidos'] += 1
                 app.logger.warning(
                     f"Recordatorio {r['id_recordatorio']} (cita {r['id_cita']}): "
-                    "paciente sin correo registrado."
+                    "paciente sin teléfono registrado."
                 )
                 continue
 
-            success, error, _tipo_error = email_service.enviar_recordatorio_cita(
-                correo_destino=r['paciente_correo'],
+            success, _message_id, error, _tipo_error = ultramsg_service.enviar_recordatorio_cita(
+                telefono=r['paciente_telefono'],
                 nombre_paciente=r['paciente_nombre'],
                 cita_fecha=r['cita_fecha'],
                 cita_hora=r['cita_hora'],

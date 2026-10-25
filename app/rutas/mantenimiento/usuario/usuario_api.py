@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
-from app.dao.auth.user_dao import UsuarioDao, MAX_USUARIOS_CON_FUNCIONARIO
+from app.dao.auth.user_dao import UsuarioDao
+from app.utils.soporte import ocultar_soporte, es_usuario_soporte
 from app.dao.mantenimiento.seguridad.acceso.AccesoDao import AccesoDao
 from app.auth.utils.decorators import role_required
 from app.auth.utils.password_validator import validar_politica_password
@@ -19,10 +20,33 @@ def _es_superadmin():
     return 'SUPERADMIN' in {(r or "").strip().upper() for r in session.get("roles", [])}
 
 
+def _tope_usuarios():
+    """Tope de usuarios activos con funcionario (lo fija el Superadministrador en la empresa)."""
+    return UsuarioDao().obtener_topes()[1]
+
+
 def _mensaje_tope_usuarios():
     """Mensaje de error cuando se alcanzó el máximo de usuarios activos con funcionario."""
-    return (f'Se alcanzó el máximo de {MAX_USUARIOS_CON_FUNCIONARIO} usuarios activos con funcionario. '
+    return (f'Se alcanzó el máximo de {_tope_usuarios()} usuarios activos con funcionario. '
             'Desactive un usuario existente antes de crear o reactivar otro.')
+
+
+def _protegido_de_soporte(id_usuario):
+    """Respuesta 404 si el usuario pedido es el Superadministrador y quien consulta no lo es (no debe saber que existe)."""
+    if not _es_superadmin() and es_usuario_soporte(id_usuario):
+        return jsonify({'success': False, 'error': 'No se encontró el usuario con el ID proporcionado.'}), 404
+    return None
+
+
+@usuarioapi.route('/usuarios/cupo', methods=['GET'])
+@role_required("ADMINISTRADOR", "SUPERADMIN")
+def getCupoUsuarios():
+    """Cupo usado de funcionarios y usuarios activos, para mostrar «x de N» en las pantallas."""
+    dao = UsuarioDao()
+    max_func, max_usu = dao.obtener_topes()
+    return jsonify({'success': True, 'error': None, 'data': {
+        'funcionarios': {'activos': dao.contar_funcionarios_activos(), 'maximo': max_func},
+        'usuarios': {'activos': dao.contar_usuarios_activos_con_funcionario(), 'maximo': max_usu}}}), 200
 
 
 # ============================================
@@ -35,7 +59,7 @@ def getUsuarios():
     usuariodao = UsuarioDao()
 
     try:
-        usuarios = usuariodao.getUsuarios()
+        usuarios = ocultar_soporte(usuariodao.getUsuarios())
 
         return jsonify({
             'success': True,
@@ -59,6 +83,9 @@ def getUsuarios():
 def getUsuario(id_usuario):
     """Obtiene un usuario específico por su ID"""
     usuariodao = UsuarioDao()
+    protegido = _protegido_de_soporte(id_usuario)
+    if protegido:
+        return protegido
 
     try:
         usuario = usuariodao.getUsuarioById(id_usuario)
@@ -92,6 +119,9 @@ def getDetalleUsuario(id_usuario):
     """Todo lo que se muestra en la ventana de detalle de un usuario: datos
     de identidad/bloqueo, historial de logins, resumen de MFA, dispositivos
     confiables, solicitudes de recuperación y sesiones activas."""
+    protegido = _protegido_de_soporte(id_usuario)
+    if protegido:
+        return protegido
     try:
         acceso_dao = AccesoDao()
         detalle = acceso_dao.getDetalleUsuario(id_usuario)
@@ -223,10 +253,10 @@ def addUsuario():
         if rol and rol['cod_rol'] == 'SUPERADMIN':
             return jsonify({
                 'success': False,
-                'error': 'Solo un Superadministrador puede asignar el rol Superadministrador.'
+                'error': 'El rol indicado no es válido.'
             }), 403
 
-    if data.get('est_usuario', True) and usuariodao.contar_usuarios_activos_con_funcionario() >= MAX_USUARIOS_CON_FUNCIONARIO:
+    if data.get('est_usuario', True) and usuariodao.contar_usuarios_activos_con_funcionario() >= _tope_usuarios():
         return jsonify({
             'success': False,
             'error': _mensaje_tope_usuarios()
@@ -290,11 +320,18 @@ def addUsuario():
 # ACTUALIZAR USUARIO EXISTENTE
 # ============================================
 @usuarioapi.route('/usuarios/<int:id_usuario>', methods=['PUT'])
-@role_required("SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def updateUsuario(id_usuario):
-    """Actualiza un usuario existente - solo Superadministrador"""
+    """Actualiza un usuario existente - Administrador o Superadministrador (el Administrador no toca al Superadmin)"""
     data = request.get_json()
     usuariodao = UsuarioDao()
+    protegido = _protegido_de_soporte(id_usuario)
+    if protegido:
+        return protegido
+    if not _es_superadmin() and data.get('id_rol'):
+        rol = _dao_roles.execute_query_one("SELECT cod_rol FROM roles WHERE id_rol = %s", (data['id_rol'],))
+        if rol and rol['cod_rol'] == 'SUPERADMIN':
+            return jsonify({'success': False, 'error': 'El rol indicado no es válido.'}), 403
 
     usuario_existente = usuariodao.getUsuarioById(id_usuario)
     if not usuario_existente:
@@ -311,7 +348,7 @@ def updateUsuario(id_usuario):
 
     reactivando = not usuario_existente['est_usuario'] and data.get('est_usuario', True)
     if (reactivando and usuario_existente['id_funcionario']
-            and usuariodao.contar_usuarios_activos_con_funcionario() >= MAX_USUARIOS_CON_FUNCIONARIO):
+            and usuariodao.contar_usuarios_activos_con_funcionario() >= _tope_usuarios()):
         return jsonify({
             'success': False,
             'error': _mensaje_tope_usuarios()
@@ -390,10 +427,15 @@ def updateUsuario(id_usuario):
 # DESACTIVAR USUARIO (SOFT DELETE)
 # ============================================
 @usuarioapi.route('/usuarios/<int:id_usuario>', methods=['DELETE'])
-@role_required("SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN")
 def desactivarUsuario(id_usuario):
-    """Desactiva un usuario (soft delete) - solo Superadministrador"""
+    """Desactiva un usuario (soft delete) - Administrador o Superadministrador (el Administrador no toca al Superadmin)"""
     usuariodao = UsuarioDao()
+    protegido = _protegido_de_soporte(id_usuario)
+    if protegido:
+        return protegido
+    if id_usuario == session.get('id_usuario'):
+        return jsonify({'success': False, 'error': 'No puede desactivar su propio usuario.'}), 400
 
     try:
         if usuariodao.desactivarUsuario(id_usuario, session.get('id_usuario')):
@@ -430,6 +472,9 @@ def desactivarUsuario(id_usuario):
 def resetearIntentos(id_usuario):
     """Resetea el contador de intentos fallidos de login"""
     usuariodao = UsuarioDao()
+    protegido = _protegido_de_soporte(id_usuario)
+    if protegido:
+        return protegido
 
     try:
         if usuariodao.resetearIntentos(id_usuario, session.get('id_usuario')):

@@ -21,7 +21,7 @@
 <div class="container-fluid px-4 mt-n10">
   <div class="card shadow-sm mb-4">
     <div class="card-header py-3">
-      <h6 class="m-0 fw-bold">Comprobantes emitidos</h6>
+      <h6 class="m-0 fw-bold">Comprobantes emitidos y borradores</h6>
     </div>
     <div class="card-body">
       <div class="table-responsive">
@@ -98,20 +98,22 @@ document.addEventListener('DOMContentLoaded', () => {
     language: { url: '/static/plugins/datatables/lang/es.json' },
     order: [[0, 'desc']],
     columns: [
-      { data: 'id_factura' },
-      { data: 'factura_numero' },
+      { data: 'id_factura', render: (v, type, row) => row.es_borrador && type === 'display' ? '—' : v },
+      { data: 'factura_numero', render: (v, type, row) => row.es_borrador ? '<span class="text-muted">Sin número</span>' : v },
       { data: 'paciente_nombre' },
       { data: 'paciente_cedula' },
       { data: 'fecha_factura_fmt' },
-      { data: 'des_condicion_venta' },
+      { data: 'des_condicion_venta', defaultContent: '—' },
       { data: 'factura_total', render: v => fmt(v) },
       { data: 'des_estado_factura', render: v => {
-          const cls = v === 'EMITIDA' ? 'success' : v === 'ANULADA' ? 'danger' : 'secondary';
+          const cls = v === 'EMITIDA' ? 'success' : v === 'ANULADA' ? 'danger' : v === 'BORRADOR' ? 'warning text-dark' : 'secondary';
           return `<span class="badge bg-${cls}">${v}</span>`;
         }
       },
-      { data: null, orderable: false, render: row =>
-          `<button class="btn btn-xs btn-info" onclick="verDetalle(${row.id_factura})">
+      { data: null, orderable: false, render: row => row.es_borrador
+          ? `<a class="btn btn-xs btn-warning" href="{{ url_for('factura.facturaAgregar') }}?borrador=${row.id_borrador}" title="Seguir con este borrador">Retomar</a>
+             <button class="btn btn-xs btn-outline-danger" onclick="descartarBorrador(${row.id_borrador})" title="Descartar borrador"><i data-feather="trash-2" class="icon-xs"></i></button>`
+          : `<button class="btn btn-xs btn-info" onclick="verDetalle(${row.id_factura})">
              <i data-feather="eye" class="icon-xs"></i>
            </button>` }
     ]
@@ -120,11 +122,35 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnAnular')?.addEventListener('click', anular);
 });
 
+const PUEDE_CREAR = {{ 'true' if tiene_permiso_accion('VENTAS', 'CREAR') else 'false' }};
+
+// Los borradores van en el mismo listado, arriba de las facturas emitidas
+async function cargarBorradores() {
+  if (!PUEDE_CREAR) return [];
+  try {
+    const j = await (await fetch(`${API}-borrador`)).json();
+    return (j.data || []).map(b => ({
+      es_borrador: true, id_borrador: b.id_factura_borrador, id_factura: 999999999 + b.id_factura_borrador,
+      factura_numero: null, paciente_nombre: b.paciente, paciente_cedula: b.cedula,
+      fecha_factura_fmt: b.fecha_fmt, des_condicion_venta: b.des_condicion_venta,
+      factura_total: b.total, des_estado_factura: 'BORRADOR'
+    }));
+  } catch (e) { return []; }
+}
+
 async function cargar() {
-  const r = await fetch(API);
-  const j = await r.json();
-  tbl.clear().rows.add(j.data || []).draw();
+  const [r, borradores] = await Promise.all([fetch(API).then(x => x.json()), cargarBorradores()]);
+  tbl.clear().rows.add(borradores.concat(r.data || [])).draw();
   feather.replace();
+}
+
+async function descartarBorrador(id) {
+  if (!confirm('¿Descartar este borrador? Se pierde lo cargado y no se puede recuperar.')) return;
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const r = await fetch(`${API}-borrador/${id}`, { method: 'DELETE', headers: { 'X-CSRFToken': csrf } });
+  const j = await r.json();
+  if (!j.success) alert(j.error || 'No se pudo descartar el borrador.');
+  cargar();
 }
 
 async function verDetalle(id) {

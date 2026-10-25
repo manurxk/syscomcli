@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required
 
 consultamod = Blueprint('consulta', __name__, template_folder='templates')
 
-ROLES_CONSULTA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_CONSULTA = ("ADMINISTRADOR", "CLINICO")
 
 
 @consultamod.route('/consulta-index')

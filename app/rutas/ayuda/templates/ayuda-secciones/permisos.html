@@ -1,18 +1,12 @@
 <h3>Roles y Permisos</h3>
-<p>En esta pantalla se registra qué acciones tiene habilitadas cada rol sobre cada módulo del sistema. Las acciones son <strong>Leer / Consultar</strong>, <strong>Crear</strong>, <strong>Editar</strong> y <strong>Eliminar</strong>.</p>
-
-<h4>¿Cómo cambio los permisos de un rol?</h4>
-{{ figura('permisos/01_matriz.jpg', 'Roles y Permisos: los números coinciden con los pasos') }}
+<p>Define qué acciones tiene cada rol en cada módulo: Leer, Crear, Editar y Eliminar.</p>
+{{ figura('permisos/01_matriz.jpg', 'Roles y Permisos: ① Rol ② casillas ③ Guardar cambios') }}
 <ol>
-    <li>Elija el <strong>Rol</strong> en la lista de arriba. Aparece una tabla con un módulo por fila y una acción por columna.</li>
-    <li>Marque las casillas de las acciones que el rol tiene permitidas en cada módulo, y desmarque las que no.</li>
+    <li>Elija el <strong>Rol</strong>: aparece un módulo por fila y una acción por columna.</li>
+    <li>Marque las acciones permitidas y desmarque las demás.</li>
     <li>Presione <span class="btn-ref">Guardar cambios</span>.</li>
 </ol>
-<p>El rol Superadministrador no aparece en la lista para el Administrador: sus permisos los maneja solo un Superadministrador.</p>
-
-<h4>¿Dónde se aplican hoy los permisos?</h4>
-<p>En el módulo <strong>Ventas</strong>. Sin <strong>Crear</strong>, el rol no ve los botones «Nuevo» ni puede abrir una caja; sin <strong>Editar</strong>, no puede aprobar, entregar, depositar ni cerrar la caja; sin <strong>Eliminar</strong>, no ve el botón «Anular»; y sin <strong>Leer</strong>, no puede entrar a las pantallas de Ventas. Los demás módulos se controlan por rol. El Administrador y el Superadministrador no tienen límite.</p>
-<p class="importante">La anulación de documentos de Ventas es solo del Administrador y del Superadministrador, aunque otro rol tenga marcada la acción «Eliminar».</p>
-
-<h4>¿Qué diferencia hay con la pantalla Menú?</h4>
-<p><strong>Menú</strong> define qué pantallas ve cada rol en el menú de la izquierda. <strong>Roles y Permisos</strong> define qué acciones corresponden a cada rol dentro de cada módulo.</p>
+<ul>
+    <li>Hoy se aplican en <strong>Ventas</strong>: sin <strong>Crear</strong> no hay botones «Nuevo» ni apertura de caja; sin <strong>Editar</strong> no se aprueba, entrega, deposita ni cierra; sin <strong>Eliminar</strong> no hay «Anular».</li>
+    <li>El Administrador no tiene límite. Anular documentos de Ventas es solo suyo.</li>
+</ul>

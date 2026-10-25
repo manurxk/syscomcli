@@ -6,7 +6,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 cuentacobrarapi = Blueprint('cuentacobrarapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @cuentacobrarapi.route('/cuentas-cobrar', methods=['GET'])

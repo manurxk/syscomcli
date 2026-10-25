@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Manual de seguridad - {{ clinica.nombre if clinica else 'SYSCLIN' }}</title>
+    <title>{{ m.titulo }} - {{ clinica.nombre if clinica else 'SYSCLIN' }}</title>
     <style>
         /* Formato de documento técnico (IEEE Std 1063-2001 / ISO/IEC 26514:2008), igual que la guía de uso:
            blanco y negro, capítulos numerados 1, 1.1, 1.1.1, control del documento e índice con páginas. */
@@ -19,7 +19,7 @@
             size: A4 portrait;
             margin: 2.5cm 2cm 2cm 2.5cm;
             @top-left {
-                content: "SYSCLIN — Manual de seguridad y operación";
+                content: "SYSCLIN — {{ m.titulo }}";
                 font-family: "Times New Roman", Times, serif;
                 font-size: 12pt;
                 color: #595959;
@@ -81,6 +81,9 @@
         .indice li { counter-increment: indice; margin-bottom: 3px; }
         .indice li a::before { content: counter(indice) ". "; }
         .indice li.anexo a::before { content: "Anexo A. "; }
+        .indice li.parte { counter-increment: none; margin-top: 8px; font-weight: bold; }
+        .indice li.parte a::before, .indice li.anexo-n a::before { content: ""; }
+        .indice li.anexo-n { counter-increment: none; }
         body.pdf .indice li a::after { content: leader('.') target-counter(attr(href), page); }
         body.pdf .indice { page-break-after: always; }
 
@@ -94,6 +97,18 @@
         section.seccion h5::before { counter-increment: apartado; content: counter(capitulo) "." counter(subcapitulo) "." counter(apartado) " "; }
         section.anexo h3::before { counter-increment: none; content: "Anexo A. "; }
         section.anexo h4::before { content: "A." counter(subcapitulo) " "; }
+        section.anexo-n h3::before { counter-increment: none; content: ""; }
+
+        /* Carátula de cada parte: hoja propia en el PDF */
+        section.parte { text-align: center; padding: 60px 0 40px; margin-bottom: 28px; border-top: 3px solid var(--titulo); }
+        section.parte h2 { font-size: 22pt; font-weight: bold; color: var(--titulo); margin: 0 0 12px; }
+        section.parte p { text-align: center; color: var(--gris); }
+        body.pdf section.parte { page-break-before: always; page-break-after: always; padding-top: 7cm; border: 0; }
+
+        /* Capturas de pantalla de las secciones de la guía de uso */
+        figure.captura { margin: 10px 0; text-align: center; }
+        figure.captura img { max-width: 100%; border: 1px solid var(--linea-suave); }
+        figure.captura figcaption { font-style: italic; margin-top: 4px; }
         p { margin: 6px 0; text-align: justify; }
         ol, ul { padding-left: 24px; margin: 6px 0; }
         li { margin-bottom: 3px; text-align: justify; }
@@ -127,8 +142,8 @@
     <div class="portada">
         {% if logo_base64 %}<div class="logo"><img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo SYSCLIN"></div>{% endif %}
         <div class="marca">{{ clinica.nombre if clinica else 'SYSCLIN' }}</div>
-        <h1>Manual de seguridad y operación del sistema</h1>
-        <p class="sub">Uso interno del administrador</p>
+        <h1>{{ m.titulo }}</h1>
+        <p class="sub">{{ m.subtitulo }}</p>
         <div class="datos-portada">
             Sistema SYSCLIN de gestión clínica<br>
             Versión 1.0 · {{ fecha }}<br>
@@ -139,14 +154,14 @@
     <div class="control">
         <h2 class="titulo-bloque">Control del documento</h2>
         <table class="datos">
-            <tr><th style="width: 30%">Documento</th><td>Manual de seguridad y operación del sistema</td></tr>
+            <tr><th style="width: 30%">Documento</th><td>{{ m.titulo }}</td></tr>
             <tr><th>Sistema</th><td>Sysclin, gestión clínica (agendamiento, consultorio, ventas)</td></tr>
-            <tr><th>Destinatario</th><td>Administrador y Superadministrador del sistema</td></tr>
+            <tr><th>Destinatario</th><td>{{ m.destinatario }}</td></tr>
             <tr><th>Versión</th><td>1.0</td></tr>
             <tr><th>Fecha de generación</th><td>{{ fecha }}</td></tr>
-            <tr><th>Revisión</th><td>Cada 6 meses, o después de un incidente o un cambio de infraestructura</td></tr>
-            <tr><th>Confidencialidad</th><td>No contiene contraseñas, pero describe la infraestructura: no se publica ni se entrega a usuarios finales</td></tr>
-            <tr><th>Referencias</th><td>ISO/IEC 27002:2013 (A.12.1.1, procedimientos de operación documentados); NIST SP 800-61 rev. 2 (respuesta a incidentes)</td></tr>
+            <tr><th>Revisión</th><td>{{ m.revision }}</td></tr>
+            <tr><th>Confidencialidad</th><td>{{ m.confidencialidad }}</td></tr>
+            <tr><th>Referencias</th><td>{{ m.referencias }}</td></tr>
         </table>
         <table class="datos control-firmas">
             <tr><th style="width: 30%"></th><th>Nombre</th><th style="width: 22%">Firma</th><th style="width: 16%">Fecha</th></tr>
@@ -164,20 +179,40 @@
     <div class="indice">
         <h2 class="titulo-bloque">Índice</h2>
         <ol>
-            {% for s in secciones %}
-            <li><a href="#{{ s.id }}">{{ s.titulo }}</a></li>
+            {% for p in partes %}
+            {% if p.titulo %}<li class="parte"><a href="#parte-{{ loop.index }}">{{ p.titulo }}</a></li>{% endif %}
+            {% for c in p.capitulos %}
+            <li><a href="#{{ c.id }}">{{ c.titulo }}</a></li>
             {% endfor %}
-            <li class="anexo"><a href="#anexo-scripts">Scripts y archivos de configuración</a></li>
+            {% endfor %}
+            {% for a in anexos %}<li class="anexo-n"><a href="#{{ a.id }}">Anexo {{ a.letra }}. {{ a.titulo }}</a></li>{% endfor %}
+            {% if scripts %}<li class="anexo"><a href="#anexo-scripts">Scripts y archivos de configuración</a></li>{% endif %}
         </ol>
     </div>
 
-    {% for s in secciones %}
-    <section class="seccion" id="{{ s.id }}">
-        <h3>{{ s.titulo }}</h3>
-        {% include s.template %}
+    {% for p in partes %}
+    {% if p.titulo %}
+    <section class="parte" id="parte-{{ loop.index }}">
+        <h2>{{ p.titulo }}</h2>
+        {% if p.introduccion %}<p>{{ p.introduccion }}</p>{% endif %}
+    </section>
+    {% endif %}
+    {% for c in p.capitulos %}
+    <section class="seccion" id="{{ c.id }}">
+        <h3>{{ c.titulo }}</h3>
+        {{ c.html|safe }}
+    </section>
+    {% endfor %}
+    {% endfor %}
+
+    {% for a in anexos %}
+    <section class="seccion anexo-n" id="{{ a.id }}">
+        <h3>Anexo {{ a.letra }}. {{ a.titulo }}</h3>
+        {{ a.html|safe }}
     </section>
     {% endfor %}
 
+    {% if scripts %}
     <section class="seccion anexo" id="anexo-scripts">
         <h3>Scripts y archivos de configuración</h3>
         <p>Contenido vigente de cada archivo al {{ fecha }}, tomado directamente del sistema. Las rutas son relativas a la carpeta raíz del proyecto (<code>syscomcli</code>). Las contraseñas no aparecen: viven en el <code>.env</code>, que no forma parte de este anexo.</p>
@@ -199,9 +234,10 @@
         </div>
         {% endfor %}
     </section>
+    {% endif %}
 
     <div class="pie">
-        SYSCLIN — Manual de seguridad y operación · Versión 1.0 · Generado el {{ fecha }}
+        SYSCLIN — {{ m.titulo }} · Versión 1.0 · Generado el {{ fecha }}
     </div>
 </body>
 </html>

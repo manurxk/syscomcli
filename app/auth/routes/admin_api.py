@@ -9,6 +9,7 @@ from app.auth.utils.decorators import role_required
 from app.core.base_dao import BaseDAO
 from app.dao.mantenimiento.auditoria.AuditoriaDao import AuditoriaDao
 from app.utils.auditoria_constantes import AuditAccion
+from app.utils.soporte import es_superadmin_sesion, es_usuario_soporte, ocultar_soporte, etiquetar_soporte
 from werkzeug.security import generate_password_hash
 import secrets
 
@@ -23,6 +24,8 @@ def desbloquear_usuario(id_usuario):
     """
     Desbloquea un usuario
     """
+    if not es_superadmin_sesion() and es_usuario_soporte(id_usuario):
+        return jsonify({'success': False, 'error': 'No se encontró el usuario.'}), 404
     try:
         sql = """
             UPDATE usuarios
@@ -77,6 +80,8 @@ def resetear_password_admin(id_usuario):
     Resetea la contraseña de un usuario (admin)
     Genera una contraseña temporal y marca requiere_cambio_password = TRUE
     """
+    if not es_superadmin_sesion() and es_usuario_soporte(id_usuario):
+        return jsonify({'success': False, 'error': 'No se encontró el usuario.'}), 404
     try:
         data = request.get_json() or {}
         enviar_email = data.get('enviar_email', False)
@@ -172,6 +177,7 @@ def listar_sesiones_activas():
             for fila in filas:
                 sesion = {col: (valor.isoformat() if hasattr(valor, 'isoformat') else valor) for col, valor in fila.items()}
                 sesiones.append(sesion)
+            sesiones = ocultar_soporte(sesiones)
 
             return jsonify({
                 'success': True,
@@ -200,6 +206,9 @@ def cerrar_sesion_remota(id_sesion):
     """
     Cierra una sesión remotamente
     """
+    _fila_sesion = _dao.execute_query_one("SELECT id_usuario FROM sesiones WHERE id_sesion = %s", (id_sesion,))
+    if _fila_sesion and not es_superadmin_sesion() and es_usuario_soporte(_fila_sesion['id_usuario']):
+        return jsonify({'success': False, 'error': 'Sesión no encontrada.'}), 404
     try:
         # Obtener token de sesión
         sql = "SELECT token_sesion FROM sesiones WHERE id_sesion = %s"
@@ -296,6 +305,7 @@ def listar_intentos_login():
                     'user_agent': fila['user_agent'],
                     'csrf_valido': fila['csrf_valido']
                 })
+            etiquetar_soporte(intentos)
 
             return jsonify({
                 'success': True,

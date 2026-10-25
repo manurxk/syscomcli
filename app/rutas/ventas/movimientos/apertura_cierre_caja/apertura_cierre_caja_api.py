@@ -7,7 +7,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 aperturacierrecajaapi = Blueprint('aperturacierrecajaapi', __name__)
 
-ROLES_CAJA = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_CAJA = ("ADMINISTRADOR", "VENTAS")
 
 
 @aperturacierrecajaapi.route('/cajas-estado', methods=['GET'])

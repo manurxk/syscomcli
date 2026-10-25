@@ -1,33 +1,19 @@
 <h3>Cobranzas</h3>
-<p>Una cobranza registra un pago de un paciente sobre una cuenta a cobrar. Puede pagar todo o solo una parte, y con una o varias formas de pago.</p>
-<p class="importante">Para registrar una cobranza tiene que haber una caja abierta (vea Estado de Caja).</p>
-
-<h4>¿Cómo registro un pago?</h4>
+<p>Registra un pago de un paciente sobre una cuenta a cobrar, total o parcial, con una o varias formas de pago.</p>
+<div class="par">
 {{ figura('cobranzas/01_listado.jpg', 'Cobranzas: ① Nueva Cobranza') }}
-{{ figura('cobranzas/02_nueva.jpg', 'Nueva Cobranza: ② elija la deuda y presione Seleccionar y continuar') }}
+{{ figura('cobranzas/02_nueva.jpg', 'Nueva Cobranza: ② deuda y Seleccionar y continuar') }}
+</div>
 <ol>
     <li>Presione <span class="btn-ref">Nueva Cobranza</span>.</li>
-    <li>En <strong>Cuenta a Cobrar</strong>, elija la deuda del paciente y presione <span class="btn-ref">Seleccionar y continuar</span>. Se muestran la factura y el <strong>Monto Pendiente</strong>.</li>
+    <li>En <strong>Cuenta a Cobrar</strong>, elija la deuda y <span class="btn-ref">Seleccionar y continuar</span>: se ve el <strong>Monto Pendiente</strong>.</li>
     <li>Elija la <strong>Caja</strong> donde entra el dinero.</li>
-    <li>Presione <span class="btn-ref">Agregar forma de cobro</span>, elija la forma de pago, escriba el monto y presione <span class="btn-ref">Agregar</span>. Según la forma de pago, el sistema pide datos extra:
-        <ul>
-            <li><strong>Efectivo:</strong> solo el monto.</li>
-            <li><strong>Cheque:</strong> el número de cheque.</li>
-            <li><strong>Tarjeta:</strong> la marca, la entidad adherida, el número de tarjeta y la cantidad de cuotas.</li>
-            <li><strong>Transferencia:</strong> el banco emisor.</li>
-        </ul>
-        Si el paciente paga con varias formas (por ejemplo, parte en efectivo y parte con tarjeta), agregue una por una.
-    </li>
+    <li><span class="btn-ref">Agregar forma de cobro</span>, elija forma y monto, y <span class="btn-ref">Agregar</span>. Efectivo: monto; cheque: número; tarjeta: marca, entidad, número y cuotas; transferencia: banco. Repita si paga con varias.</li>
     <li>Presione <span class="btn-ref">Guardar Cobranza</span>.</li>
 </ol>
-<p>Si el paciente paga en partes, registre una cobranza por cada pago. Lo pendiente de la cuenta baja cada vez.</p>
-
-<h4>¿Por qué no me deja guardar?</h4>
 <ul>
-    <li><strong>No hay caja abierta:</strong> abra la caja en Estado de Caja.</li>
-    <li><strong>La moneda no coincide:</strong> la caja tiene que estar abierta en la misma moneda que la deuda.</li>
-    <li><strong>La cuenta ya está cobrada:</strong> esa deuda ya no tiene saldo pendiente.</li>
+    <li><strong>Pago en partes:</strong> una cobranza por cada pago; lo pendiente baja cada vez.</li>
+    <li><strong>No guarda:</strong> falta caja abierta, la caja está en otra moneda, o la cuenta ya no tiene saldo.</li>
+    <li><strong>Anular:</strong> abra el detalle y presione <span class="btn-ref">Anular</span>.</li>
 </ul>
-
-<h4>¿Cómo anulo una cobranza?</h4>
-<p>En la lista, abra el detalle de la cobranza y presione <span class="btn-ref">Anular</span>. El detalle muestra también cuánto se cobró con cada forma de pago.</p>
+<p class="importante">Se necesita una caja abierta (ver Estado de Caja).</p>

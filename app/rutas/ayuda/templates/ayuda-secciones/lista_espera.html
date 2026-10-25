@@ -1,36 +1,20 @@
 <h3>Lista de Espera</h3>
-<p>En esta pantalla se anotan los pacientes que necesitan un turno con un especialista que por ahora no tiene horarios libres, para llamarlos cuando se libere uno.</p>
-
-<h4>¿Cómo anoto a un paciente?</h4>
+<p>Pacientes que necesitan un turno con un especialista sin horarios libres, para llamarlos cuando se libere uno.</p>
+<div class="par">
 {{ figura('lista_espera/01_listado.jpg', 'Lista de Espera: ① Agregar') }}
-{{ figura('lista_espera/02_agregar.jpg', 'Agregar a la lista: los números coinciden con los pasos') }}
+{{ figura('lista_espera/02_agregar.jpg', 'Agregar a la lista') }}
+</div>
 <ol>
     <li>Presione <span class="btn-ref">Agregar</span>.</li>
-    <li>En <strong>Agenda</strong>, elija el especialista y el horario que el paciente necesita.</li>
-    <li>Elija el <strong>Paciente</strong>. Si no aparece, primero regístrelo en Pacientes.</li>
-    <li>Ponga la <strong>Prioridad</strong>. Es un número: cuanto más alto, más arriba queda en la lista. Déjelo en 0 si no es urgente.</li>
-    <li>Si quiere, escriba el <strong>Motivo</strong>.</li>
-    <li>Presione <span class="btn-ref">Guardar</span>. El paciente queda como <strong>Pendiente</strong>.</li>
+    <li>En <strong>Agenda</strong>, elija el especialista y el horario que necesita.</li>
+    <li>Elija el <strong>Paciente</strong>.</li>
+    <li>Ponga la <strong>Prioridad</strong>: más alto, más arriba (0 si no es urgente).</li>
+    <li>Escriba el <strong>Motivo</strong> (opcional).</li>
+    <li>Presione <span class="btn-ref">Guardar</span>: queda <strong>Pendiente</strong>.</li>
 </ol>
-
-<h4>¿Qué hago cuando se libera un turno?</h4>
-<ol>
-    <li>Busque en la lista a los pacientes de esa agenda. Los de arriba son los de mayor prioridad.</li>
-    <li>Llame o escriba al primero y ofrézcale el turno.</li>
-    <li>Presione <span class="btn-ref">Notificado</span>. Así queda registrado que se le avisó y cuándo.</li>
-    <li>Si acepta, presione <span class="btn-ref">Aceptado</span> y regístrele la cita en Citas con <span class="btn-ref">Nueva Cita</span>.</li>
-    <li>Si no acepta o no responde, siga con el siguiente de la lista.</li>
-</ol>
-<p class="importante">El sistema no avisa solo al paciente. El aviso lo hace usted, y después lo marca en la lista.</p>
-
-<h4>¿Cómo saco a un paciente de la lista?</h4>
-<p>Cuando ya no necesita el turno, presione <span class="btn-ref">Retirar</span> y confirme. Deja de aparecer en la lista.</p>
-
-<h4>¿Qué significa cada estado?</h4>
 <ul>
-    <li><strong>Pendiente:</strong> esperando que se libere un turno.</li>
-    <li><strong>Notificado:</strong> ya se le avisó; falta su respuesta.</li>
-    <li><strong>Aceptado:</strong> aceptó el turno; hay que registrarle la cita.</li>
-    <li><strong>Expirado:</strong> no respondió a tiempo.</li>
-    <li><strong>Cancelado:</strong> ya no espera un turno.</li>
+    <li><strong>Al liberarse un turno:</strong> avise al primero de la lista y presione <span class="btn-ref">Notificado</span>; si acepta, <span class="btn-ref">Aceptado</span> y regístrele la cita.</li>
+    <li><strong>Retirar:</strong> saca al paciente de la lista.</li>
+    <li><strong>Estados:</strong> Pendiente, Notificado, Aceptado, Expirado y Cancelado.</li>
 </ul>
+<p class="importante">El sistema no avisa solo al paciente: el aviso lo hace usted.</p>

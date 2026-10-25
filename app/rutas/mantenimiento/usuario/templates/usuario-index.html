@@ -28,6 +28,7 @@ Usuarios
   <div class="card mb-4">
     <div class="card-header d-flex align-items-center">
       <span class="fw-bold">Lista de Usuarios</span>
+      <span id="cupo" class="badge text-bg-light border ms-3 fw-normal"></span>
       {% set roles_usuario = session.get('roles', []) | map('upper') | list %}
       {% if 'SUPERADMIN' in roles_usuario or 'ADMINISTRADOR' in roles_usuario %}
       <a href="{{ url_for('usuario.usuarioAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nuevo Usuario</a>
@@ -165,9 +166,23 @@ Usuarios
     });
   }
 
+
+  // Cupo usado: «x de N» (los máximos los fija el Superadministrador)
+  function mostrarCupo(clave) {
+    fetch('/api/v1/usuarios/cupo').then(r => r.json()).then(res => {
+      if (!res.success) return;
+      const c = res.data[clave];
+      const el = document.getElementById('cupo');
+      el.textContent = `${c.activos} de ${c.maximo} ${clave} activos`;
+      el.classList.toggle('text-bg-warning', c.activos >= c.maximo);
+      el.classList.toggle('text-bg-light', c.activos < c.maximo);
+    });
+  }
+
   $(document).ready(function () {
     initDatatable();
     ver();
+    mostrarCupo('usuarios');
   });
 
 </script>

@@ -8,6 +8,7 @@ el PDF y el Word son siempre iguales.
 Solo depende de python-docx (sin Flask), para que los scripts de docs/scripts también puedan usarlo.
 """
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -189,6 +190,30 @@ def _estilos_anexo(doc):
         nivel_esquema = OxmlElement('w:outlineLvl')
         nivel_esquema.set(qn('w:val'), str(nivel))
         insertar(ppr, nivel_esquema, ('w:divId', 'w:cnfStyle', 'w:rPr', 'w:sectPr', 'w:pPrChange'))
+
+
+def _estilos_densos(doc):
+    """Manual de usuario: letra 11, interlineado simple y espacios cortos, para que entren dos pantallas por hoja.
+    Cada capítulo (módulo) sigue empezando en hoja nueva."""
+    estilos = doc.styles
+    normal = estilos['Normal']
+    normal.font.size = Pt(11)
+    normal.paragraph_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+    normal.paragraph_format.space_after = Pt(3)
+    for nivel in (1, 2, 3):
+        t = estilos[f'Heading {nivel}']
+        t.font.size = Pt(14 if nivel == 1 else 12)
+        t.paragraph_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        t.paragraph_format.space_before = Pt(14 if nivel == 1 else 10)
+        t.paragraph_format.space_after = Pt(4)
+    for nombre in ('List Number', 'List Bullet'):
+        estilos[nombre].font.size = Pt(11)
+        estilos[nombre].paragraph_format.space_after = Pt(1)
+    estilos['Caption'].font.size = Pt(9)
+    estilos['Caption'].paragraph_format.space_after = Pt(4)
+    for nombre in ('Nota', 'Advertencia'):
+        estilos[nombre].paragraph_format.space_before = Pt(3)
+        estilos[nombre].paragraph_format.space_after = Pt(5)
 
 
 def _estilos(doc):
@@ -408,9 +433,9 @@ def control(doc, datos, fecha, version=VERSION):
     doc.add_paragraph('').add_run().add_break(WD_BREAK.PAGE)
 
 
-def indice(doc, con_figuras=False):
+def indice(doc, con_figuras=False, niveles='1-2'):
     doc.add_paragraph('ÍNDICE', style='Título sin número')
-    campo(doc.add_paragraph('', style='Fin de índice'), 'TOC \\o "1-2" \\h \\z \\u',
+    campo(doc.add_paragraph('', style='Fin de índice'), f'TOC \\o "{niveles}" \\h \\z \\u',
           'Haga clic derecho y elija «Actualizar campos» para generar el índice.')
     if con_figuras:
         doc.add_paragraph('ÍNDICE DE FIGURAS', style='Título sin número')
@@ -605,6 +630,7 @@ def _tabla_html(doc, nodo):
     t.autofit = False
     for n_fila, celdas in enumerate(celdas_por_fila):
         fila = t.add_row()
+        fila._tr.get_or_add_trPr().append(OxmlElement('w:cantSplit'))  # una fila no se corta entre dos hojas
         if n_fila == 0 and all(c.etiqueta == 'th' for c in celdas):
             fila._tr.get_or_add_trPr().append(OxmlElement('w:tblHeader'))
         for i in range(columnas):
@@ -612,6 +638,10 @@ def _tabla_html(doc, nodo):
             celda.width = Cm(anchos[i])
             p = celda.paragraphs[0]
             p.style = 'Texto de tabla'
+            # El encabezado va con la primera fila (y el título anterior con ambos): sin tablas «colgadas». Una tabla
+            # chica se mantiene entera en una hoja.
+            if n_fila == 0 or (len(celdas_por_fila) <= 9 and n_fila < len(celdas_por_fila) - 1):
+                p.paragraph_format.keep_with_next = True
             if i < len(celdas):
                 origen = celdas[i]
                 _runs(p, origen, negrita=origen.etiqueta == 'th')
@@ -642,26 +672,123 @@ def _lista(doc, nodo):
         _runs(p, en_linea)
 
 
-def _figura_html(doc, nodo):
-    """<figure class="captura"><img><figcaption>: captura centrada con pie «Figura N.M.» (N = capítulo, M = figura
-    del capítulo), como en docs/scripts/generar_plantilla_manual.py. Sin imagen en disco no pone nada."""
+def _recortar_base(img, margen=14):
+    """Quita el fondo liso que queda debajo del contenido de una captura (formularios cortos, listados con pocas
+    filas): la imagen ocupa menos alto en la hoja. Deja un margen y un alto mínimo de un tercio del original."""
+    gris = img.convert('L')
+    ancho, alto = gris.size
+    minimo = alto // 3
+    y = alto - 1
+    while y > minimo:
+        menor, mayor = gris.crop((0, y, ancho, y + 1)).getextrema()
+        if mayor - menor > 40:  # el fondo de las pantallas tiene degradados suaves: no cuentan como contenido
+            break
+        y -= 1
+    return img.crop((0, 0, ancho, min(alto, y + margen)))
+
+
+def _imagen_liviana(ruta, ancho_max=1300, recortar=False):
+    """Las capturas están a doble resolución (2232 px): a 12-15 cm basta con 1500 px (unos 280 ppp a 12 cm) y el Word y el
+    PDF pesan mucho menos. Devuelve la ruta tal cual si ya es chica o no se puede reducir.
+    recortar=True además quita el fondo liso de abajo (manual de usuario)."""
+    try:
+        from PIL import Image
+        with Image.open(ruta) as img:
+            if img.width <= ancho_max and not recortar:
+                return ruta
+            img = img.convert('RGB')
+            if img.width > ancho_max:
+                img = img.resize((ancho_max, round(img.height * ancho_max / img.width)), Image.LANCZOS)
+            if recortar:
+                img = _recortar_base(img)
+            salida = BytesIO()
+            img.save(salida, 'JPEG', quality=80, optimize=True)
+            salida.seek(0)
+            return salida
+    except Exception:
+        return ruta
+
+
+def _ruta_figura(nodo):
+    """Ruta en disco de la imagen de un <figure>, o '' si no existe."""
     img = next(_descendientes(nodo, 'img'), None)
     ruta = (img.atributos.get('src') or '').removeprefix('file://') if img else ''
-    if not os.path.isfile(ruta):
-        return
-    doc.add_paragraph('', style='Figura').add_run().add_picture(ruta, width=Cm(15))
-    # N = capítulo (títulos 1 hasta aquí) y M = figura dentro del capítulo. Se calculan al generar y M va en un
-    # campo SEQ con reinicio explícito (\r): así el índice de figuras y LibreOffice dan lo mismo que Word.
+    return ruta if os.path.isfile(ruta) else ''
+
+
+def _pie_figura(doc, pie, nodo):
+    """Escribe en el párrafo `pie` la leyenda «Figura N.M. texto» (N = capítulo, M = figura del capítulo). Se calculan al
+    generar y M va en un campo SEQ con reinicio explícito (\\r): así el índice de figuras y LibreOffice dan lo mismo
+    que Word."""
     capitulo = sum(1 for p in doc.paragraphs if p.style.name == 'Heading 1')
     anterior_cap, anterior_n = getattr(doc, '_ultima_figura', (None, 0))
     numero = anterior_n + 1 if anterior_cap == capitulo else 1
     doc._ultima_figura = (capitulo, numero)
-    pie = doc.add_paragraph('', style='Caption')
     pie.add_run(f'Figura {capitulo}.').bold = True
     campo(pie, f'SEQ Figura \\r {numero} \\* ARABIC', str(numero))
     pie.add_run('. ').bold = True
     leyenda = next(_descendientes(nodo, 'figcaption'), None)
     pie.add_run(_colapsar(_texto_plano(leyenda)).strip() if leyenda else '')
+
+
+def _figura_html(doc, nodo, ancho_cm=None):
+    """<figure class="captura"><img><figcaption>: captura centrada con pie «Figura N.M.» (N = capítulo, M = figura
+    del capítulo), como en docs/scripts/generar_plantilla_manual.py. Sin imagen en disco no pone nada."""
+    ruta = _ruta_figura(nodo)
+    if not ruta:
+        return
+    imagen = _imagen_liviana(ruta, recortar=getattr(doc, 'recortar_figuras', False))
+    ancho = ancho_cm or getattr(doc, 'ancho_figura_cm', 15)
+    alto_max = getattr(doc, 'alto_apilada_cm', None) if ancho_cm else None
+    if alto_max:  # captura alta (un formulario largo): se achica para que la pantalla entre en una hoja
+        try:
+            from PIL import Image
+            if hasattr(imagen, 'seek'):
+                imagen.seek(0)
+            with Image.open(imagen) as im:
+                ancho = min(ancho, alto_max * im.width / im.height)
+            if hasattr(imagen, 'seek'):
+                imagen.seek(0)
+        except Exception:
+            pass
+    doc.add_paragraph('', style='Figura').add_run().add_picture(imagen, width=Cm(ancho))
+    _pie_figura(doc, doc.add_paragraph('', style='Caption'), nodo)
+
+
+def _pantallas_juntas(parrafos):
+    """Cada pantalla del manual (un título de nivel 2 y lo que sigue hasta el próximo) se mantiene en una sola hoja si
+    cabe: todos sus párrafos menos el último van «con el siguiente». Si no cabe, sigue de largo, como siempre. Así
+    una pantalla corta comparte hoja con la anterior, una larga empieza en hoja nueva y no quedan títulos solos al pie
+    ni notas sueltas en la hoja siguiente."""
+    bloque = []
+    for p in list(parrafos) + [None]:
+        if p is None or p.style.name == 'Heading 2':
+            for q in bloque[:-1]:
+                q.paragraph_format.keep_with_next = True
+            bloque = []
+        if p is not None:
+            bloque.append(p)
+
+
+def _par_figuras_html(doc, nodo, lado_a_lado=False):
+    """<div class="par"> con varias <figure>: las capturas van lado a lado en una tabla sin bordes, cada una con su
+    pie, si el documento lo pide (ancho_par_cm); si no, una debajo de otra y más grandes. <div class="par-mini"> (avisos
+    de error, capturas chicas) siempre va lado a lado. Con menos de dos imágenes se ponen como figuras comunes."""
+    figuras = [f for f in _descendientes(nodo, 'figure') if _ruta_figura(f)]
+    ancho = getattr(doc, 'ancho_par_cm', None) or (8.0 if lado_a_lado else 0)
+    if not figuras or not ancho or (len(figuras) < 2 and not lado_a_lado):
+        # Una debajo de otra; si son dos de una misma pantalla, algo más chicas para que la pantalla entre en una hoja
+        for f in figuras:
+            _figura_html(doc, f, getattr(doc, 'ancho_apilada_cm', None) if len(figuras) > 1 else None)
+        return
+    t = doc.add_table(rows=1, cols=len(figuras))
+    t.autofit = False
+    t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for celda, f in zip(t.rows[0].cells, figuras):
+        celda.width = Cm(ancho + 0.3)
+        celda.paragraphs[0].style = 'Figura'
+        celda.paragraphs[0].add_run().add_picture(_imagen_liviana(_ruta_figura(f)), width=Cm(ancho))
+        _pie_figura(doc, celda.add_paragraph('', style='Caption'), f)
 
 
 def _es_nota(nodo):
@@ -681,6 +808,10 @@ def _bloques(doc, hijos):
             doc.add_heading(_colapsar(_texto_plano(nodo)).strip(), level=1)
         elif e == 'figure':
             _figura_html(doc, nodo)
+        elif 'par' in nodo.clases:  # capturas lado a lado (o apiladas, según el documento)
+            _par_figuras_html(doc, nodo)
+        elif 'par-mini' in nodo.clases:  # capturas chicas: siempre lado a lado
+            _par_figuras_html(doc, nodo, lado_a_lado=True)
         elif 'aqui' in nodo.clases:  # rótulo «Pantalla actual» de la vista previa: no va en el documento
             continue
         elif e == 'h4':
@@ -694,6 +825,9 @@ def _bloques(doc, hijos):
                 p.add_run(f'{estilo}: ').bold = True
             else:
                 p = doc.add_paragraph('')
+            siguiente_nodo = hijos[n + 1] if n + 1 < len(hijos) else None
+            if isinstance(siguiente_nodo, _Nodo) and siguiente_nodo.etiqueta == 'table':
+                p.paragraph_format.keep_with_next = True  # el texto que presenta una tabla no queda solo al pie
             _runs(p, nodo)
         elif e in ('ul', 'ol'):
             _lista(doc, nodo)
@@ -744,52 +878,130 @@ def anexo_scripts(doc, raiz, scripts, fecha):
 
 # ---------------------------------------------------------------- manuales
 
-def manual_seguridad(raiz, dir_secciones, secciones, scripts, logo, fecha):
-    """Manual de seguridad y operación (.docx en bytes) con el contenido de las secciones de la ayuda."""
-    titulo = 'Manual de seguridad y operación'
+def manual_tecnico(raiz, partes, anexos, scripts, logo, fecha, datos):
+    """Manual técnico (seguridad o infraestructura, .docx en bytes) con el contenido de las secciones de la ayuda.
+    partes = [{'titulo' (o None, sin carátula), 'introduccion', 'capitulos': [{'titulo', 'html'}]}];
+    anexos = [{'letra', 'titulo', 'html'}] (sin subtítulos h4: el anexo no lleva numeración);
+    datos = titulo, subtitulo, destinatario, revision, confidencialidad y referencias (ayuda_routes.MANUALES_TECNICOS).
+    El anexo de scripts solo sale si se pasan scripts."""
+    titulo = datos['titulo']
     doc = nuevo_documento()
+    compacto = datos.get('compacto', False)
+    denso = datos.get('denso', False)
+    if compacto:  # igual que el Manual del sistema: para no pasar de 100 hojas
+        doc.styles['Normal'].paragraph_format.line_spacing = 1.15
+        doc.styles['Normal'].paragraph_format.space_after = Pt(4)
+        doc.ancho_figura_cm = 12
+    if denso:  # manual de usuario: dos pantallas por hoja, capturas lado a lado
+        _estilos_densos(doc)
+        doc.ancho_figura_cm = datos.get('ancho_figura_cm', 11.5)
+        doc.ancho_par_cm = datos.get('ancho_par_cm')  # None: las capturas van una debajo de otra, más grandes
+        doc.recortar_figuras = True
+        doc.ancho_apilada_cm = datos.get('ancho_apilada_cm', 10.0)  # dos capturas de una pantalla, una debajo de otra
+        doc.alto_apilada_cm = datos.get('alto_apilada_cm', 8.6)     # y sin pasar de este alto
     encabezado_y_pie(doc.sections[0], titulo)
-    portada(doc, logo, 'Manual de seguridad y operación del sistema', 'Uso interno del administrador',
+    portada(doc, logo, titulo, datos['subtitulo'],
             ('Sistema SYSCLIN de gestión clínica', f'Versión {VERSION}', fecha, 'Documento confidencial'))
     control(doc, [
-        ('Documento', 'Manual de seguridad y operación del sistema'),
+        ('Documento', titulo),
+        ('Sistema', 'Sysclin, gestión clínica (agendamiento, consultorio, ventas)'),
+        ('Destinatario', datos['destinatario']),
+        ('Versión', VERSION),
+        ('Fecha de generación', fecha),
+        ('Revisión', datos['revision']),
+        ('Confidencialidad', datos['confidencialidad']),
+        ('Referencias', datos['referencias']),
+    ], fecha)
+    indice(doc, con_figuras=not denso and any('<figure' in c['html'] for p in partes for c in p['capitulos']),
+           niveles='1-1' if denso else '1-2')  # denso: el índice lista solo los capítulos
+    for parte in partes:
+        if parte['titulo']:
+            caratula_parte(doc, parte['titulo'], parte['introduccion'], [c['titulo'] for c in parte['capitulos']])
+        antes = len(doc.paragraphs)
+        for capitulo in parte['capitulos']:
+            doc.add_heading(capitulo['titulo'], level=1)
+            antes_capitulo = len(doc.paragraphs)
+            html_texto_a_docx(doc, capitulo['html'])
+            if denso and capitulo['id'].startswith('modulo-'):
+                _pantallas_juntas(doc.paragraphs[antes_capitulo:])
+        if (compacto and not denso) or datos.get('capitulos_seguidos'):
+            # Capítulos seguidos: solo el primero del documento empieza hoja nueva (los demás siguen al anterior)
+            titulos = [p for p in doc.paragraphs[antes:] if p.style.name == 'Heading 1']
+            for i, t in enumerate(titulos):
+                t.paragraph_format.page_break_before = (i == 0 and parte is partes[0])
+    for n_anexo, anexo in enumerate(anexos):
+        titulo_anexo = doc.add_paragraph(f"Anexo {anexo['letra']}. {anexo['titulo']}", style='Título de anexo')
+        if datos.get('capitulos_seguidos'):  # solo el primer anexo empieza hoja nueva
+            titulo_anexo.paragraph_format.page_break_before = (n_anexo == 0)
+        html_texto_a_docx(doc, anexo['html'])
+    if scripts:
+        anexo_scripts(doc, raiz, scripts, fecha)
+    return guardar(doc, titulo)
+
+
+def manual_sistema(partes, raiz, scripts, logo, fecha):
+    """Manual del sistema (.docx en bytes): guías de uso y seguridad en un solo documento, dividido en partes.
+    partes = [{'titulo', 'introduccion', 'capitulos': [(titulo o None, html)]}]; si el capítulo trae título se
+    lo pone aquí (seguridad), si no, el html ya trae su h3 (guía de uso). Los capítulos se numeran seguidos."""
+    titulo = 'Manual del sistema'
+    doc = nuevo_documento()
+    # Documento largo (unas 100 hojas): interlineado 1,15 en vez de 1,5 del estándar de los manuales individuales
+    doc.styles['Normal'].paragraph_format.line_spacing = 1.15
+    doc.styles['Normal'].paragraph_format.space_after = Pt(4)
+    doc.ancho_figura_cm = 12  # capturas más angostas que en las guías individuales (15 cm)
+    encabezado_y_pie(doc.sections[0], titulo)
+    portada(doc, logo, titulo, 'Guía de uso, administración, seguridad y operación',
+            ('Sistema SYSCLIN de gestión clínica', f'Versión {VERSION}', fecha, 'Documento confidencial'))
+    control(doc, [
+        ('Documento', titulo),
         ('Sistema', 'Sysclin, gestión clínica (agendamiento, consultorio, ventas)'),
         ('Destinatario', 'Administrador y Superadministrador del sistema'),
+        ('Contenido', '; '.join(p['titulo'] for p in partes)),
         ('Versión', VERSION),
         ('Fecha de generación', fecha),
-        ('Revisión', 'Cada 6 meses, o después de un incidente o un cambio de infraestructura'),
-        ('Confidencialidad', 'No contiene contraseñas, pero describe la infraestructura: no se publica ni se '
-                             'entrega a usuarios finales'),
-        ('Referencias', 'ISO/IEC 27002:2013 (A.12.1.1, procedimientos de operación documentados); '
-                        'NIST SP 800-61 rev. 2 (respuesta a incidentes)'),
-    ], fecha)
-    indice(doc)
-    for s in secciones:
-        doc.add_heading(s['titulo'], level=1)
-        html_a_docx(doc, os.path.join(dir_secciones, s['template']))
-    anexo_scripts(doc, raiz, scripts, fecha)
-    return guardar(doc, 'Manual de seguridad y operación del sistema')
-
-
-def manual_guia(secciones_html, perfil, logo, fecha):
-    """Guía de uso del sistema (manual de usuario, .docx en bytes) para un perfil. secciones_html = HTML ya
-    renderizado de cada capítulo (Primeros pasos, una por pantalla y el anexo de avisos); cada uno trae su h3."""
-    titulo = 'Guía de uso del sistema'
-    doc = nuevo_documento()
-    encabezado_y_pie(doc.sections[0], titulo)
-    portada(doc, logo, titulo, f'Manual de usuario · Perfil {perfil}',
-            ('Sistema SYSCLIN de gestión clínica', f'Versión {VERSION}', fecha))
-    control(doc, [
-        ('Documento', 'Guía de uso del sistema (manual de usuario)'),
-        ('Perfil', perfil),
-        ('Versión', VERSION),
-        ('Fecha de generación', fecha),
+        ('Confidencialidad', 'Incluye la parte de seguridad y operación, que describe la infraestructura: no se '
+                             'entrega a usuarios finales. Para ellos están las guías de uso por rol'),
         ('Referencia', 'IEEE Std 1063-2001, Software User Documentation; ISO/IEC 26514:2008'),
     ], fecha)
-    indice(doc, con_figuras=True)
-    for html in secciones_html:
-        html_texto_a_docx(doc, html)
+    indice(doc, con_figuras=True, niveles='1-1')  # solo partes y capítulos: con subtítulos ocupa 9 hojas
+    primeros = []  # primer capítulo de cada parte: es el único que empieza en hoja nueva, tras la carátula
+    for parte in partes:
+        nombres = [t or re.search(r'<h3[^>]*>(.*?)</h3>', h, re.S).group(1).strip()
+                   for t, h in parte['capitulos']]
+        caratula_parte(doc, parte['titulo'], parte['introduccion'], nombres)
+        antes = len(doc.paragraphs)
+        for titulo_capitulo, html in parte['capitulos']:
+            if titulo_capitulo:
+                doc.add_heading(titulo_capitulo, level=1)
+            html_texto_a_docx(doc, html)
+        primeros.append(next(p._p for p in doc.paragraphs[antes:] if p.style.name == 'Heading 1'))
+    # Con 37 capítulos, uno por hoja deja la mitad en blanco: siguen uno tras otro dentro de cada parte
+    for p in doc.paragraphs:
+        if p.style.name == 'Heading 1':
+            p.paragraph_format.page_break_before = p._p in primeros
+    anexo_scripts(doc, raiz, scripts, fecha)
     return guardar(doc, titulo)
+
+
+def caratula_parte(doc, titulo, introduccion, capitulos):
+    """Carátula de una parte: hoja propia con el título grande, una línea de introducción y los capítulos que
+    contiene. El título usa el estilo de anexo (sin número, entra en el índice)."""
+    p = doc.add_paragraph('', style='Título de anexo')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(150)
+    p.paragraph_format.space_after = Pt(18)
+    r = p.add_run(titulo)
+    r.font.size = Pt(26)
+    if introduccion:
+        intro = doc.add_paragraph(introduccion)
+        intro.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        intro.paragraph_format.space_after = Pt(24)
+    doc.add_paragraph('Contenido de esta parte', style='Título sin número').alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for nombre in capitulos:
+        item = doc.add_paragraph(nombre)
+        item.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        item.paragraph_format.space_after = Pt(2)
+        item.paragraph_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
 
 
 def docx_a_pdf(docx_bytes, timeout=110):

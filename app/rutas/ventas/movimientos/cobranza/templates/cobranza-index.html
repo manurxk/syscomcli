@@ -155,6 +155,7 @@ async function verDetalle(id) {
     const complemento = [
       det.numero_cheque  ? `Cheque: ${det.numero_cheque}`        : '',
       det.numero_tarjeta ? `Tarjeta: ${det.numero_tarjeta}`      : '',
+      det.numero_transferencia ? `Transf.: ${det.numero_transferencia}` : '',
       det.marca_tarjeta  ? `Marca: ${det.marca_tarjeta}`         : '',
       det.entidad_adherida ? `Entidad: ${det.entidad_adherida}`  : '',
       det.entidad_emisora  ? `Emisor: ${det.entidad_emisora}`    : '',

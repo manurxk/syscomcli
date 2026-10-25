@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
+from app.dao.auth.user_dao import UsuarioDao
 from app.auth.utils.decorators import role_required
 
 empresaapi = Blueprint('empresaapi', __name__)
@@ -107,6 +108,34 @@ def addEmpresa():
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         app.logger.error(f"Error al guardar empresa: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@empresaapi.route('/empresa/topes', methods=['PATCH'])
+@role_required("SUPERADMIN")
+def updateTopes():
+    """PATCH: el Superadministrador fija cuántos funcionarios y usuarios pueden estar activos a la vez."""
+    data = request.get_json() or {}
+    try:
+        max_func, max_usu = int(data.get('max_funcionarios_activos')), int(data.get('max_usuarios_activos'))
+    except (TypeError, ValueError):
+        return jsonify({'success': False, 'error': 'Indique el máximo de funcionarios y de usuarios como números enteros.'}), 400
+    if max_func < 1 or max_usu < 1:
+        return jsonify({'success': False, 'error': 'Los máximos deben ser al menos 1.'}), 400
+    if max_usu > max_func:
+        return jsonify({'success': False, 'error': 'El máximo de usuarios no puede superar al de funcionarios: cada usuario es un funcionario distinto.'}), 400
+
+    usuariodao = UsuarioDao()
+    if max_func < usuariodao.contar_funcionarios_activos() or max_usu < usuariodao.contar_usuarios_activos_con_funcionario():
+        return jsonify({'success': False, 'error': 'Los máximos no pueden ser menores que los funcionarios y usuarios activos hoy. Desactive primero a quien corresponda.'}), 400
+    actual = EmpresaDao().getEmpresaPrincipal()
+    if not actual:
+        return jsonify({'success': False, 'error': 'Todavía no hay una empresa configurada.'}), 404
+    try:
+        EmpresaDao().actualizarTopes(actual['id_empresa'], max_func, max_usu, session.get('id_usuario'))
+        return jsonify({'success': True, 'data': {'max_funcionarios_activos': max_func, 'max_usuarios_activos': max_usu}, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al actualizar topes: {str(e)}")
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 

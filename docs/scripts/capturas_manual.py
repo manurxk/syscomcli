@@ -14,7 +14,7 @@ Sin argumento regenera todas; con una sección (por ejemplo "citas"), solo esa.
 
 Notas:
 - Usa cuentas de PRUEBA sin MFA (el código llega por correo y el script no lo lee).
-  La contraseña sale de CAPTURAS_PASS_<USUARIO> o, solo para las cuentas del seed (recep2, cajero1),
+  La contraseña sale de CAPTURAS_PASS_<USUARIO> o, solo para las cuentas del seed (sduarte, gferreira, mvillalba, ncuevas),
   de su valor conocido. Sin contraseña el rol se saltea: no se prueban claves, porque cada fallo
   suma al bloqueo de la cuenta. Ej.: -e CAPTURAS_PASS_PSICOADMIN para las capturas de ADMIN.
 - Sysclin permite una sola sesión por usuario: no usar una cuenta que alguien tenga abierta.
@@ -30,20 +30,31 @@ from playwright.sync_api import sync_playwright
 
 BASE = os.getenv('CAPTURAS_BASE_URL', 'https://nginx')
 SALIDA = os.path.join('app', 'static', 'img', 'ayuda')
-PASS_USUARIOS_PRUEBA = 'Prueba2026!'  # la del seed (docs/scripts/seed_prueba.py)
+PASS_USUARIOS_PRUEBA = 'Prueba2026!'  # la del seed (docs/scripts/seed_clinica.py)
+
+# Nitidez: el navegador dibuja al doble de píxeles (el texto sale claro al achicar la captura en el Word) y el
+# JPEG se guarda con poca compresión. Antes: escala 1 y calidad 82.
+ESCALA_PANTALLA = 2
+CALIDAD_JPEG = 92
+# Los listados muestran el botón «Nuevo…» y las primeras 5 filas de la tabla (la captura se corta bajo la 5.ª fila)
+ACCIONES_LISTADO = [('esperar', '.dataTables_wrapper tbody tr td')]
+HASTA_LISTADO = '.dataTables_wrapper tbody tr:nth-child(5):visible'
+ALTO_LISTADO = 760   # tope si la tabla tiene menos de 5 filas (evita el espacio vacío de abajo)
+SIN_SESION = 'SIN_SESION'  # capturas de pantallas públicas (el ingreso): no se inicia sesión
 
 # Cuenta de prueba por rol (sin MFA)
 USUARIOS = {
-    'RECEPCION': 'recep2',
-    'CLINICO': 'lgonzalez',
-    'VENTAS': 'cajero1',
-    'ADMIN': 'psicoadmin',     # ADMINISTRADOR + CLINICO, sin MFA (Funcionarios)
+    'RECEPCION': 'sduarte',
+    'CLINICO': 'gferreira',    # neuropsicólogo con citas hoy (Mi Agenda) y consultas propias
+    'VENTAS': 'sduarte',       # Recepción + Ventas
+    'ADMIN': 'mvillalba',      # ADMINISTRADOR + CLINICO, sin MFA (Funcionarios)
+    'CAMBIO_CLAVE': 'ncuevas', # cuenta con la marca «debe cambiar la contraseña» (ver CAPTURAS de acceso)
 }
-CUENTAS_SEED = ('recep2', 'cajero1')
+CUENTAS_SEED = ('sduarte', 'gferreira', 'mvillalba', 'ncuevas')
 
-# Datos de prueba que usan algunas pantallas (paciente CI 9000009 y una consulta suya)
-ID_CONSULTA_PRUEBA = 27
-ID_CONSULTA_CON_ORDENES = 24   # consulta de lgonzalez con órdenes cargadas (impresión)
+# Datos de prueba que usan algunas pantallas (consultas de gferreira creadas por seed_clinica.py)
+ID_CONSULTA_PRUEBA = 5         # consulta abierta (EN_ATENCION) de Mateo Insfrán
+ID_CONSULTA_CON_ORDENES = 3    # consulta de Hugo Escobar con una orden de estudio y análisis (impresión)
 
 
 def boton(texto):
@@ -73,18 +84,18 @@ CAPTURAS = [
     {
         'seccion': 'pacientes', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
         'url': '/mantenimiento/paciente/paciente-index',
-        'marcas': [(boton('Nuevo Paciente'), 1)], 'hasta': boton('Nuevo Paciente'),
+        'marcas': [(boton('Nuevo Paciente'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'pacientes', 'archivo': '02_formulario.jpg', 'rol': 'RECEPCION',
         'url': '/mantenimiento/paciente/paciente-agregar',
-        'marcas': [(titulo('Datos Personales'), 2), (titulo('Documento para Facturación'), 3),
-                   (titulo('Contacto'), 4), (titulo('Notas Clínicas'), 6), (boton('Registrar Paciente'), 7, 'esquina')],
+        'marcas': [(titulo('Datos Personales'), 2), (campo('Documento para Facturación'), 3),
+                   (titulo('Contacto'), 4), (campo('Notas Clínicas'), 6), (boton('Registrar Paciente'), 7, 'esquina')],
     },
     {
         'seccion': 'agenda_medica', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
         'url': '/agendamiento/agenda-horarios/agenda-horarios-index',
-        'marcas': [(boton('Nuevo Horario'), 1)], 'hasta': boton('Nuevo Horario'),
+        'marcas': [(boton('Nuevo Horario'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'agenda_medica', 'archivo': '02_nuevo_horario.jpg', 'rol': 'RECEPCION',
@@ -102,7 +113,7 @@ CAPTURAS = [
         'seccion': 'citas', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
         'url': '/agendamiento/citas/citas-index',
         'marcas': [('a.btn[href$="citas-agregar"]', 1)],
-        'hasta': '.card-header',  # título + botón; la tabla no aporta a este paso
+        'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'citas', 'archivo': '02_nueva_cita.jpg', 'rol': 'RECEPCION',
@@ -138,7 +149,7 @@ CAPTURAS = [
     {
         'seccion': 'lista_espera', 'archivo': '01_listado.jpg', 'rol': 'RECEPCION',
         'url': '/agendamiento/lista-espera/lista-espera-index',
-        'marcas': [(boton('Agregar'), 1)], 'hasta': boton('Agregar'),
+        'marcas': [(boton('Agregar'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'lista_espera', 'archivo': '02_agregar.jpg', 'rol': 'RECEPCION',
@@ -180,12 +191,12 @@ CAPTURAS = [
     {
         'seccion': 'pei', 'archivo': '01_listado.jpg', 'rol': 'CLINICO',
         'url': '/clinico/pei/pei-index',
-        'marcas': [(boton('Nuevo PEI'), 1)], 'hasta': boton('Nuevo PEI'),
+        'marcas': [(boton('Nuevo PEI'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'pei', 'archivo': '02_nuevo.jpg', 'rol': 'CLINICO',
         'url': '/clinico/pei/pei-agregar',
-        'marcas': [(campo('Paciente'), 2), (boton('Seleccionar y continuar'), 3, 'esquina')],
+        'marcas': [(campo('Nombre, apellido o historia clínica'), 2), (boton('Seleccionar y continuar'), 3, 'esquina')],
         'alto': 700,
     },
     {
@@ -198,7 +209,7 @@ CAPTURAS = [
     {
         'seccion': 'funcionarios', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
         'url': '/mantenimiento/funcionario/funcionario-index',
-        'marcas': [(boton('Nuevo Funcionario'), 1)], 'hasta': boton('Nuevo Funcionario'),
+        'marcas': [(boton('Nuevo Funcionario'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'funcionarios', 'archivo': '02_formulario.jpg', 'rol': 'ADMIN',
@@ -215,7 +226,7 @@ CAPTURAS = [
     {
         'seccion': 'usuarios', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
         'url': '/mantenimiento/usuario/usuario-index',
-        'marcas': [(boton('Nuevo Usuario'), 1)], 'hasta': boton('Nuevo Usuario'),
+        'marcas': [(boton('Nuevo Usuario'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'usuarios', 'archivo': '02_formulario.jpg', 'rol': 'ADMIN',
@@ -225,9 +236,9 @@ CAPTURAS = [
                    (titulo('Contraseña'), 6), ('#btnGuardar', 7, 'esquina')],
     },
     {
-        # Detalle de recep2 (id 5, cuenta del seed): datos y acciones (los registros de acceso están en Auditoría)
+        # Detalle de sduarte (id 6, cuenta del seed): datos y acciones (los registros de acceso están en Auditoría)
         'seccion': 'usuarios', 'archivo': '03_detalle.jpg', 'rol': 'ADMIN',
-        'url': '/mantenimiento/usuario/usuario-detalle/5',
+        'url': '/mantenimiento/usuario/usuario-detalle/6',
         'marcas': [('a.btn[href*="auditoria-index"]', 1, 'esquina'), ('#btnResetear', 2, 'esquina'), (titulo('Sesiones activas'), 3)],
         'hasta': titulo('Sesiones activas'),
     },
@@ -312,7 +323,7 @@ CAPTURAS = [
     {
         'seccion': 'timbrados', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
         'url': '/ventas/referenciales/timbrado/timbrado-index',
-        'marcas': [(boton('Agregar'), 1)], 'hasta': boton('Agregar'),
+        'marcas': [(boton('Agregar'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'timbrados', 'archivo': '02_agregar.jpg', 'rol': 'ADMIN',
@@ -324,7 +335,7 @@ CAPTURAS = [
     {
         'seccion': 'puntos_expedicion', 'archivo': '01_listado.jpg', 'rol': 'ADMIN',
         'url': '/ventas/referenciales/punto-expedicion/punto-expedicion-index',
-        'marcas': [(boton('Agregar'), 1)], 'hasta': boton('Agregar'),
+        'marcas': [(boton('Agregar'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'puntos_expedicion', 'archivo': '02_agregar.jpg', 'rol': 'ADMIN',
@@ -336,7 +347,7 @@ CAPTURAS = [
     {
         'seccion': 'pedidos', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/pedido/pedido-index',
-        'marcas': [(boton('Nuevo Pedido'), 1)], 'hasta': boton('Nuevo Pedido'),
+        'marcas': [(boton('Nuevo Pedido'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'pedidos', 'archivo': '02_nuevo.jpg', 'rol': 'VENTAS',
@@ -347,7 +358,7 @@ CAPTURAS = [
     {
         'seccion': 'presupuestos', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/presupuesto/presupuesto-index',
-        'marcas': [(boton('Nuevo Presupuesto'), 1)], 'hasta': boton('Nuevo Presupuesto'),
+        'marcas': [(boton('Nuevo Presupuesto'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'presupuestos', 'archivo': '02_nuevo.jpg', 'rol': 'VENTAS',
@@ -369,7 +380,7 @@ CAPTURAS = [
     {
         'seccion': 'arqueos', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/arqueo-caja/arqueo-index',
-        'marcas': [(boton('Nuevo Arqueo'), 1)], 'hasta': boton('Nuevo Arqueo'),
+        'marcas': [(boton('Nuevo Arqueo'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'arqueos', 'archivo': '02_nuevo.jpg', 'rol': 'VENTAS',
@@ -380,7 +391,7 @@ CAPTURAS = [
     {
         'seccion': 'facturas', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/factura/factura-index',
-        'marcas': [(boton('Nueva Factura'), 1)], 'hasta': boton('Nueva Factura'),
+        'marcas': [(boton('Nueva Factura'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'facturas', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
@@ -391,7 +402,7 @@ CAPTURAS = [
     {
         'seccion': 'remisiones', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/remision/remision-index',
-        'marcas': [(boton('Nueva Remisión'), 1)], 'hasta': boton('Nueva Remisión'),
+        'marcas': [(boton('Nueva Remisión'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'remisiones', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
@@ -402,7 +413,7 @@ CAPTURAS = [
     {
         'seccion': 'notas_credito', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/nota-credito/nota-credito-index',
-        'marcas': [(boton('Nueva Nota de Crédito'), 1)], 'hasta': boton('Nueva Nota de Crédito'),
+        'marcas': [(boton('Nueva Nota de Crédito'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'notas_credito', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
@@ -413,7 +424,7 @@ CAPTURAS = [
     {
         'seccion': 'notas_debito', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/nota-debito/nota-debito-index',
-        'marcas': [(boton('Nueva Nota de Débito'), 1)], 'hasta': boton('Nueva Nota de Débito'),
+        'marcas': [(boton('Nueva Nota de Débito'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'notas_debito', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
@@ -429,7 +440,7 @@ CAPTURAS = [
     {
         'seccion': 'cobranzas', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/cobranza/cobranza-index',
-        'marcas': [(boton('Nueva Cobranza'), 1)], 'hasta': boton('Nueva Cobranza'),
+        'marcas': [(boton('Nueva Cobranza'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'cobranzas', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
@@ -440,7 +451,7 @@ CAPTURAS = [
     {
         'seccion': 'recaudaciones', 'archivo': '01_listado.jpg', 'rol': 'VENTAS',
         'url': '/ventas/movimientos/recaudacion/recaudacion-index',
-        'marcas': [(boton('Nueva Recaudación'), 1)], 'hasta': boton('Nueva Recaudación'),
+        'marcas': [(boton('Nueva Recaudación'), 1)], 'acciones': ACCIONES_LISTADO, 'hasta': HASTA_LISTADO, 'alto': ALTO_LISTADO,
     },
     {
         'seccion': 'recaudaciones', 'archivo': '02_nueva.jpg', 'rol': 'VENTAS',
@@ -504,6 +515,31 @@ def _capturas_avisos_recepcion():
 CAPTURAS += _capturas_avisos()
 CAPTURAS += _capturas_avisos_recepcion()
 
+# Pantalla de ingreso (manual de usuario, «Acceso al sistema»): sin sesión y sin escribir nada. La del código de
+# verificación y la del correo no se pueden tomar aquí (el código llega por correo): se toman a mano en seguridad/.
+CAPTURAS.append({
+    'seccion': 'acceso', 'archivo': '01_ingreso.jpg', 'rol': SIN_SESION,
+    'url': '/login', 'elemento': '.form-box',
+})
+# Cambio obligatorio de contraseña. Hay que dejar marcada la cuenta antes de correr el script:
+#   UPDATE usuarios SET requiere_cambio_clave = TRUE WHERE usu_nick = 'ncuevas';   (y desmarcarla después)
+# El ingreso con la contraseña temporal abre la pantalla; la segunda captura envía dos contraseñas que NO
+# coinciden: el servidor la rechaza y no se guarda nada.
+CAPTURAS.append({
+    'seccion': 'acceso', 'archivo': '02_cambiar_password.jpg', 'rol': 'CAMBIO_CLAVE',
+    'url': '/login/cambiar-password', 'elemento': '.card',
+    'marcas': [('#password_actual', 1), ('#password_nueva', 2), ('#password_confirmacion', 3),
+               (boton('Cambiar contraseña'), 4, 'esquina')],
+})
+CAPTURAS.append({
+    'seccion': 'acceso', 'archivo': '03_cambiar_password_aviso.jpg', 'rol': 'CAMBIO_CLAVE',
+    'url': '/login/cambiar-password', 'elemento': '.card',
+    'acciones': [('llenar', '#password_actual', PASS_USUARIOS_PRUEBA),
+                 ('llenar', '#password_nueva', 'Clinica#2026'),
+                 ('llenar', '#password_confirmacion', 'Otra#2026xx'),
+                 ('click', boton('Cambiar contraseña')), ('esperar', '.flash-danger')],
+})
+
 # Marca circular violeta (paleta SYSCLIN) más un contorno. Por defecto va a la izquierda del elemento,
 # centrada (no tapa la etiqueta de arriba); 'esquina' la pone arriba a la izquierda (botones con vecino al lado).
 JS_MARCAR = """
@@ -537,7 +573,7 @@ def iniciar_sesion(page, usuario):
     page.fill('#inputUsuario', usuario)
     page.fill('#usuario_clave', clave_de(usuario))
     page.click('#btnLogin')
-    page.wait_for_url(lambda url: '/login' not in url, timeout=20000)
+    page.wait_for_url(lambda url: '/login' not in url or 'cambiar-password' in url, timeout=20000)
 
 
 def caja(page, selector):
@@ -594,7 +630,7 @@ def capturar(page, c):
 
     # Un modal se fotografía en la ventana visible: con full_page el navegador se agranda al alto de toda la
     # página, el modal se reubica y el recorte (calculado antes) ya no coincide (pasaba en páginas largas, como Auditoría)
-    page.screenshot(path=destino, type='jpeg', quality=82, full_page=not c.get('elemento'), clip=clip)
+    page.screenshot(path=destino, type='jpeg', quality=CALIDAD_JPEG, full_page=not c.get('elemento'), clip=clip)
     aviso = f"  (sin marcar: {' | '.join(faltantes)})" if faltantes else ''
     print(f'OK  {destino}{aviso}')
 
@@ -610,12 +646,23 @@ def main():
         navegador = p.chromium.launch(args=['--lang=es-ES'])
         # Agrupado por rol: una sesión por usuario
         for rol in dict.fromkeys(c['rol'] for c in capturas):
+            if rol == SIN_SESION:
+                ctx = navegador.new_context(ignore_https_errors=True, viewport={'width': 1366, 'height': 900},
+                                            device_scale_factor=ESCALA_PANTALLA, color_scheme='light', locale='es-ES')
+                page = ctx.new_page()
+                for c in (c for c in capturas if c['rol'] == rol):
+                    try:
+                        capturar(page, c)
+                    except Exception as e:
+                        print(f'ERROR {c["seccion"]}/{c["archivo"]}: {str(e).splitlines()[0]}')
+                ctx.close()
+                continue
             usuario = USUARIOS[rol]
             if not clave_de(usuario):
                 print(f'OMITIDO {rol}: falta CAPTURAS_PASS_{usuario.upper()}')
                 continue
             ctx = navegador.new_context(ignore_https_errors=True, viewport={'width': 1366, 'height': 900},
-                                        color_scheme='light', locale='es-ES')
+                                        device_scale_factor=ESCALA_PANTALLA, color_scheme='light', locale='es-ES')
             page = ctx.new_page()
             try:
                 iniciar_sesion(page, usuario)

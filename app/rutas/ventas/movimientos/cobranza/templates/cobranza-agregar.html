@@ -198,6 +198,10 @@
               <option value="">— Seleccionar —</option>
             </select>
           </div>
+          <div class="col-12 campo-transferencia d-none">
+            <label class="fw-semibold">N° de transferencia / comprobante <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="txtNroTransferencia" placeholder="N° que figura en el comprobante del banco" maxlength="50">
+          </div>
           <!-- Monto (siempre visible) -->
           <div class="col-12">
             <label class="fw-semibold">Monto (<span id="lblMonedaCod">—</span>) <span class="text-danger">*</span></label>
@@ -372,6 +376,7 @@ function renderTabla() {
     const complemento = [
       d.numero_cheque  ? `Cheque: ${d.numero_cheque}`         : '',
       d.numero_tarjeta ? `Tarjeta: ${d.numero_tarjeta}`       : '',
+      d.numero_transferencia ? `Transf.: ${d.numero_transferencia}` : '',
       d._marcaNombre   ? `Marca: ${d._marcaNombre}`           : '',
       d._adheridaNombre ? `Entidad: ${d._adheridaNombre}`     : '',
       d._emisoraNombre  ? `Emisor: ${d._emisoraNombre}`       : '',
@@ -404,6 +409,7 @@ document.getElementById('btnAgregarForma').addEventListener('click', () => {
   document.getElementById('selFormaCobro').value    = '';
   document.getElementById('txtNroCheque').value     = '';
   document.getElementById('txtNroTarjeta').value    = '';
+  document.getElementById('txtNroTransferencia').value = '';
   document.getElementById('txtNroCuotas').value     = 1;
   document.getElementById('selMarcaTarjeta').value  = '';
   document.getElementById('selEntidadAdherida').value = '';
@@ -424,6 +430,8 @@ document.getElementById('btnConfirmarForma').addEventListener('click', () => {
   if (monto <= 0) { alert('El monto debe ser mayor a 0.'); return; }
 
   const opt = selFC.selectedOptions[0];
+  const nroTransferencia = document.getElementById('txtNroTransferencia').value.trim();
+  if ((opt.dataset.cod || '').includes('TRANSFERENCIA') && !nroTransferencia) { alert('Indicá el N° de transferencia / comprobante.'); return; }
   const selMT = document.getElementById('selMarcaTarjeta');
   const selEA = document.getElementById('selEntidadAdherida');
   const selEE = document.getElementById('selEntidadEmisora');
@@ -433,6 +441,7 @@ document.getElementById('btnConfirmarForma').addEventListener('click', () => {
     _formaNombre:        opt.textContent,
     numero_cheque:       document.getElementById('txtNroCheque').value.trim()  || null,
     numero_tarjeta:      document.getElementById('txtNroTarjeta').value.trim() || null,
+    numero_transferencia: (opt.dataset.cod || '').includes('TRANSFERENCIA') ? nroTransferencia : null,
     numero_cuotas:       parseInt(document.getElementById('txtNroCuotas').value) || 1,
     id_marca_tarjeta:    parseInt(selMT.value) || null,
     _marcaNombre:        selMT.value ? selMT.selectedOptions[0].textContent : '',
@@ -473,6 +482,7 @@ document.getElementById('btnGuardar').addEventListener('click', async () => {
       id_entidad_emisora:  d.id_entidad_emisora,
       numero_cheque:       d.numero_cheque,
       numero_tarjeta:      d.numero_tarjeta,
+      numero_transferencia: d.numero_transferencia,
       numero_cuotas:       d.numero_cuotas,
       monto_cobrado:       d.monto_cobrado,
       observaciones:       d.observaciones,

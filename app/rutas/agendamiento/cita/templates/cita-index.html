@@ -21,6 +21,12 @@ Citas
 
 <div class="container-fluid px-4 mt-n10">
 
+  <ul class="nav nav-pills mb-3 bg-white rounded p-2 shadow-sm d-inline-flex position-relative" id="pestanasCitas">
+    <li class="nav-item"><button type="button" class="nav-link active" data-tab="lista"><i class="fas fa-list me-1"></i>Lista</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-tab="calendario"><i class="far fa-calendar-days me-1"></i>Calendario</button></li>
+  </ul>
+
+  <div id="tabLista">
   <div class="card mb-4">
     <div class="card-header d-flex align-items-center">
       <span class="fw-bold">Lista de Citas</span>
@@ -48,7 +54,29 @@ Citas
       </div>
     </div>
   </div>
+  </div><!-- /tabLista -->
+
+  <div id="tabCalendario" class="d-none">
+    <div class="card mb-4">
+      <div class="card-header d-flex align-items-center">
+        <span class="fw-bold">Calendario semanal</span>
+        <a href="{{ url_for('cita.citaAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nueva Cita</a>
+      </div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+          <div>
+            <label class="small mb-1" for="selEspCal">Especialista</label>
+            <select class="form-select" id="selEspCal" style="min-width:280px"></select>
+          </div>
+          <div class="small text-muted pb-2"><i class="fas fa-hand-pointer me-1"></i>Toque un hueco libre para ver el turno y agregar una cita ahí: se abre «Registrar nueva cita» con el especialista, la fecha y la hora ya cargados.</div>
+        </div>
+        <div id="calCitas"></div>
+      </div>
+    </div>
+  </div><!-- /tabCalendario -->
 </div>
+
+{% include 'calendario_semanal.html' %}
 
 <!-- Modal Historial de la Cita -->
 <div class="modal fade" id="modalLogCita" tabindex="-1">
@@ -192,9 +220,8 @@ Citas
         { data: function (row) { return row.des_especialidad || '<span class="text-muted">-</span>'; } },
         {
           data: function (row) {
-            return row.cita_es_primera_vez
-              ? 'Primera Vez'
-              : `Seguimiento${row.cita_numero_sesion ? ' #' + row.cita_numero_sesion : ''}`;
+            const tipo = { PRIMERA_VEZ: 'Primera Vez', SEGUIMIENTO: 'Seguimiento', TRATAMIENTO: 'Tratamiento' }[row.tipo_cita] || (row.cita_es_primera_vez ? 'Primera Vez' : 'Seguimiento');
+            return row.tipo_cita === 'PRIMERA_VEZ' ? tipo : `${tipo}${row.cita_numero_sesion ? ' #' + row.cita_numero_sesion : ''}`;
           }
         },
         {
@@ -227,24 +254,20 @@ Citas
             const opciones = row.es_pasada ? posibles.filter(([cod]) => ESTADOS_FINALES.includes(cod))
               : row.es_futura ? posibles.filter(([cod]) => !SOLO_EL_DIA.includes(cod))
               : posibles.concat(CORRECCION_MISMO_DIA[row.cod_estado_cita] || []);
-            let acciones = `<button class="btn btn-sm btn-outline-info me-1" type="button" name="btn_log" data-id="${row.id_cita}" title="Ver Historial"><i class="fas fa-history me-1"></i>Historial</button>`;
+            let acciones = `<button class="btn btn-datatable btn-icon btn-outline-info me-1" type="button" name="btn_log" data-id="${row.id_cita}" title="Ver historial"><i class="fas fa-history"></i><span class="visually-hidden">Historial</span></button>`;
             if (!esFinal) {
-              acciones += `<a class="btn btn-sm btn-outline-primary me-1" href="/agendamiento/citas/citas-agregar?id_cita=${row.id_cita}" title="Editar / Reprogramar"><i class="fas fa-edit me-1"></i>Editar</a>`;
+              acciones += `<a class="btn btn-datatable btn-icon btn-outline-primary me-1" href="/agendamiento/citas/citas-agregar?id_cita=${row.id_cita}" title="Editar / Reprogramar"><i class="fas fa-edit"></i><span class="visually-hidden">Editar</span></a>`;
             }
-            opciones.forEach(([cod, label, icono, color], idx) => {
+            opciones.forEach(([cod, label, icono, color]) => {
               const nombreBtn = cod === 'EN_CONSULTA' ? 'btn_iniciar_consulta' : 'btn_cambiar_estado';
-              if (idx === 0) {
-                acciones += `<button class="btn btn-sm btn-outline-${color} me-1" type="button" name="${nombreBtn}" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono} me-1"></i>${label}</button>`;
-              } else {
-                acciones += `<button class="btn btn-sm btn-icon btn-outline-${color} me-1" type="button" name="${nombreBtn}" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i><span class="visually-hidden">${label}</span></button>`;
-              }
+              acciones += `<button class="btn btn-datatable btn-icon btn-outline-${color} me-1" type="button" name="${nombreBtn}" data-id="${row.id_cita}" data-estado="${cod}" title="${label}"><i class="fas fa-${icono}"></i><span class="visually-hidden">${label}</span></button>`;
             });
             if (esFinal || row.es_pasada) {
-              acciones += `<button class="btn btn-sm btn-icon btn-outline-dark me-1" type="button" name="btn_corregir" data-id="${row.id_cita}" data-estado="${row.cod_estado_cita}" title="Corregir (requiere administrador)"><i class="fas fa-user-shield"></i><span class="visually-hidden">Corregir</span></button>`;
+              acciones += `<button class="btn btn-datatable btn-icon btn-outline-dark me-1" type="button" name="btn_corregir" data-id="${row.id_cita}" data-estado="${row.cod_estado_cita}" title="Corregir (requiere administrador)"><i class="fas fa-user-shield"></i><span class="visually-hidden">Corregir</span></button>`;
             }
             return acciones;
           },
-          className: 'text-center',
+          className: 'text-center text-nowrap',
           orderable: false
         }
       ],
@@ -509,6 +532,49 @@ Citas
       });
     });
   };
+
+  // ── Calendario semanal: el especialista que se elija, sus citas y sus turnos libres ──
+  const URL_CITA_AGREGAR = "{{ url_for('cita.citaAgregar') }}";
+  let calendarioCitas = null;
+
+  const crearCalendarioCitas = () => CalendarioSemanal(document.getElementById('calCitas'), {
+    mensajeVacio: 'Elija un especialista para ver su semana.',
+    nombreEspecialista: () => $('#selEspCal option:selected').text(),
+    datos: async (desde, hasta) => {
+      const id = $('#selEspCal').val();
+      if (!id) return null;
+      const leer = async (url) => (await (await fetch(url)).json());
+      const [rc, rh, rs] = await Promise.all([
+        leer(`/api/v1/citas?id_especialista=${id}&desde=${desde}&hasta=${encodeURIComponent(hasta + ' 23:59:59')}`),
+        leer(`/api/v1/agenda-horarios?id_especialista=${id}`),
+        leer(`/api/v1/citas/slots-disponibles?id_especialista=${id}&desde=${desde}&hasta=${hasta}`)
+      ]);
+      return { citas: rc.success ? rc.data : [], horarios: rh.success ? rh.data : [], slots: rs.success ? rs.data : [] };
+    },
+    alTocarHueco: (slot) => {
+      window.location.href = `${URL_CITA_AGREGAR}?id_especialista=${$('#selEspCal').val()}&fecha=${slot.slot_inicio.split(' ')[0]}&id_slot=${slot.id_slot_agenda}`;
+    },
+    urlEditar: (c) => `${URL_CITA_AGREGAR}?id_cita=${c.id_cita}`
+  });
+
+  $('#pestanasCitas').on('click', '[data-tab]', function () {
+    const tab = $(this).data('tab');
+    $('#pestanasCitas .nav-link').removeClass('active');
+    $(this).addClass('active');
+    $('#tabLista').toggleClass('d-none', tab !== 'lista');
+    $('#tabCalendario').toggleClass('d-none', tab !== 'calendario');
+    if (tab === 'calendario') {
+      if (!calendarioCitas) {
+        calendarioCitas = crearCalendarioCitas();
+        fetch('/api/v1/citas/especialistas').then(r => r.json()).then(d => {
+          $('#selEspCal').html('<option value="">— Elija un especialista —</option>' +
+            (d.success ? d.data : []).map(e => `<option value="${e.id_especialista}">${$('<div>').text(e.nombre_completo).html()}</option>`).join(''));
+        });
+      }
+      calendarioCitas.pintar();
+    }
+  });
+  $('#selEspCal').on('change', () => calendarioCitas && calendarioCitas.pintar());
 
   $(document).ready(function () {
     initDatatable();

@@ -423,18 +423,26 @@ function renderProcedimientos(lista) {
 // -------------------------------------------------------
 // CONSULTAS
 // -------------------------------------------------------
+const TIPOS_CITA = { PRIMERA_VEZ: 'Primera vez', SEGUIMIENTO: 'Seguimiento', TRATAMIENTO: 'Tratamiento' };
+// «Seguimiento #3», «Tratamiento #1» o «Primera vez»; vacío si la consulta no nació de una cita
+function etiquetaTipoCita(x) {
+  if (!x.tipo_cita) return '—';
+  return TIPOS_CITA[x.tipo_cita] + (x.tipo_cita !== 'PRIMERA_VEZ' && x.numero_sesion ? ' #' + x.numero_sesion : '');
+}
+
 function renderConsultas(lista) {
   const el = document.getElementById('sec-consultas');
   if (!lista.length) { el.innerHTML = renderVacio('Sin consultas registradas.'); return; }
   el.innerHTML = `
     <table class="table table-sm table-bordered align-middle mb-0">
       <thead class="table-light">
-        <tr><th>Fecha</th><th>Motivo</th><th>Estado</th><th>Profesional</th><th>Dx</th><th>Proc.</th></tr>
+        <tr><th>Fecha</th><th>Tipo</th><th>Motivo</th><th>Estado</th><th>Profesional</th><th>Dx</th><th>Proc.</th></tr>
       </thead>
       <tbody>
         ${lista.map(c => `
           <tr>
             <td>${c.fecha || '—'}</td>
+            <td>${etiquetaTipoCita(c)}</td>
             <td>${c.motivo || '—'}</td>
             <td>${badge(c.estado, 'secondary')}</td>
             <td>${c.profesional || '—'}</td>
@@ -458,7 +466,7 @@ function renderCitas(lista) {
           <div class="d-flex justify-content-between align-items-start">
             <div>
               <div class="fw-semibold">${c.fecha || '—'} ${c.hora_inicio || ''} – ${c.hora_fin || ''}</div>
-              <small class="text-muted">${c.especialista || '—'} · ${c.especialidad || '—'}</small>
+              <small class="text-muted">${etiquetaTipoCita(c)} · ${c.especialista || '—'} · ${c.especialidad || '—'}</small>
               ${c.motivo ? `<div class="small">${c.motivo}</div>` : ''}
             </div>
             <span class="badge bg-secondary">${c.dias_hasta_cita != null ? 'en ' + c.dias_hasta_cita + ' d.' : ''}</span>

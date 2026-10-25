@@ -1,5 +1,5 @@
 -- 01_infraestructura_auth.sql — Infraestructura y autenticación
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -152,7 +152,7 @@ CREATE TABLE public.sesiones (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_sesiones_tipo_cierre CHECK (((tipo_cierre IS NULL) OR ((tipo_cierre)::text = ANY ((ARRAY['LOGOUT'::character varying, 'TIMEOUT'::character varying, 'ADMIN_FORCE'::character varying, 'SECURITY'::character varying, 'MFA_REVOKE'::character varying])::text[]))))
+    CONSTRAINT chk_sesiones_tipo_cierre CHECK (((tipo_cierre IS NULL) OR ((tipo_cierre)::text = ANY (ARRAY[('LOGOUT'::character varying)::text, ('TIMEOUT'::character varying)::text, ('ADMIN_FORCE'::character varying)::text, ('SECURITY'::character varying)::text, ('MFA_REVOKE'::character varying)::text]))))
 );
 
 --

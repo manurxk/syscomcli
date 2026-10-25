@@ -5,7 +5,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 anamnesisapi = Blueprint('anamnesisapi', __name__)
 
-ROLES_ANAMNESIS = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_ANAMNESIS = ("ADMINISTRADOR", "CLINICO")
 # Mismos valores que el CHECK chk_anamnesis_informante de la tabla anamnesis
 INFORMANTES_VALIDOS = ('PACIENTE', 'MADRE', 'PADRE', 'TUTOR', 'OTRO')
 

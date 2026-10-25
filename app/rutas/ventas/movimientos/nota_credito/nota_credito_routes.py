@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 notacreditomod = Blueprint('nota_credito', __name__, template_folder='templates')
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @notacreditomod.route('/nota-credito-index')

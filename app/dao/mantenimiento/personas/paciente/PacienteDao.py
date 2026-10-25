@@ -575,6 +575,15 @@ class PacienteDao(BaseDAO):
         ruc_final = ruc if tipo_documento == 'RUC' else None
         return self.execute_query(sql, (tipo_documento, ruc_final, usuario_modificacion, pac_id), commit=True) > 0
 
+    def actualizarContacto(self, pac_id, correo, telefono, usuario_modificacion=None):
+        """Actualiza solo correo y teléfono de la persona. Usado desde la pantalla de factura."""
+        sql = """
+            UPDATE personas
+            SET per_correo = %s, per_telefono = %s, usuario_modificacion = %s
+            WHERE id_persona = (SELECT id_persona FROM pacientes WHERE id_paciente = %s)
+        """
+        return self.execute_query(sql, (correo or None, telefono or None, usuario_modificacion, pac_id), commit=True) > 0
+
     def desactivarPaciente(self, pac_id, usuario_modificacion=None):
         """Desactiva un paciente (soft-delete, est_paciente = FALSE)."""
         sql = "UPDATE pacientes SET est_paciente = FALSE, usuario_modificacion = %s WHERE id_paciente = %s"
@@ -626,7 +635,9 @@ class PacienteDao(BaseDAO):
                 p.per_apellido,
                 p.per_cedula,
                 p.per_tipo_documento,
-                p.per_ruc
+                p.per_ruc,
+                p.per_correo,
+                p.per_telefono
             FROM pacientes pac
             JOIN personas p ON pac.id_persona = p.id_persona
             WHERE
@@ -647,4 +658,6 @@ class PacienteDao(BaseDAO):
             'per_cedula': r['per_cedula'],
             'per_tipo_documento': r['per_tipo_documento'] if r['per_tipo_documento'] else 'CI',
             'per_ruc': r['per_ruc'],
+            'per_correo': r['per_correo'],
+            'per_telefono': r['per_telefono'],
         } for r in rows]

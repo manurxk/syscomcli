@@ -8,7 +8,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 notadebitoapi = Blueprint('notadebitoapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @notadebitoapi.route('/notas-debito', methods=['GET'])
@@ -69,7 +69,7 @@ def addNotaDebito():
 
 
 @notadebitoapi.route('/notas-debito/<int:id_nota_debito>/anular', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR")
 @permiso_requerido("VENTAS", "ELIMINAR")
 def anularNotaDebito(id_nota_debito):
     """PUT: anula la nota de débito."""

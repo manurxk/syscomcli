@@ -1,0 +1,43 @@
+{# Capítulo inicial del manual de usuario. Variables: perfil_nombre, unificado, matriz (de _partes_usuario en ayuda_routes.py), roles_matriz #}
+<h3>Introducción</h3>
+<p>Este manual explica cómo usar el sistema de gestión de la clínica. El sistema reúne en un solo lugar la agenda de los profesionales, la atención clínica de los pacientes y la facturación: desde que el paciente pide un turno hasta que se le factura y se le cobra.</p>
+{% if unificado %}
+<p>Esta es la versión completa: incluye las pantallas de <strong>todos los perfiles</strong>.</p>
+{% else %}
+<p>Esta versión corresponde al perfil <strong>{{ perfil_nombre }}</strong>: incluye las pantallas que ese perfil tiene en su menú.</p>
+{% endif %}
+
+<h4>¿A quién está dirigido?</h4>
+<ul>
+    <li><strong>Recepción:</strong> pacientes, agenda médica, citas y lista de espera.</li>
+    <li><strong>Clínico:</strong> su agenda, las consultas, los planes (PEI) y las fichas médicas.</li>
+    <li><strong>Ventas:</strong> caja, pedidos, presupuestos, facturas, cobranzas y notas.</li>
+    <li><strong>Administrador:</strong> todo lo anterior, más la administración de usuarios, permisos y catálogos.</li>
+</ul>
+<p>Las pantallas que ve cada persona dependen de su perfil. Si necesita una pantalla que no ve, pídasela al administrador.</p>
+
+<h4>Requisitos</h4>
+<ul>
+    <li>Una computadora con conexión a la red de la clínica o a Internet.</li>
+    <li>Un navegador actualizado, por ejemplo Google Chrome, Microsoft Edge o Mozilla Firefox.</li>
+    <li>Un usuario y una contraseña entregados por el administrador, y acceso al correo registrado, donde llega el código de verificación.</li>
+</ul>
+
+<h4>Cómo leer este manual</h4>
+<ul>
+    <li>Cada capítulo corresponde a una pantalla del menú lateral, y los capítulos están agrupados por módulo.</li>
+    <li>Los pasos numerados indican el orden en que se hace una tarea. En las figuras, los números ①②③ coinciden con esos pasos.</li>
+    <li>Los nombres de botones y de campos aparecen en <strong>negrita</strong>.</li>
+    <li>Los recuadros <strong>Nota</strong> señalan reglas del sistema o acciones que no se pueden deshacer.</li>
+    <li>Cada pantalla indica <strong>quién la usa</strong>.</li>
+</ul>
+<p class="importante">Las reglas de seguridad (contraseñas, bloqueos, cuidado de la información) están en el <strong>Manual de seguridad</strong>. La administración de usuarios, permisos y menú se explica en este mismo manual, en su versión para el Administrador. Este manual también está disponible dentro del sistema: el botón <span class="btn-ref">?</span> abre la parte que explica la pantalla donde usted está.</p>
+
+<h4>¿Quién usa cada pantalla?</h4>
+<table class="datos">
+    <tr><th>Módulo</th><th>Pantalla</th>{% for r in roles_matriz %}<th>{{ r }}</th>{% endfor %}</tr>
+    {% for f in matriz %}
+    <tr><td>{{ f.modulo }}</td><td>{{ f.pantalla }}</td>{% for marca in f.roles %}<td>{{ '●' if marca else '' }}</td>{% endfor %}</tr>
+    {% endfor %}
+</table>
+<p>Admin. = Administrador. El menú de cada persona puede ajustarse: la tabla muestra la configuración habitual.</p>

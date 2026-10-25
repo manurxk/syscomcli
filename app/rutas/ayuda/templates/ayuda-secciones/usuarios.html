@@ -1,53 +1,27 @@
 <h3>Usuarios</h3>
-<p>Un usuario es la cuenta con la que un funcionario entra al sistema. En esta pantalla se crean las cuentas, se les asigna el rol y se atienden los problemas de acceso: bloqueos, verificación en dos pasos y sesiones abiertas.</p>
-
-<h4>¿Cómo creo un usuario?</h4>
-{{ figura('usuarios/01_listado.jpg', 'Gestión de Usuarios: ① Nuevo Usuario') }}
-{{ figura('usuarios/02_formulario.jpg', 'Nuevo usuario: los números coinciden con los pasos') }}
+<p>Cuentas con las que los funcionarios entran al sistema: alta, rol, desbloqueo, verificación en dos pasos y sesiones abiertas.</p>
+<div class="par">
+{{ figura('usuarios/01_listado.jpg', 'Usuarios: ① Nuevo Usuario') }}
+{{ figura('usuarios/02_formulario.jpg', 'Nuevo usuario') }}
+</div>
 <ol>
     <li>Presione <span class="btn-ref">Nuevo Usuario</span>.</li>
-    <li>En <strong>Funcionario Asociado</strong>, elija el funcionario. Solo aparecen los que todavía no tienen usuario; si no está en la lista, primero regístrelo en <strong>Funcionarios</strong>.</li>
-    <li>En <strong>Datos de Acceso</strong>, escriba el <strong>Username</strong> con el que va a entrar. Debajo aparece si está disponible o si ya lo usa otra persona.</li>
-    <li>Elija el <strong>Rol Principal</strong>: define qué pantallas va a ver en el menú.</li>
+    <li>En <strong>Funcionario Asociado</strong>, elija al funcionario (si no está, regístrelo antes en Funcionarios).</li>
+    <li>Escriba el <strong>Username</strong>; el sistema avisa si ya existe.</li>
+    <li>Elija el <strong>Rol Principal</strong>: define las pantallas que verá.</li>
     <li>Deje marcado <strong>Usuario Activo</strong>.</li>
-    <li>Escriba la <strong>Contraseña</strong> y repítala en <strong>Confirmar Contraseña</strong>. Cada requisito de la lista se marca en verde cuando se cumple: entre 8 y 16 caracteres, una mayúscula, una minúscula, un número, un carácter especial (! @ # $ % ^ &amp; *) y que la confirmación sea igual.</li>
+    <li>Escriba una <strong>Contraseña</strong> temporal y confírmela (8 a 16 caracteres, con mayúscula, minúscula, número y símbolo).</li>
     <li>Presione <span class="btn-ref">Guardar</span>.</li>
 </ol>
-<p class="importante">Entregue la contraseña al funcionario en persona. El sistema no la envía por correo.</p>
-
-<h4>¿Qué muestra la lista?</h4>
-<p>Por cada usuario: su username, el funcionario y su cargo, el rol principal y los roles adicionales, si está <strong>Activo</strong> o <strong>Inactivo</strong>, si está bloqueado (y hasta cuándo), la cantidad de intentos fallidos de contraseña y la fecha de creación. Los intentos se marcan en rojo cuando pasan de 2.</p>
-
-<h4>¿Cómo veo el detalle de un usuario?</h4>
-{{ figura('usuarios/03_detalle.jpg', 'Detalle del usuario: ① Ver en Auditoría, ② Resetear intentos y desbloquear, ③ Sesiones activas') }}
-<p>Presione <span class="btn-ref">Ver</span> en su fila. El detalle muestra:</p>
+<div class="par">
+{{ figura('usuarios/03_detalle.jpg', 'Detalle: ① Ver en Auditoría ② Resetear intentos y desbloquear ③ Sesiones activas') }}
+</div>
 <ul>
-    <li>Sus datos: funcionario, cargo, rol, estado, correo, si usa verificación en dos pasos (MFA), bloqueo, intentos fallidos, último ingreso y fecha de creación.</li>
-    <li><strong>Verificación en dos pasos (MFA)</strong>: cuántos códigos se le enviaron y cuántos usó, y los dispositivos que marcó como confiables.</li>
-    <li><strong>Sesiones activas</strong>: desde qué equipo está conectado ahora.</li>
+    <li><strong>Ver</strong>: datos, MFA, dispositivos confiables y sesiones activas del usuario.</li>
+    <li><strong>Desbloquear</strong>: en el detalle, <span class="btn-ref">Resetear intentos y desbloquear</span> y confirme.</li>
+    <li><strong>Quitar MFA</strong>: <span class="btn-ref">Revocar MFA</span> (si ya no recibe los códigos).</li>
+    <li><strong>Cerrar sesión ajena</strong>: <span class="btn-ref">Cerrar</span> en Sesiones activas.</li>
+    <li><strong>Editar o desactivar</strong>: el Administrador, desde el detalle. Los usuarios no se borran, para conservar su rastro en la auditoría.</li>
+    <li><strong>Máximo de usuarios</strong>: la lista muestra «x de N usuarios activos». Al llegar al máximo, desactive uno antes de crear o reactivar otro.</li>
 </ul>
-<p>Para ver sus ingresos (correctos o fallidos), sus pedidos de recuperación de contraseña y lo que modificó, presione <span class="btn-ref">Ver en Auditoría</span>: se abre la pantalla de Auditoría ya filtrada por ese usuario.</p>
-
-<h4>¿Cómo desbloqueo a un usuario?</h4>
-<p>Si el usuario se equivocó varias veces de contraseña, la cuenta queda bloqueada.</p>
-<ol>
-    <li>Abra el detalle del usuario con <span class="btn-ref">Ver</span>.</li>
-    <li>Presione <span class="btn-ref">Resetear intentos y desbloquear</span>.</li>
-    <li>Confirme con <span class="btn-ref">Sí, continuar</span>.</li>
-</ol>
-<p>El contador de intentos vuelve a 0 y se levanta cualquier bloqueo, incluido el indefinido. También puede hacerlo desde <strong>Auditoría → Sesiones y usuarios</strong>.</p>
-
-<h4>¿Cómo quito la verificación en dos pasos?</h4>
-<p>Sirve cuando el usuario ya no puede recibir los códigos, por ejemplo porque cambió de correo.</p>
-<ol>
-    <li>En el detalle del usuario, presione <span class="btn-ref">Revocar MFA</span>. El botón solo aparece si el usuario tiene la verificación activada.</li>
-    <li>Confirme con <span class="btn-ref">Sí, revocar</span>.</li>
-</ol>
-<p>Para volver a usar la verificación en dos pasos, el usuario tiene que vincularla de nuevo.</p>
-
-<h4>¿Cómo cierro una sesión abierta?</h4>
-<p>En el detalle del usuario, dentro de <strong>Sesiones activas</strong>, presione <span class="btn-ref">Cerrar</span> en la sesión y confirme con <span class="btn-ref">Sí, cerrar</span>. Sirve, por ejemplo, si el usuario dejó la sesión abierta en otra computadora.</p>
-
-<h4>¿Quién puede editar o desactivar un usuario?</h4>
-<p>Los botones <span class="btn-ref">Editar</span> y <span class="btn-ref">Desactivar</span> del detalle los ve solo el <strong>Superadministrador</strong>. Si hay que cambiarle el rol o la contraseña a un usuario, o darlo de baja, pídaselo a él.</p>
-<p class="importante">Los usuarios no se borran: se desactivan, para conservar su rastro en la auditoría.</p>
+<p class="importante">Entregue la contraseña temporal al funcionario en persona: el sistema no la envía por correo. En su <strong>primer ingreso</strong> el sistema le pide reemplazarla por una propia; el administrador no llega a conocerla.</p>

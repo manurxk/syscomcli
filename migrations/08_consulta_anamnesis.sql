@@ -1,5 +1,5 @@
 -- 08_consulta_anamnesis.sql — Consulta, anamnesis, PEI, notas clínicas y derivaciones
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -70,7 +70,7 @@ CREATE TABLE public.anamnesis (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_anamnesis_informante CHECK (((informante IS NULL) OR ((informante)::text = ANY ((ARRAY['PACIENTE'::character varying, 'MADRE'::character varying, 'PADRE'::character varying, 'TUTOR'::character varying, 'OTRO'::character varying])::text[]))))
+    CONSTRAINT chk_anamnesis_informante CHECK (((informante IS NULL) OR ((informante)::text = ANY (ARRAY[('PACIENTE'::character varying)::text, ('MADRE'::character varying)::text, ('PADRE'::character varying)::text, ('TUTOR'::character varying)::text, ('OTRO'::character varying)::text]))))
 );
 
 --
@@ -116,7 +116,7 @@ CREATE TABLE public.consultas (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_consultas_estado CHECK (((consulta_estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'EN_ATENCION'::character varying, 'FINALIZADA'::character varying])::text[])))
+    CONSTRAINT chk_consultas_estado CHECK (((consulta_estado)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('EN_ATENCION'::character varying)::text, ('FINALIZADA'::character varying)::text])))
 );
 
 --
@@ -251,7 +251,7 @@ CREATE TABLE public.pei (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_pei_estado CHECK (((pei_estado)::text = ANY ((ARRAY['ACTIVO'::character varying, 'CERRADO'::character varying])::text[])))
+    CONSTRAINT chk_pei_estado CHECK (((pei_estado)::text = ANY (ARRAY[('ACTIVO'::character varying)::text, ('CERRADO'::character varying)::text])))
 );
 
 --

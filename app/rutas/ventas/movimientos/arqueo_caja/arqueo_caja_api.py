@@ -6,7 +6,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 arqueocajaapi = Blueprint('arqueocajaapi', __name__)
 
-ROLES_CAJA = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_CAJA = ("ADMINISTRADOR", "VENTAS")
 
 
 @arqueocajaapi.route('/arqueos', methods=['GET'])

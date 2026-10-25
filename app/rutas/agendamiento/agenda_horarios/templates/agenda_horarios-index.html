@@ -265,6 +265,7 @@ Agenda Médica
                                 <th>Inicio</th>
                                 <th>Fin</th>
                                 <th>Estado</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="tbodySlots"></tbody>
@@ -475,7 +476,7 @@ Agenda Médica
                     orderable: false,
                     className: 'text-center',
                     render: (data, type, row) => `
-                        <button type="button" class="btn btn-outline-info btn-sm" onclick="verSlots(${row.id_agenda_horario})" title="Ver cupos generados">
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="verSlots(${row.id_agenda_horario}, ${row.id_especialista})" title="Ver cupos generados">
                             <i class="fas fa-calendar-alt"></i>
                         </button>
                         ${SOLO_AGENDA_PROPIA ? '' : `<button type="button" class="btn btn-outline-primary btn-sm" onclick="editarHorario(${row.id_agenda_horario})" title="Editar">
@@ -537,7 +538,12 @@ Agenda Médica
     // ==========================================
     // VER SLOTS
     // ==========================================
-    const verSlots = (idAgendaHorario) => {
+    // Un cupo libre y futuro se puede agendar desde acá: abre «Registrar nueva cita» con el especialista, la fecha y el turno elegidos
+    // (solo Administrador y Recepción; el especialista ve su agenda en solo lectura)
+    const URL_CITA_AGREGAR = "{{ url_for('cita.citaAgregar') }}";
+    const ahoraLocal = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+
+    const verSlots = (idAgendaHorario, idEspecialista) => {
         $.ajax({
             url: `/api/v1/agenda-horarios/${idAgendaHorario}/slots`,
             type: 'GET',
@@ -545,17 +551,21 @@ Agenda Médica
                 const tbody = $('#tbodySlots');
                 tbody.empty();
                 if (response.success && response.data && response.data.length > 0) {
+                    const ahora = ahoraLocal();
                     response.data.forEach((slot) => {
+                        const agendable = !SOLO_AGENDA_PROPIA && slot.estado_slot === 'DISPONIBLE' && slot.slot_inicio > ahora;
+                        const enlace = `${URL_CITA_AGREGAR}?id_especialista=${idEspecialista}&fecha=${slot.slot_inicio.split(' ')[0]}&id_slot=${slot.id_slot_agenda}`;
                         tbody.append(`
                             <tr>
                                 <td>${slot.slot_inicio}</td>
                                 <td>${slot.slot_fin}</td>
                                 <td>${slot.estado_slot}${slot.es_sobreturno ? ' <span class="badge bg-danger">sobreturno</span>' : ''}</td>
+                                <td class="text-end">${agendable ? `<a class="btn btn-sm btn-success" href="${enlace}" title="Agendar una cita en este turno"><i class="fas fa-calendar-plus me-1"></i>Agendar</a>` : ''}</td>
                             </tr>
                         `);
                     });
                 } else {
-                    tbody.html('<tr><td colspan="3" class="text-center text-muted">Sin cupos generados</td></tr>');
+                    tbody.html('<tr><td colspan="4" class="text-center text-muted">Sin cupos generados</td></tr>');
                 }
                 new bootstrap.Modal(document.getElementById('modalSlots')).show();
             },

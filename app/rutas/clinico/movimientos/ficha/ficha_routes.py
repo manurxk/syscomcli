@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required
 
 fichamod = Blueprint('ficha', __name__, template_folder='templates')
 
-ROLES_FICHA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_FICHA = ("ADMINISTRADOR", "CLINICO")
 
 
 @fichamod.route('/ficha-index')

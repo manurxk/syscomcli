@@ -1,10 +1,21 @@
 from flask import Blueprint, request, jsonify, current_app as app, session
 from app.dao.mantenimiento.personas.funcionario.FuncionarioDao import FuncionarioDao
+from app.dao.auth.user_dao import UsuarioDao
 from app.auth.utils.decorators import role_required
 from app.utils.mensajes_validacion import msg_obligatorio
 
 
 funcionarioapi = Blueprint('funcionarioapi', __name__)
+
+
+def _tope_funcionarios_alcanzado():
+    """Mensaje de error si ya se llegó al máximo de funcionarios activos (lo fija el Superadministrador); si no, None."""
+    dao = UsuarioDao()
+    maximo = dao.obtener_topes()[0]
+    if dao.contar_funcionarios_activos() >= maximo:
+        return (f'Se alcanzó el máximo de {maximo} funcionarios activos. '
+                'Desactive un funcionario existente antes de crear o reactivar otro.')
+    return None
 
 
 
@@ -195,6 +206,11 @@ def addFuncionario():
                 'error': 'Debe seleccionar al menos una especialidad.'
             }), 400
 
+    if data.get('activo', True):
+        tope = _tope_funcionarios_alcanzado()
+        if tope:
+            return jsonify({'success': False, 'error': tope}), 400
+
     try:
         funcionario_id = funcionariodao.guardarFuncionario(
             # Datos de persona (obligatorios)
@@ -301,6 +317,11 @@ def updateFuncionario(id_funcionario):
                 'success': False,
                 'error': 'Debe seleccionar al menos una especialidad.'
             }), 400
+
+    if not funcionario_existente.get('activo') and data.get('activo', True):   # reactivación
+        tope = _tope_funcionarios_alcanzado()
+        if tope:
+            return jsonify({'success': False, 'error': tope}), 400
 
     try:
         resultado = funcionariodao.updateFuncionario(

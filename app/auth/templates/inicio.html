@@ -7,7 +7,7 @@ Dashboard - Inicio
 
 {% block layout_content %}
 
-{% set primer_rol = roles[0] if roles else {'cod': '', 'label': 'Usuario', 'icon': 'fa-house', 'color': '#7c3aed'} %}
+{% set primer_rol = roles[0] if roles else {'cod': '', 'label': 'Usuario', 'icon': 'fa-house', 'color': '#3f3dc4'} %}
 {% set nombre_corto = (usuario or 'Usuario').split(' ')[0] %}
 
 {# Pastilla de estado de cita: color por código, texto del sistema (des_estado_cita) #}
@@ -63,7 +63,7 @@ Dashboard - Inicio
     {% set c = d.citas or {} %}
     {% set cxc = d.cxc or {} %}
     {% set seg = d.seguridad or {} %}
-    {% set resumen = 'Resumen general de la clínica hoy.' %}
+    {% set resumen = 'Mantenimiento y configuración del sistema.' if d.soporte else 'Resumen general de la clínica hoy.' %}
     {% elif r.cod == 'CLINICO' %}
     {% set resumen = ('Tenés ' ~ (d.citas|length) ~ ' pacientes hoy · ' ~ d.atendidos ~ ' atendidos.') if not d.sin_especialista else '' %}
     {% elif r.cod == 'RECEPCION' %}
@@ -77,6 +77,9 @@ Dashboard - Inicio
 
       {# ═══════════════════════ ADMINISTRADOR ═══════════════════════ #}
       {% if r.cod == 'ADMINISTRADOR' %}
+      {% if d.soporte %}
+      <div class="card mb-4"><div class="card-body text-center text-body-secondary">Cuenta de soporte técnico: este resumen no muestra datos de pacientes ni de ventas.</div></div>
+      {% else %}
       <div class="row g-3 mb-4">
         <div class="col-6 col-xl-3">
           <a href="{{ url_for('cita.citaIndex') }}" class="card card-body h-100 text-decoration-none kpi">
@@ -118,8 +121,10 @@ Dashboard - Inicio
 
       <div class="d-flex flex-wrap gap-2 mb-4">
         <a href="{{ url_for('reporte.reporteIndex') }}" class="btn btn-outline-secondary"><i class="fas fa-chart-line me-1"></i>Reportes</a>
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualesRol"><i class="fas fa-book me-1"></i>Manuales por rol</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualesRol"><i class="fas fa-book me-1"></i>Manual de usuario</button>
         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualSeguridad"><i class="fas fa-shield-halved me-1"></i>Manual de seguridad</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualInfra"><i class="fas fa-server me-1"></i>Manual de infraestructura</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalManualSistema"><i class="fas fa-book-open me-1"></i>Manual del sistema</button>
       </div>
 
       <div class="row g-3 mb-4">
@@ -231,6 +236,7 @@ Dashboard - Inicio
       </div>
 
       {# ═══════════════════════ CLÍNICO ═══════════════════════ #}
+      {% endif %}
       {% elif r.cod == 'CLINICO' %}
       {% if d.sin_especialista %}
       <div class="card mb-4">
@@ -577,12 +583,12 @@ Dashboard - Inicio
 </div>
 
 {% if roles | selectattr('cod', 'equalto', 'ADMINISTRADOR') | list %}
-<!-- Modal Manuales por rol: vista previa y PDF del manual de cualquier rol (mismo manual del modal de Ayuda) -->
+<!-- Modal Manual de usuario: vista previa, Word y PDF del manual de cualquier rol (mismo manual del modal de Ayuda) -->
 <div class="modal fade" id="modalManualesRol" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content border-0 shadow">
       <div class="modal-header border-bottom">
-        <h5 class="modal-title fw-bold">Manuales por rol</h5>
+        <h5 class="modal-title fw-bold">Manual de usuario</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-0">
@@ -590,11 +596,15 @@ Dashboard - Inicio
           <label class="fw-semibold mb-0" for="selRolManual">Rol</label>
           <select class="form-select form-select-sm" id="selRolManual" style="max-width:260px;">
             <option value="">Seleccione un rol...</option>
+            <option value="TODOS">Todos los roles (manual completo)</option>
           </select>
         </div>
         <iframe id="iframeManualRol" title="Manual del rol" style="width:100%;height:65vh;border:0;"></iframe>
       </div>
       <div class="modal-footer bg-light">
+        <a class="btn btn-primary btn-sm disabled" id="btnManualRolDocx" href="#">
+          <i class="fas fa-file-word"></i> Descargar Word
+        </a>
         <a class="btn btn-danger btn-sm disabled" id="btnManualRolPdf" href="#">
           <i class="fas fa-file-pdf"></i> Descargar PDF
         </a>
@@ -604,12 +614,12 @@ Dashboard - Inicio
   </div>
 </div>
 
-<!-- Modal Manual de seguridad: políticas + operación (contenedores, backups, scripts), vista previa y PDF -->
+<!-- Modal Manual de seguridad: políticas y controles, vista previa, Word y PDF -->
 <div class="modal fade" id="modalManualSeguridad" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content border-0 shadow">
       <div class="modal-header border-bottom">
-        <h5 class="modal-title fw-bold">Manual de seguridad y operación</h5>
+        <h5 class="modal-title fw-bold">Manual de seguridad</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-0">
@@ -617,7 +627,68 @@ Dashboard - Inicio
                 data-src="{{ url_for('ayuda.ayudaSeguridad') }}"></iframe>
       </div>
       <div class="modal-footer bg-light">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('ayuda.ayudaSeguridadDocx') }}">
+          <i class="fas fa-file-word"></i> Descargar Word
+        </a>
         <a class="btn btn-danger btn-sm" href="{{ url_for('ayuda.ayudaSeguridadPdf') }}">
+          <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Manual de infraestructura: operación del servidor (contenedores, backups, scripts), vista previa, Word y PDF -->
+<div class="modal fade" id="modalManualInfra" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Manual de infraestructura</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <iframe id="iframeManualInfra" title="Manual de infraestructura" style="width:100%;height:70vh;border:0;"
+                data-src="{{ url_for('ayuda.ayudaInfraestructura') }}"></iframe>
+      </div>
+      <div class="modal-footer bg-light">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('ayuda.ayudaInfraestructuraDocx') }}">
+          <i class="fas fa-file-word"></i> Descargar Word
+        </a>
+        <a class="btn btn-danger btn-sm" href="{{ url_for('ayuda.ayudaInfraestructuraPdf') }}">
+          <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Manual del sistema: guías de uso y seguridad en un solo documento, por partes (solo descarga) -->
+<div class="modal fade" id="modalManualSistema" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold">Manual del sistema</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Un solo documento con todos los manuales, sin pantallas repetidas:</p>
+        <ul class="mb-3">
+          <li>Parte I. Pantallas comunes</li>
+          <li>Parte II. Rol Recepción</li>
+          <li>Parte III. Rol Clínico</li>
+          <li>Parte IV. Rol Ventas</li>
+          <li>Parte V. Rol Administrador</li>
+          <li>Parte VI. Seguridad y operación</li>
+        </ul>
+        <p class="text-muted small mb-0">Incluye la parte de seguridad, que describe la infraestructura: no se entrega a usuarios finales. La generación puede tardar unos segundos. En el Word, el índice se actualiza con Ctrl+A y F9.</p>
+      </div>
+      <div class="modal-footer bg-light">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('ayuda.ayudaSistemaDocx') }}">
+          <i class="fas fa-file-word"></i> Descargar Word
+        </a>
+        <a class="btn btn-danger btn-sm" href="{{ url_for('ayuda.ayudaSistemaPdf') }}">
           <i class="fas fa-file-pdf"></i> Descargar PDF
         </a>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -628,27 +699,27 @@ Dashboard - Inicio
 {% endif %}
 
 <style>
-  /* Colores del inicio: el violeta del sistema en los componentes "primary" de Bootstrap/AdminLTE
+  /* Colores del inicio: el azul ultramar del sistema en los componentes "primary" de Bootstrap/AdminLTE
      (AdminLTE los trae compilados en azul). Solo aplica a esta pantalla. */
   .app-content .btn-primary {
-    --bs-btn-bg: #7c3aed; --bs-btn-border-color: #7c3aed;
-    --bs-btn-hover-bg: #6d28d9; --bs-btn-hover-border-color: #6d28d9;
-    --bs-btn-active-bg: #5b21b6; --bs-btn-active-border-color: #5b21b6;
-    --bs-btn-disabled-bg: #7c3aed; --bs-btn-disabled-border-color: #7c3aed;
-    --bs-btn-focus-shadow-rgb: 124, 58, 237;
+    --bs-btn-bg: #3f3dc4; --bs-btn-border-color: #3f3dc4;
+    --bs-btn-hover-bg: #32309f; --bs-btn-hover-border-color: #32309f;
+    --bs-btn-active-bg: #32309f; --bs-btn-active-border-color: #32309f;
+    --bs-btn-disabled-bg: #3f3dc4; --bs-btn-disabled-border-color: #3f3dc4;
+    --bs-btn-focus-shadow-rgb: 63, 61, 196;
   }
-  .app-content .text-bg-primary { background-color: #7c3aed !important; color: #fff !important; }
-  .app-content .progress-bar:not([class*="bg-"]) { background-color: #7c3aed; }
-  .app-content .border-primary { border-color: #7c3aed !important; }
+  .app-content .text-bg-primary { background-color: #3f3dc4 !important; color: #fff !important; }
+  .app-content .progress-bar:not([class*="bg-"]) { background-color: #3f3dc4; }
+  .app-content .border-primary { border-color: #3f3dc4 !important; }
   .app-content {
-    --bs-primary-text-emphasis: #5b21b6;
-    --bs-primary-bg-subtle: #ede9fe;
-    --bs-primary-border-subtle: #ddd6fe;
+    --bs-primary-text-emphasis: #32309f;
+    --bs-primary-bg-subtle: #e0e0f7;
+    --bs-primary-border-subtle: #c3c3ee;
   }
   [data-bs-theme="dark"] .app-content {
-    --bs-primary-text-emphasis: #c4b5fd;
-    --bs-primary-bg-subtle: #2e1065;
-    --bs-primary-border-subtle: #5b21b6;
+    --bs-primary-text-emphasis: #a5a4ee;
+    --bs-primary-bg-subtle: #1d1c4a;
+    --bs-primary-border-subtle: #32309f;
   }
   .app-content .nav-pills {
     --bs-nav-pills-link-active-bg: var(--bs-primary-bg-subtle);
@@ -656,8 +727,8 @@ Dashboard - Inicio
     --bs-nav-link-color: var(--bs-secondary-color);
     --bs-nav-link-hover-color: var(--bs-primary-text-emphasis);
   }
-  .app-content a:not(.btn):not(.nav-link):not(.list-group-item):not(.card) { color: #6d28d9; }
-  [data-bs-theme="dark"] .app-content a:not(.btn):not(.nav-link):not(.list-group-item):not(.card) { color: #a78bfa; }
+  .app-content a:not(.btn):not(.nav-link):not(.list-group-item):not(.card) { color: #32309f; }
+  [data-bs-theme="dark"] .app-content a:not(.btn):not(.nav-link):not(.list-group-item):not(.card) { color: #8887e8; }
 
   /* Tarjeta de indicador clicable + cuadro del ícono */
   .kpi { transition: border-color 0.15s; }
@@ -778,18 +849,21 @@ Dashboard - Inicio
   }
 })();
 
-// Manuales por rol: los roles salen de /api/v1/roles (ya oculta SUPERADMIN a quien no lo es)
+// Manual de usuario por rol: los roles salen de /api/v1/roles (ya oculta SUPERADMIN a quien no lo es)
 (function () {
   const modal = document.getElementById('modalManualesRol');
   if (!modal) return;
   const sel = document.getElementById('selRolManual');
   const iframe = document.getElementById('iframeManualRol');
   const btnPdf = document.getElementById('btnManualRolPdf');
+  const btnDocx = document.getElementById('btnManualRolDocx');
   const urlManual = "{{ url_for('ayuda.ayudaManual') }}";
   const urlPdf = "{{ url_for('ayuda.ayudaManualPdf') }}";
+  const urlDocx = "{{ url_for('ayuda.ayudaManualDocx') }}";
 
   modal.addEventListener('shown.bs.modal', function () {
-    if (sel.options.length > 1) return;
+    if (sel.dataset.cargados) return;
+    sel.dataset.cargados = '1';
     fetch('/api/v1/roles')
       .then(r => r.json())
       .then(data => {
@@ -803,25 +877,26 @@ Dashboard - Inicio
     const rol = sel.value;
     if (!rol) {
       iframe.removeAttribute('src');
-      btnPdf.classList.add('disabled');
-      btnPdf.setAttribute('href', '#');
+      [btnPdf, btnDocx].forEach(b => { b.classList.add('disabled'); b.setAttribute('href', '#'); });
       return;
     }
     const q = '?rol=' + encodeURIComponent(rol);
     iframe.setAttribute('src', urlManual + q);
     btnPdf.setAttribute('href', urlPdf + q);
-    btnPdf.classList.remove('disabled');
+    btnDocx.setAttribute('href', urlDocx + q);
+    [btnPdf, btnDocx].forEach(b => b.classList.remove('disabled'));
   });
 })();
 
-// Manual de seguridad: el iframe se carga recién al abrir el modal
-(function () {
-  const modal = document.getElementById('modalManualSeguridad');
+// Manuales de seguridad e infraestructura: el iframe se carga recién al abrir el modal
+['modalManualSeguridad:iframeManualSeguridad', 'modalManualInfra:iframeManualInfra'].forEach(function (ids) {
+  const [idModal, idIframe] = ids.split(':');
+  const modal = document.getElementById(idModal);
   if (!modal) return;
-  const iframe = document.getElementById('iframeManualSeguridad');
+  const iframe = document.getElementById(idIframe);
   modal.addEventListener('shown.bs.modal', function () {
     if (!iframe.getAttribute('src')) iframe.setAttribute('src', iframe.dataset.src);
   });
-})();
+});
 </script>
 {% endblock %}

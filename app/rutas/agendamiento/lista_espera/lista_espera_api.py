@@ -6,7 +6,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 listaesperaapi = Blueprint('listaesperaapi', __name__)
 
-ROLES_LISTA_ESPERA = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+ROLES_LISTA_ESPERA = ("ADMINISTRADOR", "RECEPCION")
 
 
 @listaesperaapi.route('/lista-espera', methods=['GET'])

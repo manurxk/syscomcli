@@ -87,7 +87,7 @@ Get-Content migrations\17_rol_sysclin_app.sql -Raw | docker exec -i syscomcli_bd
     <li>Cargar los datos desde el último backup con la <strong>restauración de emergencia</strong> (capítulo <a href="#backups">Backups</a>, pasos 4 y siguientes).</li>
     <li>Volver a ejecutar el script 17 de <code>migrations/</code> (mismo comando del paso 6), para que los permisos de <code>sysclin_app</code> queden completos.</li>
     <li>Levantar todo: <code>docker compose -f dock/docker-compose.yml up -d</code> (en el servidor, con los dos archivos).</li>
-    <li>Hacer el <strong>chequeo periódico</strong> completo (capítulo <a href="#auditoria">Auditoría y chequeo</a>).</li>
+    <li>Hacer el <strong>chequeo periódico</strong> completo (Manual de seguridad, capítulo «Auditoría y chequeo periódico»).</li>
 </ol>
 
 <h4>Modo de arranque de la aplicación</h4>

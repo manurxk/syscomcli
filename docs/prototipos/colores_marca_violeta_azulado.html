@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo de color de marca</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f1f3f6; color: #212529; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  h2.grupo { margin: 0; padding: 18px 24px 0; font-size: 1.05rem; color: #495057; }
+  .top { padding: 20px 24px; background: #fff; border-bottom: 1px solid #dee2e6; }
+  .top p { margin: 4px 0 0; color: #6c757d; font-size: .9rem; }
+  .wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; padding: 18px 24px 24px; }
+  .opcion { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; }
+  .opcion.actual { border: 2px solid #212529; }
+  .opcion > header { padding: 10px 16px; font-weight: 700; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+  .opcion > header small { font-weight: 400; color: #6c757d; }
+  .app { display: flex; min-height: 330px; }
+  .side { width: 170px; background: #fff; border-right: 1px solid #e5e7eb; padding: 12px 8px; font-size: .82rem; }
+  .side .titulo { color: var(--p); font-weight: 700; padding: 4px 10px 10px; font-size: .9rem; }
+  .side .it { padding: 7px 10px; border-radius: 6px; color: #444; margin-bottom: 2px; }
+  .side .it.hov { color: var(--pd); background: var(--soft); }
+  .side .it.act { background: var(--p); color: #fff; font-weight: 600; }
+  .main { flex: 1; padding: 14px; background: #f8f9fb; }
+  .banner { background: var(--p); color: #fff; border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+  .banner h3 { margin: 0; font-size: 1.1rem; }
+  .banner span { opacity: .85; font-size: .82rem; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; font-size: .85rem; }
+  .btn { display: inline-block; border: 1px solid var(--p); background: var(--p); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: .8rem; margin-right: 6px; }
+  .btn.out { background: transparent; color: var(--p); }
+  .btn.hv { background: var(--pd); border-color: var(--pd); }
+  .badge { background: var(--soft); color: var(--pd); padding: 3px 8px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+  a { color: var(--pd); }
+  .prog { height: 8px; background: #e9ecef; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .prog i { display: block; height: 100%; width: 65%; background: var(--p); }
+  .alert { background: var(--soft); border-left: 4px solid var(--p); color: var(--pd); padding: 8px 10px; border-radius: 4px; font-size: .8rem; margin-top: 10px; }
+  .dark { background: #1b1e27; color: #e4e6ee; padding: 10px 14px; font-size: .82rem; display: flex; gap: 14px; align-items: center; }
+  .dark a { color: var(--dk); }
+  .dark .btn { background: var(--dk); border-color: var(--dk); color: #12131a; margin: 0; }
+  .chips { display: flex; gap: 6px; padding: 10px 14px; border-top: 1px solid #dee2e6; font-size: .72rem; flex-wrap: wrap; }
+  .chips b { display: inline-block; width: 18px; height: 18px; border-radius: 4px; margin-right: 4px; border: 1px solid #0002; }
+  .chips div { display: flex; align-items: center; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Elegir UN solo color de marca</h1>
+  <p>Todos son colores planos (sin degradados). Cada tarjeta muestra banner, menú lateral (normal, hover, activo), botones, insignia, enlace, barra, alerta y modo oscuro.</p>
+</div>
+
+<div id="app"></div>
+
+<script>
+// p = principal, pd = hover/oscuro, soft = fondo suave, dk = enlaces/botón en modo oscuro
+const GRUPOS = [
+  { titulo: 'Color actual del sistema', items: [
+    { id: '0', nombre: 'Violeta actual', p: '#7c3aed', pd: '#6d28d9', soft: '#ede9fe', dk: '#a78bfa', actual: true },
+  ]},
+  { titulo: 'Violeta azulado', items: [
+    { id: 'A', nombre: 'Índigo clásico',      p: '#4f46e5', pd: '#4338ca', soft: '#e0e7ff', dk: '#818cf8' },
+    { id: 'B', nombre: 'Azul real violáceo',  p: '#4455d6', pd: '#3644b8', soft: '#e3e6fb', dk: '#8c98f0' },
+    { id: 'C', nombre: 'Iris',                p: '#5b4fe0', pd: '#4a3fc4', soft: '#e8e5fc', dk: '#9d94f5' },
+    { id: 'D', nombre: 'Azul ultramar',       p: '#3f3dc4', pd: '#32309f', soft: '#e0e0f7', dk: '#8887e8' },
+  ]},
+  { titulo: 'Verde azulado (teal)', items: [
+    { id: 'E', nombre: 'Teal profundo',       p: '#0f766e', pd: '#115e59', soft: '#ccfbf1', dk: '#2dd4bf' },
+    { id: 'F', nombre: 'Teal medio',          p: '#0d9488', pd: '#0f766e', soft: '#d5f5f0', dk: '#5eead4' },
+    { id: 'G', nombre: 'Verde petróleo',      p: '#17727a', pd: '#115960', soft: '#d3eef0', dk: '#5cc3cc' },
+  ]},
+  { titulo: 'Cian con un toque violeta', items: [
+    { id: 'H', nombre: 'Cian profundo',       p: '#0e7490', pd: '#155e75', soft: '#cffafe', dk: '#22d3ee' },
+    { id: 'I', nombre: 'Cian azulado',        p: '#0891b2', pd: '#0e7490', soft: '#d2f3fa', dk: '#67e8f9' },
+    { id: 'J', nombre: 'Azul cian violáceo',  p: '#4a6fd8', pd: '#3b5bb8', soft: '#e1e8fb', dk: '#8fa7ee' },
+    { id: 'K', nombre: 'Pizarra cian-violeta',p: '#5468b8', pd: '#43549a', soft: '#e3e7f6', dk: '#98a6dc' },
+  ]},
+];
+
+const app = document.getElementById('app');
+GRUPOS.forEach(g => {
+  const h = document.createElement('h2');
+  h.className = 'grupo'; h.textContent = g.titulo;
+  const wrap = document.createElement('div'); wrap.className = 'wrap';
+  g.items.forEach(o => {
+    const s = document.createElement('section');
+    s.className = 'opcion' + (o.actual ? ' actual' : '');
+    s.style.cssText = `--p:${o.p};--pd:${o.pd};--soft:${o.soft};--dk:${o.dk}`;
+    s.innerHTML = `
+      <header>${o.id === '0' ? '' : o.id + ' · '}${o.nombre} <small>${o.p}</small></header>
+      <div class="app">
+        <div class="side"><div class="titulo">SYSCLIN</div>
+          <div class="it act">Inicio</div><div class="it hov">Agenda (hover)</div><div class="it">Pacientes</div><div class="it">Reportes</div></div>
+        <div class="main">
+          <div class="banner"><h3>Pacientes</h3><span>Gestión de pacientes y fichas</span></div>
+          <div class="card"><span class="btn">Guardar</span><span class="btn hv">Hover</span><span class="btn out">Cancelar</span> <span class="badge">Activo</span>
+            <p>Texto con <a href="#">enlace de ejemplo</a>.</p><div class="prog"><i></i></div><div class="alert">Aviso informativo del sistema.</div></div>
+        </div>
+      </div>
+      <div class="dark"><span>Modo oscuro:</span><a href="#">enlace</a><span class="btn">Botón</span></div>
+      <div class="chips">
+        <div><b style="background:${o.p}"></b>principal</div><div><b style="background:${o.pd}"></b>hover</div>
+        <div><b style="background:${o.soft}"></b>suave</div><div><b style="background:${o.dk}"></b>oscuro</div>
+      </div>`;
+    wrap.appendChild(s);
+  });
+  app.append(h, wrap);
+});
+</script>
+</body>
+</html>

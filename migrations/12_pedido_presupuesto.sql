@@ -1,5 +1,5 @@
 -- 12_pedido_presupuesto.sql — Ítems de servicio, pedidos y presupuestos
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -119,7 +119,7 @@ CREATE TABLE public.pedidos (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
-    CONSTRAINT chk_pedidos_estado CHECK (((pedido_estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'CONFIRMADO'::character varying, 'FACTURADO'::character varying, 'CANCELADO'::character varying])::text[])))
+    CONSTRAINT chk_pedidos_estado CHECK (((pedido_estado)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('CONFIRMADO'::character varying)::text, ('FACTURADO'::character varying)::text, ('CANCELADO'::character varying)::text])))
 );
 
 --
@@ -208,7 +208,7 @@ CREATE TABLE public.presupuestos (
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
     id_pei integer,
-    CONSTRAINT chk_presupuestos_estado CHECK (((presupuesto_estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'APROBADO'::character varying, 'RECHAZADO'::character varying, 'CONVERTIDO'::character varying, 'VENCIDO'::character varying])::text[])))
+    CONSTRAINT chk_presupuestos_estado CHECK (((presupuesto_estado)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('APROBADO'::character varying)::text, ('RECHAZADO'::character varying)::text, ('CONVERTIDO'::character varying)::text, ('VENCIDO'::character varying)::text])))
 );
 
 --

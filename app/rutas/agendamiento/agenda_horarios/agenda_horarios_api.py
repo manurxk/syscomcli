@@ -16,7 +16,7 @@ agendahorariosapi = Blueprint('agendahorariosapi', __name__)
 
 DURACIONES_VALIDAS = (10, 15, 20, 30, 45, 60, 90)
 MODALIDADES_VALIDAS = ('PRESENCIAL', 'TELEMEDICINA', 'DOMICILIO')
-ROLES_GESTION_AGENDA = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+ROLES_GESTION_AGENDA = ("ADMINISTRADOR", "RECEPCION")
 
 
 def _soloAgendaPropia():
@@ -92,7 +92,7 @@ def _advertenciaHorarioClinica(id_dia_semana, hora_inicio, hora_fin):
 
 
 @agendahorariosapi.route('/especialistas', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "RECEPCION")
 def getEspecialistas():
     """GET: lista los especialistas."""
     try:
@@ -104,7 +104,7 @@ def getEspecialistas():
 
 
 @agendahorariosapi.route('/dias-semana', methods=['GET'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "RECEPCION")
 def getDiasSemana():
     """GET: lista los días de la semana."""
     try:
@@ -165,7 +165,7 @@ def getSlotsAgendaHorario(id_agenda_horario):
 
 
 @agendahorariosapi.route('/agenda-horarios', methods=['POST'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "RECEPCION")
 def addAgendaHorario():
     """POST: valida y crea el horario de agenda."""
     data = request.get_json() or {}
@@ -206,7 +206,7 @@ def addAgendaHorario():
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "RECEPCION")
 def updateAgendaHorario(id_agenda_horario):
     """PUT: valida y actualiza el horario de agenda; 404 si no existe."""
     data = request.get_json() or {}
@@ -252,7 +252,7 @@ def updateAgendaHorario(id_agenda_horario):
 
 
 @agendahorariosapi.route('/agenda-horarios/<int:id_agenda_horario>/estado', methods=['PATCH'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "RECEPCION")
 def cambiarEstadoAgendaHorario(id_agenda_horario):
     """PATCH: activa o desactiva el horario de agenda."""
     data = request.get_json() or {}

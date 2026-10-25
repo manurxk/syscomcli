@@ -111,19 +111,33 @@ Registrar Paciente
         <div class="row gx-3">
           <div class="col-md-4 mb-3 mb-md-0 position-relative">
             <label class="small mb-1" for="txtCiudad">Ciudad de Residencia</label>
-            <div class="autocomplete-container">
-              <input type="hidden" id="id_ciudad">
-              <input class="form-control city-autocomplete" id="txtCiudad" type="text"
-                placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
-            </div>
+            <input type="hidden" id="id_ciudad">
+            <input class="form-control city-autocomplete" id="txtCiudad" type="text"
+              placeholder="Escriba para buscar..." autocomplete="off" list="listCiudades">
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1 text-muted" for="txtDepartamento">Departamento</label>
+            <input class="form-control" id="txtDepartamento" type="text" readonly>
           </div>
           <div class="col-md-4">
+            <label class="small mb-1 text-muted" for="txtPais">País</label>
+            <input class="form-control" id="txtPais" type="text" readonly>
+          </div>
+        </div>
+        <div class="row gx-3 mt-3">
+          <div class="col-md-4 mb-3 mb-md-0 position-relative">
             <label class="small mb-1" for="txtCiudad_nacimiento">Ciudad de Nacimiento</label>
-            <div class="autocomplete-container">
-              <input type="hidden" id="id_ciudad_nacimiento">
-              <input class="form-control city-autocomplete" id="txtCiudad_nacimiento" type="text"
-                placeholder="Escriba el nombre de la ciudad..." autocomplete="off" list="listCiudades">
-            </div>
+            <input type="hidden" id="id_ciudad_nacimiento">
+            <input class="form-control city-autocomplete" id="txtCiudad_nacimiento" type="text"
+              placeholder="Escriba para buscar..." autocomplete="off" list="listCiudades">
+          </div>
+          <div class="col-md-4 mb-3 mb-md-0">
+            <label class="small mb-1 text-muted" for="txtDepartamentoNacimiento">Departamento de Nacimiento</label>
+            <input class="form-control" id="txtDepartamentoNacimiento" type="text" readonly>
+          </div>
+          <div class="col-md-4">
+            <label class="small mb-1 text-muted" for="txtPaisNacimiento">País de Nacimiento</label>
+            <input class="form-control" id="txtPaisNacimiento" type="text" readonly>
           </div>
         </div>
         <datalist id="listCiudades"></datalist>
@@ -279,6 +293,8 @@ Registrar Paciente
             $('#txtCiudad').val(data.ciudad);
             $('#id_ciudad_nacimiento').val(data.id_ciudad_nacimiento);
             $('#txtCiudad_nacimiento').val(data.ciudad_nacimiento);
+            cargarDepartamentoYPais(data.id_ciudad, '#txtDepartamento', '#txtPais');
+            cargarDepartamentoYPais(data.id_ciudad_nacimiento, '#txtDepartamentoNacimiento', '#txtPaisNacimiento');
 
             // Esperar un poco para que los catálogos se carguen antes de setear selectores
             setTimeout(() => {
@@ -306,48 +322,55 @@ Registrar Paciente
     // ==========================================
     // AUTOCOMPLETE CIUDADES
     // ==========================================
+    let ciudadesCache = [];
+    const normalizarTexto = (txt) => (txt || '').toString().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+
+    // Consulta departamento y país de una ciudad y los pinta en los campos readonly indicados
+    const cargarDepartamentoYPais = (idCiudad, selDepartamento, selPais) => {
+      $(selDepartamento).val('');
+      $(selPais).val('');
+      if (!idCiudad) return;
+      fetch(`/api/v1/ciudades/${idCiudad}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.success && res.data) {
+            $(selDepartamento).val(res.data.desc_departamento || '');
+            $(selPais).val(res.data.desc_pais || '');
+          }
+        });
+    };
+
     const initCityAutocomplete = () => {
-      let timeout = null;
       const datalist = document.getElementById('listCiudades');
+      const destinos = {
+        txtCiudad: ['#id_ciudad', '#txtDepartamento', '#txtPais'],
+        txtCiudad_nacimiento: ['#id_ciudad_nacimiento', '#txtDepartamentoNacimiento', '#txtPaisNacimiento']
+      };
+
+      fetch('/api/v1/ciudades')
+        .then(r => r.json())
+        .then(res => { if (res.success) ciudadesCache = res.data || []; });
 
       document.querySelectorAll('.city-autocomplete').forEach(input => {
+        const [selId, selDep, selPais] = destinos[input.id];
         input.addEventListener('input', function () {
-          const query = this.value;
-          const targetIdInput = this.id === 'txtCiudad' ? 'id_ciudad' : 'id_ciudad_nacimiento';
+          const termino = normalizarTexto(this.value);
+          $(selId).val('');
+          $(selDep).val('');
+          $(selPais).val('');
+          if (termino.length < 2) { datalist.innerHTML = ''; return; }
 
-          if (!query) document.getElementById(targetIdInput).value = '';
-          if (query.length < 2) return;
+          datalist.innerHTML = ciudadesCache
+            .filter(c => normalizarTexto(c.descripcion).includes(termino))
+            .slice(0, 8)
+            .map(c => `<option value="${c.descripcion}"></option>`).join('');
 
-          clearTimeout(timeout);
-          timeout = setTimeout(() => {
-            fetch(`/api/v1/ciudades?q=${encodeURIComponent(query)}`)
-              .then(r => r.json())
-              .then(data => {
-                if (data.success) {
-                  datalist.innerHTML = '';
-                  data.data.forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city.descripcion;
-                    option.dataset.id = city.id;
-                    datalist.appendChild(option);
-                  });
-                }
-              });
-          }, 300);
-        });
-
-        input.addEventListener('change', function () {
-          const query = this.value;
-          const targetIdInput = this.id === 'txtCiudad' ? 'id_ciudad' : 'id_ciudad_nacimiento';
-          const options = datalist.querySelectorAll('option');
-
-          let found = false;
-          options.forEach(opt => {
-            if (opt.value === query) {
-              document.getElementById(targetIdInput).value = opt.dataset.id;
-              found = true;
-            }
-          });
+          const exacta = ciudadesCache.find(c => normalizarTexto(c.descripcion) === termino);
+          if (exacta) {
+            $(selId).val(exacta.id);
+            cargarDepartamentoYPais(exacta.id, selDep, selPais);
+          }
         });
       });
     };

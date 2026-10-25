@@ -61,7 +61,7 @@ MODULOS = [
     ('12_pedido_presupuesto', 'Ítems de servicio, pedidos y presupuestos',
      'items_servicios pedidos pedido_detalle presupuestos presupuesto_detalle'),
     ('13_facturacion_remisiones', 'Facturación, notas de crédito/débito y remisiones',
-     'timbrados puntos_expedicion facturas factura_detalle notas_credito nota_credito_detalle notas_debito '
+     'timbrados puntos_expedicion facturas factura_detalle facturas_borrador notas_credito nota_credito_detalle notas_debito '
      'nota_debito_detalle remisiones remision_detalle'),
     ('14_caja', 'Caja, depósitos y recaudaciones',
      'cajas depositos aperturas_cierre_caja arqueos_caja recaudaciones'),

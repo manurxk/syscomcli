@@ -5,7 +5,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 libroventasapi = Blueprint('libroventasapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 @libroventasapi.route('/libro-ventas', methods=['GET'])

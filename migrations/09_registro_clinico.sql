@@ -1,5 +1,5 @@
 -- 09_registro_clinico.sql — Registro clínico
--- Generado el 2026-10-20 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
+-- Generado el 2026-10-25 desde sysclin_bd con docs/scripts/generar_esquema_base.py, con todos los
 -- cambios de la base hasta esa fecha ya fusionados. No se edita a mano: un cambio va primero en una
 -- migración temporal NN_temp_<descripcion>.sql; validado, se regenera este archivo y se borra la temporal
 -- (manual del administrador, §3.2).
@@ -76,8 +76,8 @@ CREATE TABLE public.registro_diagnosticos (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_registro_diagnosticos_gravedad CHECK (((registro_gravedad IS NULL) OR ((registro_gravedad)::text = ANY ((ARRAY['LEVE'::character varying, 'MODERADO'::character varying, 'GRAVE'::character varying])::text[])))),
-    CONSTRAINT chk_registro_diagnosticos_tipo CHECK (((registro_tipo)::text = ANY ((ARRAY['PRESUNTIVO'::character varying, 'DEFINITIVO'::character varying, 'DIFERENCIAL'::character varying])::text[])))
+    CONSTRAINT chk_registro_diagnosticos_gravedad CHECK (((registro_gravedad IS NULL) OR ((registro_gravedad)::text = ANY (ARRAY[('LEVE'::character varying)::text, ('MODERADO'::character varying)::text, ('GRAVE'::character varying)::text])))),
+    CONSTRAINT chk_registro_diagnosticos_tipo CHECK (((registro_tipo)::text = ANY (ARRAY[('PRESUNTIVO'::character varying)::text, ('DEFINITIVO'::character varying)::text, ('DIFERENCIAL'::character varying)::text])))
 );
 
 --
@@ -204,7 +204,7 @@ CREATE TABLE public.registro_signos (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_registro_signos_intensidad CHECK (((registro_intensidad IS NULL) OR ((registro_intensidad)::text = ANY ((ARRAY['LEVE'::character varying, 'MODERADO'::character varying, 'GRAVE'::character varying])::text[]))))
+    CONSTRAINT chk_registro_signos_intensidad CHECK (((registro_intensidad IS NULL) OR ((registro_intensidad)::text = ANY (ARRAY[('LEVE'::character varying)::text, ('MODERADO'::character varying)::text, ('GRAVE'::character varying)::text]))))
 );
 
 --
@@ -246,7 +246,7 @@ CREATE TABLE public.registro_sintomas (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_registro_sintomas_intensidad CHECK (((registro_intensidad IS NULL) OR ((registro_intensidad)::text = ANY ((ARRAY['LEVE'::character varying, 'MODERADO'::character varying, 'GRAVE'::character varying])::text[]))))
+    CONSTRAINT chk_registro_sintomas_intensidad CHECK (((registro_intensidad IS NULL) OR ((registro_intensidad)::text = ANY (ARRAY[('LEVE'::character varying)::text, ('MODERADO'::character varying)::text, ('GRAVE'::character varying)::text]))))
 );
 
 --
@@ -295,7 +295,7 @@ CREATE TABLE public.tratamientos (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_tratamientos_estado CHECK (((tratamiento_estado)::text = ANY ((ARRAY['ACTIVO'::character varying, 'FINALIZADO'::character varying, 'SUSPENDIDO'::character varying])::text[])))
+    CONSTRAINT chk_tratamientos_estado CHECK (((tratamiento_estado)::text = ANY (ARRAY[('ACTIVO'::character varying)::text, ('FINALIZADO'::character varying)::text, ('SUSPENDIDO'::character varying)::text])))
 );
 
 --

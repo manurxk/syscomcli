@@ -7,7 +7,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 consultaapi = Blueprint('consultaapi', __name__)
 
-ROLES_CONSULTA = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_CONSULTA = ("ADMINISTRADOR", "CLINICO")
 
 
 @consultaapi.route('/consultas/especialistas', methods=['GET'])
@@ -91,7 +91,7 @@ def getConsultaDesdeCita(id_cita):
 
 
 @consultaapi.route('/citas/<int:id_cita>/iniciar-consulta', methods=['POST'])
-@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO", "RECEPCION")
+@role_required("ADMINISTRADOR", "CLINICO", "RECEPCION")
 def iniciarConsultaDesdeCita(id_cita):
     """Crea (o recupera, si ya existe) la consulta vinculada a la cita y la pasa a
     EN_CONSULTA. Toda consulta nace de una cita — no hay alta manual suelta.
@@ -144,6 +144,11 @@ def updateConsulta(id_consulta):
     for campo in campos_requeridos:
         if not data.get(campo):
             return jsonify({'success': False, 'error': msg_obligatorio(campo)}), 400
+
+    # Una consulta finalizada ya quedó guardada: guardarla otra vez no hace nada nuevo
+    if consulta['consulta_estado'] == 'FINALIZADA' and data['consulta_estado'] == 'FINALIZADA':
+        return jsonify({'success': False, 'ya_finalizada': True,
+                        'error': 'Esta consulta ya fue finalizada y guardada.'}), 409
 
     try:
         usuario = session.get('id_usuario')

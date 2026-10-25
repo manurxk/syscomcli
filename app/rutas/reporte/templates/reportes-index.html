@@ -295,7 +295,7 @@ Reportes
   const num = (v) => (Number(v) || 0).toLocaleString('es-PY');
   const dec1 = (v) => (Number(v) || 0).toLocaleString('es-PY', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const fecha = (v) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : esc(v); };
-  const VIOLETA = '#7c3aed', AMBAR = '#ffc107';
+  const MARCA = '#3f3dc4', AMBAR = '#ffc107';
 
   const kpi = (icono, color, etiqueta, valor, sub, claseValor) => `
     <div class="col-6 col-xl-3"><div class="card card-body h-100 shadow-sm">
@@ -375,7 +375,7 @@ Reportes
       kpiSimple('Tasa de asistencia', `${dec1(t.tasa_asistencia)} %`) + kpiSimple('Tasa de ausencia', `${dec1(t.tasa_ausencia)} %`) +
       kpiSimple('Pacientes distintos', num(p.pacientes_distintos)) + kpiSimple('Pacientes nuevos', num(p.pacientes_nuevos));
     const colores = { Atendidas: '#198754', Canceladas: '#dc3545', Ausencias: AMBAR };
-    res.chart_data.datasets.forEach(d => { d.borderColor = d.backgroundColor = colores[d.label] || VIOLETA; d.tension = .3; });
+    res.chart_data.datasets.forEach(d => { d.borderColor = d.backgroundColor = colores[d.label] || MARCA; d.tension = .3; });
     dibujar('chAgenda', { type: 'line', data: res.chart_data, options: opciones() });
     if ($('agPorEspecialista')) llenar('agPorEspecialista', res.por_especialista, 4, e =>
       `<tr><td>${esc(e.especialista_nombre)}</td><td class="text-end">${num(e.agendadas)}</td><td class="text-end">${num(e.atendidas)}</td><td class="text-end">${num(e.ausentes)}</td></tr>`);
@@ -402,7 +402,7 @@ Reportes
           conRecibidas ? `${num(d.total_hechas)} / ${num(d.total_recibidas)}` : num(d.total_hechas));
     dibujar('chDiag', { type: 'bar',
       data: { labels: res.top_diagnosticos.map(x => `${x.cod_cie10 || ''} ${x.diagnostico}`.trim()),
-              datasets: [{ label: 'Consultas', data: res.top_diagnosticos.map(x => x.cantidad), backgroundColor: VIOLETA, borderRadius: 4 }] },
+              datasets: [{ label: 'Consultas', data: res.top_diagnosticos.map(x => x.cantidad), backgroundColor: MARCA, borderRadius: 4 }] },
       options: opciones({ indexAxis: 'y', plugins: { legend: { display: false } } }) });
     if ($('coPorEspecialista')) llenar('coPorEspecialista', res.por_especialista, 3, e =>
       `<tr><td>${esc(e.especialista_nombre)}</td><td>${esc(e.especialidades)}</td><td class="text-end">${num(e.consultas)}</td></tr>`);
@@ -423,12 +423,12 @@ Reportes
       : '<div class="col-12"><div class="card card-body text-center text-body-secondary">Sin comprobantes en el período.</div></div>';
     const ds = res.chart_data.datasets;
     ds.forEach(d => { d.borderRadius = 4; });
-    if (ds.length === 1) ds[0].backgroundColor = ds[0].borderColor = VIOLETA;
+    if (ds.length === 1) ds[0].backgroundColor = ds[0].borderColor = MARCA;
     dibujar('chVentas', { type: 'bar', data: res.chart_data, options: opciones({ plugins: { legend: { display: ds.length > 1, position: 'bottom' } } }) });
     const varias = new Set(res.datos_metodo_pago.map(x => x.cod_moneda)).size > 1;
     dibujar('chCondicion', { type: 'doughnut',
       data: { labels: res.datos_metodo_pago.map(x => varias ? `${x.metodo_pago} (${x.cod_moneda})` : x.metodo_pago),
-              datasets: [{ data: res.datos_metodo_pago.map(x => x.total), backgroundColor: [VIOLETA, AMBAR, '#198754', '#dc3545'] }] },
+              datasets: [{ data: res.datos_metodo_pago.map(x => x.total), backgroundColor: [MARCA, AMBAR, '#198754', '#dc3545'] }] },
       options: opciones() });
     llenarPaginada('veDetalle', res.datos_detalle, d =>
       `<tr>${fechaOrd(d.fecha)}<td>${esc(d.numero_comprobante)}</td><td>${esc(d.nombre_cliente)}</td><td>${esc(d.ruc_cliente)}</td>

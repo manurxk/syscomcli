@@ -1382,7 +1382,11 @@ Atender Consulta
   // GUARDAR CONSULTA
   // ==========================================
   const guardarConsulta = () => {
+    const irAMiAgenda = () => { window.location.href = "{{ url_for('mi_agenda.miAgendaIndex') }}"; };
+    let guardandoConsulta = false;
+
     $('#btnGuardarConsulta').on('click', function () {
+      if (guardandoConsulta) return;
       const motivo = $('#txtMotivo').val().trim();
 
       if (!motivo) {
@@ -1400,7 +1404,9 @@ Atender Consulta
 
       const btn = $(this);
       const textoOriginal = btn.html();
+      guardandoConsulta = true;
       btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Guardando...');
+      const liberar = () => { guardandoConsulta = false; btn.prop('disabled', false).html(textoOriginal); };
 
       fetch(`/api/v1/consultas/${idConsultaEdit}`, {
         method: 'PUT',
@@ -1409,15 +1415,25 @@ Atender Consulta
       })
         .then(resp => resp.json())
         .then(data => {
-          btn.prop('disabled', false).html(textoOriginal);
-          if (data.success) {
-            Swal.fire({ icon: 'success', title: '¡Éxito!', text: 'Consulta actualizada correctamente.' });
+          if (data.success && datos.consulta_estado === 'FINALIZADA') {
+            // Consulta terminada: queda guardada, el botón no se vuelve a habilitar y se vuelve a Mi Agenda
+            btn.html('<i class="fas fa-check"></i> Consulta finalizada');
+            Swal.fire({ icon: 'success', title: 'Consulta finalizada', text: 'La consulta quedó guardada. Volvés a Mi Agenda.', timer: 1800, showConfirmButton: false })
+              .then(irAMiAgenda);
+          } else if (data.success) {
+            liberar();
+            Swal.fire({ icon: 'success', title: 'Consulta guardada', timer: 1500, showConfirmButton: false });
+          } else if (data.ya_finalizada) {
+            btn.html('<i class="fas fa-check"></i> Consulta finalizada');
+            Swal.fire({ icon: 'info', title: 'Ya está guardada', text: 'Esta consulta ya fue finalizada y guardada. Volvés a Mi Agenda.', timer: 2200, showConfirmButton: false })
+              .then(irAMiAgenda);
           } else {
+            liberar();
             Swal.fire('Error', data.error || 'Ocurrió un error al guardar la consulta', 'error');
           }
         })
         .catch(() => {
-          btn.prop('disabled', false).html(textoOriginal);
+          liberar();
           Swal.fire('Error', 'Ocurrió un error al guardar la consulta', 'error');
         });
     });

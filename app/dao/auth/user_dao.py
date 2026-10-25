@@ -2,8 +2,10 @@ from app.core.base_dao import BaseDAO
 from werkzeug.security import generate_password_hash
 
 MAX_ROLES_POR_USUARIO = 3
-# Tope de usuarios activos vinculados a funcionarios (el superadmin técnico sin funcionario no cuenta).
-MAX_USUARIOS_CON_FUNCIONARIO = 10
+# Topes por defecto si la empresa no los tiene cargados. Los valores reales están en empresa.max_usuarios_activos y
+# empresa.max_funcionarios_activos y los fija el Superadministrador (el superadmin sin funcionario no cuenta en ninguno).
+TOPE_USUARIOS_POR_DEFECTO = 10
+TOPE_FUNCIONARIOS_POR_DEFECTO = 15
 
 
 class UsuarioDao(BaseDAO):
@@ -94,8 +96,10 @@ class UsuarioDao(BaseDAO):
             params = (username,)
         return self.execute_query_one(sql, params) is None
 
-    def guardarUsuario(self, username, password, id_funcionario, id_rol, est_usuario=True, usuario_creacion=None):
-        """Crea un usuario nuevo y le asigna id_rol como rol principal."""
+    def guardarUsuario(self, username, password, id_funcionario, id_rol, est_usuario=True, usuario_creacion=None,
+                       requiere_cambio_clave=True):
+        """Crea un usuario nuevo y le asigna id_rol como rol principal. La contraseña la genera el
+        administrador, así que por defecto debe cambiarla en el primer ingreso."""
         if not self.validarUsernameDisponible(username):
             return None
 
@@ -109,12 +113,12 @@ class UsuarioDao(BaseDAO):
                 usu_nick, usu_clave, id_funcionario, est_usuario,
                 clave_nunca_expira, requiere_cambio_clave, fecha_cambio_clave, usuario_creacion
             )
-            VALUES (%s, %s, %s, %s, TRUE, FALSE, NOW(), %s)
+            VALUES (%s, %s, %s, %s, TRUE, %s, NOW(), %s)
             RETURNING id_usuario
         """
         fila = self.execute_query_one(
             sql_usuario,
-            (username, password_hash, id_funcionario, est_usuario, usuario_creacion),
+            (username, password_hash, id_funcionario, est_usuario, requiere_cambio_clave, usuario_creacion),
             commit=True
         )
         if not fila:
@@ -139,7 +143,7 @@ class UsuarioDao(BaseDAO):
             sql = """
                 UPDATE usuarios
                 SET usu_nick = %s, usu_clave = %s, est_usuario = %s,
-                    clave_nunca_expira = TRUE, requiere_cambio_clave = FALSE, fecha_cambio_clave = NOW(),
+                    clave_nunca_expira = TRUE, requiere_cambio_clave = TRUE, fecha_cambio_clave = NOW(),
                     usuario_modificacion = %s
                 WHERE id_usuario = %s
             """
@@ -211,6 +215,20 @@ class UsuarioDao(BaseDAO):
             LIMIT 1
         """
         return self.execute_query_one(sql, (id_usuario,))
+
+    def obtener_topes(self):
+        """(tope de funcionarios activos, tope de usuarios activos) de la empresa principal."""
+        fila = self.execute_query_one(
+            "SELECT max_funcionarios_activos, max_usuarios_activos FROM empresa "
+            "ORDER BY es_principal DESC, id_empresa LIMIT 1")
+        if not fila:
+            return TOPE_FUNCIONARIOS_POR_DEFECTO, TOPE_USUARIOS_POR_DEFECTO
+        return fila['max_funcionarios_activos'], fila['max_usuarios_activos']
+
+    def contar_funcionarios_activos(self):
+        """Cuenta los funcionarios activos (para el tope de funcionarios)."""
+        fila = self.execute_query_one("SELECT COUNT(*) AS total FROM funcionarios WHERE est_funcionario = TRUE")
+        return fila["total"] if fila else 0
 
     def contar_usuarios_activos_con_funcionario(self):
         """Cuenta los usuarios activos vinculados a un funcionario (para el tope de usuarios)."""

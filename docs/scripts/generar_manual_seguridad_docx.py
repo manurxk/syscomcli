@@ -1,25 +1,22 @@
-"""Genera el manual de seguridad y operación en Word, igual al que descarga el sistema (/ayuda/seguridad/pdf).
+"""Genera un manual técnico en Word, igual al que descarga el sistema (/ayuda/seguridad/docx e /infraestructura/docx).
 
-El formato y el armado están en app/services/manual_word_service.py; este script solo lo llama fuera de
-Flask, con el contenido de app/rutas/ayuda/templates/ayuda-seguridad-secciones/*.html en el orden de
-SECCIONES_SEGURIDAD y los scripts de SCRIPTS_SEGURIDAD (ayuda_routes.py).
+El formato y el armado están en app/services/manual_word_service.py y los capítulos, en
+app/rutas/ayuda/ayuda_routes.py (PARTES_SEGURIDAD, SECCIONES_INFRAESTRUCTURA). Se corre dentro del contenedor,
+porque los capítulos son plantillas de Flask y la Parte C del manual de seguridad se genera de los avisos:
+    docker exec -w /app syscomcli_app python -X utf8 docs/scripts/generar_manual_seguridad_docx.py [seguridad|infraestructura] [salida.docx]
 
-Uso: python docs/scripts/generar_manual_seguridad_docx.py [salida.docx]
-Salida por defecto: docs/estandar/manual_seguridad.docx (se sobrescribe).
+Salida por defecto: docs/estandar/manual_<manual>.docx (se sobrescribe). Sin argumentos genera el de seguridad.
 
 El índice es un campo de Word: al abrir el archivo, seleccionar todo (Ctrl+A) y presionar F9.
 """
-import ast
 import importlib.util
 import os
 import sys
 from datetime import date
 
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-RUTAS_AYUDA = os.path.join(RAIZ, 'app', 'rutas', 'ayuda', 'ayuda_routes.py')
-SECCIONES_DIR = os.path.join(RAIZ, 'app', 'rutas', 'ayuda', 'templates')
 LOGO = os.path.join(RAIZ, 'app', 'static', 'img', 'sys_logo.png')
-SALIDA = os.path.join(RAIZ, 'docs', 'estandar', 'manual_seguridad.docx')
+MANUALES = ('seguridad', 'infraestructura')
 
 
 def cargar_servicio():
@@ -31,26 +28,24 @@ def cargar_servicio():
     return modulo
 
 
-def _constantes_rutas():
-    """Lee SECCIONES_SEGURIDAD y SCRIPTS_SEGURIDAD de ayuda_routes.py sin importar Flask."""
-    with open(RUTAS_AYUDA, encoding='utf-8') as f:
-        arbol = ast.parse(f.read())
-    valores = {}
-    for nodo in arbol.body:
-        if isinstance(nodo, ast.Assign) and isinstance(nodo.targets[0], ast.Name):
-            if nodo.targets[0].id in ('SECCIONES_SEGURIDAD', 'SCRIPTS_SEGURIDAD'):
-                valores[nodo.targets[0].id] = ast.literal_eval(nodo.value)
-    return valores['SECCIONES_SEGURIDAD'], valores['SCRIPTS_SEGURIDAD']
-
-
 def main():
-    salida = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else SALIDA
-    secciones, scripts = _constantes_rutas()
-    docx = cargar_servicio().manual_seguridad(RAIZ, SECCIONES_DIR, secciones, scripts, LOGO,
-                                              date.today().strftime('%d/%m/%Y'))
+    manual = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in MANUALES else 'seguridad'
+    resto = [a for a in sys.argv[1:] if a not in MANUALES]
+    salida = os.path.abspath(resto[0]) if resto else os.path.join(RAIZ, 'docs', 'estandar', f'manual_{manual}.docx')
+
+    sys.path.insert(0, os.getcwd())
+    from app import app
+    from app.rutas.ayuda import ayuda_routes as r
+    from app.services.ayuda_service import AyudaService
+
+    with app.test_request_context():
+        partes, anexos, scripts, datos = r._manual_tecnico(manual, r._figura(True))
+        docx = AyudaService().manual_tecnico_docx(partes, anexos, scripts, date.today().strftime('%d/%m/%Y'), datos)
     os.makedirs(os.path.dirname(salida), exist_ok=True)
     with open(salida, 'wb') as f:
         f.write(docx)
+    for p in partes:
+        print(f"{p['titulo'] or 'Sin parte'}: {len(p['capitulos'])} capítulos")
     print(f'Manual generado: {salida}')
 
 

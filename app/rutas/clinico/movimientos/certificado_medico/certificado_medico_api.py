@@ -9,7 +9,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 certificadomedicoapi = Blueprint('certificadomedicoapi', __name__)
 
-ROLES_CERTIFICADO = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_CERTIFICADO = ("ADMINISTRADOR", "CLINICO")
 
 
 @certificadomedicoapi.route('/consultas/<int:id_consulta>/certificados', methods=['GET'])

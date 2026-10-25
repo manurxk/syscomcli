@@ -28,6 +28,7 @@ Funcionarios
   <div class="card mb-4">
     <div class="card-header d-flex align-items-center">
       <span class="fw-bold">Lista de Funcionarios</span>
+      <span id="cupo" class="badge text-bg-light border ms-3 fw-normal"></span>
       <a href="{{ url_for('funcionario.funcionarioAgregar') }}" class="btn btn-sm btn-primary ms-auto">Nuevo Funcionario</a>
     </div>
 
@@ -195,10 +196,24 @@ Funcionarios
   // ==========================================
   // INICIALIZACIÓN
   // ==========================================
+
+  // Cupo usado: «x de N» (los máximos los fija el Superadministrador)
+  function mostrarCupo(clave) {
+    fetch('/api/v1/usuarios/cupo').then(r => r.json()).then(res => {
+      if (!res.success) return;
+      const c = res.data[clave];
+      const el = document.getElementById('cupo');
+      el.textContent = `${c.activos} de ${c.maximo} ${clave} activos`;
+      el.classList.toggle('text-bg-warning', c.activos >= c.maximo);
+      el.classList.toggle('text-bg-light', c.activos < c.maximo);
+    });
+  }
+
   $(document).ready(function () {
     initDatatable();
     editar();
     desactivar();
+    mostrarCupo('funcionarios');
   });
 
 </script>

@@ -52,8 +52,8 @@
 
     <style>
         :root {
-            --bs-primary: #7c3aed;
-            --bs-primary-rgb: 124, 58, 237;
+            --bs-primary: #3f3dc4;
+            --bs-primary-rgb: 63, 61, 196;
             --primary-color: #0061f2;
             --primary-dark: #0056d6;
             --cobalt-blue: #0047AB;
@@ -101,17 +101,17 @@
         html:not([data-bs-theme="dark"]) .app-sidebar {
             background-color: #ffffff;
             --lte-sidebar-color: #212529;
-            --lte-sidebar-header-color: #7c3aed;
-            --lte-sidebar-hover-color: #5b21b6;
-            --lte-sidebar-hover-bg: rgba(147, 51, 234, 0.08);
-            --lte-sidebar-active-color: #5b21b6;
+            --lte-sidebar-header-color: #3f3dc4;
+            --lte-sidebar-hover-color: #32309f;
+            --lte-sidebar-hover-bg: rgba(63, 61, 196, 0.08);
+            --lte-sidebar-active-color: #32309f;
             --lte-sidebar-menu-active-color: #ffffff;
-            --lte-sidebar-menu-active-bg: #9333ea;
+            --lte-sidebar-menu-active-bg: #3f3dc4;
             --lte-sidebar-submenu-color: #212529;
-            --lte-sidebar-submenu-hover-color: #5b21b6;
-            --lte-sidebar-submenu-hover-bg: rgba(147, 51, 234, 0.08);
+            --lte-sidebar-submenu-hover-color: #32309f;
+            --lte-sidebar-submenu-hover-bg: rgba(63, 61, 196, 0.08);
             --lte-sidebar-submenu-active-color: #ffffff;
-            --lte-sidebar-submenu-active-bg: #9333ea;
+            --lte-sidebar-submenu-active-bg: #3f3dc4;
         }
 
         .app-sidebar .nav-header {
@@ -132,7 +132,7 @@
         }
 
         html:not([data-bs-theme="dark"]) .app-sidebar .brand-text {
-            color: #6b21a8;
+            color: #32309f;
         }
 
         .sidebar-logout {
@@ -152,8 +152,8 @@
         }
 
         html:not([data-bs-theme="dark"]) .sidebar-logout:hover {
-            background-color: rgba(147, 51, 234, 0.08);
-            color: #5b21b6;
+            background-color: rgba(63, 61, 196, 0.08);
+            color: #32309f;
         }
 
         @media (max-width: 768px) {
@@ -200,29 +200,30 @@
                         </a>
                     </li>
 
-                    <!-- Usuario -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown"
+                    <!-- Usuario: menú de usuario de AdminLTE 4 (user-menu) -->
+                    <li class="nav-item dropdown user-menu">
+                        <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false" id="navbarDropdownUser">
-                            <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
-                                alt="Perfil" style="width:32px;height:32px;">
-                            <span class="d-none d-md-inline small">{{ session.get('nombre_persona', 'Usuario') }}</span>
+                            <img class="user-image rounded-circle shadow" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
+                                alt="Perfil">
+                            <span class="d-none d-md-inline">{{ session.get('nombre_persona', 'Usuario') }}</span>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarDropdownUser">
-                            <div class="dropdown-header d-flex align-items-center gap-2 py-2">
-                                <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
-                                    alt="Perfil" style="width:36px;height:36px;">
-                                <div>
-                                    <div class="fw-semibold small">{{ session.get('nombre_persona', 'Usuario') }}</div>
-                                    <span class="badge bg-primary" style="font-size:0.7rem;">{{ session.get('grupo', 'Sin rol') }}</span>
-                                </div>
-                            </div>
-                            <div class="dropdown-divider"></div>
+                        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                            <li class="user-header text-bg-primary">
+                                <img class="rounded-circle shadow" src="{{ url_for('static', filename='img/undraw_profile.svg') }}"
+                                    alt="Perfil">
+                                <p>
+                                    {{ session.get('nombre_persona', 'Usuario') }}
+                                    <small>{{ session.get('grupo', 'Sin rol') }}</small>
+                                </p>
+                            </li>
                             {# TODO: módulo perfil pendiente de reconstruir (ver app/rutas/legacy/gestionar_personas/perfil) #}
-                            <a class="dropdown-item text-danger" href="{{ url_for('login.logout') }}">
-                                <i data-feather="log-out" style="width:14px;height:14px;margin-right:6px;"></i> Cerrar Sesión
-                            </a>
-                        </div>
+                            <li class="user-footer">
+                                <a href="{{ url_for('login.logout') }}" class="btn btn-outline-danger btn-flat float-end">
+                                    <i data-feather="log-out" style="width:14px;height:14px;margin-right:6px;"></i> Cerrar sesión
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                 </ul>

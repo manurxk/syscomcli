@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required
 
 peimod = Blueprint('pei', __name__, template_folder='templates')
 
-ROLES_PEI = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_PEI = ("ADMINISTRADOR", "CLINICO")
 
 
 @peimod.route('/pei-index')

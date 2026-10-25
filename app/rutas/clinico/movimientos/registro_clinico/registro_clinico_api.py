@@ -10,7 +10,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 registroclinicoapi = Blueprint('registroclinicoapi', __name__)
 
-ROLES_REGISTRO_CLINICO = ("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
+ROLES_REGISTRO_CLINICO = ("ADMINISTRADOR", "CLINICO")
 
 
 # ============================================================================

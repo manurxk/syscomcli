@@ -5,7 +5,7 @@ remisionmod = Blueprint('remision', __name__, template_folder='templates')
 
 
 @remisionmod.route('/remision-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "LEER")
 def remisionIndex():
     """Página principal de remisión (listado y acciones)."""
@@ -13,7 +13,7 @@ def remisionIndex():
 
 
 @remisionmod.route('/remision-agregar')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "CREAR")
 def remisionAgregar():
     """Página del formulario para registrar remisión."""

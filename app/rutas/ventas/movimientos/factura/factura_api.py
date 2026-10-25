@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app, session, send_file
 
 from app.dao.ventas.movimientos.factura.FacturaDao import FacturaDao
+from app.dao.ventas.movimientos.factura.FacturaBorradorDao import FacturaBorradorDao
 from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
 from app.services.factura_pdf_service import FacturaPDFService
 from app.services.EmailService import EmailService
@@ -9,7 +10,7 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 facturaapi = Blueprint('facturaapi', __name__)
 
-ROLES_VENTAS = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_VENTAS = ("ADMINISTRADOR", "VENTAS")
 
 
 def _construir_pdf_factura(id_factura):
@@ -135,6 +136,13 @@ def addFactura():
     try:
         nuevo_id = FacturaDao().guardar(data, usuario_creacion=session.get('id_usuario'))
 
+        # Si venía de un borrador, ya cumplió su función: se elimina
+        if data.get('id_factura_borrador'):
+            try:
+                FacturaBorradorDao().eliminarBorrador(int(data['id_factura_borrador']))
+            except Exception as e:
+                app.logger.warning(f"Factura {nuevo_id} emitida, pero no se pudo eliminar el borrador {data['id_factura_borrador']}: {e}")
+
         envio_correo_ok, envio_correo_error = _enviar_factura_por_correo(nuevo_id)
         if not envio_correo_ok:
             app.logger.warning(f"Factura {nuevo_id} timbrada, pero no se pudo enviar por correo: {envio_correo_error}")
@@ -144,6 +152,81 @@ def addFactura():
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         app.logger.error(f"Error al guardar factura: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+# ── Borradores de factura ──────────────────────────────────────────────────
+@facturaapi.route('/facturas-borrador', methods=['GET'])
+@role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
+def getFacturasBorrador():
+    """GET: lista los borradores de factura pendientes."""
+    try:
+        return jsonify({'success': True, 'data': FacturaBorradorDao().getBorradores(), 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al listar borradores de factura: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@facturaapi.route('/facturas-borrador/<int:id_borrador>', methods=['GET'])
+@role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
+def getFacturaBorrador(id_borrador):
+    """GET: devuelve el contenido de un borrador; 404 si no existe."""
+    try:
+        reg = FacturaBorradorDao().getBorradorById(id_borrador)
+        if not reg:
+            return jsonify({'success': False, 'error': 'No se encontró el borrador.'}), 404
+        return jsonify({'success': True, 'data': reg, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener borrador de factura: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@facturaapi.route('/facturas-borrador', methods=['POST'])
+@role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
+def addFacturaBorrador():
+    """POST: crea un borrador (hace falta al menos el paciente); devuelve el id nuevo (201)."""
+    data = request.get_json() or {}
+    if not data.get('id_paciente'):
+        return jsonify({'success': False, 'error': msg_obligatorio('Paciente')}), 400
+    try:
+        nuevo_id = FacturaBorradorDao().crearBorrador(int(data['id_paciente']), data.get('datos') or {}, session.get('id_usuario'))
+        return jsonify({'success': True, 'data': {'id_factura_borrador': nuevo_id}, 'error': None}), 201
+    except Exception as e:
+        app.logger.error(f"Error al crear borrador de factura: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@facturaapi.route('/facturas-borrador/<int:id_borrador>', methods=['PUT'])
+@role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
+def updateFacturaBorrador(id_borrador):
+    """PUT: guarda el avance de un borrador; 404 si ya no existe (se emitió o lo descartaron)."""
+    data = request.get_json() or {}
+    if not data.get('id_paciente'):
+        return jsonify({'success': False, 'error': msg_obligatorio('Paciente')}), 400
+    try:
+        if not FacturaBorradorDao().actualizarBorrador(id_borrador, int(data['id_paciente']), data.get('datos') or {}, session.get('id_usuario')):
+            return jsonify({'success': False, 'error': 'El borrador ya no existe: se emitió o lo descartaron.'}), 404
+        return jsonify({'success': True, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al actualizar borrador de factura: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+@facturaapi.route('/facturas-borrador/<int:id_borrador>', methods=['DELETE'])
+@role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "CREAR")
+def deleteFacturaBorrador(id_borrador):
+    """DELETE: descarta un borrador."""
+    try:
+        if not FacturaBorradorDao().eliminarBorrador(id_borrador):
+            return jsonify({'success': False, 'error': 'No se encontró el borrador.'}), 404
+        return jsonify({'success': True, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al descartar borrador de factura: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 
@@ -178,10 +261,10 @@ def enviarFacturaCorreo(id_factura):
 
 
 @facturaapi.route('/facturas/<int:id_factura>/anular', methods=['PUT'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR")
 @permiso_requerido("VENTAS", "ELIMINAR")
 def anularFactura(id_factura):
-    """PUT: anula la factura con motivo obligatorio (llama a sp_anular_factura); solo ADMINISTRADOR/SUPERADMIN."""
+    """PUT: anula la factura con motivo obligatorio (llama a sp_anular_factura); solo ADMINISTRADOR."""
     dao = FacturaDao()
     if not dao.getFacturaById(id_factura):
         return jsonify({'success': False, 'error': 'No se encontró la factura.'}), 404

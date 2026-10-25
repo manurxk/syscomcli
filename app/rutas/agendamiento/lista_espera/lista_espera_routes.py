@@ -5,7 +5,7 @@ listaesperamod = Blueprint('lista_espera', __name__, template_folder='templates'
 
 
 @listaesperamod.route('/lista-espera-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+@role_required("ADMINISTRADOR", "RECEPCION")
 def listaEsperaIndex():
     """Página principal de la lista de espera."""
     return render_template('lista_espera-index.html')

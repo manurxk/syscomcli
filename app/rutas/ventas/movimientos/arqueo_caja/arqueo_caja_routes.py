@@ -3,7 +3,7 @@ from app.auth.utils.decorators import role_required, permiso_requerido
 
 arqueocajamod = Blueprint('arqueo_caja', __name__, template_folder='templates')
 
-ROLES_CAJA = ("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+ROLES_CAJA = ("ADMINISTRADOR", "VENTAS")
 
 
 @arqueocajamod.route('/arqueo-index')

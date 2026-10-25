@@ -7,7 +7,7 @@
     <tr><td>Vencimiento</td><td>90 días. Al vencer, el sistema exige el cambio</td></tr>
     <tr><td>Historial de contraseñas</td><td><strong>No se guarda, por decisión de diseño</strong> (ver más abajo)</td></tr>
     <tr><td>Almacenamiento</td><td>Solo el hash (<code>pbkdf2:sha256</code>; algunas anteriores en <code>scrypt</code>, también seguro). <strong>Nunca</strong> la contraseña en texto, ni siquiera la de un intento fallido</td></tr>
-    <tr><td>Segundo factor (MFA)</td><td>Código por correo, válido 5 minutos, máximo 5 intentos por código. Opción de "dispositivo confiable" por 60 días</td></tr>
+    <tr><td>Segundo factor (MFA)</td><td>Código por correo, válido 5 minutos, máximo 5 intentos por código. Tras un código correcto, el equipo queda como "dispositivo confiable" por 60 días y no se vuelve a pedir en él</td></tr>
     <tr><td>Bloqueo escalonado</td><td>5 fallos → 30 min; 3 más → 1 h; 3 más → bloqueo indefinido, que solo levanta un administrador</td></tr>
     <tr><td>Límite por equipo</td><td>10 fallos desde una misma IP en 15 min frenan el login desde esa IP</td></tr>
     <tr><td>Recuperación</td><td>Exige usuario <strong>y</strong> correo registrado; enlace válido 24 h y de un solo uso; máximo 3 solicitudes por cuenta por hora; mensaje genérico (no revela si la cuenta existe)</td></tr>
@@ -28,9 +28,9 @@
 </table>
 <ul>
     <li>Ninguna contraseña se escribe en el código ni en las migraciones.</li>
-    <li>Las contraseñas de servicio se generan al azar, con 48 caracteres o más (capítulo <a href="#configuracion">Configuración</a>).</li>
+    <li>Las contraseñas de servicio se generan al azar, con 48 caracteres o más (Manual de infraestructura, capítulo «Configuración»).</li>
 </ul>
-<p>Los procedimientos para cambiarlas están en el capítulo <a href="#base-datos">Base de datos</a>.</p>
+<p>Los procedimientos para cambiarlas están en el Manual de infraestructura, capítulo «Base de datos».</p>
 
 <h4>Por qué no se guarda historial de contraseñas</h4>
 <p>Muchos sistemas guardan las últimas contraseñas de cada usuario para impedir que las reutilice. Sysclin <strong>no lo hace</strong>; la tabla <code>password_history</code> se eliminó con la migración 105 (2026-10-11).</p>

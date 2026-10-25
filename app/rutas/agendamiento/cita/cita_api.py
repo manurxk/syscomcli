@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, request, jsonify, current_app as app, session
 
 from app.dao.agendamiento.cita.CitaDao import CitaDao
@@ -12,9 +14,53 @@ from app.utils.mensajes_validacion import msg_obligatorio
 
 citaapi = Blueprint('citaapi', __name__)
 
-ROLES_CITAS = ("ADMINISTRADOR", "SUPERADMIN", "RECEPCION")
+ROLES_CITAS = ("ADMINISTRADOR", "RECEPCION")
+TIPOS_CITA = ("PRIMERA_VEZ", "SEGUIMIENTO", "TRATAMIENTO")
+
+
+def _campos_tipo_cita(data):
+    """tipo_cita y cita_es_primera_vez de una cita. El tipo manda: cita_es_primera_vez siempre es
+    (tipo == PRIMERA_VEZ). Si el cliente solo manda cita_es_primera_vez (formato anterior), se deriva el tipo de ahí."""
+    tipo = data.get('tipo_cita')
+    if not tipo:
+        tipo = 'PRIMERA_VEZ' if data.get('cita_es_primera_vez', True) else 'SEGUIMIENTO'
+    if tipo not in TIPOS_CITA:
+        raise ValueError('El tipo de cita debe ser Primera vez, Seguimiento o Tratamiento.')
+    return {'tipo_cita': tipo, 'cita_es_primera_vez': tipo == 'PRIMERA_VEZ'}
+
+
+def _validar_primera_cita(id_paciente, tipo_cita, excluir_id_cita=None):
+    """Un paciente sin citas anteriores (válidas) solo puede agendar una cita de Primera vez."""
+    if tipo_cita != 'PRIMERA_VEZ' and CitaDao().contarCitasPrevias(id_paciente, excluir_id_cita) == 0:
+        raise ValueError('El paciente no tiene citas anteriores: su primera cita debe ser de Primera vez.')
 
 ESTADOS_VALIDOS = ('AGENDADA', 'CONFIRMADA', 'EN_CONSULTA', 'COMPLETADA', 'AUSENTE', 'CANCELADA')
+
+
+@citaapi.route('/citas/numero-sesion', methods=['GET'])
+@role_required(*ROLES_CITAS)
+def getNumeroSesion():
+    """GET: número de sesión que le corresponde a una cita de Seguimiento o Tratamiento del paciente.
+    `inicio` (AAAA-MM-DD HH:MM) cuenta solo las citas anteriores a esa fecha; sin ella, es el de la próxima cita.
+    `excluir_id_cita` deja afuera la cita que se está editando."""
+    id_paciente = request.args.get('id_paciente', type=int)
+    tipo_cita = request.args.get('tipo_cita', '')
+    if not id_paciente:
+        return jsonify({'success': False, 'error': msg_obligatorio('id_paciente')}), 400
+    if tipo_cita not in TIPOS_CITA:
+        return jsonify({'success': False, 'error': 'El tipo de cita debe ser Primera vez, Seguimiento o Tratamiento.'}), 400
+    inicio = request.args.get('inicio') or None
+    if inicio:
+        try:
+            datetime.strptime(inicio, '%Y-%m-%d %H:%M')
+        except ValueError:
+            return jsonify({'success': False, 'error': 'La fecha de inicio debe tener el formato AAAA-MM-DD HH:MM.'}), 400
+    try:
+        numero = CitaDao().calcularNumeroSesion(id_paciente, tipo_cita, inicio, request.args.get('excluir_id_cita', type=int))
+        return jsonify({'success': True, 'data': {'numero': numero}, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al calcular el número de sesión: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 
 @citaapi.route('/citas/especialistas', methods=['GET'])
@@ -92,11 +138,12 @@ def addCita():
             'id_slot_agenda': data['id_slot_agenda'],
             'id_especialidad': data.get('id_especialidad'),
             'modalidad': data.get('modalidad', 'PRESENCIAL'),
-            'cita_es_primera_vez': data.get('cita_es_primera_vez', True),
+            **_campos_tipo_cita(data),
             'cita_numero_sesion': data.get('cita_numero_sesion'),
             'motivo': data.get('motivo'),
             'observaciones': data.get('observaciones'),
         }
+        _validar_primera_cita(datos['id_paciente'], datos['tipo_cita'])
         id_cita = CitaDao().crearCita(datos, usuario_creacion=session.get('id_usuario'))
         return jsonify({'success': True, 'data': {'id_cita': id_cita}, 'error': None}), 201
     except ValueError as e:
@@ -124,11 +171,14 @@ def updateCita(id_cita):
             'id_slot_agenda': data['id_slot_agenda'],
             'id_especialidad': data.get('id_especialidad'),
             'modalidad': data.get('modalidad', 'PRESENCIAL'),
-            'cita_es_primera_vez': data.get('cita_es_primera_vez', True),
+            **_campos_tipo_cita(data),
             'cita_numero_sesion': data.get('cita_numero_sesion'),
             'motivo': data.get('motivo'),
             'observaciones': data.get('observaciones'),
         }
+        cita_actual = CitaDao().getCitaById(id_cita)
+        if cita_actual:
+            _validar_primera_cita(cita_actual['id_paciente'], datos['tipo_cita'], excluir_id_cita=id_cita)
         CitaDao().actualizarCita(id_cita, datos, usuario_modificacion=session.get('id_usuario'))
         return jsonify({'success': True, 'mensaje': 'Cita actualizada correctamente.', 'error': None}), 200
     except ValueError as e:

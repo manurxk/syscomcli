@@ -5,7 +5,7 @@ pedidomod = Blueprint('pedido', __name__, template_folder='templates')
 
 
 @pedidomod.route('/pedido-index')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "LEER")
 def pedidoIndex():
     """Página principal de pedido (listado y acciones)."""
@@ -13,7 +13,7 @@ def pedidoIndex():
 
 
 @pedidomod.route('/pedido-agregar')
-@role_required("ADMINISTRADOR", "SUPERADMIN", "VENTAS")
+@role_required("ADMINISTRADOR", "VENTAS")
 @permiso_requerido("VENTAS", "CREAR")
 def pedidoAgregar():
     """Página del formulario para registrar pedido."""
