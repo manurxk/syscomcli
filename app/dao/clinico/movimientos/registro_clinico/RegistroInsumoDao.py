@@ -37,11 +37,17 @@ class RegistroInsumoDao(BaseDAO):
 
         def _guardar(cur):
             cur.execute(
-                "UPDATE insumos SET stock_actual = stock_actual - %s WHERE id_insumo = %s AND stock_actual >= %s RETURNING id_insumo",
+                """UPDATE insumos SET stock_actual = stock_actual - %s WHERE id_insumo = %s AND stock_actual >= %s
+                   RETURNING des_insumo, insumo_unidad_medida, stock_actual, stock_minimo""",
                 (cantidad, id_insumo, cantidad)
             )
-            if cur.fetchone() is None:
-                raise ValueError("Stock insuficiente para registrar este insumo.")
+            insumo = cur.fetchone()
+            if insumo is None:
+                cur.execute("SELECT des_insumo, insumo_unidad_medida, stock_actual FROM insumos WHERE id_insumo = %s", (id_insumo,))
+                actual = cur.fetchone()
+                if actual is None:
+                    raise ValueError("El insumo no existe.")
+                raise ValueError(f"Stock insuficiente de {actual[0]}: quedan {actual[2]:g} {actual[1].lower()}.")
 
             cur.execute(
                 """
@@ -52,7 +58,10 @@ class RegistroInsumoDao(BaseDAO):
                 """,
                 (id_consulta, id_insumo, cantidad, observaciones, usuario_creacion)
             )
-            return cur.fetchone()[0]
+            nombre, unidad, stock, minimo = insumo
+            aviso = (f"El stock de {nombre} quedó en {stock:g} {unidad.lower()} (mínimo {minimo:g}): hay que reponerlo."
+                     if stock <= minimo else None)
+            return {'id_registro_insumo': cur.fetchone()[0], 'aviso': aviso}
 
         return self.execute_transaction(_guardar)
 

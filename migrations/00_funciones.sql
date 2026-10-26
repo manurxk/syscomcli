@@ -303,7 +303,7 @@ COMMENT ON FUNCTION public.fn_proteger_factura() IS 'Trigger de negocio BEFORE U
 -- Name: fn_saldo_esperado_caja(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.fn_saldo_esperado_caja(p_id_caja integer) RETURNS TABLE(saldo_inicial numeric, total_efectivo numeric, total_cheques numeric, total_tarjetas numeric, total_transferencias numeric, saldo_esperado numeric)
+CREATE FUNCTION public.fn_saldo_esperado_caja(p_id_caja integer) RETURNS TABLE(saldo_inicial numeric, total_efectivo numeric, total_cheques numeric, total_tarjetas numeric, total_transferencias numeric, recaudado_efectivo numeric, recaudado_cheques numeric, recaudado_tarjetas numeric, esperado_efectivo numeric, esperado_cheques numeric, esperado_tarjetas numeric, esperado_transferencias numeric, saldo_esperado numeric)
     LANGUAGE plpgsql STABLE
     AS $$
 DECLARE
@@ -329,7 +329,12 @@ BEGIN
     RETURN QUERY
     SELECT v_apertura.saldo_ini,
            t.efectivo, t.cheques, t.tarjetas, t.transferencias,
-           v_apertura.saldo_ini + t.efectivo + t.cheques + t.tarjetas + t.transferencias
+           r.efectivo, r.cheques, r.tarjetas,
+           v_apertura.saldo_ini + t.efectivo - r.efectivo,
+           t.cheques - r.cheques,
+           t.tarjetas - r.tarjetas,
+           t.transferencias,
+           v_apertura.saldo_ini + (t.efectivo - r.efectivo) + (t.cheques - r.cheques) + (t.tarjetas - r.tarjetas) + t.transferencias
       FROM (
         SELECT COALESCE(SUM(CASE WHEN fc.cod_forma_cobro = 'EFECTIVO' THEN cd.monto_cobrado END), 0) AS efectivo,
                COALESCE(SUM(CASE WHEN fc.cod_forma_cobro = 'CHEQUE' THEN cd.monto_cobrado END), 0) AS cheques,
@@ -341,7 +346,16 @@ BEGIN
          WHERE c.id_caja = p_id_caja
            AND c.fecha_cobranza >= v_apertura.fecha_ini
            AND c.est_cobranza = 'REGISTRADA'
-      ) t;
+      ) t,
+      (
+        SELECT COALESCE(SUM(rc.monto_efectivo), 0) AS efectivo,
+               COALESCE(SUM(rc.monto_cheques), 0) AS cheques,
+               COALESCE(SUM(rc.monto_tarjetas), 0) AS tarjetas
+          FROM recaudaciones rc
+         WHERE rc.id_caja = p_id_caja
+           AND rc.fecha_recaudacion >= v_apertura.fecha_ini
+           AND rc.est_recaudacion <> 'ANULADA'
+      ) r;
 END;
 $$;
 
@@ -349,7 +363,7 @@ $$;
 -- Name: FUNCTION fn_saldo_esperado_caja(p_id_caja integer); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.fn_saldo_esperado_caja(p_id_caja integer) IS 'Saldo que deberia haber en la caja: saldo inicial de la apertura activa + cobros REGISTRADOS desde esa apertura, por forma de cobro (efectivo, cheques, tarjetas, transferencias). Sin apertura activa no devuelve filas. Traslada a la base la logica de AperturaCierreCajaDao.calcularSaldoEsperado; la usa sp_cerrar_caja.';
+COMMENT ON FUNCTION public.fn_saldo_esperado_caja(p_id_caja integer) IS 'Saldo esperado de la apertura activa de la caja: por forma de pago (el efectivo incluye el saldo inicial) y descontando las recaudaciones no anuladas. Sin apertura activa no devuelve filas.';
 
 --
 -- Name: fn_set_fecha_modificacion(); Type: FUNCTION; Schema: public; Owner: -
@@ -737,6 +751,7 @@ CREATE PROCEDURE public.sp_cerrar_caja(IN p_id_caja integer, IN p_id_usuario int
     AS $$
 DECLARE
     v_apertura RECORD;
+    v_esp RECORD;
 BEGIN
     -- 1. Validaciones de entrada
     IF p_id_caja IS NULL OR p_id_usuario IS NULL THEN
@@ -749,6 +764,10 @@ BEGIN
        OR COALESCE(p_monto_tarjetas, 0) < 0 OR COALESCE(p_monto_transferencias, 0) < 0 THEN
         RAISE EXCEPTION 'Los montos contados no pueden ser negativos.';
     END IF;
+    IF abs(p_saldo_final - (COALESCE(p_monto_efectivo, 0) + COALESCE(p_monto_cheques, 0)
+                            + COALESCE(p_monto_tarjetas, 0) + COALESCE(p_monto_transferencias, 0))) > 0.005 THEN
+        RAISE EXCEPTION 'El saldo final debe ser la suma de los montos contados (efectivo, cheques, tarjetas y transferencias).';
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM cajas WHERE id_caja = p_id_caja) THEN
         RAISE EXCEPTION 'La caja % no existe.', p_id_caja;
     END IF;
@@ -757,7 +776,7 @@ BEGIN
     END IF;
 
     -- 2. Bloquea la apertura activa (dos cierres simultaneos no pueden pasar)
-    SELECT id_apertura_cierre, saldo_inicial
+    SELECT id_apertura_cierre, saldo_inicial, id_moneda
       INTO v_apertura
       FROM aperturas_cierre_caja
      WHERE id_caja = p_id_caja AND tipo_operacion = 'APERTURA' AND est_apertura_cierre = 'A'
@@ -768,11 +787,12 @@ BEGIN
         RAISE EXCEPTION 'No hay apertura activa para esta caja.';
     END IF;
 
-    -- 3. Saldo esperado y diferencia
-    SELECT s.saldo_esperado INTO o_saldo_esperado FROM fn_saldo_esperado_caja(p_id_caja) s;
-    o_diferencia := p_saldo_final - COALESCE(o_saldo_esperado, v_apertura.saldo_inicial);
+    -- 3. Saldo esperado (por forma de pago, con las recaudaciones descontadas) y diferencia
+    SELECT * INTO v_esp FROM fn_saldo_esperado_caja(p_id_caja);
+    o_saldo_esperado := COALESCE(v_esp.saldo_esperado, v_apertura.saldo_inicial);
+    o_diferencia := p_saldo_final - o_saldo_esperado;
 
-    -- 4. Cierra la apertura, registra el cierre y deja la caja CERRADA
+    -- 4. Cierra la apertura, registra el cierre (con su esperado y su diferencia) y deja la caja CERRADA
     UPDATE aperturas_cierre_caja
        SET est_apertura_cierre = 'C', usuario_modificacion = p_usuario_creacion
      WHERE id_apertura_cierre = v_apertura.id_apertura_cierre;
@@ -780,12 +800,15 @@ BEGIN
     INSERT INTO aperturas_cierre_caja(
         id_caja, id_usuario, tipo_operacion, saldo_inicial, saldo_final,
         monto_efectivo, monto_cheques, monto_tarjetas, monto_transferencias,
-        observaciones, est_apertura_cierre, usuario_creacion)
+        observaciones, est_apertura_cierre, usuario_creacion, id_moneda,
+        saldo_esperado, diferencia, esperado_efectivo, esperado_cheques, esperado_tarjetas, esperado_transferencias)
     VALUES (
         p_id_caja, p_id_usuario, 'CIERRE', v_apertura.saldo_inicial, p_saldo_final,
         COALESCE(p_monto_efectivo, 0), COALESCE(p_monto_cheques, 0),
         COALESCE(p_monto_tarjetas, 0), COALESCE(p_monto_transferencias, 0),
-        p_observaciones, 'C', p_usuario_creacion)
+        p_observaciones, 'C', p_usuario_creacion, v_apertura.id_moneda,
+        o_saldo_esperado, o_diferencia, v_esp.esperado_efectivo, v_esp.esperado_cheques,
+        v_esp.esperado_tarjetas, v_esp.esperado_transferencias)
     RETURNING id_apertura_cierre INTO o_id_cierre;
 
     UPDATE cajas

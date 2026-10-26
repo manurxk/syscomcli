@@ -63,6 +63,19 @@ class ConsultaDao(BaseDAO):
             'esp_matricula': f['esp_matricula'],
         } for f in filas]
 
+    def getConsultasFacturadas(self, ids_consulta):
+        """Ids (de los indicados) de las consultas que tienen un ítem en una factura emitida (no anulada)."""
+        if not ids_consulta:
+            return set()
+        filas = self.execute_query("""
+            SELECT DISTINCT fd.id_consulta
+            FROM factura_detalle fd
+            JOIN facturas f ON f.id_factura = fd.id_factura
+            JOIN estados_factura ef ON ef.id_estado_factura = f.id_estado_factura
+            WHERE fd.id_consulta = ANY(%s) AND COALESCE(ef.cod_estado_factura, '') <> 'ANUL'
+        """, (list(ids_consulta),))
+        return {f['id_consulta'] for f in filas}
+
     def getConsultaById(self, id_consulta):
         """Detalle completo de una consulta para visualización, incluye datos de la cita
         de origen (de solo lectura — paciente/especialista/fecha quedan fijos desde la cita)."""

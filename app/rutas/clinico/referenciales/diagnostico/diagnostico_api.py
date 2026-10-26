@@ -34,9 +34,10 @@ def getDiagnostico(diagnostico_id):
 
 
 @diagnosticoapi.route('/diagnosticos', methods=['POST'])
-@role_required("ADMINISTRADOR", "SUPERADMIN")
+@role_required("ADMINISTRADOR", "SUPERADMIN", "CLINICO")
 def addDiagnostico():
-    """POST: valida los datos y crea un registro de diagnóstico; devuelve el id nuevo (201)."""
+    """POST: valida los datos y crea un registro de diagnóstico; devuelve el id nuevo (201).
+    El especialista (CLINICO) lo usa desde la consulta para dar de alta un diagnóstico que no está en el catálogo."""
     data = request.get_json() or {}
     dao = DiagnosticoDao()
 

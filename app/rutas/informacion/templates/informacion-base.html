@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+{# Base de las páginas públicas de información legal (sin sesión). Mismo AdminLTE 4 y mismas variables que app/templates/base.html, sin sidebar. #}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="color-scheme" content="light dark">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/sys_logo.png') }}">
+    <title>{% block titulo %}{% endblock %} - SYSCLIN</title>
+
+    <!-- Tema antes de pintar (misma clave que base.html) -->
+    <script>
+        (function () {
+            'use strict';
+            var stored = null;
+            try { stored = localStorage.getItem('lte-theme'); } catch (e) {}
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var resolved = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', resolved);
+            document.documentElement.style.colorScheme = resolved;
+        })();
+    </script>
+
+    <link href="{{ url_for('static', filename='vendor/adminlte4/css/adminlte.min.css') }}" rel="stylesheet">
+    <script data-search-pseudo-elements defer
+        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700,800" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/compat.css') }}" rel="stylesheet">
+
+    <style>
+        :root {
+            --bs-primary: #3f3dc4;
+            --bs-primary-rgb: 63, 61, 196;
+            --font-family-base: 'Nunito', sans-serif;
+        }
+        body { font-family: var(--font-family-base); }
+        .doc { max-width: 900px; }
+        .app-footer-custom {
+            background-color: #212832;
+            color: #a7aeb8;
+            padding-top: 1.5rem;
+            padding-bottom: 1rem;
+            width: 100%;
+        }
+        .app-footer-custom * { background-color: transparent !important; }
+        .app-footer-custom a { transition: all 0.3s ease; }
+        .app-footer-custom a:hover { opacity: 1; transform: translateX(3px); text-decoration: none; }
+        @media (max-width: 768px) {
+            .app-footer-custom { padding-top: 1rem !important; padding-bottom: 0.75rem !important; }
+        }
+        .doc h2 { font-size: 1.1rem; font-weight: 700; margin-top: 1.75rem; }
+    </style>
+</head>
+
+<body class="bg-body-tertiary d-flex flex-column min-vh-100">
+
+    <nav class="app-header navbar navbar-expand bg-body border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('login.login') }}">
+                <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="Logo SYSCLIN" style="width:24px;height:24px;margin-right:8px;">
+                <span class="fw-bold">SYSCLIN</span>
+            </a>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login.login') }}"><i class="fas fa-arrow-left me-1"></i>Volver al sistema</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="javascript:void(0);" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="app-main flex-grow-1">
+        <div class="app-content-header">
+            <div class="container doc">
+                <div class="row">
+                    <div class="col-sm-8">
+                        <h3 class="mb-0">{% block titulo_pagina %}{% endblock %}</h3>
+                    </div>
+                    <div class="col-sm-4">
+                        <ol class="breadcrumb float-sm-end">
+                            <li class="breadcrumb-item"><a href="{{ url_for('login.login') }}">Inicio</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{% block migas %}{% endblock %}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="container doc">
+                <div class="card card-primary card-outline mb-4">
+                    <div class="card-header">
+                        <div class="card-title">Versión {{ version }} · Última actualización: {{ actualizado }}</div>
+                    </div>
+                    <div class="card-body">
+                        {% block contenido %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mismo pie que app/templates/base.html -->
+    <footer class="app-footer app-footer-custom">
+        <div class="container-fluid px-4 px-lg-5">
+            <div class="row gx-5 justify-content-between">
+                <div class="col-lg-5 col-md-6 mb-2 mb-lg-0">
+                    <a href="{{ url_for('login.login') }}" class="d-flex align-items-center mb-1 text-white text-decoration-none">
+                        <img src="{{ url_for('static', filename='img/sys_logo.png') }}" alt="Logo SYSCLIN"
+                            style="width:20px;height:20px;margin-right:8px;opacity:0.9;">
+                        <span class="fs-6 fw-bold" style="letter-spacing:0.05rem;">{{ clinica.nombre_pie }}</span>
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
+                    <div class="small mb-1">
+                        <a href="{{ url_for('informacion.privacidad') }}" class="text-decoration-none" style="color:#a7aeb8;">Política de privacidad</a>
+                        <span style="color:#a7aeb8;"> · </span>
+                        <a href="{{ url_for('informacion.terminos') }}" class="text-decoration-none" style="color:#a7aeb8;">Términos y condiciones</a>
+                    </div>
+                    {% if clinica.email %}<a href="mailto:{{ clinica.email }}" class="text-decoration-none small" style="color:#a7aeb8;">{{ clinica.email }}</a>{% endif %}
+                </div>
+            </div>
+
+            <hr class="mt-2 mb-2" style="border-color:rgba(255,255,255,0.1);" />
+
+            <div class="row align-items-center small" style="font-size:0.75rem;">
+                <div class="col-md-6 mb-1 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
+                    <span class="me-2">Copyright &copy; {{ clinica.nombre_pie }} {{ current_year }}</span>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    Versión {{ app_version if app_version else '2.1.0' }}
+                </div>
+            </div>
+            <div class="row mt-1">
+                <div class="col-12 text-center small" style="font-size:0.7rem;opacity:0.6;">
+                    Proyecto educativo (trabajo de tesis de grado) — no apto para producción. Datos de prueba ficticios.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var icon = document.getElementById('themeIcon');
+            function pintar() {
+                var oscuro = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                icon.className = oscuro ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            document.getElementById('themeToggle').addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', next);
+                document.documentElement.style.colorScheme = next;
+                try { localStorage.setItem('lte-theme', next); } catch (e) {}
+                pintar();
+            });
+            pintar();
+        })();
+    </script>
+</body>
+</html>

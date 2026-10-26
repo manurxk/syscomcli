@@ -116,7 +116,7 @@ CREATE TABLE public.consultas (
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
-    CONSTRAINT chk_consultas_estado CHECK (((consulta_estado)::text = ANY (ARRAY[('PENDIENTE'::character varying)::text, ('EN_ATENCION'::character varying)::text, ('FINALIZADA'::character varying)::text])))
+    CONSTRAINT chk_consultas_estado CHECK (((consulta_estado)::text = ANY (ARRAY['PENDIENTE'::text, 'EN_ATENCION'::text, 'EN_OBSERVACION'::text, 'FINALIZADA'::text])))
 );
 
 --
@@ -130,6 +130,12 @@ COMMENT ON TABLE public.consultas IS 'Cabecera de atención clínica. Es la tabl
 --
 
 COMMENT ON COLUMN public.consultas.id_cita IS 'Obligatorio: toda consulta nace de una cita agendada (recepción confirma/el especialista la inicia desde su agenda). No existe alta manual de consulta sin cita.';
+
+--
+-- Name: COLUMN consultas.consulta_estado; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.consultas.consulta_estado IS 'PENDIENTE, EN_ATENCION, EN_OBSERVACION (Pendiente de observación: iniciada y no cerrada en el día; la pasa la tarea de las 23:00 y el especialista la verifica y la cierra) o FINALIZADA.';
 
 --
 -- Name: consultas_id_consulta_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -163,14 +169,39 @@ CREATE TABLE public.derivaciones (
     fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
     usuario_creacion integer,
     fecha_modificacion timestamp without time zone,
-    usuario_modificacion integer
+    usuario_modificacion integer,
+    id_especialista_destino integer,
+    estado_derivacion character varying(12) DEFAULT 'PENDIENTE'::character varying NOT NULL,
+    motivo_respuesta text,
+    fecha_respuesta timestamp without time zone,
+    usuario_respuesta integer,
+    CONSTRAINT chk_derivaciones_estado CHECK (((estado_derivacion)::text = ANY (ARRAY['PENDIENTE'::text, 'ACEPTADA'::text, 'RECHAZADA'::text]))),
+    CONSTRAINT chk_derivaciones_rechazo CHECK ((((estado_derivacion)::text <> 'RECHAZADA'::text) OR (motivo_respuesta IS NOT NULL)))
 );
 
 --
 -- Name: TABLE derivaciones; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.derivaciones IS 'Derivaci??n entre especialistas como detalle de una consulta. Registra la especialidad destino y el motivo; el paciente y el especialista origen se heredan de la consulta asociada.';
+COMMENT ON TABLE public.derivaciones IS 'Derivación a otra especialidad como detalle de una consulta. El especialista que deriva elige la especialidad destino y, opcionalmente, un especialista; quien recibe la acepta o la rechaza (con motivo) desde Mi Agenda. El paciente y el especialista origen se heredan de la consulta.';
+
+--
+-- Name: COLUMN derivaciones.id_especialista_destino; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.derivaciones.id_especialista_destino IS 'Especialista al que se deriva. NULL: la ven todos los de la especialidad destino y se asigna al primero que la acepta.';
+
+--
+-- Name: COLUMN derivaciones.estado_derivacion; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.derivaciones.estado_derivacion IS 'PENDIENTE (al crearla), ACEPTADA o RECHAZADA. Una derivación respondida no se puede dar de baja.';
+
+--
+-- Name: COLUMN derivaciones.motivo_respuesta; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.derivaciones.motivo_respuesta IS 'Motivo del rechazo (obligatorio si estado_derivacion = RECHAZADA); lo ve el especialista que derivó.';
 
 --
 -- Name: derivaciones_id_derivacion_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -401,6 +432,18 @@ CREATE INDEX idx_consultas_paciente ON public.consultas USING btree (id_paciente
 CREATE INDEX idx_derivaciones_consulta ON public.derivaciones USING btree (id_consulta) WHERE (est_derivacion = true);
 
 --
+-- Name: idx_derivaciones_destino; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_derivaciones_destino ON public.derivaciones USING btree (id_especialista_destino) WHERE (id_especialista_destino IS NOT NULL);
+
+--
+-- Name: idx_derivaciones_pendientes; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_derivaciones_pendientes ON public.derivaciones USING btree (id_especialidad_destino, id_especialista_destino) WHERE ((est_derivacion = true) AND ((estado_derivacion)::text = 'PENDIENTE'::text));
+
+--
 -- Name: idx_notas_clinicas_paciente; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -561,6 +604,13 @@ ALTER TABLE ONLY public.derivaciones
     ADD CONSTRAINT derivaciones_id_especialidad_destino_fkey FOREIGN KEY (id_especialidad_destino) REFERENCES public.especialidades(id_especialidad) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 --
+-- Name: derivaciones derivaciones_id_especialista_destino_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.derivaciones
+    ADD CONSTRAINT derivaciones_id_especialista_destino_fkey FOREIGN KEY (id_especialista_destino) REFERENCES public.especialistas(id_especialista) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+--
 -- Name: derivaciones derivaciones_usuario_creacion_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -573,6 +623,13 @@ ALTER TABLE ONLY public.derivaciones
 
 ALTER TABLE ONLY public.derivaciones
     ADD CONSTRAINT derivaciones_usuario_modificacion_fkey FOREIGN KEY (usuario_modificacion) REFERENCES public.usuarios(id_usuario);
+
+--
+-- Name: derivaciones derivaciones_usuario_respuesta_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.derivaciones
+    ADD CONSTRAINT derivaciones_usuario_respuesta_fkey FOREIGN KEY (usuario_respuesta) REFERENCES public.usuarios(id_usuario);
 
 --
 -- Name: notas_clinicas notas_clinicas_id_especialista_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -

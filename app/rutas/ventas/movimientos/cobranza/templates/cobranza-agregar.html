@@ -225,7 +225,7 @@
 let MONEDA = { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
 const API_COB  = '/api/v1/cobranzas';
 const API_CTA  = '/api/v1/cuentas-cobrar/pendientes';
-const API_CAJA = '/api/v1/cajas';
+const API_CAJA = '/api/v1/cajas-estado';
 const API_FC   = '/api/v1/formas-cobro';
 const API_MT   = '/api/v1/marcas-tarjeta';
 const API_EA   = '/api/v1/entidades-adheridas';
@@ -263,7 +263,7 @@ async function inicializar() {
 
   // Cajas
   const selCaja = document.getElementById('selCaja');
-  (jCaja.data || []).forEach(c => {
+  (jCaja.data || []).filter(c => c.caja_estado === 'ABIERTA').forEach(c => {
     const o = document.createElement('option');
     o.value = c.id_caja;
     o.textContent = `${c.des_caja} (${c.cod_moneda})`;

@@ -786,6 +786,10 @@
 
             <div class="form-foot">
                 <span class="mobile-only">&copy; 2026 SYSCLIN</span>
+                <span>
+                    <a href="{{ url_for('informacion.privacidad') }}" class="link">{{ _('Privacidad') }}</a> ·
+                    <a href="{{ url_for('informacion.terminos') }}" class="link">{{ _('Términos y condiciones') }}</a>
+                </span>
                 <span>{{ _('Versión') }} {{ app_version if app_version else '2.0.4' }}</span>
             </div>
         </main>

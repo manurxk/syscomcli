@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático — Términos y condiciones de uso — SYSCLIN
+    Página pública (sin sesión), dirigida al personal que usa el sistema.
+    BORRADOR: el texto debe ser revisado por la clínica / asesor legal antes de usarse.
+    Mismo criterio visual que docs/prototipos/politica_privacidad.html.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Términos y condiciones - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <script>
+        (function () {
+            var stored = null;
+            try { stored = localStorage.getItem('lte-theme'); } catch (e) {}
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-bs-theme',
+                stored === 'dark' || (!stored && prefersDark) ? 'dark' : 'light');
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bs-border-radius: 2px; --bs-border-radius-sm: 2px; --bs-border-radius-lg: 2px;
+            --bs-border-radius-xl: 2px; --bs-border-radius-xxl: 2px; --bs-border-radius-pill: 2px;
+        }
+        :root, [data-bs-theme="light"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-link-color: #5b21b6; --bs-link-color-rgb: 91, 33, 182;
+            --bs-link-hover-color: #4c1d95; --bs-link-hover-color-rgb: 76, 29, 149;
+        }
+        [data-bs-theme="dark"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-link-color: #a78bfa; --bs-link-color-rgb: 167, 139, 250;
+            --bs-link-hover-color: #c4b5fd; --bs-link-hover-color-rgb: 196, 181, 253;
+        }
+        .card { --bs-card-border-radius: 0; --bs-card-inner-border-radius: 0; }
+        .brand-banner { color: #fff; background: linear-gradient(160deg, #1e1b4b 0%, #3730a3 55%, #6d28d9 100%); }
+        .brand-logo { width: 32px; height: 32px; object-fit: contain; filter: brightness(100) saturate(0); }
+        .doc { max-width: 860px; }
+        .doc h2 { font-size: 1.15rem; font-weight: 700; margin-top: 2rem; }
+        .theme-sun { display: none; }
+        [data-bs-theme="dark"] .theme-sun { display: inline-block; }
+        [data-bs-theme="dark"] .theme-moon { display: none; }
+    </style>
+</head>
+<body class="bg-body-tertiary">
+
+    <header class="brand-banner d-flex align-items-center gap-3 px-4 py-3">
+        <img src="../app/static/img/sys_logo.png" alt="" class="brand-logo">
+        <div class="flex-grow-1">
+            <div class="fw-bold lh-1">SYSCLIN</div>
+            <div class="small" style="color:rgba(255,255,255,.78)">Sistema de Gestión Clínica</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-light" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">
+            <span class="theme-moon"><i class="fas fa-moon"></i></span>
+            <span class="theme-sun"><i class="fas fa-sun"></i></span>
+        </button>
+    </header>
+
+    <main class="container doc py-4 py-md-5">
+        <nav class="small mb-3">
+            <a href="login_clinico.html"><i class="fas fa-arrow-left me-1"></i>Volver al inicio de sesión</a>
+        </nav>
+
+        <div class="alert alert-warning small" role="alert">
+            <i class="fas fa-triangle-exclamation me-2"></i><strong>Borrador.</strong>
+            Texto de trabajo para revisión de la clínica y de un asesor legal. Los datos entre corchetes se completan antes de publicar.
+        </div>
+
+        <div class="card border">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h3 fw-bold mb-1">Términos y condiciones de uso</h1>
+                <p class="text-body-secondary small mb-4">Versión 0.1 (borrador) · Vigente desde [fecha] · Última actualización: 26/10/2026</p>
+
+                <p>Estos términos regulan el uso de SYSCLIN por parte del personal autorizado de <strong>[Nombre de la clínica]</strong>. Al iniciar sesión, la persona usuaria declara haberlos leído y aceptarlos.</p>
+
+                <h2>1. Quién puede usar el sistema</h2>
+                <p>Solo el personal al que el Administrador haya creado una cuenta. Cada cuenta es personal e intransferible y tiene los permisos de su rol; el acceso a un módulo no autoriza a consultar datos que no se necesiten para el trabajo.</p>
+
+                <h2>2. Cuidado de la cuenta</h2>
+                <ul>
+                    <li>No compartir el usuario, la contraseña ni los códigos de verificación (MFA).</li>
+                    <li>Cerrar la sesión al dejar el equipo. Usar el dispositivo de confianza solo en equipos propios o de la clínica.</li>
+                    <li>Avisar de inmediato al Administrador si se sospecha un acceso indebido.</li>
+                </ul>
+
+                <h2>3. Confidencialidad y secreto profesional</h2>
+                <p>La información clínica es confidencial. Está prohibido copiarla, fotografiarla, enviarla por medios no autorizados o comentarla fuera del ámbito profesional. Esta obligación continúa después de terminada la relación con la clínica.</p>
+
+                <h2>4. Uso aceptable</h2>
+                <ul>
+                    <li>Registrar información veraz, completa y a tiempo.</li>
+                    <li>No alterar ni eliminar registros para ocultar acciones; las correcciones se hacen por los medios previstos.</li>
+                    <li>Usar WhatsApp y correo del sistema solo para fines de la atención y la gestión de la clínica.</li>
+                    <li>No intentar acceder a módulos, datos o cuentas ajenos.</li>
+                </ul>
+
+                <h2>5. Auditoría</h2>
+                <p>El sistema registra las acciones realizadas (accesos, consultas, cambios, envíos). Estos registros pueden usarse para investigar incidentes y para cumplir obligaciones legales.</p>
+
+                <h2>6. Responsabilidad</h2>
+                <p>Cada persona usuaria responde por lo que se haga con su cuenta. El uso indebido puede dar lugar a suspensión de la cuenta y a las medidas disciplinarias o legales que correspondan. La clínica procura la disponibilidad del servicio, pero no garantiza que esté libre de interrupciones.</p>
+
+                <h2>7. Propiedad</h2>
+                <p>El software SYSCLIN y su documentación pertenecen a [titular]. Los datos clínicos y administrativos pertenecen a la clínica y a las personas a quienes se refieren.</p>
+
+                <h2>8. Privacidad</h2>
+                <p>El tratamiento de datos personales se rige por la <a href="politica_privacidad.html">Política de privacidad</a>.</p>
+
+                <h2>9. Cambios y ley aplicable</h2>
+                <p>Los términos pueden modificarse; la versión vigente es la publicada en esta página. Se rigen por las leyes de la República del Paraguay, con jurisdicción en los tribunales de [ciudad].</p>
+            </div>
+        </div>
+
+        <footer class="small text-body-secondary text-center mt-4">
+            &copy; 2026 SYSCLIN ·
+            <a href="politica_privacidad.html">Privacidad</a> ·
+            <a href="terminos_condiciones.html">Términos y condiciones</a>
+        </footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('themeToggle').addEventListener('click', function () {
+            var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', next);
+            try { localStorage.setItem('lte-theme', next); } catch (e) {}
+        });
+    </script>
+</body>
+</html>

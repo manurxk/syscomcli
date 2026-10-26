@@ -83,6 +83,29 @@
     </div>
   </div>
 
+  <!-- Consultas que quedaron sin cerrar (tarea de las 23:00): hay que verificarlas y cerrarlas -->
+  <div class="card shadow-sm mb-4 border-danger" id="cardObservacion" style="display:none;">
+    <div class="card-header py-3 bg-body"><h6 class="m-0 fw-bold"><i class="fas fa-clipboard-question me-1 text-danger"></i>Consultas pendientes de observación <span class="badge text-bg-danger ms-1" id="badgeObservacion"></span></h6></div>
+    <div class="card-body">
+      <p class="small text-muted mb-2">Estas consultas se iniciaron y no se cerraron en el día. Verificá lo registrado y cerralas (Finalizada).</p>
+      <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-light"><tr><th>Fecha</th><th>Paciente</th><th>Motivo</th><th class="text-end"></th></tr></thead>
+        <tbody id="tbodyObservacion"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Bloqueos de mi agenda (ausencias, feriados) con citas reservadas adentro: recepción las tiene que reprogramar -->
+  <div class="alert alert-warning mb-4" id="avisoBloqueos" style="display:none;"></div>
+
+  <!-- Derivaciones: las que me hacen (aceptar / rechazar), las aceptadas por agendar y las respuestas a las mías -->
+  <div class="card shadow-sm mb-4 border-warning" id="cardDerivaciones" style="display:none;">
+    <div class="card-header py-3 d-flex align-items-center bg-body">
+      <h6 class="m-0 fw-bold"><i class="fas fa-share-from-square me-1 text-warning"></i>Derivaciones <span class="badge text-bg-warning ms-1" id="badgeDerivaciones"></span></h6>
+    </div>
+    <div class="card-body" id="cuerpoDerivaciones"></div>
+  </div>
+
   <div class="card shadow-sm mb-4">
     <div class="card-header py-3 d-flex align-items-center">
       <h6 class="m-0 fw-bold">Citas de Hoy</h6>
@@ -277,7 +300,109 @@
       });
   });
 
-  $('#btnRefrescar').on('click', cargarCitas);
+  $('#btnRefrescar').on('click', () => { cargarCitas(); cargarDerivaciones(); });
+
+  // ── Consultas pendientes de observación ──
+  function cargarConsultasObservacion() {
+    fetch('/api/v1/mi-agenda/consultas-observacion')
+      .then(r => r.json())
+      .then(res => {
+        const card = $('#cardObservacion');
+        if (!res.success || !res.data.length) { card.hide(); return; }
+        $('#badgeObservacion').text(res.data.length);
+        $('#tbodyObservacion').html(res.data.map(c => `<tr><td class="text-nowrap">${escapeHtml(c.fecha)}</td><td class="fw-semibold">${escapeHtml(c.paciente)}${c.facturada ? ' <span class="badge text-bg-warning" title="Recepción ya la facturó">Facturada, revisar</span>' : ''}</td><td>${escapeHtml(c.motivo)}</td>
+          <td class="text-end"><a class="btn btn-sm btn-danger" href="/clinico/consulta/consulta-editar/${c.id_consulta}"><i class="fas fa-stethoscope me-1"></i>Verificar y cerrar</a></td></tr>`).join(''));
+        card.show();
+      });
+  }
+
+  // ── Avisos de bloqueos con citas adentro ──
+  function cargarAvisosBloqueos() {
+    fetch('/api/v1/mi-agenda/avisos-bloqueos')
+      .then(r => r.json())
+      .then(res => {
+        const caja = $('#avisoBloqueos');
+        if (!res.success || !res.data.length) { caja.hide(); return; }
+        caja.html(res.data.map(b => `<div class="mb-2"><i class="fas fa-triangle-exclamation me-1"></i><b>Tu agenda está bloqueada</b> del ${escapeHtml(b.desde)} al ${escapeHtml(b.hasta)} (${escapeHtml(b.motivo)}) y hay
+          ${b.citas.length === 1 ? '1 cita reservada' : b.citas.length + ' citas reservadas'} adentro. Recepción tiene que reprogramarlas o cancelarlas:
+          <ul class="mb-0 small">${b.citas.map(c => `<li>${escapeHtml(c.cita_inicio)} · ${escapeHtml(c.paciente)} · ${escapeHtml(c.des_estado_cita)}</li>`).join('')}</ul></div>`).join('')).show();
+      });
+  }
+
+  // ── Derivaciones ──
+  const URL_FICHA = "{{ url_for('ficha.fichaPaciente', id_paciente=0) }}";
+  const URL_CITA_DERIVACION = "{{ url_for('consulta.derivacionCita', id_derivacion=0) }}";
+
+  function cargarDerivaciones() {
+    fetch('/api/v1/mi-agenda/derivaciones')
+      .then(r => r.json())
+      .then(res => {
+        if (!res.success) return;
+        const { recibidas, sin_cita: sinCita, respondidas } = res.data;
+        const card = $('#cardDerivaciones');
+        if (!recibidas.length && !sinCita.length && !respondidas.length) { card.hide(); return; }
+        $('#badgeDerivaciones').text(recibidas.length + sinCita.length || '');
+        let h = '';
+        if (recibidas.length) {
+          h += `<h6 class="fw-bold small text-uppercase text-muted mb-2">Para responder (${recibidas.length})</h6>
+            <div class="table-responsive mb-3"><table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light"><tr><th>Paciente</th><th>Deriva</th><th>Especialidad</th><th>Motivo</th><th>Fecha</th><th class="text-end">Respuesta</th></tr></thead><tbody>` +
+            recibidas.map(d => `<tr><td class="fw-semibold">${escapeHtml(d.paciente)}</td><td>${escapeHtml(d.deriva)}</td>
+              <td>${escapeHtml(d.des_especialidad)}${d.dirigida_a_mi ? ' <span class="badge text-bg-info">para vos</span>' : ''}</td>
+              <td>${escapeHtml(d.motivo_derivacion)}${d.derivacion_observaciones ? `<br><small class="text-muted">${escapeHtml(d.derivacion_observaciones)}</small>` : ''}</td>
+              <td class="text-nowrap">${escapeHtml(d.fecha)}</td>
+              <td class="text-end text-nowrap"><button type="button" class="btn btn-sm btn-success btn-aceptar-derivacion" data-id="${d.id_derivacion}" data-paciente="${escapeHtml(d.paciente)}"><i class="fas fa-check me-1"></i>Aceptar</button>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-rechazar-derivacion" data-id="${d.id_derivacion}" data-paciente="${escapeHtml(d.paciente)}"><i class="fas fa-xmark me-1"></i>Rechazar</button></td></tr>`).join('') +
+            '</tbody></table></div>';
+        }
+        if (sinCita.length) {
+          h += `<h6 class="fw-bold small text-uppercase text-muted mb-2">Aceptadas, falta agendar la cita (${sinCita.length})</h6>
+            <div class="table-responsive mb-3"><table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light"><tr><th>Paciente</th><th>Deriva</th><th>Especialidad</th><th>Aceptada</th><th class="text-end"></th></tr></thead><tbody>` +
+            sinCita.map(d => `<tr><td class="fw-semibold">${escapeHtml(d.paciente)}</td><td>${escapeHtml(d.deriva)}</td><td>${escapeHtml(d.des_especialidad)}</td><td class="text-nowrap">${escapeHtml(d.fecha_respuesta)}</td>
+              <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-secondary" href="${URL_FICHA.replace(/0$/, d.id_paciente)}"><i class="fas fa-notes-medical me-1"></i>Ver ficha</a>
+                <a class="btn btn-sm btn-primary" href="${URL_CITA_DERIVACION.replace(/0$/, d.id_derivacion)}"><i class="fas fa-calendar-plus me-1"></i>Agendar cita</a></td></tr>`).join('') +
+            '</tbody></table></div>';
+        }
+        if (respondidas.length) {
+          h += `<h6 class="fw-bold small text-uppercase text-muted mb-2">Respuestas a mis derivaciones (últimos 7 días)</h6>
+            <ul class="list-unstyled small mb-0">` + respondidas.map(d => d.estado_derivacion === 'ACEPTADA'
+              ? `<li class="mb-1"><span class="badge text-bg-success">Aceptada</span> <b>${escapeHtml(d.paciente)}</b> → ${escapeHtml(d.des_especialidad)}${d.responde ? ' (' + escapeHtml(d.responde) + ')' : ''} <span class="text-muted">${escapeHtml(d.fecha_respuesta)}</span></li>`
+              : `<li class="mb-1"><span class="badge text-bg-danger">Rechazada</span> <b>${escapeHtml(d.paciente)}</b> → ${escapeHtml(d.des_especialidad)}${d.responde ? ' (' + escapeHtml(d.responde) + ')' : ''}: <i>${escapeHtml(d.motivo_respuesta)}</i> <span class="text-muted">${escapeHtml(d.fecha_respuesta)}</span> — podés derivarlo a otro desde la consulta.</li>`).join('') + '</ul>';
+        }
+        $('#cuerpoDerivaciones').html(h);
+        card.show();
+      });
+  }
+
+  const responderDerivacion = (id, aceptar, motivo) => fetch(`/api/v1/derivaciones/${id}/${aceptar ? 'aceptar' : 'rechazar'}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }, body: JSON.stringify({ motivo })
+  }).then(r => r.json());
+
+  $(document).on('click', '.btn-aceptar-derivacion', async function () {
+    const id = $(this).data('id'), paciente = $(this).data('paciente');
+    const r = await Swal.fire({ title: 'Aceptar derivación', html: `Vas a atender a <b>${paciente}</b>. Después podés agendar su cita.`, icon: 'question',
+      showCancelButton: true, confirmButtonText: 'Aceptar', cancelButtonText: 'Volver' });
+    if (!r.isConfirmed) return;
+    const data = await responderDerivacion(id, true);
+    if (!data.success) { await Swal.fire('No se pudo aceptar', data.error || '', 'warning'); cargarDerivaciones(); return; }
+    cargarDerivaciones();
+    const s = await Swal.fire({ icon: 'success', title: 'Derivación aceptada', text: '¿Querés agendar la cita del paciente ahora?',
+      showCancelButton: true, confirmButtonText: 'Agendar cita', cancelButtonText: 'Después' });
+    if (s.isConfirmed) window.location.href = URL_CITA_DERIVACION.replace(/0$/, id);
+  });
+
+  $(document).on('click', '.btn-rechazar-derivacion', async function () {
+    const id = $(this).data('id'), paciente = $(this).data('paciente');
+    const r = await Swal.fire({ title: 'Rechazar derivación', html: `Paciente: <b>${paciente}</b>. Quien la hizo va a ver tu motivo.`, icon: 'warning',
+      input: 'textarea', inputPlaceholder: 'Motivo del rechazo', inputAttributes: { maxlength: 500 },
+      showCancelButton: true, confirmButtonText: 'Rechazar', cancelButtonText: 'Volver',
+      preConfirm: (v) => (v || '').trim() ? v.trim() : Swal.showValidationMessage('El motivo del rechazo es obligatorio') });
+    if (!r.isConfirmed) return;
+    const data = await responderDerivacion(id, false, r.value);
+    if (!data.success) await Swal.fire('No se pudo rechazar', data.error || '', 'warning');
+    cargarDerivaciones();
+  });
 
   // ── Semana: calendario de solo lectura con las citas y los horarios del propio especialista ──
   let calendarioSemana = null;
@@ -321,6 +446,9 @@
   $(document).ready(function () {
     initTablaAgenda();
     cargarCitas();
+    cargarDerivaciones();
+    cargarAvisosBloqueos();
+    cargarConsultasObservacion();
   });
 </script>
 {% endblock %}

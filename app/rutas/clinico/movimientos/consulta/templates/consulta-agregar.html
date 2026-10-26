@@ -85,6 +85,7 @@ Atender Consulta
                   <select class="form-control" id="selectEstado">
                     <option value="PENDIENTE">Pendiente</option>
                     <option value="EN_ATENCION">En atención</option>
+                    <option value="EN_OBSERVACION">Pendiente de observación</option>
                     <option value="FINALIZADA">Finalizada</option>
                   </select>
                 </div>
@@ -277,7 +278,7 @@ Atender Consulta
         </div>
         <div class="table-responsive">
           <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light"><tr><th>Especialidad destino</th><th>Motivo</th><th>Observaciones</th><th></th></tr></thead>
+            <thead class="table-light"><tr><th>Destino</th><th>Motivo</th><th>Respuesta</th><th></th></tr></thead>
             <tbody id="tbody-derivaciones"><tr><td colspan="4" class="text-muted text-center">Sin registros</td></tr></tbody>
           </table>
         </div>
@@ -433,6 +434,24 @@ Atender Consulta
           <select class="form-control" id="ri_catalogo">
             <option value="">-- Seleccione --</option>
           </select>
+          <!-- Catálogos con buscador (diagnósticos): se busca por código o nombre y, si no está, se crea uno nuevo -->
+          <div id="ri_buscar" class="position-relative" style="display:none">
+            <input type="text" class="form-control" id="ri_buscador" placeholder="Buscar por código o nombre (ej. F41, ansiedad)" autocomplete="off">
+            <div class="list-group position-absolute w-100 shadow-sm" id="ri_sugerencias" style="display:none; z-index:1056; max-height:260px; overflow-y:auto"></div>
+          </div>
+          <div id="ri_elegido" class="small text-success mt-1" style="display:none"></div>
+        </div>
+        <div class="border rounded p-2 mt-2" id="ri_nuevo_dx" style="display:none">
+          <div class="fw-semibold small mb-2"><i class="fas fa-plus-circle me-1"></i>Diagnóstico nuevo</div>
+          <div class="row g-2">
+            <div class="col-4"><input type="text" class="form-control form-control-sm" id="ri_nuevo_cod" placeholder="CIE-10 (opcional)" maxlength="10"></div>
+            <div class="col-8"><input type="text" class="form-control form-control-sm" id="ri_nuevo_des" placeholder="Descripción" maxlength="255"></div>
+          </div>
+          <div class="small text-muted mt-1">Letras, números y puntos. El código sigue el formato F32 o F32.1. Queda en el catálogo para todos.</div>
+          <div class="mt-2 text-end">
+            <button type="button" class="btn btn-sm btn-secondary" id="ri_nuevo_cancelar">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-success" id="ri_nuevo_crear">Crear y usar</button>
+          </div>
         </div>
         <div class="form-group mt-2 fld-tipo" style="display:none">
           <label class="fw-semibold">Tipo</label>
@@ -459,6 +478,11 @@ Atender Consulta
             <option value="MODERADO">Moderado</option>
             <option value="GRAVE">Grave</option>
           </select>
+        </div>
+        <div class="form-group mt-2 fld-especialista" style="display:none">
+          <label class="fw-semibold">Especialista (opcional)</label>
+          <select class="form-control" id="ri_especialista"><option value="">Cualquiera de la especialidad</option></select>
+          <div class="small text-muted mt-1">Si no elige uno, la ven todos los especialistas de esa especialidad en su Mi Agenda y la toma el primero que la acepte.</div>
         </div>
         <div class="form-group mt-2 fld-desc" style="display:none">
           <label class="fw-semibold" id="ri_desc_label">Descripción</label>
@@ -805,7 +829,7 @@ Atender Consulta
   // ==========================================
   const REGISTRO_CONFIG = {
     diagnosticos: {
-      catalogUrl: '/api/v1/diagnosticos', activeField: 'est_diagnostico',
+      catalogUrl: '/api/v1/diagnosticos', activeField: 'est_diagnostico', buscable: true,
       catalogLabel: 'Diagnóstico', idKeyRow: 'id_registro_diagnostico',
       optLabel: d => (d.cod_cie10 ? d.cod_cie10 + ' - ' : '') + d.des_diagnostico,
       fields: ['tipo', 'gravedad', 'desc', 'observaciones'], descLabel: 'Descripción específica',
@@ -879,7 +903,7 @@ Atender Consulta
     },
     // Sin ventana de alta: «+ Agregar» y el botón de cada fila abren la pantalla del plan de tratamiento
     tratamientos: {
-      idKeyRow: 'id_tratamiento', deleteUrl: id => `/api/v1/tratamientos/${id}`,
+      idKeyRow: 'id_tratamiento', deleteUrl: id => `/api/v1/tratamientos/${id}`, vacio: 'Sin planes de tratamiento',
       planUrl: id => `{{ url_for('consulta.tratamientoPlan', id_tratamiento=0) }}`.replace(/0$/, id),
       cols: row => [
         row.des_tipo_tratamiento, row.des_tratamiento, row.tratamiento_fecha_inicio,
@@ -893,6 +917,8 @@ Atender Consulta
       fields: ['fecha', 'desc', 'dias_reposo', 'fecha_desde', 'fecha_hasta', 'resultado', 'observaciones'],
       descLabel: 'Motivo', resultadoLabel: 'Diagnóstico', observacionesLabel: 'Recomendaciones',
       requiredFields: [{ id: 'ri_fecha', label: 'La fecha' }, { id: 'ri_desc', label: 'El motivo' }],
+      validar: () => ($('#ri_fecha_desde').val() && $('#ri_fecha_hasta').val() && $('#ri_fecha_hasta').val() < $('#ri_fecha_desde').val())
+        ? 'La fecha «Vigente hasta» no puede ser anterior a «Vigente desde».' : null,
       deleteUrl: id => `/api/v1/certificados/${id}`,
       pdfUrl: id => `/api/v1/certificados/${id}/pdf`, documento: 'Certificado guardado',
       cols: row => [
@@ -914,13 +940,22 @@ Atender Consulta
       catalogUrl: '/api/v1/especialidades', activeField: 'est_especialidad',
       catalogLabel: 'Especialidad de destino', idKeyRow: 'id_derivacion',
       optLabel: d => d.des_especialidad,
-      fields: ['desc', 'observaciones'],
+      fields: ['especialista', 'desc', 'observaciones'],
       descLabel: 'Motivo de derivación',
       requiredFields: [{ id: 'ri_desc', label: 'El motivo de derivación' }],
       deleteUrl: id => `/api/v1/derivaciones/${id}`,
-      cols: row => [row.des_especialidad, row.motivo_derivacion, row.derivacion_observaciones || '-'],
+      cols: row => [
+        `${escHtml(row.des_especialidad)}${row.id_especialista_destino && row.estado_derivacion !== 'ACEPTADA' ? `<br><small class="text-muted">${escHtml(row.especialista_destino)}</small>` : ''}`,
+        `${escHtml(row.motivo_derivacion)}${row.derivacion_observaciones ? `<br><small class="text-muted">${escHtml(row.derivacion_observaciones)}</small>` : ''}`,
+        row.estado_derivacion === 'ACEPTADA'
+          ? `<span class="badge text-bg-success">Aceptada</span><br><small class="text-muted">por ${escHtml(row.especialista_destino)} · ${escHtml(row.fecha_respuesta)}</small>`
+          : row.estado_derivacion === 'RECHAZADA'
+            ? `<span class="badge text-bg-danger">Rechazada</span><br><small class="text-muted">${escHtml(row.motivo_respuesta)} · ${escHtml(row.fecha_respuesta)}</small>`
+            : '<span class="badge text-bg-warning">Pendiente</span>'
+      ],
       buildPayload: () => ({
         id_especialidad_destino: parseInt($('#ri_catalogo').val()),
+        id_especialista_destino: $('#ri_especialista').val() ? parseInt($('#ri_especialista').val()) : null,
         motivo_derivacion: $('#ri_desc').val().trim(),
         derivacion_observaciones: $('#ri_observaciones').val() || null
       })
@@ -944,7 +979,7 @@ Atender Consulta
             </td></tr>`;
           }).join(''));
         } else {
-          tbody.html(`<tr><td colspan="${nCols}" class="text-muted text-center">Sin registros</td></tr>`);
+          tbody.html(`<tr><td colspan="${nCols}" class="text-muted text-center">${cfg.vacio || 'Sin registros'}</td></tr>`);
         }
       });
   };
@@ -952,6 +987,132 @@ Atender Consulta
   const cargarTodosRegistros = () => {
     Object.keys(REGISTRO_CONFIG).forEach(cargarTablaRegistro);
   };
+
+  // Llena el selector del modal con el catálogo (y la lista del buscador, si el catálogo es buscable)
+  let catalogoBusqueda = [];
+  const cargarCatalogo = (cfg) => {
+    const select = $('#ri_catalogo');
+    select.html('<option value="">Cargando...</option>');
+    return fetch(cfg.catalogUrl)
+      .then(resp => resp.json())
+      .then(data => {
+        select.html('<option value="">-- Seleccione --</option>');
+        catalogoBusqueda = [];
+        if (data.success) {
+          data.data.filter(d => d[cfg.activeField] !== false).forEach(d => {
+            const id = d.id_diagnostico ?? d.id_signo ?? d.id_sintoma ?? d.id_tipo_procedimiento ?? d.id_insumo ?? d.id_tipo_tratamiento ?? d.id_tipo_certificado_medico ?? d.id_especialidad;
+            select.append(`<option value="${id}">${cfg.optLabel(d)}</option>`);
+            catalogoBusqueda.push({ id, label: cfg.optLabel(d), texto: sinAcentos(cfg.optLabel(d)) });
+          });
+        }
+      });
+  };
+
+  // ---------- Buscador de catálogo (diagnósticos): código o nombre, y alta de uno nuevo ----------
+  const sinAcentos = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const escHtml = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  const prepararBuscador = (activo) => {
+    $('#ri_catalogo').toggle(!activo);
+    $('#ri_buscar').toggle(activo);
+    $('#ri_buscador').val('');
+    $('#ri_sugerencias').hide().empty();
+    $('#ri_elegido').hide().text('');
+    $('#ri_nuevo_dx').hide();
+    $('#ri_nuevo_cod, #ri_nuevo_des').val('');
+  };
+
+  const elegirDelCatalogo = (item) => {
+    $('#ri_catalogo').val(String(item.id));
+    $('#ri_buscador').val(item.label);
+    $('#ri_sugerencias').hide().empty();
+    $('#ri_nuevo_dx').hide();
+    $('#ri_elegido').html(`<i class="fas fa-check me-1"></i>Elegido: ${escHtml(item.label)}`).show();
+  };
+
+  const mostrarSugerencias = () => {
+    const q = $('#ri_buscador').val().trim(), nq = sinAcentos(q);
+    const lista = catalogoBusqueda.filter(i => !nq || i.texto.includes(nq)).slice(0, 8);
+    const $panel = $('#ri_sugerencias').empty();
+    lista.forEach(i => {
+      $('<a href="#" class="list-group-item list-group-item-action py-2"></a>').text(i.label)
+        .on('mousedown', (e) => { e.preventDefault(); elegirDelCatalogo(i); }).appendTo($panel);
+    });
+    if (q.length >= 2 && !catalogoBusqueda.some(i => i.texto === nq)) {
+      const $nuevo = $('<div class="list-group-item bg-light"></div>').html(
+        `<div class="small text-muted mb-1">${lista.length ? 'Si no es ninguno de estos:' : `No hay ningún diagnóstico con «${escHtml(q)}».`}</div>
+         <button type="button" class="btn btn-success btn-sm w-100"><i class="fas fa-plus me-1"></i>Crear diagnóstico «${escHtml(q)}»</button>`);
+      $nuevo.find('button').on('mousedown', (e) => { e.preventDefault(); abrirNuevoDiagnostico(q); });
+      $panel.append($nuevo);
+    }
+    $panel.toggle($panel.children().length > 0);
+  };
+
+  const abrirNuevoDiagnostico = (texto) => {
+    $('#ri_sugerencias').hide();
+    const esCodigo = /^[A-Za-z][0-9]{2}(\.[0-9]{1,2})?$/.test(texto.trim());
+    $('#ri_nuevo_cod').val(esCodigo ? texto.trim().toUpperCase() : '');
+    $('#ri_nuevo_des').val(esCodigo ? '' : texto.trim().toUpperCase());
+    $('#ri_nuevo_dx').show();
+    $(esCodigo ? '#ri_nuevo_des' : '#ri_nuevo_cod').trigger('focus');
+  };
+
+  const buscadorDiagnosticos = () => {
+    $('#ri_buscador').on('input focus', function (e) {
+      if (e.type === 'input') { $('#ri_catalogo').val(''); $('#ri_elegido').hide(); }
+      mostrarSugerencias();
+    }).on('blur', () => setTimeout(() => $('#ri_sugerencias').hide(), 150));
+    $('#ri_nuevo_cancelar').on('click', () => $('#ri_nuevo_dx').hide());
+    $('#ri_nuevo_crear').on('click', function () {
+      const des = $('#ri_nuevo_des').val().trim();
+      if (!des) { Swal.fire('Atención', 'Escriba la descripción del diagnóstico.', 'warning'); return; }
+      const btn = $(this).prop('disabled', true);
+      fetch('/api/v1/diagnosticos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
+        body: JSON.stringify({ des_diagnostico: des, cod_cie10: $('#ri_nuevo_cod').val().trim() || null })
+      })
+        .then(resp => resp.json())
+        .then(async data => {
+          if (!data.success) { Swal.fire('No se creó el diagnóstico', data.error || '', 'warning'); return; }
+          await cargarCatalogo(REGISTRO_CONFIG.diagnosticos);
+          const nuevo = catalogoBusqueda.find(i => String(i.id) === String(data.data.id_diagnostico));
+          if (nuevo) elegirDelCatalogo(nuevo);
+        })
+        .catch(() => Swal.fire('Error', 'Ocurrió un error al crear el diagnóstico.', 'error'))
+        .finally(() => btn.prop('disabled', false));
+    });
+  };
+
+  // ---------- Justificativo de reposo: «hasta» y «días» se calculan solos ----------
+  const aFechaLocal = (f) => { const [a, m, d] = f.split('-').map(Number); return new Date(a, m - 1, d); };
+  const aISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const reposoAutomatico = () => {
+    const desde = () => $('#ri_fecha_desde').val(), hasta = () => $('#ri_fecha_hasta').val(), dias = () => parseInt($('#ri_dias_reposo').val());
+    const calcularHasta = () => { // desde + días − 1 (un día de reposo vence el mismo día)
+      const d = aFechaLocal(desde()); d.setDate(d.getDate() + dias() - 1); $('#ri_fecha_hasta').val(aISO(d));
+    };
+    const calcularDias = () => { // días entre «desde» y «hasta», ambos incluidos
+      const n = Math.round((aFechaLocal(hasta()) - aFechaLocal(desde())) / 86400000) + 1;
+      $('#ri_dias_reposo').val(n >= 1 ? n : '');
+    };
+    $('#ri_dias_reposo').on('input', () => { if (desde() && dias() >= 1) calcularHasta(); });
+    $('#ri_fecha_desde').on('change', () => {
+      if (!desde()) return;
+      if (dias() >= 1) calcularHasta(); else if (hasta()) calcularDias();
+    });
+    $('#ri_fecha_hasta').on('change', () => { if (desde() && hasta()) calcularDias(); });
+  };
+
+  // Derivaciones: al elegir la especialidad se ofrecen sus especialistas
+  const cargarEspecialistasDeEspecialidad = () => {
+    const sel = $('#ri_especialista').html('<option value="">Cualquiera de la especialidad</option>');
+    const id = $('#ri_catalogo').val();
+    if ($('#ri_tipo').val() !== 'derivaciones' || !id) return;
+    fetch(`/api/v1/derivaciones/especialistas?id_especialidad=${id}`)
+      .then(r => r.json())
+      .then(d => { if (d.success) d.data.forEach(e => sel.append(`<option value="${e.id_especialista}">${escHtml(e.nombre_completo)}</option>`)); });
+  };
+  $(document).on('change', '#ri_catalogo', cargarEspecialistasDeEspecialidad);
 
   const abrirModalRegistro = () => {
     $('.btn-agregar-registro').on('click', function () {
@@ -973,20 +1134,12 @@ Atender Consulta
 
       $('#ri_tipo_dx, #ri_gravedad, #ri_intensidad, #ri_desc, #ri_duracion, #ri_resultado, #ri_cantidad, #ri_observaciones, #ri_objetivos, #ri_fecha_inicio, #ri_numero_sesiones, #ri_frecuencia_sesiones, #ri_fecha, #ri_dias_reposo, #ri_fecha_desde, #ri_fecha_hasta').val('');
       $('#ri_fecha, #ri_fecha_desde, #ri_fecha_inicio').val(fechaConsulta());
+      $('#ri_tipo_dx').val('PRESUNTIVO');   // el diagnóstico se indica presuntivo salvo que se elija otro tipo
 
       const select = $('#ri_catalogo');
-      select.html('<option value="">Cargando...</option>');
-      fetch(cfg.catalogUrl)
-        .then(resp => resp.json())
-        .then(data => {
-          select.html('<option value="">-- Seleccione --</option>');
-          if (data.success) {
-            data.data.filter(d => d[cfg.activeField] !== false).forEach(d => {
-              const id = d.id_diagnostico ?? d.id_signo ?? d.id_sintoma ?? d.id_tipo_procedimiento ?? d.id_insumo ?? d.id_tipo_tratamiento ?? d.id_tipo_certificado_medico ?? d.id_especialidad;
-              select.append(`<option value="${id}">${cfg.optLabel(d)}</option>`);
-            });
-          }
-        });
+      prepararBuscador(!!cfg.buscable);
+      $('#ri_especialista').html('<option value="">Cualquiera de la especialidad</option>');
+      cargarCatalogo(cfg);
 
       new bootstrap.Modal(document.getElementById('modalRegistroItem')).show();
     });
@@ -1013,6 +1166,8 @@ Atender Consulta
           }
         }
       }
+      const errorPropio = cfg.validar ? cfg.validar() : null;
+      if (errorPropio) { Swal.fire('Atención', errorPropio, 'warning'); return; }
 
       fetch(`/api/v1/consultas/${idConsultaEdit}/${tipo}`, {
         method: 'POST',
@@ -1024,6 +1179,7 @@ Atender Consulta
           if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modalRegistroItem')).hide();
             cargarTablaRegistro(tipo);
+            if (data.data && data.data.aviso) Swal.fire({ icon: 'warning', title: 'Stock bajo', text: data.data.aviso });
             if (cfg.pdfUrl && data.data && data.data[cfg.idKeyRow]) {
               ofrecerImprimir(cfg.pdfUrl(data.data[cfg.idKeyRow]), cfg.documento);
             }
@@ -1209,12 +1365,42 @@ Atender Consulta
             <tr><td>${o.orden_numero}</td><td>${o.orden_fecha}</td>
             <td>${o.detalles.map(d => d.descripcion).join(', ')}</td>
             <td>${o.orden_estado}</td>
-            <td class="text-center">${botonImprimir(`/api/v1/ordenes/${o.id_orden}/pdf`)}<button type="button" class="btn btn-sm btn-outline-danger btn-borrar-orden" data-id="${o.id_orden}">&times;</button></td></tr>
+            <td class="text-center text-nowrap">${botonImprimir(`/api/v1/ordenes/${o.id_orden}/pdf`)}<button type="button" class="btn btn-sm btn-outline-success me-1 btn-enviar-orden" data-id="${o.id_orden}" data-numero="${o.orden_numero}" title="Enviar la orden al paciente por correo o WhatsApp"><i class="fas fa-paper-plane"></i></button><button type="button" class="btn btn-sm btn-outline-danger btn-borrar-orden" data-id="${o.id_orden}">&times;</button></td></tr>
           `).join(''));
         } else {
           tbody.html('<tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr>');
         }
       });
+  };
+
+  // Enviar la orden (PDF) al paciente: por correo y/o WhatsApp, a los datos de su ficha de paciente
+  const enviarOrden = () => {
+    $(document).on('click', '.btn-enviar-orden', async function () {
+      const id = $(this).data('id'), numero = $(this).data('numero');
+      const dest = await (await fetch(`/api/v1/ordenes/${id}/destinos`)).json();
+      if (!dest.success) { Swal.fire('No se puede enviar', dest.error || '', 'warning'); return; }
+      const d = dest.data;
+      const opcion = (idc, etiqueta, valor, falta) => `<div class="form-check text-start mb-2"><input class="form-check-input" type="checkbox" id="${idc}" ${valor ? 'checked' : 'disabled'}>
+        <label class="form-check-label" for="${idc}"><b>${etiqueta}</b><br><small class="${valor ? 'text-muted' : 'text-danger'}">${valor ? escHtml(valor) : falta}</small></label></div>`;
+      const r = await Swal.fire({
+        title: `Enviar la orden ${escHtml(numero)}`, icon: 'question', showCancelButton: true, confirmButtonText: 'Enviar', cancelButtonText: 'Cancelar',
+        html: `<p class="small text-start mb-2">Paciente: <b>${escHtml(d.paciente || '')}</b>. Se envía el PDF a los datos que el paciente tiene en su ficha.</p>` +
+              opcion('envCorreo', 'Correo', d.correo, 'Sin correo registrado en la ficha del paciente') +
+              opcion('envWhatsapp', 'WhatsApp', d.telefono, 'Sin teléfono registrado en la ficha del paciente'),
+        preConfirm: () => {
+          const canales = [document.getElementById('envCorreo').checked && 'correo', document.getElementById('envWhatsapp').checked && 'whatsapp'].filter(Boolean);
+          return canales.length ? canales : Swal.showValidationMessage('Elegí al menos un canal');
+        }
+      });
+      if (!r.isConfirmed) return;
+      const res = await (await fetch(`/api/v1/ordenes/${id}/enviar`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken }, body: JSON.stringify({ canales: r.value })
+      })).json();
+      if (!res.data) { Swal.fire('No se pudo enviar', res.error || '', 'error'); return; }
+      const NOMBRES = { correo: 'Correo', whatsapp: 'WhatsApp' };
+      const lineas = Object.entries(res.data).map(([c, x]) => `<div class="text-start mb-1"><i class="fas ${x.ok ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger'} me-1"></i><b>${NOMBRES[c]}:</b> ${escHtml(x.mensaje)}</div>`).join('');
+      Swal.fire({ title: res.success ? 'Orden enviada' : 'No se pudo enviar', icon: res.success ? 'success' : 'error', html: lineas });
+    });
   };
 
   const borrarOrden = () => {
@@ -1510,12 +1696,15 @@ Atender Consulta
     verHistorialAnamnesis();
     guardarConsulta();
     abrirModalRegistro();
+    buscadorDiagnosticos();
+    reposoAutomatico();
     guardarRegistroItem();
     borrarRegistroItem();
     abrirModalOrden();
     agregarItemOrden();
     guardarOrden();
     borrarOrden();
+    enviarOrden();
     abrirModalReceta();
     agregarItemReceta();
     guardarReceta();

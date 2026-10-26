@@ -9,6 +9,7 @@ Fase 2: Mejoras y Optimizaciones
 - Categorización de errores
 - Métricas y monitoreo
 """
+import base64
 import requests
 from flask import current_app as app
 from datetime import datetime, timedelta
@@ -598,6 +599,43 @@ Gracias por confiar en nosotros."""
             return None
     
     
+    def enviar_documento(self, telefono, nombre_archivo, contenido, texto=None):
+        """
+        Envía un documento (por ejemplo, el PDF de una orden de estudios) por WhatsApp, en base64.
+        Un intento, sin reintentos: lo dispara una persona desde la pantalla y ve el resultado.
+
+        Args:
+            telefono: Número de teléfono del destinatario
+            nombre_archivo: Nombre con el que llega el archivo (ej. orden_ORD-2026-0001.pdf)
+            contenido: bytes del archivo
+            texto: mensaje que acompaña al documento (opcional)
+
+        Returns:
+            tuple: (success: bool, error: str)
+        """
+        if not self.client_available:
+            return (False, "Cliente UltraMsg no inicializado. Verifique la configuración.")
+        try:
+            self._aplicar_rate_limit()
+            url = f"{self.api_url}/{self.instance_id}/messages/document"
+            payload = {
+                "token": self.token,
+                "to": self._formatear_telefono(telefono),
+                "filename": nombre_archivo,
+                "document": base64.b64encode(contenido).decode('ascii'),
+                "caption": texto or "",
+            }
+            response = requests.post(url, json=payload, timeout=60)
+            datos = response.json() if response.content else {}
+            if response.status_code == 200 and not datos.get('error'):
+                return (True, None)
+            return (False, str(datos.get('error') or f"Error HTTP {response.status_code}"))
+        except requests.exceptions.RequestException as e:
+            return (False, f"No se pudo conectar con el servicio de WhatsApp: {str(e)}")
+        except Exception as e:
+            app.logger.error(f"Error enviando documento por WhatsApp: {str(e)}", exc_info=True)
+            return (False, f"Error inesperado al enviar por WhatsApp: {str(e)}")
+
     def enviar_mensaje_simple(self, telefono, mensaje):
         """
         Envía un mensaje simple de texto con reintentos automáticos

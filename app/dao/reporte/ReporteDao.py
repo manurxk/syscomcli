@@ -380,13 +380,13 @@ class ReporteDao:
         return self._consultar(sql, [fecha_desde, fecha_hasta] + extra)
 
     def getResumenConsultorio(self, fecha_desde, fecha_hasta, id_especialista=None):
-        """Consultas, pacientes distintos, pacientes nuevos y consultas abiertas (EN_ATENCION) del período."""
+        """Consultas, pacientes distintos, pacientes nuevos y consultas abiertas (EN_ATENCION o pendientes de observación) del período."""
         filtro, extra = self._filtro_especialista(id_especialista)
         sql = f"""
             SELECT COUNT(DISTINCT id_consulta) AS consultas,
                    COUNT(DISTINCT id_paciente) AS pacientes_distintos,
                    COUNT(DISTINCT id_paciente) FILTER (WHERE cita_es_primera_vez) AS pacientes_nuevos,
-                   COUNT(DISTINCT id_consulta) FILTER (WHERE consulta_estado = 'EN_ATENCION') AS consultas_abiertas
+                   COUNT(DISTINCT id_consulta) FILTER (WHERE consulta_estado IN ('EN_ATENCION', 'EN_OBSERVACION')) AS consultas_abiertas
             FROM v_consultas_resumen
             WHERE fecha BETWEEN %s AND %s{filtro}
         """
@@ -588,12 +588,12 @@ class ReporteDao:
         return resumen
 
     def getResumenConsultas(self, fecha, id_especialista=None):
-        """Consultas registradas en el día y consultas abiertas (EN_ATENCION)."""
+        """Consultas registradas en el día y consultas abiertas (EN_ATENCION o pendientes de observación)."""
         resumen = {'consultas_dia': 0, 'abiertas': 0}
         sql = """
             SELECT
                 COUNT(*) FILTER (WHERE c.consulta_fecha::DATE = %s),
-                COUNT(*) FILTER (WHERE c.consulta_estado = 'EN_ATENCION')
+                COUNT(*) FILTER (WHERE c.consulta_estado IN ('EN_ATENCION', 'EN_OBSERVACION'))
             FROM consultas c
             WHERE c.est_consulta = TRUE
         """

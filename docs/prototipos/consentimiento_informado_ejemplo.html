@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<!--
+    Prototipo — Consentimiento informado (documento que se envía como PDF por WhatsApp) — SYSCLIN
+    BORRADOR: el texto debe ser revisado por la psicóloga/neuropsicóloga responsable y por un asesor legal.
+    Formato A4, pensado para imprimir o convertir a PDF (Ctrl+P).
+    Datos de ejemplo: paciente de prueba, teléfono 0991000xxx.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Consentimiento informado - SYSCLIN</title>
+    <style>
+        @page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 11.5pt; line-height: 1.45; color: #111; background: #e5e7eb; margin: 0; }
+        .hoja { width: 210mm; min-height: 297mm; margin: 12px auto; padding: 18mm; background: #fff; }
+        @media print { body { background: #fff; } .hoja { margin: 0; padding: 0; width: auto; min-height: 0; } .aviso { display: none; } }
+        .aviso { width: 210mm; margin: 12px auto 0; padding: 8px 12px; background: #fef3c7; border: 1px solid #f59e0b; font: 12px Arial, sans-serif; }
+        header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #3730a3; padding-bottom: 8px; margin-bottom: 14px; }
+        header img { width: 44px; height: 44px; object-fit: contain; }
+        header .clinica { font-weight: bold; font-size: 13pt; }
+        header .sub { font-size: 9.5pt; color: #444; }
+        h1 { text-align: center; font-size: 14pt; margin: 6px 0 2px; text-transform: uppercase; letter-spacing: .5px; }
+        .version { text-align: center; font-size: 9.5pt; color: #555; margin-bottom: 12px; }
+        h2 { font-size: 11.5pt; margin: 14px 0 4px; }
+        p { margin: 0 0 6px; text-align: justify; }
+        ul { margin: 0 0 6px; padding-left: 22px; }
+        table.datos { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10.5pt; }
+        table.datos td { border: 1px solid #777; padding: 4px 6px; }
+        table.datos td.et { background: #f3f4f6; width: 28%; font-weight: bold; }
+        .caja { display: inline-block; width: 11px; height: 11px; border: 1px solid #111; margin-right: 6px; vertical-align: -1px; }
+        .firmas { display: flex; gap: 24px; margin-top: 36px; page-break-inside: avoid; }
+        .firma { flex: 1; text-align: center; font-size: 10pt; }
+        .firma .linea { border-top: 1px solid #111; margin-top: 44px; padding-top: 4px; }
+        footer { margin-top: 18px; padding-top: 6px; border-top: 1px solid #aaa; font-size: 8.5pt; color: #555; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="aviso"><strong>Borrador.</strong> Texto de trabajo; completar los datos entre corchetes y validar con la profesional responsable y un asesor legal. Para ver el PDF: Ctrl+P → Guardar como PDF.</div>
+
+    <div class="hoja">
+        <header>
+            <img src="../app/static/img/sys_logo.png" alt="">
+            <div>
+                <div class="clinica">[Nombre de la clínica]</div>
+                <div class="sub">Neuropsicología · RUC [RUC] · [Dirección], [Ciudad] · Tel. [teléfono]</div>
+            </div>
+        </header>
+
+        <h1>Consentimiento informado</h1>
+        <div class="version">Atención neuropsicológica y tratamiento de datos personales · Versión 0.1 (borrador)</div>
+
+        <h2>1. Datos de la persona atendida</h2>
+        <table class="datos">
+            <tr><td class="et">Nombre y apellido</td><td>Paciente de Prueba</td><td class="et">Cédula</td><td>0.000.001</td></tr>
+            <tr><td class="et">Fecha de nacimiento</td><td>12/05/2015</td><td class="et">Teléfono</td><td>0991000001</td></tr>
+            <tr><td class="et">Representante legal (si es menor o no puede decidir)</td><td>Tutor de Prueba</td><td class="et">Cédula / parentesco</td><td>0.000.002 · Madre</td></tr>
+        </table>
+
+        <h2>2. En qué consiste la atención</h2>
+        <p>La atención neuropsicológica incluye entrevistas, observación, aplicación de pruebas y escalas, elaboración de informes y, cuando corresponda, sesiones de intervención o rehabilitación. El profesional explicó el motivo de la consulta, los procedimientos, su duración aproximada y los resultados que pueden esperarse. Los resultados no son una garantía de curación, y el proceso puede requerir varias sesiones.</p>
+
+        <h2>3. Beneficios, riesgos y alternativas</h2>
+        <p>La evaluación permite orientar el diagnóstico y el tratamiento. Pueden presentarse molestias leves, como cansancio, frustración o ansiedad durante las pruebas. Existen otras opciones, incluida la de no realizar la evaluación o buscar otra opinión profesional, que se pueden consultar con el profesional tratante.</p>
+
+        <h2>4. Confidencialidad y sus límites</h2>
+        <p>La información clínica es confidencial y está amparada por el secreto profesional. Solo se comparte con terceros con autorización escrita, por orden de autoridad competente, o cuando exista un riesgo grave e inminente para la vida o la integridad de la persona o de otras. Para fines de enseñanza o investigación se usarán únicamente datos que no permitan identificarla.</p>
+
+        <h2>5. Tratamiento de datos personales</h2>
+        <p>Los datos (identificación, contacto, salud, citas y facturación) se registran en el sistema SYSCLIN para la atención, la agenda, la facturación y las obligaciones legales. Acceden a ellos solo las personas autorizadas, según su función, y cada acceso queda registrado. Se conservan durante el plazo que exige la normativa sanitaria aplicable. Puede solicitar acceso, rectificación o supresión de sus datos, dentro de los límites de la ley, en la clínica o en [correo de contacto]. Más información en la Política de privacidad del sistema.</p>
+
+        <h2>6. Comunicaciones por WhatsApp y correo</h2>
+        <p>Autorizo el envío, al número y correo registrados, de recordatorios de citas y de documentos relacionados con la atención. Entiendo que estos canales pertenecen a terceros, que los mensajes no incluyen diagnósticos, y que puedo retirar esta autorización en cualquier momento.</p>
+
+        <h2>7. Voluntariedad y revocación</h2>
+        <p>La participación es voluntaria. Puedo hacer preguntas antes y durante el proceso, negarme a un procedimiento o retirar este consentimiento en cualquier momento, sin que ello afecte mi derecho a la atención. El retiro no afecta lo ya realizado.</p>
+
+        <h2>8. Declaración</h2>
+        <p>
+            <span class="caja"></span>Leí (o me leyeron) este documento y recibí respuesta a mis preguntas.<br>
+            <span class="caja"></span>Autorizo la atención neuropsicológica descrita.<br>
+            <span class="caja"></span>Autorizo el tratamiento de mis datos personales y de salud según el punto 5.<br>
+            <span class="caja"></span>Autorizo las comunicaciones por WhatsApp y correo según el punto 6.
+        </p>
+
+        <div class="firmas">
+            <div class="firma"><div class="linea">Firma y aclaración<br>Paciente / Representante legal</div></div>
+            <div class="firma"><div class="linea">Firma y sello<br>Profesional responsable</div></div>
+        </div>
+        <p style="margin-top:14px; font-size:10pt;">Fecha: ____ / ____ / ________ &nbsp;&nbsp; Lugar: [Ciudad]</p>
+
+        <footer>
+            Documento emitido por SYSCLIN el 26/10/2026 · Código CI-2026-0001 · Enviado a 0991000001 por WhatsApp<br>
+            Al devolver este documento firmado (foto o escaneo) o responder ACEPTO desde este número, la clínica registra la aceptación.
+        </footer>
+    </div>
+</body>
+</html>

@@ -76,26 +76,36 @@ class AgendaHorariosDao(BaseDAO):
         """
         return self.execute_query_one(sql, (id_agenda_horario,))
 
-    def validarConflictoHorario(self, id_especialista, id_consultorio, id_dia_semana,
-                                 hora_inicio, hora_fin, fec_desde, fec_hasta=None,
-                                 excluir_id=None):
-        """Detecta solapamiento de horario para el mismo especialista o el mismo
-        consultorio, en el mismo día de semana y rango de vigencia. La tabla no
-        usa un EXCLUDE de BD para esto (ver comentario en agenda_horarios), se
-        valida acá antes de insertar/actualizar.
+    def getConflictosHorario(self, id_especialista, id_consultorio, id_dia_semana,
+                             hora_inicio, hora_fin, fec_desde, fec_hasta=None,
+                             excluir_id=None):
+        """Horarios activos que se superponen con el que se quiere guardar: mismo especialista o mismo consultorio,
+        en el mismo día de semana y rango de vigencia. Cada uno dice si choca por el especialista, por el consultorio
+        o por los dos, y con qué horario (para explicarlo en el aviso). La tabla no usa un EXCLUDE de BD para esto
+        (ver comentario en agenda_horarios): se valida acá antes de insertar o actualizar.
         """
         sql = """
-            SELECT 1
-            FROM agenda_horarios
-            WHERE id_dia_semana = %(id_dia_semana)s
-              AND est_agenda_horario = TRUE
-              AND (id_especialista = %(id_especialista)s OR id_consultorio = %(id_consultorio)s)
-              AND hora_inicio < %(hora_fin)s
-              AND hora_fin > %(hora_inicio)s
-              AND fec_desde <= COALESCE(%(fec_hasta)s, fec_desde)
-              AND (fec_hasta IS NULL OR fec_hasta >= %(fec_desde)s)
-              AND (%(excluir_id)s IS NULL OR id_agenda_horario != %(excluir_id)s)
-            LIMIT 1
+            SELECT ah.id_especialista = %(id_especialista)s AS mismo_especialista,
+                   ah.id_consultorio = %(id_consultorio)s AS mismo_consultorio,
+                   ds.des_dia AS dia,
+                   TO_CHAR(ah.hora_inicio, 'HH24:MI') AS hora_inicio, TO_CHAR(ah.hora_fin, 'HH24:MI') AS hora_fin,
+                   TO_CHAR(ah.fec_desde, 'DD/MM/YYYY') AS fec_desde, TO_CHAR(ah.fec_hasta, 'DD/MM/YYYY') AS fec_hasta,
+                   co.des_consultorio, pe.per_nombre || ' ' || pe.per_apellido AS especialista
+            FROM agenda_horarios ah
+            JOIN dias_semana ds ON ds.id_dia_semana = ah.id_dia_semana
+            JOIN consultorios co ON co.id_consultorio = ah.id_consultorio
+            JOIN especialistas e ON e.id_especialista = ah.id_especialista
+            JOIN funcionarios f ON f.id_funcionario = e.id_funcionario
+            JOIN personas pe ON pe.id_persona = f.id_persona
+            WHERE ah.id_dia_semana = %(id_dia_semana)s
+              AND ah.est_agenda_horario = TRUE
+              AND (ah.id_especialista = %(id_especialista)s OR ah.id_consultorio = %(id_consultorio)s)
+              AND ah.hora_inicio < %(hora_fin)s
+              AND ah.hora_fin > %(hora_inicio)s
+              AND ah.fec_desde <= COALESCE(%(fec_hasta)s, ah.fec_desde)
+              AND (ah.fec_hasta IS NULL OR ah.fec_hasta >= %(fec_desde)s)
+              AND (%(excluir_id)s IS NULL OR ah.id_agenda_horario != %(excluir_id)s)
+            ORDER BY ah.hora_inicio
         """
         params = {
             "id_especialista": id_especialista,
@@ -107,7 +117,7 @@ class AgendaHorariosDao(BaseDAO):
             "fec_hasta": fec_hasta,
             "excluir_id": excluir_id,
         }
-        return self.execute_query_one(sql, params) is not None
+        return self.execute_query(sql, params)
 
     def crearAgendaHorario(self, datos, usuario_creacion):
         """Inserta la cabecera y genera los slots iniciales en una sola transacción."""
@@ -207,10 +217,23 @@ class AgendaHorariosDao(BaseDAO):
 
         return self.execute_transaction(_cambiar)
 
-    def getCitasFueraDeAgenda(self, id_agenda_horario, todas=False):
+    def getCitasFueraDeAgenda(self, id_agenda_horario, todas=False, nuevo=None):
         """Citas futuras (no cerradas) con turno en esta agenda que ya no encajan en ella: otro día, otra hora o
-        fuera de su vigencia. Con todas=True, todas sus citas futuras (por ejemplo, al desactivarla)."""
-        condicion = "TRUE" if todas else """(EXTRACT(ISODOW FROM sa.slot_inicio) <> ah.id_dia_semana
+        fuera de su vigencia. Con todas=True, todas sus citas futuras (por ejemplo, al desactivarla). Con `nuevo`
+        (id_dia_semana, hora_inicio, hora_fin, fec_desde, fec_hasta) calcula cuáles quedarían fuera del horario
+        que se quiere guardar, antes de guardarlo."""
+        params = {'id': id_agenda_horario}
+        if todas:
+            condicion = "TRUE"
+        elif nuevo:
+            params.update({'dia': nuevo['id_dia_semana'], 'hi': nuevo['hora_inicio'], 'hf': nuevo['hora_fin'],
+                           'desde': nuevo['fec_desde'], 'hasta': nuevo.get('fec_hasta')})
+            condicion = """(EXTRACT(ISODOW FROM sa.slot_inicio) <> %(dia)s::int
+                    OR sa.slot_inicio::time < %(hi)s::time OR sa.slot_fin::time > %(hf)s::time
+                    OR sa.slot_inicio::date < %(desde)s::date
+                    OR (%(hasta)s::date IS NOT NULL AND sa.slot_inicio::date > %(hasta)s::date))"""
+        else:
+            condicion = """(EXTRACT(ISODOW FROM sa.slot_inicio) <> ah.id_dia_semana
                     OR sa.slot_inicio::time < ah.hora_inicio OR sa.slot_fin::time > ah.hora_fin
                     OR sa.slot_inicio::date < ah.fec_desde OR (ah.fec_hasta IS NOT NULL AND sa.slot_inicio::date > ah.fec_hasta))"""
         return self.execute_query(f"""
@@ -222,11 +245,11 @@ class AgendaHorariosDao(BaseDAO):
             JOIN estados_citas ec ON ec.id_estado_cita = c.id_estado_cita
             JOIN pacientes pa ON pa.id_paciente = c.id_paciente
             JOIN personas pp ON pp.id_persona = pa.id_persona
-            WHERE sa.id_agenda_horario = %s AND sa.estado_slot = 'RESERVADO'
+            WHERE sa.id_agenda_horario = %(id)s AND sa.estado_slot = 'RESERVADO'
               AND sa.slot_inicio >= {self.SQL_AHORA} AND ec.es_final = FALSE
               AND {condicion}
             ORDER BY sa.slot_inicio
-        """, (id_agenda_horario,))
+        """, params)
 
     def getSlotsByAgendaHorario(self, id_agenda_horario):
         """Lista los turnos (slots) generados para el horario de agenda."""

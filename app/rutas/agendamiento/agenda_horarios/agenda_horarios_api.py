@@ -91,6 +91,19 @@ def _advertenciaHorarioClinica(id_dia_semana, hora_inicio, hora_fin):
     return None
 
 
+def _mensajeConflicto(conflictos):
+    """Explica con qué horario choca el que se quiere guardar: el del especialista, el del consultorio o los dos."""
+    partes = []
+    for c in conflictos:
+        vigencia = f"desde el {c['fec_desde']}" + (f" hasta el {c['fec_hasta']}" if c['fec_hasta'] else ', sin fecha de fin')
+        horario = f"el {c['dia']} de {c['hora_inicio']} a {c['hora_fin']}"
+        if c['mismo_especialista']:
+            partes.append(f"{c['especialista']} ya tiene horario {horario} en {c['des_consultorio']} ({vigencia}).")
+        else:
+            partes.append(f"{c['des_consultorio']} ya está ocupado {horario} por {c['especialista']} ({vigencia}).")
+    return 'No se puede guardar el horario: ' + ' '.join(partes)
+
+
 @agendahorariosapi.route('/especialistas', methods=['GET'])
 @role_required("ADMINISTRADOR", "RECEPCION")
 def getEspecialistas():
@@ -175,11 +188,12 @@ def addAgendaHorario():
         return jsonify({'success': False, 'error': error}), 400
 
     agendadao = AgendaHorariosDao()
-    if agendadao.validarConflictoHorario(
+    conflictos = agendadao.getConflictosHorario(
         data['id_especialista'], data['id_consultorio'], data['id_dia_semana'],
         data['hora_inicio'], data['hora_fin'], data['fec_desde'], data.get('fec_hasta')
-    ):
-        return jsonify({'success': False, 'error': 'Ya existe un horario que se superpone para ese especialista o consultorio en ese día.'}), 400
+    )
+    if conflictos:
+        return jsonify({'success': False, 'error': _mensajeConflicto(conflictos)}), 400
 
     try:
         datos = {
@@ -219,12 +233,20 @@ def updateAgendaHorario(id_agenda_horario):
     if error:
         return jsonify({'success': False, 'error': error}), 400
 
-    if agendadao.validarConflictoHorario(
+    conflictos = agendadao.getConflictosHorario(
         data['id_especialista'], data['id_consultorio'], data['id_dia_semana'],
         data['hora_inicio'], data['hora_fin'], data['fec_desde'], data.get('fec_hasta'),
         excluir_id=id_agenda_horario
-    ):
-        return jsonify({'success': False, 'error': 'Ya existe un horario que se superpone para ese especialista o consultorio en ese día.'}), 400
+    )
+    if conflictos:
+        return jsonify({'success': False, 'error': _mensajeConflicto(conflictos)}), 400
+
+    # Si el cambio deja citas reservadas fuera del horario nuevo, no se guarda: se muestran para reprogramarlas antes
+    citas = agendadao.getCitasFueraDeAgenda(id_agenda_horario, nuevo=data)
+    if citas:
+        return jsonify({'success': False, 'citas_afectadas': citas,
+                        'error': f"No se puede cambiar el horario: {len(citas)} {'cita reservada quedaría' if len(citas) == 1 else 'citas reservadas quedarían'} "
+                                 "fuera del horario nuevo. Reprográmelas o cancélelas desde Citas y vuelva a intentar."}), 400
 
     try:
         datos = {
@@ -241,9 +263,7 @@ def updateAgendaHorario(id_agenda_horario):
             'fec_hasta': data.get('fec_hasta'),
         }
         agendadao.actualizarAgendaHorario(id_agenda_horario, datos, usuario_modificacion=session.get('id_usuario'))
-        # Citas reservadas que quedaron fuera del horario nuevo: se listan para reprogramarlas
         return jsonify({'success': True, 'data': {'id_agenda_horario': id_agenda_horario},
-                        'citas_afectadas': agendadao.getCitasFueraDeAgenda(id_agenda_horario),
                         'advertencia': _advertenciaHorarioClinica(data['id_dia_semana'], data['hora_inicio'], data['hora_fin']),
                         'error': None}), 200
     except Exception as e:
@@ -263,13 +283,17 @@ def cambiarEstadoAgendaHorario(id_agenda_horario):
 
     estado = bool(data.get('est_agenda_horario', True))
 
+    # Un horario con citas reservadas no se desactiva: se muestran las citas para reprogramarlas o cancelarlas antes
+    citas = [] if estado else agendadao.getCitasFueraDeAgenda(id_agenda_horario, todas=True)
+    if citas:
+        return jsonify({'success': False, 'citas_afectadas': citas,
+                        'error': f"No se puede desactivar el horario: tiene {len(citas)} {'cita reservada' if len(citas) == 1 else 'citas reservadas'}. "
+                                 "Reprográmelas o cancélelas desde Citas y vuelva a intentar."}), 400
+
     try:
         agendadao.cambiarEstadoAgendaHorario(id_agenda_horario, estado, usuario_modificacion=session.get('id_usuario'))
         accion = 'activado' if estado else 'desactivado'
-        # Al desactivar, las citas que tenía siguen reservadas: se listan para reprogramarlas o cancelarlas
-        citas = [] if estado else agendadao.getCitasFueraDeAgenda(id_agenda_horario, todas=True)
-        return jsonify({'success': True, 'mensaje': f'Horario {accion} correctamente.', 'citas_afectadas': citas,
-                        'error': None}), 200
+        return jsonify({'success': True, 'mensaje': f'Horario {accion} correctamente.', 'error': None}), 200
     except Exception as e:
         app.logger.error(f"Error al cambiar estado del horario: {str(e)}")
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático — Política de privacidad — SYSCLIN
+    Página pública (sin sesión), enlazada desde el pie del login y el menú de usuario.
+    BORRADOR: el texto debe ser revisado por la clínica / asesor legal antes de usarse.
+    Mismo criterio visual que docs/prototipos/login_clinico.html.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Política de privacidad - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <script>
+        (function () {
+            var stored = null;
+            try { stored = localStorage.getItem('lte-theme'); } catch (e) {}
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-bs-theme',
+                stored === 'dark' || (!stored && prefersDark) ? 'dark' : 'light');
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bs-border-radius: 2px; --bs-border-radius-sm: 2px; --bs-border-radius-lg: 2px;
+            --bs-border-radius-xl: 2px; --bs-border-radius-xxl: 2px; --bs-border-radius-pill: 2px;
+        }
+        :root, [data-bs-theme="light"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-link-color: #5b21b6; --bs-link-color-rgb: 91, 33, 182;
+            --bs-link-hover-color: #4c1d95; --bs-link-hover-color-rgb: 76, 29, 149;
+        }
+        [data-bs-theme="dark"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-link-color: #a78bfa; --bs-link-color-rgb: 167, 139, 250;
+            --bs-link-hover-color: #c4b5fd; --bs-link-hover-color-rgb: 196, 181, 253;
+        }
+        .card { --bs-card-border-radius: 0; --bs-card-inner-border-radius: 0; }
+        .brand-banner { color: #fff; background: linear-gradient(160deg, #1e1b4b 0%, #3730a3 55%, #6d28d9 100%); }
+        .brand-logo { width: 32px; height: 32px; object-fit: contain; filter: brightness(100) saturate(0); }
+        .doc { max-width: 860px; }
+        .doc h2 { font-size: 1.15rem; font-weight: 700; margin-top: 2rem; }
+        .doc-toc a { text-decoration: none; }
+        .theme-sun { display: none; }
+        [data-bs-theme="dark"] .theme-sun { display: inline-block; }
+        [data-bs-theme="dark"] .theme-moon { display: none; }
+    </style>
+</head>
+<body class="bg-body-tertiary">
+
+    <header class="brand-banner d-flex align-items-center gap-3 px-4 py-3">
+        <img src="../app/static/img/sys_logo.png" alt="" class="brand-logo">
+        <div class="flex-grow-1">
+            <div class="fw-bold lh-1">SYSCLIN</div>
+            <div class="small" style="color:rgba(255,255,255,.78)">Sistema de Gestión Clínica</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-light" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">
+            <span class="theme-moon"><i class="fas fa-moon"></i></span>
+            <span class="theme-sun"><i class="fas fa-sun"></i></span>
+        </button>
+    </header>
+
+    <main class="container doc py-4 py-md-5">
+        <nav class="small mb-3">
+            <a href="login_clinico.html"><i class="fas fa-arrow-left me-1"></i>Volver al inicio de sesión</a>
+        </nav>
+
+        <div class="alert alert-warning small" role="alert">
+            <i class="fas fa-triangle-exclamation me-2"></i><strong>Borrador.</strong>
+            Texto de trabajo para revisión de la clínica y de un asesor legal. Los datos entre corchetes se completan antes de publicar.
+        </div>
+
+        <div class="card border">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h3 fw-bold mb-1">Política de privacidad</h1>
+                <p class="text-body-secondary small mb-4">Versión 0.1 (borrador) · Vigente desde [fecha] · Última actualización: 26/10/2026</p>
+
+                <div class="doc-toc small border-start ps-3 mb-4">
+                    <div class="fw-semibold mb-1">Contenido</div>
+                    <ol class="mb-0 ps-3">
+                        <li><a href="#s1">Quién es el responsable</a></li>
+                        <li><a href="#s2">Qué datos se recogen</a></li>
+                        <li><a href="#s3">Para qué se usan</a></li>
+                        <li><a href="#s4">Quién puede verlos</a></li>
+                        <li><a href="#s5">Avisos por WhatsApp y correo</a></li>
+                        <li><a href="#s6">Seguridad y auditoría</a></li>
+                        <li><a href="#s7">Cuánto tiempo se conservan</a></li>
+                        <li><a href="#s8">Derechos de las personas</a></li>
+                        <li><a href="#s9">Cookies y dispositivo de confianza</a></li>
+                        <li><a href="#s10">Cambios y contacto</a></li>
+                    </ol>
+                </div>
+
+                <h2 id="s1">1. Quién es el responsable</h2>
+                <p>El responsable del tratamiento de los datos es <strong>[Nombre de la clínica]</strong>, RUC [RUC], con domicilio en [dirección], [ciudad], Paraguay. SYSCLIN es la herramienta con la que la clínica gestiona agenda, historia clínica, facturación y caja.</p>
+
+                <h2 id="s2">2. Qué datos se recogen</h2>
+                <ul>
+                    <li><strong>Identificación y contacto:</strong> nombre, cédula, fecha de nacimiento, teléfono, correo, dirección, representante legal en el caso de menores.</li>
+                    <li><strong>Datos de salud (sensibles):</strong> motivo de consulta, evaluaciones, diagnósticos, evolución, derivaciones, órdenes de estudios e insumos utilizados.</li>
+                    <li><strong>Datos administrativos:</strong> citas, facturas, cobros y notas de crédito.</li>
+                    <li><strong>Datos de las cuentas del personal:</strong> usuario, rol, dispositivos de confianza y registro de actividad.</li>
+                </ul>
+
+                <h2 id="s3">3. Para qué se usan</h2>
+                <ul>
+                    <li>Brindar la atención clínica y dar continuidad al tratamiento.</li>
+                    <li>Agendar citas y enviar recordatorios.</li>
+                    <li>Emitir comprobantes y llevar el control de caja.</li>
+                    <li>Cumplir obligaciones legales, tributarias y de conservación de historias clínicas.</li>
+                </ul>
+                <p>No se venden ni se ceden datos a terceros con fines comerciales.</p>
+
+                <h2 id="s4">4. Quién puede verlos</h2>
+                <p>El acceso depende del rol. Cada persona ve únicamente lo necesario para su función:</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light"><tr><th>Rol</th><th>Acceso</th></tr></thead>
+                        <tbody>
+                            <tr><td>Clínico</td><td>Fichas, consultas y agenda propias.</td></tr>
+                            <tr><td>Recepción</td><td>Datos de contacto, agenda y citas. Sin contenido clínico.</td></tr>
+                            <tr><td>Ventas / caja</td><td>Datos de facturación y la referencia del documento. Nunca contenido clínico.</td></tr>
+                            <tr><td>Administrador</td><td>Gestión de usuarios, permisos y reportes.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Todo el personal está obligado a guardar el secreto profesional y la confidencialidad.</p>
+
+                <h2 id="s5">5. Avisos por WhatsApp y correo</h2>
+                <p>Con la autorización de la persona, el sistema envía recordatorios de citas y documentos (por ejemplo, el consentimiento informado u órdenes de estudios) al número o correo registrado. Estos canales pertenecen a servicios de terceros; por eso se envía el mínimo necesario y no se incluyen diagnósticos en los mensajes. Puede pedir en cualquier momento que se dejen de enviar.</p>
+
+                <h2 id="s6">6. Seguridad y auditoría</h2>
+                <ul>
+                    <li>Contraseñas almacenadas cifradas y verificación en dos pasos (MFA) en las cuentas del personal.</li>
+                    <li>Bloqueo automático de cuentas ante intentos fallidos.</li>
+                    <li>Registro de auditoría: quién consultó o modificó un dato, y cuándo.</li>
+                    <li>Copias de seguridad diarias de la base de datos.</li>
+                </ul>
+
+                <h2 id="s7">7. Cuánto tiempo se conservan</h2>
+                <p>Las historias clínicas se conservan durante el plazo que exija la normativa sanitaria aplicable ([plazo a confirmar]). Los comprobantes, durante el plazo tributario vigente. Cumplidos los plazos, los datos se eliminan o se anonimizan.</p>
+
+                <h2 id="s8">8. Derechos de las personas</h2>
+                <p>Toda persona puede solicitar <strong>acceso, rectificación, actualización y supresión</strong> de sus datos, así como oponerse a determinados usos, dentro de los límites que fije la ley (por ejemplo, la obligación de conservar la historia clínica). La solicitud se presenta en la clínica o por [correo de contacto]; se responde en un plazo máximo de [N] días hábiles.</p>
+
+                <h2 id="s9">9. Cookies y dispositivo de confianza</h2>
+                <p>SYSCLIN usa una cookie de sesión para mantener el acceso y, si el usuario lo acepta, una cookie de <em>dispositivo de confianza</em> por 60 días para no pedir el código MFA en cada ingreso. No se usan cookies de publicidad ni de seguimiento.</p>
+
+                <h2 id="s10">10. Cambios y contacto</h2>
+                <p>Si esta política cambia, se publicará la nueva versión con su fecha. Para consultas: <strong>[correo]</strong> · <strong>[teléfono]</strong>.</p>
+            </div>
+        </div>
+
+        <footer class="small text-body-secondary text-center mt-4">
+            &copy; 2026 SYSCLIN ·
+            <a href="politica_privacidad.html">Privacidad</a> ·
+            <a href="terminos_condiciones.html">Términos y condiciones</a>
+        </footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('themeToggle').addEventListener('click', function () {
+            var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', next);
+            try { localStorage.setItem('lte-theme', next); } catch (e) {}
+        });
+    </script>
+</body>
+</html>

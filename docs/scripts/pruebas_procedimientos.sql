@@ -67,7 +67,7 @@ BEGIN
     END IF;
     BEGIN
         SELECT s.saldo_esperado INTO v_esp FROM fn_saldo_esperado_caja(v_caja) s;
-        CALL sp_cerrar_caja(v_caja, v_usr, v_esp, v_id, v_esp, v_dif);
+        CALL sp_cerrar_caja(v_caja, v_usr, v_esp, v_id, v_esp, v_dif, v_esp);  -- el saldo final es la suma de lo contado: todo en efectivo
         SELECT caja_estado INTO v_estado FROM cajas WHERE id_caja = v_caja;
         SELECT count(*) INTO v_abiertas FROM aperturas_cierre_caja WHERE id_caja = v_caja AND est_apertura_cierre = 'A';
         PERFORM pg_temp.informar('sp_cerrar_caja feliz: devuelve id de cierre y diferencia 0', v_id IS NOT NULL AND v_dif = 0, 'cierre ' || v_id);
@@ -81,8 +81,9 @@ BEGIN
     PERFORM pg_temp.espera_error('sp_cerrar_caja: caja nula', format('CALL sp_cerrar_caja(NULL, %s, 0, NULL, NULL, NULL)', v_usr), '%obligatorios%');
     PERFORM pg_temp.espera_error('sp_cerrar_caja: saldo negativo', format('CALL sp_cerrar_caja(%s, %s, -5, NULL, NULL, NULL)', v_caja, v_usr), '%saldo final%');
     PERFORM pg_temp.espera_error('sp_cerrar_caja: monto negativo', format('CALL sp_cerrar_caja(%s, %s, 5, NULL, NULL, NULL, -1)', v_caja, v_usr), '%montos contados%');
-    PERFORM pg_temp.espera_error('sp_cerrar_caja: caja inexistente', format('CALL sp_cerrar_caja(-1, %s, 5, NULL, NULL, NULL)', v_usr), '%no existe%');
-    PERFORM pg_temp.espera_error('sp_cerrar_caja: usuario inexistente', format('CALL sp_cerrar_caja(%s, -1, 5, NULL, NULL, NULL)', v_caja), '%usuario indicado no existe%');
+    PERFORM pg_temp.espera_error('sp_cerrar_caja: saldo final distinto de lo contado', format('CALL sp_cerrar_caja(%s, %s, 5, NULL, NULL, NULL, 3)', v_caja, v_usr), '%suma de los montos contados%');
+    PERFORM pg_temp.espera_error('sp_cerrar_caja: caja inexistente', format('CALL sp_cerrar_caja(-1, %s, 5, NULL, NULL, NULL, 5)', v_usr), '%no existe%');
+    PERFORM pg_temp.espera_error('sp_cerrar_caja: usuario inexistente', format('CALL sp_cerrar_caja(%s, -1, 5, NULL, NULL, NULL, 5)', v_caja), '%usuario indicado no existe%');
 END $$;
 
 -- ═══════════════════════════ sp_anular_factura

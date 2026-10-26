@@ -211,3 +211,27 @@ class EmailService:
             'mime': ('application', 'pdf'),
         }]
         return self.enviar_correo(correo_destino, asunto, cuerpo, adjuntos=adjuntos)
+
+    def enviar_orden_estudio(self, correo_destino, numero_orden, nombre_paciente, pdf_bytes, nombre_clinica="SYSCLIN"):
+        """
+        Envía la orden de estudios o análisis (PDF) al paciente por correo.
+
+        Returns:
+            tuple: (success: bool, error: str, tipo_error: TipoError)
+        """
+        saludo = self._variar(self._SALUDOS).format(nombre=nombre_paciente)
+        cierre = self._variar(self._CIERRES)
+
+        asunto = f"{nombre_clinica} - Orden de estudios {numero_orden}"
+        cuerpo = (
+            f"{saludo}\n\n"
+            f"Adjuntamos su orden de estudios {numero_orden}, indicada en su consulta. "
+            f"Preséntela en el laboratorio o centro donde se vaya a realizar los estudios.\n\n"
+            f"{cierre}"
+        )
+        adjuntos = [{
+            'nombre': f"orden_{numero_orden}.pdf",
+            'contenido': pdf_bytes,
+            'mime': ('application', 'pdf'),
+        }]
+        return self.enviar_correo(correo_destino, asunto, cuerpo, adjuntos=adjuntos)

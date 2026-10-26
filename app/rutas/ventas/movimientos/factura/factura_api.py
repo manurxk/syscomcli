@@ -71,6 +71,22 @@ def getFacturas():
         return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
 
 
+@facturaapi.route('/facturas/consultas-pendientes', methods=['GET'])
+@role_required(*ROLES_VENTAS)
+@permiso_requerido("VENTAS", "LEER")
+def getConsultasPendientesDeFacturar():
+    """GET: consultas del paciente (?id_paciente=) que todavía no se facturaron. Solo fecha, especialista, tipo de
+    cita y estado: la factura nunca muestra contenido clínico."""
+    id_paciente = request.args.get('id_paciente', type=int)
+    if not id_paciente:
+        return jsonify({'success': False, 'error': msg_obligatorio('id_paciente')}), 400
+    try:
+        return jsonify({'success': True, 'data': FacturaDao().getConsultasPendientesDeFacturar(id_paciente), 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener las consultas pendientes de facturar: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
 @facturaapi.route('/facturas/<int:id_factura>', methods=['GET'])
 @role_required(*ROLES_VENTAS)
 @permiso_requerido("VENTAS", "LEER")

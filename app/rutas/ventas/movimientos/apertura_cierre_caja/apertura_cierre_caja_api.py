@@ -146,14 +146,12 @@ def cerrarCaja():
         return jsonify({'success': False, 'error': msg_obligatorio('Caja')}), 400
     if not id_usuario:
         return jsonify({'success': False, 'error': msg_obligatorio('Usuario')}), 400
-    if data.get('saldo_final') is None:
-        return jsonify({'success': False, 'error': msg_obligatorio('Saldo final')}), 400
 
     try:
-        nuevo_id = AperturaCierreCajaDao().guardarCierre(
+        cierre = AperturaCierreCajaDao().guardarCierre(
             id_caja=id_caja,
             id_usuario=id_usuario,
-            saldo_final=data.get('saldo_final'),
+            saldo_final=None,  # es la suma de los montos contados: la calcula guardarCierre
             monto_efectivo=data.get('monto_efectivo', 0),
             monto_cheques=data.get('monto_cheques', 0),
             monto_tarjetas=data.get('monto_tarjetas', 0),
@@ -161,9 +159,9 @@ def cerrarCaja():
             observaciones=data.get('observaciones'),
             usuario_creacion=session.get('id_usuario'),
         )
-        if nuevo_id is None:
+        if cierre is None:
             return jsonify({'success': False, 'error': 'No se pudo registrar el cierre.'}), 500
-        return jsonify({'success': True, 'data': {'id_apertura_cierre': nuevo_id}, 'error': None}), 201
+        return jsonify({'success': True, 'data': cierre, 'error': None}), 201
     except ValueError as e:
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:

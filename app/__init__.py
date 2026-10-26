@@ -132,6 +132,7 @@ from app.rutas.ventas.movimientos.libro_ventas.libro_ventas_api import librovent
 from app.rutas.reporte.reporte_routes import reportemod
 from app.rutas.reporte.reporte_api import reporteapi
 from app.rutas.ayuda.ayuda_routes import ayudamod
+from app.rutas.informacion.informacion_routes import informacionmod
 from app.context_processors import init_context_processors
 from app.utils.template_helpers import registrar_funciones_template
 
@@ -301,6 +302,7 @@ app.register_blueprint(libroventasapi, url_prefix='/api/v1')
 app.register_blueprint(reportemod, url_prefix='/reporte')
 app.register_blueprint(reporteapi, url_prefix='/api/v1')
 app.register_blueprint(ayudamod, url_prefix='/ayuda')
+app.register_blueprint(informacionmod)
 
 # Context processors y helpers de template
 init_context_processors(app)

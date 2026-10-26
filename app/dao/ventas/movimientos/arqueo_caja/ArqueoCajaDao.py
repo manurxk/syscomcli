@@ -1,6 +1,7 @@
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
 from app.core.moneda import get_moneda, redondear
+from app.dao.ventas.movimientos.apertura_cierre_caja.AperturaCierreCajaDao import AperturaCierreCajaDao
 
 
 class ArqueoCajaDao(BaseDAO):
@@ -97,38 +98,21 @@ class ArqueoCajaDao(BaseDAO):
         return self.execute_query(sql, (id_caja,))
 
     def calcularMontoEsperado(self, id_apertura_cierre, id_caja):
-        """Calcula el monto esperado de la apertura indicada para compararlo con el conteo real."""
+        """Dinero físico que debería haber en la caja ahora (efectivo + cheques): lo que se cuenta con las manos en un
+        arqueo. Incluye el saldo inicial y descuenta las recaudaciones depositadas; no incluye tarjetas ni transferencias,
+        que no están en el cajón. Solo existe para la apertura activa (None si la apertura no existe o ya se cerró)."""
         apertura = self.execute_query_one("""
-            SELECT saldo_inicial, saldo_final, id_moneda,
-                   TO_CHAR(fecha_operacion, 'YYYY-MM-DD HH24:MI:SS') AS fecha_operacion
-            FROM aperturas_cierre_caja
-            WHERE id_apertura_cierre = %s
+            SELECT id_caja, est_apertura_cierre FROM aperturas_cierre_caja
+            WHERE id_apertura_cierre = %s AND tipo_operacion = 'APERTURA'
         """, (id_apertura_cierre,))
-
-        if not apertura:
+        if not apertura or apertura['est_apertura_cierre'] != 'A' or apertura['id_caja'] != id_caja:
             return None
-
-        if apertura['saldo_final'] is not None:
-            return float(apertura['saldo_final'])
-
-        try:
-            row = self.execute_query_one("""
-                SELECT COALESCE(SUM(cd.monto_cobrado), 0) AS total_cobranzas
-                FROM cobranzas co
-                JOIN cobranza_detalle cd ON co.id_cobranza = cd.id_cobranza
-                WHERE co.id_caja = %s
-                  AND co.fecha_cobranza >= %s
-                  AND co.est_cobranza = 'REGISTRADA'
-            """, (id_caja, apertura['fecha_operacion']))
-            total = float(row['total_cobranzas']) if row else 0
-        except Exception:
-            total = 0
-
-        return float(apertura['saldo_inicial'] or 0) + total
+        esperado = AperturaCierreCajaDao().calcularSaldoEsperado(id_caja)
+        return esperado['esperado_fisico'] if esperado else None
 
     def guardarArqueo(self, id_apertura_cierre, id_caja, monto_real,
                       observaciones=None, usuario_creacion=None):
-        """Registra el arqueo: compara el monto real contado con el esperado y guarda la diferencia."""
+        """Registra el arqueo: compara el dinero físico contado (efectivo + cheques) con el esperado y guarda la diferencia."""
         apertura = self.execute_query_one(
             "SELECT id_moneda FROM aperturas_cierre_caja WHERE id_apertura_cierre = %s",
             (id_apertura_cierre,)
@@ -140,7 +124,7 @@ class ArqueoCajaDao(BaseDAO):
 
         monto_esperado = self.calcularMontoEsperado(id_apertura_cierre, id_caja)
         if monto_esperado is None:
-            raise ValueError("No se encontró la apertura de caja especificada.")
+            raise ValueError("El arqueo se hace sobre la apertura activa de la caja: esa apertura no existe o ya se cerró.")
         monto_esperado = redondear(monto_esperado, decimales)
         monto_real = redondear(monto_real, decimales)
 

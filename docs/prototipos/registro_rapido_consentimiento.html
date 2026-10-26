@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<!--
+    Prototipo estático — Registro rápido de paciente + botón "Consentimiento informado" — SYSCLIN
+    Parte del modal #modalRegistroRapido de app/rutas/agendamiento/cita/templates/cita-agregar.html.
+
+    Qué muestra:
+    - Un bloque nuevo "Consentimiento informado" debajo de los datos del paciente.
+    - El botón de envío se habilita solo si hay teléfono válido.
+    - Estados: Sin enviar -> Enviado (pendiente de aceptación) -> Aceptado (con fecha y vía).
+    - "Registrar y Continuar" NO depende del consentimiento: se puede registrar y enviarlo después
+      (también debería poder reenviarse desde la ficha del paciente).
+
+    Simulación: escribir un teléfono 099XXXXXXX habilita el botón. Los teléfonos de prueba son 0991000xxx.
+    Para ver "Aceptado", usar el enlace "Simular aceptación".
+    Bootstrap 5.3.7, mismas variables que docs/prototipos/login_clinico.html.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registro rápido con consentimiento - SYSCLIN</title>
+    <link rel="shortcut icon" href="../app/static/img/sys_logo.png">
+    <script>
+        (function () {
+            var stored = null;
+            try { stored = localStorage.getItem('lte-theme'); } catch (e) {}
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-bs-theme',
+                stored === 'dark' || (!stored && prefersDark) ? 'dark' : 'light');
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bs-border-radius: 2px; --bs-border-radius-sm: 2px; --bs-border-radius-lg: 2px;
+            --bs-border-radius-xl: 2px; --bs-border-radius-xxl: 2px; --bs-border-radius-pill: 2px;
+        }
+        :root, [data-bs-theme="light"], [data-bs-theme="dark"] {
+            --bs-body-font-family: 'Nunito', sans-serif;
+            --bs-primary: #5b21b6; --bs-primary-rgb: 91, 33, 182;
+        }
+        .btn-primary {
+            --bs-btn-bg: #5b21b6; --bs-btn-border-color: #5b21b6;
+            --bs-btn-hover-bg: #4c1d95; --bs-btn-hover-border-color: #4c1d95;
+            --bs-btn-active-bg: #4c1d95; --bs-btn-active-border-color: #4c1d95;
+            --bs-btn-disabled-bg: #5b21b6; --bs-btn-disabled-border-color: #5b21b6;
+        }
+        .btn-outline-primary {
+            --bs-btn-color: #5b21b6; --bs-btn-border-color: #5b21b6;
+            --bs-btn-hover-bg: #5b21b6; --bs-btn-hover-border-color: #5b21b6;
+            --bs-btn-active-bg: #4c1d95; --bs-btn-active-border-color: #4c1d95;
+        }
+        .modal-content { border-radius: 0; }
+        .consent-box { border: 1px solid var(--bs-border-color); background: var(--bs-tertiary-bg); }
+    </style>
+</head>
+<body class="bg-body-tertiary">
+
+    <div class="container py-5 text-center text-body-secondary small">
+        Fondo de la pantalla "Nueva cita". El modal se abre solo.
+        <div class="mt-2"><button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalRegistroRapido">Reabrir modal</button></div>
+    </div>
+
+    <!-- MODAL: REGISTRO RÁPIDO DE PACIENTE -->
+    <div class="modal fade" id="modalRegistroRapido" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold">Registro Rápido de Paciente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formRegistroRapido" novalidate>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="fw-semibold form-label mb-1">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" value="Paciente">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-semibold form-label mb-1">Apellido <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" value="de Prueba">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="fw-semibold form-label mb-1">Cédula <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" value="0.000.001">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-semibold form-label mb-1">Teléfono</label>
+                                <input type="tel" class="form-control" id="txtTelefono" placeholder="Ej: 0981123456" value="0991000001">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-semibold form-label mb-1">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" value="2015-05-12">
+                        </div>
+
+                        <!-- ═════ NUEVO: Consentimiento informado ═════ -->
+                        <div class="consent-box p-3">
+                            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                <div>
+                                    <div class="fw-semibold"><i class="fas fa-file-signature me-2 text-primary"></i>Consentimiento informado</div>
+                                    <div class="small text-body-secondary">Se envía en PDF por WhatsApp al número registrado.</div>
+                                </div>
+                                <span class="badge text-bg-secondary" id="badgeEstado">Sin enviar</span>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-primary" id="btnEnviarConsentimiento">
+                                    <i class="fab fa-whatsapp me-1"></i><span id="txtBtnEnviar">Enviar consentimiento</span>
+                                </button>
+                                <a href="consentimiento_informado_ejemplo.html" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-eye me-1"></i>Ver documento
+                                </a>
+                            </div>
+
+                            <div class="small text-body-secondary mt-2" id="notaConsentimiento"></div>
+                            <div class="small mt-1" id="lineaSimular" hidden>
+                                <a href="#" id="lnkSimular">Simular aceptación</a>
+                                <span class="text-body-secondary">(en el sistema real: al subir la foto/escaneo firmado o marcar «Aceptó por WhatsApp»)</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-body-tertiary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success">Registrar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aviso de resultado (equivale al toast del sistema) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="toastMsg" class="toast align-items-center text-bg-success border-0" role="status">
+            <div class="d-flex"><div class="toast-body" id="toastTexto"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+        var tel = document.getElementById('txtTelefono');
+        var btn = document.getElementById('btnEnviarConsentimiento');
+        var badge = document.getElementById('badgeEstado');
+        var nota = document.getElementById('notaConsentimiento');
+        var lineaSim = document.getElementById('lineaSimular');
+        var txtBtn = document.getElementById('txtBtnEnviar');
+        var estado = 'sin_enviar';
+
+        function telefonoValido() { return /^09[6-9]\d{7}$/.test(tel.value.replace(/\s/g, '')); }
+
+        function pintar() {
+            var ok = telefonoValido();
+            if (estado === 'sin_enviar') {
+                badge.className = 'badge text-bg-secondary'; badge.textContent = 'Sin enviar';
+                txtBtn.textContent = 'Enviar consentimiento';
+                btn.disabled = !ok;
+                nota.textContent = ok ? 'Se enviará a ' + tel.value + '.' : 'Ingrese un teléfono válido (09XXXXXXXX) para poder enviarlo.';
+                lineaSim.hidden = true;
+            } else if (estado === 'enviado') {
+                badge.className = 'badge text-bg-warning'; badge.textContent = 'Enviado · pendiente de aceptación';
+                txtBtn.textContent = 'Reenviar';
+                btn.disabled = !ok;
+                nota.textContent = 'Enviado el 26/10/2026 14:32 por lgonzalez a ' + tel.value + '.';
+                lineaSim.hidden = false;
+            } else {
+                badge.className = 'badge text-bg-success'; badge.textContent = 'Aceptado';
+                txtBtn.textContent = 'Reenviar';
+                btn.disabled = !ok;
+                nota.textContent = 'Aceptado el 26/10/2026 15:05 · vía: respuesta ACEPTO por WhatsApp · versión 0.1.';
+                lineaSim.hidden = true;
+            }
+        }
+
+        function aviso(texto) {
+            document.getElementById('toastTexto').textContent = texto;
+            bootstrap.Toast.getOrCreateInstance(document.getElementById('toastMsg'), { delay: 3500 }).show();
+        }
+
+        tel.addEventListener('input', pintar);
+        btn.addEventListener('click', function () {
+            btn.disabled = true;
+            txtBtn.textContent = 'Enviando…';
+            setTimeout(function () {
+                estado = 'enviado'; pintar();
+                aviso('Consentimiento enviado por WhatsApp a ' + tel.value + '.');
+            }, 800);
+        });
+        document.getElementById('lnkSimular').addEventListener('click', function (e) {
+            e.preventDefault(); estado = 'aceptado'; pintar();
+        });
+
+        pintar();
+        window.addEventListener('load', function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalRegistroRapido')).show();
+        });
+    </script>
+</body>
+</html>

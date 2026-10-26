@@ -4,6 +4,9 @@ from app.dao.agendamiento.cita.CitaDao import CitaDao
 from app.dao.mantenimiento.referenciales.empresa.EmpresaDao import EmpresaDao
 from app.services.ficha_html_pdf_service import FichaHtmlPdfService
 from app.auth.utils.decorators import role_required
+from app.utils.auditoria_constantes import AuditAccion
+from app.utils.ficha_acceso import (MENSAJE_SIN_ACCESO, es_administrador, id_especialista_de_sesion,
+                                    puede_ver_ficha, registrar)
 
 fichaapi = Blueprint('fichaapi', __name__)
 
@@ -21,11 +24,35 @@ def _resolver_id_especialista():
     return CitaDao().getEspecialistaPorFuncionario(id_funcionario)
 
 
+def _sin_acceso(id_paciente):
+    """Respuesta 403 si el usuario no puede ver la ficha de ese paciente (y queda en la auditoría); None si puede."""
+    if puede_ver_ficha(id_paciente):
+        return None
+    registrar(id_paciente, 'Intentó acceder sin vínculo a la ficha clínica de')
+    return jsonify({'success': False, 'error': MENSAJE_SIN_ACCESO}), 403
+
+
+@fichaapi.route('/clinico/ficha/pacientes', methods=['GET'])
+@role_required(*ROLES_FICHA)
+def getPacientesConFicha():
+    """GET: pacientes cuya ficha puede abrir el usuario (el clínico, los que tienen vínculo con él; el Administrador, todos)."""
+    try:
+        yo = None if es_administrador() else id_especialista_de_sesion()
+        if not es_administrador() and not yo:
+            return jsonify({'success': True, 'data': [], 'error': None}), 200
+        return jsonify({'success': True, 'data': FichaDao().getPacientesConAcceso(yo), 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al listar los pacientes con ficha: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
 @fichaapi.route('/clinico/ficha/<int:id_paciente>', methods=['GET'])
 @role_required(*ROLES_FICHA)
 def getFicha(id_paciente):
-    """GET: ficha clínica completa del paciente; 404 si no existe."""
+    """GET: ficha clínica completa del paciente; 403 si no tiene vínculo con él; 404 si no existe."""
     try:
+        if (denegado := _sin_acceso(id_paciente)):
+            return denegado
         data = FichaDao().getFichaCompleta(id_paciente)
         if not data or not data.get('paciente'):
             return jsonify({'success': False, 'error': 'Paciente no encontrado.'}), 404
@@ -47,9 +74,12 @@ def getFichaPdf(id_paciente):
         }), 403
 
     try:
+        if (denegado := _sin_acceso(id_paciente)):
+            return denegado
         data = FichaDao().getFichaCompleta(id_paciente)
         if not data or not data.get('paciente'):
             return jsonify({'success': False, 'error': 'Paciente no encontrado.'}), 404
+        registrar(id_paciente, 'Descargó el PDF de la ficha clínica de', accion=AuditAccion.REPORT_EXPORT)
 
         secciones_param = request.args.get('secciones')
         if secciones_param is not None:
@@ -84,6 +114,8 @@ def getFichaPdf(id_paciente):
 def getNotas(id_paciente):
     """GET: notas clínicas del paciente."""
     try:
+        if (denegado := _sin_acceso(id_paciente)):
+            return denegado
         data = FichaDao().getNotasPaciente(id_paciente)
         return jsonify({'success': True, 'data': data, 'error': None}), 200
     except Exception as e:
@@ -103,6 +135,8 @@ def addNota(id_paciente):
     id_especialista = _resolver_id_especialista()
     if not id_especialista:
         return jsonify({'success': False, 'error': 'No se pudo determinar el especialista. Verificá tu perfil.'}), 400
+    if (denegado := _sin_acceso(id_paciente)):
+        return denegado
 
     try:
         id_nota = FichaDao().guardarNota(

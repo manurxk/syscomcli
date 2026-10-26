@@ -696,7 +696,9 @@ Agenda Médica
                     mostrarError(response.error || 'Error al guardar el horario');
                 }
             },
-            error: (xhr) => mostrarError(xhr.responseJSON?.error || 'Error al guardar el horario'),
+            error: (xhr) => {
+                if (!avisarCitasQueImpiden(xhr)) mostrarError(xhr.responseJSON?.error || 'Error al guardar el horario');
+            },
             complete: () => btn.prop('disabled', false).html(textoOriginal)
         });
     };
@@ -728,7 +730,7 @@ Agenda Médica
                         Swal.fire('Error', response.error || 'Error al cambiar el estado', 'error');
                     }
                 },
-                error: (xhr) => Swal.fire('Error', xhr.responseJSON?.error || 'Error al cambiar el estado', 'error')
+                error: (xhr) => { if (!avisarCitasQueImpiden(xhr)) Swal.fire('Error', xhr.responseJSON?.error || 'Error al cambiar el estado', 'error'); }
             });
         });
     };
@@ -739,6 +741,16 @@ Agenda Médica
     const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const listaCitas = (citas) => `<ul class="text-start small mb-0">${citas.map(c =>
         `<li><b>${esc(c.cita_inicio)}</b> · ${esc(c.paciente)} · ${esc(c.des_estado_cita)}</li>`).join('')}</ul>`;
+
+    // El servidor no guarda un cambio de horario (ni desactiva uno) si hay citas reservadas que quedarían afuera:
+    // las muestra para reprogramarlas o cancelarlas antes. Devuelve true si la respuesta traía esas citas.
+    const avisarCitasQueImpiden = (xhr) => {
+        const r = xhr.responseJSON || {};
+        if (!(r.citas_afectadas || []).length) return false;
+        Swal.fire({ title: 'Hay citas reservadas', icon: 'warning', width: 640,
+                    html: `<p class="mb-1">${esc(r.error)}</p>${listaCitas(r.citas_afectadas)}` });
+        return true;
+    };
 
     // Muestra el resultado de guardar/desactivar/bloquear: éxito simple, o con la lista de citas que hay que
     // reprogramar y/o la advertencia de horario de la clínica (no bloquea, solo avisa)

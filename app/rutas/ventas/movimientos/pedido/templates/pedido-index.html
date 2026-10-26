@@ -43,6 +43,8 @@
 {% block js %}
 <script>
   const CSRFToken = "{{ csrf_token() }}";
+  // Facturar abre Nueva Factura (VENTAS/CREAR)
+  const PUEDE_CREAR_FACTURA = {{ tiene_permiso_accion('VENTAS', 'CREAR') | tojson }};
 
   const badgeEstado = est => {
     const map = {
@@ -71,7 +73,8 @@
         { data: row => badgeEstado(row.pedido_estado), className: 'text-center' },
         {
           data: row => `
-            <a class="btn btn-datatable btn-icon btn-outline-primary me-1" href="/ventas/movimientos/pedido/pedido-agregar?id=${row.id_pedido}" title="Ver detalle"><i class="fas fa-eye"></i></a>
+            <button class="btn btn-datatable btn-icon btn-outline-primary me-1" name="btn_ver" data-id="${row.id_pedido}" title="Ver detalle"><i class="fas fa-eye"></i></button>
+            ${PUEDE_CREAR_FACTURA ? `<a class="btn btn-datatable btn-icon btn-outline-success me-1 ${['PENDIENTE','CONFIRMADO'].includes(row.pedido_estado)?'':'disabled'}" href="/ventas/movimientos/factura/factura-agregar?id_pedido=${row.id_pedido}" title="Facturar"><i class="fas fa-file-invoice-dollar"></i></a>` : ''}
             <button class="btn btn-datatable btn-icon btn-outline-warning" name="btn_cancelar" data-id="${row.id_pedido}" data-num="${row.pedido_numero}" title="Cancelar" ${row.pedido_estado==='CANCELADO'||row.pedido_estado==='FACTURADO'?'disabled':''}><i class="fas fa-ban"></i></button>
           `,
           className: 'text-center', orderable: false
@@ -105,6 +108,32 @@
     });
   };
 
-  $(function() { initDatatable(); cancelar(); });
+  const verDetalle = () => {
+    $('#tbl tbody').on('click', 'button[name="btn_ver"]', function() {
+      fetch(`/api/v1/pedidos/${$(this).data('id')}`).then(r => r.json()).then(d => {
+        if (!d.success) { Swal.fire('Error', d.error || 'No se pudo abrir el pedido.', 'error'); return; }
+        const p = d.data;
+        const filas = (p.detalles || []).map(x => `
+          <tr><td>${x.item_descripcion}</td><td class="text-center">${parseInt(x.item_cantidad)}</td>
+          <td class="text-end">${formatMoney(x.item_precio_unitario, p)}</td>
+          <td class="text-end">${formatMoney(x.item_subtotal, p)}</td></tr>`).join('');
+        Swal.fire({
+          title: p.pedido_numero, width: 700, confirmButtonText: 'Cerrar',
+          html: `<div class="text-start">
+            <p class="mb-1"><strong>Paciente:</strong> ${p.paciente_nombre} (${p.paciente_cedula || '—'})</p>
+            <p class="mb-1"><strong>Profesional:</strong> ${p.profesional_nombre || '—'}</p>
+            <p class="mb-1"><strong>Fecha:</strong> ${p.fecha_pedido} &nbsp; <strong>Entrega:</strong> ${p.fecha_entrega || '—'} &nbsp; ${badgeEstado(p.pedido_estado)}</p>
+            ${p.observaciones ? `<p class="mb-1"><strong>Observaciones:</strong> ${p.observaciones}</p>` : ''}
+            <table class="table table-sm table-bordered mt-2 mb-1">
+              <thead><tr><th>Descripción</th><th class="text-center">Cant.</th><th class="text-end">Precio</th><th class="text-end">Subtotal</th></tr></thead>
+              <tbody>${filas}</tbody>
+              <tfoot><tr><th colspan="3" class="text-end">Total</th><th class="text-end">${formatMoney(p.pedido_total, p)}</th></tr></tfoot>
+            </table></div>`
+        });
+      });
+    });
+  };
+
+  $(function() { initDatatable(); cancelar(); verDetalle(); });
 </script>
 {% endblock %}

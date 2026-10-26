@@ -248,6 +248,18 @@
               <tr id="filaVacia"><td colspan="7" class="text-center text-muted py-3">Sin ítems. Buscá un servicio en la fila de abajo.</td></tr>
             </tbody>
             <tfoot>
+              <!-- Consultas del paciente sin facturar: el ítem que se agrega queda ligado a la consulta elegida (sin contenido clínico) -->
+              <tr id="filaConsultaPendiente" style="display:none">
+                <td colspan="7" class="bg-light">
+                  <div class="d-flex flex-wrap align-items-center gap-2 small">
+                    <i class="fas fa-notes-medical text-primary"></i>
+                    <span class="fw-semibold">Consultas sin facturar de este paciente:</span>
+                    <select class="form-select form-select-sm w-auto" id="selConsultaItem"><option value="">Ítem sin consulta</option></select>
+                    <span class="text-muted">El ítem que agregues abajo queda ligado a la consulta elegida.</span>
+                  </div>
+                  <div class="small text-warning-emphasis mt-1" id="avisoConsultaSinCerrar" style="display:none"></div>
+                </td>
+              </tr>
               <!-- Carga del ítem en la propia tabla (sin modal): siempre debajo de los ítems ya cargados -->
               <tr class="fila-carga-item">
                 <td class="position-relative">
@@ -323,6 +335,45 @@ let detalles = [];
 
 function fmt(n) { return Number(n || 0).toLocaleString('es-PY'); }
 
+// ── Consultas del paciente sin facturar ──
+let consultasPendientes = [];
+const ESTADO_CONSULTA = { PENDIENTE: 'sin cerrar', EN_ATENCION: 'sin cerrar', EN_OBSERVACION: 'pendiente de observación', FINALIZADA: 'cerrada' };
+const TIPO_CITA = { PRIMERA_VEZ: 'Primera vez', SEGUIMIENTO: 'Seguimiento', TRATAMIENTO: 'Tratamiento' };
+
+function etiquetaConsulta(c) {
+  const tipo = (TIPO_CITA[c.tipo_cita] || '') + (c.tipo_cita !== 'PRIMERA_VEZ' && c.cita_numero_sesion ? ' #' + c.cita_numero_sesion : '');
+  return `${c.fecha} · ${c.especialista} · ${tipo} · ${ESTADO_CONSULTA[c.consulta_estado] || c.consulta_estado}`;
+}
+
+function pintarConsultasPendientes() {
+  const usadas = new Set(detalles.map(d => d.id_consulta).filter(Boolean));
+  const libres = consultasPendientes.filter(c => !usadas.has(c.id_consulta));
+  const sel = document.getElementById('selConsultaItem');
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Ítem sin consulta</option>' +
+    libres.map(c => `<option value="${c.id_consulta}">${etiquetaConsulta(c)}</option>`).join('');
+  if (libres.some(c => String(c.id_consulta) === actual)) sel.value = actual;
+  document.getElementById('filaConsultaPendiente').style.display = libres.length ? '' : 'none';
+  avisarConsultaSinCerrar();
+}
+
+function avisarConsultaSinCerrar() {
+  const c = consultasPendientes.find(x => String(x.id_consulta) === document.getElementById('selConsultaItem').value);
+  const aviso = document.getElementById('avisoConsultaSinCerrar');
+  const sinCerrar = c && ['PENDIENTE', 'EN_ATENCION'].includes(c.consulta_estado);
+  aviso.style.display = sinCerrar ? '' : 'none';
+  if (sinCerrar) aviso.textContent = 'Esa consulta todavía no está cerrada: al emitir la factura pasa a «Pendiente de observación» y el especialista la ve en su Mi Agenda como «Facturada, revisar».';
+}
+document.getElementById('selConsultaItem').addEventListener('change', avisarConsultaSinCerrar);
+
+async function cargarConsultasPendientes(idPaciente) {
+  try {
+    const j = await (await fetch(`${API_FAC}/consultas-pendientes?id_paciente=${idPaciente}`)).json();
+    consultasPendientes = j.success ? j.data : [];
+  } catch (e) { consultasPendientes = []; }
+  pintarConsultasPendientes();
+}
+
 function recalcular() {
   let subtotal = 0, iva = 0;
   detalles.forEach(d => { subtotal += d._subtotal; iva += d._iva_monto; });
@@ -357,7 +408,7 @@ function renderTabla() {
   detalles.forEach((d, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${d.item_descripcion}</td>
+      <td>${d.item_descripcion}${d.id_consulta ? ' <span class="badge text-bg-info" title="Ítem ligado a una consulta del paciente">Consulta</span>' : ''}</td>
       <td class="text-center">${d.item_cantidad}</td>
       <td class="text-end">Gs. ${fmt(d.item_precio_con_iva)}</td>
       <td class="text-center">${d.impuesto_porcentaje}%</td>
@@ -375,6 +426,7 @@ function renderTabla() {
 
 function quitarItem(i) {
   detalles.splice(i, 1);
+  pintarConsultasPendientes();
   renderTabla();
   recalcular();
   programarGuardadoBorrador();
@@ -430,6 +482,7 @@ document.getElementById('btnSeleccionarPaciente').addEventListener('click', func
   avisoCorreoPaciente();
   document.getElementById('card-busqueda').style.display = 'none';
   document.getElementById('contenedor-factura').style.display = '';
+  cargarConsultasPendientes(document.getElementById('hidIdPaciente').value);
   feather.replace();
 });
 
@@ -605,9 +658,12 @@ function agregarItem() {
     item_descuento: dscto,
     id_tipo_impuesto: id_tipo_impuesto,
     id_item_servicio: itemCatalogoElegido ? itemCatalogoElegido.id_item_servicio : null,
+    id_consulta: parseInt(document.getElementById('selConsultaItem').value) || null,
     ...calcItem(precio, cant, porc, dscto)
   });
 
+  document.getElementById('selConsultaItem').value = '';
+  pintarConsultasPendientes();
   itemCatalogoElegido = null;
   itemEl('itemDesc').value = '';
   itemEl('itemCant').value = 1;
@@ -726,6 +782,7 @@ document.getElementById('btnEmitir').addEventListener('click', async () => {
       item_descuento: d.item_descuento,
       id_tipo_impuesto: d.id_tipo_impuesto,
       id_item_servicio: d.id_item_servicio,
+      id_consulta: d.id_consulta || null,
     }))
   };
 
@@ -881,6 +938,7 @@ async function retomarBorrador(id) {
   telefonoOriginal = d.telefono_original || '';
   el('card-busqueda').style.display = 'none';
   el('contenedor-factura').style.display = '';
+  cargarConsultasPendientes(j.data.id_paciente);
 
   el('selTipoDocumentoFactura').value = c.selTipoDocumentoFactura || 'CI';
   el('selTipoDocumentoFactura').dispatchEvent(new Event('change'));
@@ -898,6 +956,7 @@ async function retomarBorrador(id) {
   el('selFormaCobro').dispatchEvent(new Event('change'));
 
   detalles = (d.detalles || []).map(x => ({ ...x, ...calcItem(x.item_precio_con_iva, x.item_cantidad, x.impuesto_porcentaje, x.item_descuento) }));
+  pintarConsultasPendientes();
   renderTabla();
   recalcular();
   avisoCorreoPaciente();
@@ -1002,10 +1061,62 @@ async function inicializar() {
   catalogoItems = (rIS.data || []).filter(i => i.est_item_servicio);
 }
 
+// Se llega con ?id_pedido=<id> desde el listado de pedidos ("Facturar"): carga paciente, moneda e ítems del pedido
+async function cargarDesdePedido(idPedido) {
+  const j = await fetch(`/api/v1/pedidos/${idPedido}`).then(r => r.json());
+  if (!j.success) { Swal.fire('Error', j.error || 'No se pudo abrir el pedido.', 'error'); return; }
+  const p = j.data;
+  if (!['PENDIENTE', 'CONFIRMADO'].includes(p.pedido_estado)) {
+    Swal.fire('Atención', `El pedido ${p.pedido_numero} está ${p.pedido_estado} y no se puede facturar.`, 'warning');
+    return;
+  }
+
+  // Datos fiscales y de contacto del paciente: el mismo buscador que usa la pantalla
+  const q = p.paciente_cedula || p.paciente_nombre;
+  const rp = await fetch(`${API_PAC}/buscar?q=${encodeURIComponent(q)}`).then(r => r.json());
+  const pac = (rp.data || []).find(x => x.id_paciente === p.id_paciente);
+  if (!pac) { Swal.fire('Error', 'No se encontró el paciente del pedido.', 'error'); return; }
+  document.getElementById('hidIdPaciente').value = pac.id_paciente;
+  const btn = document.getElementById('btnSeleccionarPaciente');
+  Object.assign(btn.dataset, {
+    nombre: `${pac.per_nombre} ${pac.per_apellido}`, cedula: pac.per_cedula, hc: pac.pac_historia_clinica,
+    tipoDocumento: pac.per_tipo_documento || 'CI', ruc: pac.per_ruc || '',
+    correo: pac.per_correo || '', telefono: pac.per_telefono || ''
+  });
+  btn.disabled = false;   // arranca deshabilitado y un click() sobre un botón deshabilitado no hace nada
+  btn.click();
+
+  document.getElementById('selMoneda').value = p.id_moneda;
+  filtrarCajasPorMoneda();
+  const inpPedido = document.getElementById('txtIdPedido');
+  inpPedido.value = p.id_pedido;
+  inpPedido.readOnly = true;
+
+  detalles = (p.detalles || []).map(d => {
+    const cat = catalogoItems.find(i => i.id_item_servicio === d.id_item_servicio);
+    const opt = cat && cat.id_tipo_impuesto
+      ? Array.from(itemEl('selItemImpuesto').options).find(o => o.value === String(cat.id_tipo_impuesto))
+      : Array.from(itemEl('selItemImpuesto').options).find(o => parseFloat(o.dataset.porc || 0) === 0);
+    const porc = opt ? parseFloat(opt.dataset.porc || 0) : 0;
+    const precio = parseInt(d.item_precio_unitario) || 0, cant = parseInt(d.item_cantidad) || 0, dscto = parseInt(d.item_descuento) || 0;
+    return {
+      item_descripcion: d.item_descripcion, item_cantidad: cant, item_precio_con_iva: precio,
+      impuesto_porcentaje: porc, item_descuento: dscto,
+      id_tipo_impuesto: opt ? parseInt(opt.value) : null,
+      id_item_servicio: d.id_item_servicio || null, id_consulta: null,
+      ...calcItem(precio, cant, porc, dscto)
+    };
+  });
+  renderTabla();
+  recalcular();
+}
+
 // Se llega con ?borrador=<id> desde el listado de facturas ("Retomar")
+// o con ?id_pedido=<id> desde el listado de pedidos ("Facturar")
 inicializar().then(() => {
-  const id = new URLSearchParams(window.location.search).get('borrador');
-  if (id) retomarBorrador(id);
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('borrador')) retomarBorrador(params.get('borrador'));
+  else if (params.get('id_pedido')) cargarDesdePedido(params.get('id_pedido'));
 });
 </script>
 {% endblock %}

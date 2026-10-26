@@ -43,9 +43,33 @@ CREATE TABLE public.aperturas_cierre_caja (
     fecha_modificacion timestamp without time zone,
     usuario_modificacion integer,
     id_moneda integer DEFAULT 1 NOT NULL,
+    saldo_esperado numeric(18,2),
+    diferencia numeric(18,2),
+    esperado_efectivo numeric(18,2),
+    esperado_cheques numeric(18,2),
+    esperado_tarjetas numeric(18,2),
+    esperado_transferencias numeric(18,2),
     CONSTRAINT chk_acc_estado CHECK (((est_apertura_cierre)::text = ANY (ARRAY[('A'::character varying)::text, ('C'::character varying)::text]))),
     CONSTRAINT chk_acc_tipo_op CHECK (((tipo_operacion)::text = ANY (ARRAY[('APERTURA'::character varying)::text, ('CIERRE'::character varying)::text])))
 );
+
+--
+-- Name: COLUMN aperturas_cierre_caja.saldo_esperado; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.aperturas_cierre_caja.saldo_esperado IS 'Solo en las filas CIERRE: total que el sistema esperaba al cerrar (saldo inicial + cobranzas − recaudaciones). NULL en los cierres anteriores a 2026-10-25.';
+
+--
+-- Name: COLUMN aperturas_cierre_caja.diferencia; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.aperturas_cierre_caja.diferencia IS 'Solo en las filas CIERRE: saldo_final (lo contado) − saldo_esperado. Negativa: faltó plata; positiva: sobró.';
+
+--
+-- Name: COLUMN aperturas_cierre_caja.esperado_efectivo; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.aperturas_cierre_caja.esperado_efectivo IS 'Solo en las filas CIERRE: efectivo esperado (incluye el saldo inicial y descuenta las recaudaciones); se compara con monto_efectivo.';
 
 --
 -- Name: aperturas_cierre_caja_id_apertura_cierre_seq; Type: SEQUENCE; Schema: public; Owner: -

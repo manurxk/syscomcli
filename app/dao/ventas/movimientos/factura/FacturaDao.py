@@ -6,6 +6,7 @@ import psycopg2.errors
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
 from app.core.moneda import get_moneda, redondear
+from app.dao.agendamiento.cita.CitaDao import sql_numero_sesion
 from app.dao.ventas.movimientos.cobranza.CobranzaDao import CobranzaDao
 
 
@@ -195,6 +196,31 @@ class FacturaDao(BaseDAO):
             WHERE f.id_factura = %s
         """
         return self.execute_query_one(sql, (id_factura,))
+
+    # Una consulta ya está facturada si algún ítem de una factura emitida (no anulada) apunta a ella
+    SQL_CONSULTA_FACTURADA = """EXISTS (
+        SELECT 1 FROM factura_detalle fd
+        JOIN facturas f ON f.id_factura = fd.id_factura
+        JOIN estados_factura ef ON ef.id_estado_factura = f.id_estado_factura
+        WHERE fd.id_consulta = co.id_consulta AND COALESCE(ef.cod_estado_factura, '') <> 'ANUL'{excluir})"""
+
+    def getConsultasPendientesDeFacturar(self, id_paciente):
+        """Consultas del paciente que todavía no se facturaron, para ligarlas a un ítem de la factura. Solo fecha,
+        especialista, tipo de cita y estado: nunca contenido clínico."""
+        sql = f"""
+            SELECT co.id_consulta, TO_CHAR(co.consulta_fecha, 'DD/MM/YYYY') AS fecha, co.consulta_estado,
+                   pe.per_nombre || ' ' || pe.per_apellido AS especialista,
+                   ci.tipo_cita, {sql_numero_sesion('ci')} AS cita_numero_sesion
+            FROM consultas co
+            JOIN citas ci ON ci.id_cita = co.id_cita
+            JOIN especialistas e ON e.id_especialista = co.id_especialista
+            JOIN funcionarios fu ON fu.id_funcionario = e.id_funcionario
+            JOIN personas pe ON pe.id_persona = fu.id_persona
+            WHERE co.id_paciente = %s AND co.est_consulta = TRUE
+              AND NOT {self.SQL_CONSULTA_FACTURADA.format(excluir='')}
+            ORDER BY co.consulta_fecha DESC, co.id_consulta DESC
+        """
+        return self.execute_query(sql, (id_paciente,))
 
     def getFacturaDetalle(self, id_factura):
         """Devuelve las líneas de detalle de factura para el id indicado."""
@@ -411,6 +437,22 @@ class FacturaDao(BaseDAO):
                     d['id_tipo_impuesto'], d['impuesto_porcentaje'],
                     d['impuesto_monto'], d['item_total'],
                 ))
+
+            # 6b. Consultas facturadas: deben ser del paciente y no estar facturadas ya. Si el especialista no la cerró
+            # (Pendiente o En atención), pasa a «Pendiente de observación»: Mi Agenda se lo muestra como «Facturada, revisar».
+            for id_consulta in dict.fromkeys(d['id_consulta'] for d in detalles_calc if d.get('id_consulta')):
+                cur.execute("SELECT id_paciente, consulta_estado FROM consultas WHERE id_consulta = %s AND est_consulta = TRUE FOR UPDATE",
+                            (id_consulta,))
+                fila = cur.fetchone()
+                if not fila or fila[0] != data['id_paciente']:
+                    raise ValueError('Una de las consultas indicadas no es del paciente de la factura.')
+                cur.execute(f"SELECT {self.SQL_CONSULTA_FACTURADA.format(excluir=' AND fd.id_factura <> %s')} FROM consultas co WHERE co.id_consulta = %s",
+                            (id_factura, id_consulta))
+                if cur.fetchone()[0]:
+                    raise ValueError('Una de las consultas indicadas ya fue facturada.')
+                if fila[1] in ('PENDIENTE', 'EN_ATENCION'):
+                    cur.execute("UPDATE consultas SET consulta_estado = 'EN_OBSERVACION', usuario_modificacion = %s WHERE id_consulta = %s",
+                                (usuario_creacion, id_consulta))
 
             # 7. INSERT libro_ventas
             cur.execute("""

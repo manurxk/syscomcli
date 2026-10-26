@@ -105,27 +105,23 @@
           </div>
         </div>
 
+        <div class="small text-muted mb-2">
+          Contá cada forma de pago y escribí lo contado (si no hubo, poné 0). El efectivo esperado incluye el saldo inicial y descuenta lo depositado en el banco (recaudaciones). Tarjetas y transferencias se cuentan con los comprobantes, no en el cajón.
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-2">
+            <thead class="table-light"><tr><th>Forma de pago</th><th class="text-end">Esperado</th><th style="width:190px">Contado <span class="text-danger">*</span></th><th class="text-end">Diferencia</th></tr></thead>
+            <tbody>
+              <tr><td>Efectivo</td><td class="text-end" id="espEfectivo">—</td><td><input type="number" class="form-control form-control-sm cierre-contado" id="cerrarMontoEfectivo" data-forma="Efectivo" min="0" placeholder="0"></td><td class="text-end fw-bold" id="difEfectivo">—</td></tr>
+              <tr><td>Cheques</td><td class="text-end" id="espCheques">—</td><td><input type="number" class="form-control form-control-sm cierre-contado" id="cerrarMontoCheques" data-forma="Cheques" min="0" placeholder="0"></td><td class="text-end fw-bold" id="difCheques">—</td></tr>
+              <tr><td>Tarjetas</td><td class="text-end" id="espTarjetas">—</td><td><input type="number" class="form-control form-control-sm cierre-contado" id="cerrarMontoTarjetas" data-forma="Tarjetas" min="0" placeholder="0"></td><td class="text-end fw-bold" id="difTarjetas">—</td></tr>
+              <tr><td>Transferencias</td><td class="text-end" id="espTransferencias">—</td><td><input type="number" class="form-control form-control-sm cierre-contado" id="cerrarMontoTransferencias" data-forma="Transferencias" min="0" placeholder="0"></td><td class="text-end fw-bold" id="difTransferencias">—</td></tr>
+            </tbody>
+            <tfoot><tr class="table-light fw-bold"><td>Total (saldo final)</td><td class="text-end" id="espTotal">—</td><td class="text-end" id="cerrarTotalContado">—</td><td class="text-end" id="difTotal">—</td></tr></tfoot>
+          </table>
+        </div>
+        <input type="hidden" id="cerrarSaldoFinal">
         <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label small fw-bold">Saldo Final <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" id="cerrarSaldoFinal" min="0" step="1000" placeholder="Total en caja">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-bold">Efectivo</label>
-            <input type="number" class="form-control" id="cerrarMontoEfectivo" value="0" min="0" step="1000">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small fw-bold">Cheques</label>
-            <input type="number" class="form-control" id="cerrarMontoCheques" value="0" min="0">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small fw-bold">Tarjetas</label>
-            <input type="number" class="form-control" id="cerrarMontoTarjetas" value="0" min="0">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small fw-bold">Transferencias</label>
-            <input type="number" class="form-control" id="cerrarMontoTransferencias" value="0" min="0">
-          </div>
           <div class="col-12">
             <label class="form-label small fw-bold">Observaciones</label>
             <textarea class="form-control" id="cerrarObservaciones" rows="2" placeholder="Opcional"></textarea>
@@ -229,16 +225,53 @@ function actualizarMonedaAbrir() {
 }
 document.getElementById('abrirMoneda').addEventListener('change', actualizarMonedaAbrir);
 
+// Cierre: cada forma de pago se cuenta y se compara con lo esperado; el saldo final es la suma de lo contado
+const CAMPOS_CIERRE = [
+  { input: 'cerrarMontoEfectivo', esp: 'espEfectivo', dif: 'difEfectivo', clave: 'esperado_efectivo' },
+  { input: 'cerrarMontoCheques', esp: 'espCheques', dif: 'difCheques', clave: 'esperado_cheques' },
+  { input: 'cerrarMontoTarjetas', esp: 'espTarjetas', dif: 'difTarjetas', clave: 'esperado_tarjetas' },
+  { input: 'cerrarMontoTransferencias', esp: 'espTransferencias', dif: 'difTransferencias', clave: 'esperado_transferencias' },
+];
+let monedaCierre = { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
+let esperadoCierre = null;
+
+function pintarDiferencia(el, dif, moneda) {
+  el.textContent = (dif > 0 ? '+' : '') + formatMoney(dif, moneda);
+  el.className = 'text-end fw-bold ' + (dif < 0 ? 'text-danger' : dif > 0 ? 'text-warning' : 'text-success');
+}
+
+function recalcularCierre() {
+  let totalContado = 0, hayContado = false;
+  CAMPOS_CIERRE.forEach(c => {
+    const raw = document.getElementById(c.input).value;
+    const esp = esperadoCierre ? Number(esperadoCierre[c.clave] || 0) : null;
+    document.getElementById(c.esp).textContent = esp === null ? '—' : formatMoney(esp, monedaCierre);
+    const difEl = document.getElementById(c.dif);
+    if (raw === '' || esp === null) { difEl.textContent = '—'; difEl.className = 'text-end fw-bold'; return; }
+    const contado = parseFloat(raw) || 0;
+    totalContado += contado; hayContado = true;
+    pintarDiferencia(difEl, contado - esp, monedaCierre);
+  });
+  const espTotal = esperadoCierre ? Number(esperadoCierre.saldo_esperado || 0) : null;
+  document.getElementById('espTotal').textContent = espTotal === null ? '—' : formatMoney(espTotal, monedaCierre);
+  document.getElementById('cerrarTotalContado').textContent = hayContado ? formatMoney(totalContado, monedaCierre) : '—';
+  document.getElementById('cerrarSaldoFinal').value = hayContado ? totalContado : '';
+  const difTotalEl = document.getElementById('difTotal');
+  if (!hayContado || espTotal === null) { difTotalEl.textContent = '—'; difTotalEl.className = 'text-end'; }
+  else pintarDiferencia(difTotalEl, totalContado - espTotal, monedaCierre);
+}
+document.querySelectorAll('.cierre-contado').forEach(i => i.addEventListener('input', recalcularCierre));
+
 async function prepararCierre(idCaja, nomCaja) {
   const moneda = cajasMoneda[idCaja] || { decimales_moneda: 0, simbolo_moneda: 'Gs.' };
   document.getElementById('cerrarIdCaja').value = idCaja;
   document.getElementById('cerrarNombreCaja').textContent = `${nomCaja} (${moneda.cod_moneda || 'PYG'})`;
+  monedaCierre = moneda;
+  esperadoCierre = null;
   document.getElementById('cerrarSaldoFinal').value = '';
-  document.getElementById('cerrarMontoEfectivo').value = 0;
-  document.getElementById('cerrarMontoCheques').value = 0;
-  document.getElementById('cerrarMontoTarjetas').value = 0;
-  document.getElementById('cerrarMontoTransferencias').value = 0;
+  CAMPOS_CIERRE.forEach(c => { document.getElementById(c.input).value = ''; });
   document.getElementById('cerrarObservaciones').value = '';
+  recalcularCierre();
 
   document.getElementById('lblSaldoInicial').textContent = '...';
   document.getElementById('lblEfectivoCobrado').textContent = '...';
@@ -256,11 +289,9 @@ async function prepararCierre(idCaja, nomCaja) {
       document.getElementById('lblEfectivoCobrado').textContent = formatMoney(d.total_efectivo, moneda);
       document.getElementById('lblOtrosCobrados').textContent = formatMoney((d.total_cheques||0)+(d.total_tarjetas||0)+(d.total_transferencias||0), moneda);
       document.getElementById('lblSaldoEsperado').textContent = formatMoney(d.saldo_esperado, moneda);
-      document.getElementById('cerrarMontoEfectivo').value = d.total_efectivo || 0;
-      document.getElementById('cerrarMontoCheques').value = d.total_cheques || 0;
-      document.getElementById('cerrarMontoTarjetas').value = d.total_tarjetas || 0;
-      document.getElementById('cerrarMontoTransferencias').value = d.total_transferencias || 0;
-      document.getElementById('cerrarSaldoFinal').value = d.saldo_esperado || 0;
+      // Lo contado arranca vacío: el cajero cuenta y escribe; la diferencia se ve al instante
+      esperadoCierre = d;
+      recalcularCierre();
     }
   } catch(e) {
     document.getElementById('lblSaldoEsperado').textContent = 'Error al calcular';
@@ -299,10 +330,22 @@ document.getElementById('btnConfirmarApertura').addEventListener('click', async 
 
 document.getElementById('btnConfirmarCierre').addEventListener('click', async () => {
   const idCaja = document.getElementById('cerrarIdCaja').value;
-  const saldoFinal = document.getElementById('cerrarSaldoFinal').value;
-  if (!saldoFinal && saldoFinal !== '0') {
-    Swal.fire({icon:'warning', title:'Dato requerido', text:'Ingresá el saldo final de la caja.'});
+  const faltan = CAMPOS_CIERRE.filter(c => document.getElementById(c.input).value === '');
+  if (faltan.length) {
+    Swal.fire({icon:'warning', title:'Falta contar', text:'Escribí lo contado de cada forma de pago (si no hubo, poné 0).'});
     return;
+  }
+  const saldoFinal = document.getElementById('cerrarSaldoFinal').value;
+  // Una diferencia no impide el cierre, pero se confirma (y queda registrada en el historial)
+  const dif = esperadoCierre ? Number(saldoFinal) - Number(esperadoCierre.saldo_esperado || 0) : 0;
+  const tolerancia = Number(monedaCierre.decimales_moneda) === 0 ? 1000 : 1;
+  if (Math.abs(dif) > tolerancia) {
+    const r = await Swal.fire({
+      icon: 'warning', title: dif < 0 ? 'Falta plata en la caja' : 'Sobra plata en la caja',
+      html: `Esperado: <b>${formatMoney(esperadoCierre.saldo_esperado, monedaCierre)}</b><br>Contado: <b>${formatMoney(saldoFinal, monedaCierre)}</b><br>Diferencia: <b>${(dif > 0 ? '+' : '') + formatMoney(dif, monedaCierre)}</b><br><br>Se cierra igual y la diferencia queda en el historial. Conviene explicarla en Observaciones.`,
+      showCancelButton: true, confirmButtonText: 'Cerrar igual', cancelButtonText: 'Volver'
+    });
+    if (!r.isConfirmed) return;
   }
   const spin = document.getElementById('spinnerCierre');
   spin.classList.remove('d-none');
@@ -323,7 +366,10 @@ document.getElementById('btnConfirmarCierre').addEventListener('click', async ()
     const json = await res.json();
     bootstrap.Modal.getInstance(document.getElementById('modalCerrarCaja')).hide();
     if (json.success) {
-      Swal.fire({icon:'success', title:'Caja cerrada', text:'El cierre fue registrado correctamente.', timer:2000, showConfirmButton:false})
+      const c = json.data || {};
+      Swal.fire({icon:'success', title:'Caja cerrada',
+        text: `Esperado ${formatMoney(c.saldo_esperado, monedaCierre)}, contado ${formatMoney(saldoFinal, monedaCierre)}, diferencia ${formatMoney(c.diferencia, monedaCierre)}.`,
+        confirmButtonText: 'Listo'})
         .then(() => cargarCajas());
     } else {
       Swal.fire({icon:'error', title:'Error', text: json.error || 'No se pudo cerrar la caja.'});

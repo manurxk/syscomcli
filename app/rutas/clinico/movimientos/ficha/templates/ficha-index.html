@@ -42,11 +42,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   const tbody = document.querySelector('#tbl tbody');
 
-  fetch('/api/v1/pacientes')
+  // El clínico ve solo los pacientes con los que tiene vínculo (cita, consulta o derivación aceptada); el Administrador, todos
+  fetch('/api/v1/clinico/ficha/pacientes')
     .then(r => r.json())
     .then(res => {
       if (!res.success || !res.data.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin pacientes registrados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Todavía no tenés pacientes con ficha: aparecen los que tengan una cita o una consulta con vos, o una derivación que aceptaste.</td></tr>';
         return;
       }
       tbody.innerHTML = res.data.map(p => `

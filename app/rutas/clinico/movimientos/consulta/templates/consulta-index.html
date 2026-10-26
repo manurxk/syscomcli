@@ -52,8 +52,10 @@ Consultas
   const ESTADOS_BADGE = {
     PENDIENTE: 'border border-secondary text-secondary',
     EN_ATENCION: 'border border-warning text-warning',
+    EN_OBSERVACION: 'border border-danger text-danger',
     FINALIZADA: 'border border-success text-success'
   };
+  const ESTADOS_TEXTO = { EN_OBSERVACION: 'PENDIENTE DE OBSERVACIÓN' };
 
   const initDatatable = () => {
     $('#tbl').DataTable({
@@ -70,7 +72,7 @@ Consultas
         {
           data: function (row) {
             const clase = ESTADOS_BADGE[row.consulta_estado] || 'border border-secondary text-secondary';
-            return `<span class="badge ${clase}">${row.consulta_estado}</span>`;
+            return `<span class="badge ${clase}">${ESTADOS_TEXTO[row.consulta_estado] || row.consulta_estado}</span>`;
           },
           className: 'text-center'
         },

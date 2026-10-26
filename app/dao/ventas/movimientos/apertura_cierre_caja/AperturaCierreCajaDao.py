@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import psycopg2.errors
 from flask import current_app as app
 from app.core.base_dao import BaseDAO
@@ -27,10 +29,18 @@ class AperturaCierreCajaDao(BaseDAO):
                 ac.observaciones,
                 ac.est_apertura_cierre,
                 TO_CHAR(ac.fecha_creacion, 'DD/MM/YYYY') AS fecha_registro,
+                ac.saldo_esperado,
+                ac.diferencia,
+                ac.esperado_efectivo,
+                ac.esperado_cheques,
+                ac.esperado_tarjetas,
+                ac.esperado_transferencias,
+                m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 caja.des_caja,
                 COALESCE(p.per_nombre || ' ' || p.per_apellido, u.usu_nick) AS usuario
             FROM aperturas_cierre_caja ac
             JOIN cajas caja ON ac.id_caja = caja.id_caja
+            JOIN monedas m ON m.id_moneda = ac.id_moneda
             JOIN usuarios u ON ac.id_usuario = u.id_usuario
             LEFT JOIN funcionarios f ON u.id_funcionario = f.id_funcionario
             LEFT JOIN personas p ON f.id_persona = p.id_persona
@@ -124,54 +134,15 @@ class AperturaCierreCajaDao(BaseDAO):
         return self.execute_query(sql)
 
     def calcularSaldoEsperado(self, id_caja):
-        """Calcula el saldo esperado de la caja con los movimientos de la apertura vigente."""
-        apertura = self.getAperturaActivaPorCaja(id_caja)
-        if not apertura:
+        """Saldo esperado de la apertura vigente, por forma de pago (fn_saldo_esperado_caja, la misma cuenta que usa el
+        cierre): el efectivo esperado incluye el saldo inicial y descuenta las recaudaciones; el «físico» (lo que se
+        cuenta con las manos) es efectivo + cheques. None si la caja no tiene apertura activa."""
+        fila = self.execute_query_one("SELECT * FROM fn_saldo_esperado_caja(%s)", (id_caja,))
+        if not fila:
             return None
-
-        sql = """
-            SELECT
-                COALESCE(SUM(
-                    CASE WHEN fc.cod_forma_cobro = 'EFECTIVO'
-                    THEN cd.monto_cobrado ELSE 0 END
-                ), 0) AS total_efectivo,
-                COALESCE(SUM(
-                    CASE WHEN fc.cod_forma_cobro = 'CHEQUE'
-                    THEN cd.monto_cobrado ELSE 0 END
-                ), 0) AS total_cheques,
-                COALESCE(SUM(
-                    CASE WHEN fc.cod_forma_cobro IN ('TARJETA_CREDITO', 'TARJETA_DEBITO')
-                    THEN cd.monto_cobrado ELSE 0 END
-                ), 0) AS total_tarjetas,
-                COALESCE(SUM(
-                    CASE WHEN fc.cod_forma_cobro = 'TRANSFERENCIA'
-                    THEN cd.monto_cobrado ELSE 0 END
-                ), 0) AS total_transferencias
-            FROM cobranzas c
-            JOIN cobranza_detalle cd ON c.id_cobranza = cd.id_cobranza
-            JOIN formas_cobro fc ON cd.id_forma_cobro = fc.id_forma_cobro
-            WHERE c.id_caja = %s
-              AND c.fecha_cobranza >= %s
-              AND c.est_cobranza = 'REGISTRADA'
-        """
-        try:
-            row = self.execute_query_one(sql, (id_caja, apertura['fecha_operacion']))
-        except Exception:
-            row = None
-
-        efectivo = float(row['total_efectivo']) if row else 0
-        cheques = float(row['total_cheques']) if row else 0
-        tarjetas = float(row['total_tarjetas']) if row else 0
-        transferencias = float(row['total_transferencias']) if row else 0
-        saldo_inicial = float(apertura['saldo_inicial'] or 0)
-        return {
-            'saldo_inicial': saldo_inicial,
-            'total_efectivo': efectivo,
-            'total_cheques': cheques,
-            'total_tarjetas': tarjetas,
-            'total_transferencias': transferencias,
-            'saldo_esperado': saldo_inicial + efectivo + cheques + tarjetas + transferencias,
-        }
+        datos = {k: float(v or 0) for k, v in fila.items()}
+        datos['esperado_fisico'] = datos['esperado_efectivo'] + datos['esperado_cheques']
+        return datos
 
     def guardarApertura(self, id_caja, id_usuario, saldo_inicial=0,
                         observaciones=None, usuario_creacion=None, id_moneda=1):
@@ -207,7 +178,10 @@ class AperturaCierreCajaDao(BaseDAO):
                       monto_efectivo=0, monto_cheques=0, monto_tarjetas=0,
                       monto_transferencias=0, observaciones=None,
                       usuario_creacion=None):
-        """Registra el cierre de caja con los montos contados por medio de pago."""
+        """Registra el cierre de caja con los montos contados por medio de pago. El saldo final es la suma de lo contado
+        (el procedimiento lo exige) y el cierre guarda el esperado y la diferencia."""
+        saldo_final = sum(Decimal(str(x or 0)) for x in (monto_efectivo, monto_cheques, monto_tarjetas, monto_transferencias))
+
         def _fn(cur):
             # sp_cerrar_caja valida, cierra la apertura, registra el CIERRE y deja la caja CERRADA
             try:
@@ -224,7 +198,7 @@ class AperturaCierreCajaDao(BaseDAO):
             cierre_id, saldo_esperado, diferencia = cur.fetchone()
             app.logger.info(f"Cierre de caja {id_caja} registrado ID={cierre_id} "
                             f"(esperado={saldo_esperado}, diferencia={diferencia})")
-            return cierre_id
+            return {'id_apertura_cierre': cierre_id, 'saldo_esperado': float(saldo_esperado), 'diferencia': float(diferencia)}
 
         return self.execute_transaction(_fn)
 
@@ -243,8 +217,16 @@ class AperturaCierreCajaDao(BaseDAO):
                 ac.monto_transferencias,
                 ac.observaciones,
                 ac.est_apertura_cierre,
+                ac.saldo_esperado,
+                ac.diferencia,
+                ac.esperado_efectivo,
+                ac.esperado_cheques,
+                ac.esperado_tarjetas,
+                ac.esperado_transferencias,
+                m.cod_moneda, m.simbolo_moneda, m.decimales_moneda,
                 COALESCE(p.per_nombre || ' ' || p.per_apellido, u.usu_nick) AS usuario
             FROM aperturas_cierre_caja ac
+            JOIN monedas m ON m.id_moneda = ac.id_moneda
             JOIN usuarios u ON ac.id_usuario = u.id_usuario
             LEFT JOIN funcionarios f ON u.id_funcionario = f.id_funcionario
             LEFT JOIN personas p ON f.id_persona = p.id_persona

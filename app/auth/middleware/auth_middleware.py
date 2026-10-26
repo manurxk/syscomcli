@@ -35,6 +35,7 @@ def verificar_sesion_mejorada():
         "login.cambiar_idioma",
         "static",
         "informacion.privacidad",
+        "informacion.terminos",
         "informacion.soporte",
         "informacion.contacto",
         "auth.login",  # Nuevo endpoint API

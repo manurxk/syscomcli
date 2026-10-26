@@ -1,0 +1,43 @@
+{% extends "informacion-base.html" %}
+{% block titulo %}Términos y condiciones{% endblock %}
+{% block titulo_pagina %}Términos y condiciones de uso{% endblock %}
+{% block migas %}Términos y condiciones{% endblock %}
+{% block contenido %}
+<p>Estos términos regulan el uso de SYSCLIN por parte del personal autorizado de <strong>{{ clinica.razon_social or clinica.nombre }}</strong>. Al iniciar sesión, la persona usuaria declara haberlos leído y aceptarlos.</p>
+
+<h2>1. Quién puede usar el sistema</h2>
+<p>Solo el personal al que el Administrador haya creado una cuenta. Cada cuenta es personal e intransferible y tiene los permisos de su rol; el acceso a un módulo no autoriza a consultar datos que no se necesiten para el trabajo.</p>
+
+<h2>2. Cuidado de la cuenta</h2>
+<ul>
+    <li>No compartir el usuario, la contraseña ni los códigos de verificación (MFA).</li>
+    <li>Cerrar la sesión al dejar el equipo. Usar el dispositivo de confianza solo en equipos propios o de la clínica.</li>
+    <li>Avisar de inmediato al Administrador si se sospecha un acceso indebido.</li>
+</ul>
+
+<h2>3. Confidencialidad y secreto profesional</h2>
+<p>La información clínica es confidencial. Está prohibido copiarla, fotografiarla, enviarla por medios no autorizados o comentarla fuera del ámbito profesional. Esta obligación continúa después de terminada la relación con la clínica.</p>
+
+<h2>4. Uso aceptable</h2>
+<ul>
+    <li>Registrar información veraz, completa y a tiempo.</li>
+    <li>No alterar ni eliminar registros para ocultar acciones; las correcciones se hacen por los medios previstos.</li>
+    <li>Usar WhatsApp y correo del sistema solo para fines de la atención y la gestión de la clínica.</li>
+    <li>No intentar acceder a módulos, datos o cuentas ajenos.</li>
+</ul>
+
+<h2>5. Auditoría</h2>
+<p>El sistema registra las acciones realizadas (accesos, consultas, cambios, envíos). Estos registros pueden usarse para investigar incidentes y para cumplir obligaciones legales.</p>
+
+<h2>6. Responsabilidad</h2>
+<p>Cada persona responde por lo que se haga con su cuenta. El uso indebido puede dar lugar a suspensión de la cuenta y a las medidas disciplinarias o legales que correspondan. La clínica procura la disponibilidad del servicio, pero no garantiza que esté libre de interrupciones.</p>
+
+<h2>7. Propiedad</h2>
+<p>Los datos clínicos y administrativos pertenecen a la clínica y a las personas a quienes se refieren. El software y su documentación son parte de un trabajo de tesis de grado y se ofrecen con fines educativos.</p>
+
+<h2>8. Privacidad</h2>
+<p>El tratamiento de datos personales se rige por la <a href="{{ url_for('informacion.privacidad') }}">Política de privacidad</a>.</p>
+
+<h2>9. Cambios y ley aplicable</h2>
+<p>Los términos pueden modificarse; la versión vigente es la publicada en esta página. Se rigen por las leyes de la República del Paraguay.</p>
+{% endblock %}

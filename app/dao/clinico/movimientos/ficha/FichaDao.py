@@ -9,6 +9,48 @@ class FichaDao(BaseDAO):
         super().__init__(db_name_env="DB_NAME_NUEVA")
 
     # ----------------------------------------
+    # ACCESO: un clínico abre la ficha de los pacientes con los que tiene vínculo
+    # ----------------------------------------
+
+    # Vínculo = una cita (no cancelada ni ausente) o una consulta con él, o una derivación del paciente que él aceptó.
+    # Una derivación todavía pendiente NO da acceso: antes de aceptarla solo se ve el motivo.
+    SQL_VINCULO = """(
+        EXISTS (SELECT 1 FROM citas c JOIN estados_citas ec ON ec.id_estado_cita = c.id_estado_cita
+                WHERE c.id_paciente = {pac}.id_paciente AND c.id_especialista = %(yo)s AND c.est_cita = TRUE
+                  AND ec.cod_estado_cita NOT IN ('CANCELADA', 'AUSENTE'))
+        OR EXISTS (SELECT 1 FROM consultas co WHERE co.id_paciente = {pac}.id_paciente
+                   AND co.id_especialista = %(yo)s AND co.est_consulta = TRUE)
+        OR EXISTS (SELECT 1 FROM derivaciones d JOIN consultas cd ON cd.id_consulta = d.id_consulta
+                   WHERE cd.id_paciente = {pac}.id_paciente AND d.id_especialista_destino = %(yo)s
+                     AND d.estado_derivacion = 'ACEPTADA' AND d.est_derivacion = TRUE))"""
+
+    def tieneVinculo(self, id_especialista, id_paciente):
+        """True si el especialista tiene o tuvo una cita o consulta con el paciente, o aceptó una derivación suya."""
+        sql = f"SELECT 1 FROM pacientes pac WHERE pac.id_paciente = %(pac)s AND {self.SQL_VINCULO.format(pac='pac')}"
+        return self.execute_query_one(sql, {'yo': id_especialista, 'pac': id_paciente}) is not None
+
+    def getPacientesConAcceso(self, id_especialista=None):
+        """Pacientes cuya ficha puede abrir el especialista; sin especialista (Administrador), todos."""
+        filtro = f"WHERE {self.SQL_VINCULO.format(pac='pac')}" if id_especialista else ""
+        sql = f"""
+            SELECT pac.id_paciente, pac.pac_historia_clinica AS historia_clinica,
+                   p.per_nombre AS nombre, p.per_apellido AS apellido, p.per_cedula AS cedula
+            FROM pacientes pac
+            JOIN personas p ON p.id_persona = pac.id_persona
+            {filtro}
+            ORDER BY p.per_apellido, p.per_nombre
+        """
+        return self.execute_query(sql, {'yo': id_especialista})
+
+    def getEtiquetaPaciente(self, id_paciente):
+        """«Nombre Apellido (HC 000)» para el detalle de la auditoría; vacío si no existe."""
+        fila = self.execute_query_one("""
+            SELECT p.per_nombre || ' ' || p.per_apellido || ' (HC ' || COALESCE(pac.pac_historia_clinica, 's/n') || ')' AS etiqueta
+            FROM pacientes pac JOIN personas p ON p.id_persona = pac.id_persona WHERE pac.id_paciente = %s
+        """, (id_paciente,))
+        return fila['etiqueta'] if fila else ''
+
+    # ----------------------------------------
     # FICHA COMPLETA
     # ----------------------------------------
 

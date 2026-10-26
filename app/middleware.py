@@ -24,6 +24,7 @@ def init_middleware(app):
                 "login.logout", 
                 "static",
                 "informacion.privacidad",
+                "informacion.terminos",
                 "informacion.soporte",
                 "informacion.contacto",
                 "auth.login",

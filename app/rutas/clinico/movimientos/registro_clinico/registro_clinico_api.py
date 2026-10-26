@@ -220,8 +220,8 @@ def addRegistroInsumo(id_consulta):
     data['registro_cantidad'] = cantidad
 
     try:
-        nuevo_id = RegistroInsumoDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
-        return jsonify({'success': True, 'data': {'id_registro_insumo': nuevo_id}, 'error': None}), 201
+        nuevo = RegistroInsumoDao().guardar(id_consulta, data, usuario_creacion=session.get('id_usuario'))
+        return jsonify({'success': True, 'data': nuevo, 'error': None}), 201
     except ValueError as e:
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:

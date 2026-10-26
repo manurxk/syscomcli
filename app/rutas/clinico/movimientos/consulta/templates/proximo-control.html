@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{# Ventana: Próximo control. Ruta: /clinico/consulta/proximo-control/<id_consulta>[?volver=agenda]. Rol: CLINICO. API: /api/v1/consultas/<id>/proximo-control/turnos, /api/v1/consultas/<id>/proximo-control, /api/v1/mi-agenda/citas-semana, /api/v1/agenda-horarios. #}
+{# Ventana: Próximo control. Rutas: /clinico/consulta/proximo-control/<id_consulta>[?volver=agenda] (cita de Seguimiento) y /clinico/consulta/derivacion-cita/<id_derivacion> (cita de Primera vez del paciente derivado). Rol: CLINICO. API: la que pasa la ruta (api_turnos y api_agendar), /api/v1/mi-agenda/citas-semana, /api/v1/agenda-horarios. #}
 
 {% block titulo %}Próximo control{% endblock %}
 
@@ -9,8 +9,8 @@
     <div class="page-header-content pt-4">
       <div class="row align-items-center justify-content-between">
         <div class="col-auto mt-4">
-          <h1 class="page-header-title">Próximo control</h1>
-          <div class="page-header-subtitle">Elegí un turno libre de tu agenda: se crea la cita de Seguimiento del paciente y recepción la ve en su calendario</div>
+          <h1 class="page-header-title">{{ titulo }}</h1>
+          <div class="page-header-subtitle">{{ subtitulo }}</div>
         </div>
         <div class="col-12 col-xl-auto mt-4">
           <a href="#" id="lnkVolver" class="btn btn-light btn-sm shadow-sm"><i class="fas fa-arrow-left me-1"></i> <span id="txtVolver"></span></a>
@@ -24,12 +24,12 @@
   <div class="row g-3">
     <div class="col-xl-3">
       <div class="card shadow-sm mb-3">
-        <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">Control</h6></div>
+        <div class="card-header bg-body py-3"><h6 class="m-0 fw-bold">Cita</h6></div>
         <div class="card-body">
           <div class="small text-body-secondary">Paciente</div>
           <div class="fw-bold fs-6 mb-3">{{ paciente }}</div>
-          <label class="small mb-1" for="txtMotivo">Motivo del control</label>
-          <input type="text" class="form-control form-control-sm" id="txtMotivo" value="Control" maxlength="200">
+          <label class="small mb-1" for="txtMotivo">Motivo de la cita</label>
+          <input type="text" class="form-control form-control-sm" id="txtMotivo" value="{{ motivo_defecto }}" maxlength="200">
           <div class="alert alert-light border small mt-3 mb-0"><i class="fas fa-hand-pointer me-1"></i>Tocá un turno libre (verde) y confirmá. Turnos libres hasta el <b id="txtHasta"></b>.</div>
         </div>
       </div>
@@ -48,10 +48,15 @@
 {% block js %}
 <script>
   const CSRFToken = "{{ csrf_token() }}" || null;
-  const ID_CONSULTA = {{ id_consulta }};
+  const API_TURNOS = {{ api_turnos | tojson }};
+  const API_AGENDAR = {{ api_agendar | tojson }};
+  const TITULO = {{ titulo | tojson }};
   const PACIENTE = {{ paciente | tojson }};
+  // Vuelve a Mi Agenda cuando se llegó desde la tarjeta de derivaciones o al finalizar la consulta; si no, a la consulta
+  const SOLO_AGENDA = {{ 'true' if volver_agenda else 'false' }};
   const DESDE_FINALIZAR = new URLSearchParams(window.location.search).get('volver') === 'agenda';
-  const URL_VOLVER = DESDE_FINALIZAR ? "{{ url_for('mi_agenda.miAgendaIndex') }}" : "{{ url_for('consulta.consultaAgregar', id_consulta=0) }}".replace(/0$/, ID_CONSULTA);
+  const A_MI_AGENDA = SOLO_AGENDA || DESDE_FINALIZAR;
+  const URL_VOLVER = A_MI_AGENDA ? "{{ url_for('mi_agenda.miAgendaIndex') }}" : {{ (url_volver_consulta or '') | tojson }};
   const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
   let idEspecialista = null, turnos = [], horarios = [];
@@ -62,32 +67,32 @@
   const textoTurno = (s) => { const d = new Date(s.slot_inicio.slice(0, 10) + 'T00:00:00'); return `${DIAS[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} a las ${s.slot_inicio.slice(11)}`; };
 
   $('#lnkVolver').attr('href', URL_VOLVER);
-  $('#txtVolver').text(DESDE_FINALIZAR ? 'Omitir y volver a Mi Agenda' : 'Volver a la consulta');
+  $('#txtVolver').text(SOLO_AGENDA ? 'Volver a Mi Agenda' : (DESDE_FINALIZAR ? 'Omitir y volver a Mi Agenda' : 'Volver a la consulta'));
 
   const agendar = async (slot) => {
     bootstrap.Modal.getInstance(document.getElementById('modalCalCita'))?.hide();
     const r = await Swal.fire({
-      title: 'Agendar próximo control',
+      title: TITULO,
       html: `<b>${esc(PACIENTE)}</b><br>${esc(textoTurno(slot))}${slot.des_consultorio ? ' · ' + esc(slot.des_consultorio) : ''}`,
       icon: 'question', showCancelButton: true, confirmButtonText: 'Agendar', cancelButtonText: 'Volver'
     });
     if (!r.isConfirmed) return;
-    const resp = await fetch(`/api/v1/consultas/${ID_CONSULTA}/proximo-control`, {
+    const resp = await fetch(API_AGENDAR, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRFToken },
       body: JSON.stringify({ id_slot_agenda: slot.id_slot_agenda, motivo: $('#txtMotivo').val() })
     });
     const data = await resp.json();
     if (!data.success) {
-      await Swal.fire('No se agendó el control', data.error || '', 'error');
+      await Swal.fire('No se agendó la cita', data.error || '', 'error');
       cargarTurnos().then(() => cal.pintar());
       return;
     }
-    await Swal.fire({ icon: 'success', title: 'Control agendado', text: `${textoTurno(slot)}. Recepción ya lo ve en su calendario.`, confirmButtonText: 'Listo' });
+    await Swal.fire({ icon: 'success', title: 'Cita agendada', text: `${textoTurno(slot)}. Recepción ya lo ve en su calendario.`, confirmButtonText: 'Listo' });
     window.location.href = URL_VOLVER;
   };
 
   const cargarTurnos = async () => {
-    const data = await (await fetch(`/api/v1/consultas/${ID_CONSULTA}/proximo-control/turnos`)).json();
+    const data = await (await fetch(API_TURNOS)).json();
     if (!data.success) throw new Error(data.error);
     idEspecialista = data.id_especialista; turnos = data.data; cacheCitas.clear();
     const hasta = new Date(); hasta.setDate(hasta.getDate() + 30);
@@ -101,7 +106,7 @@
     horarios = rh.success ? rh.data : [];
     cal = CalendarioSemanal(document.getElementById('calControl'), {
       mensajeVacio: 'Tu usuario no tiene un perfil de especialista vinculado.',
-      textoAgendar: 'Agendar el control acá',
+      textoAgendar: 'Agendar la cita acá',
       nombreEspecialista: () => PACIENTE,
       datos: async (desde, hasta) => {
         const clave = `${desde}|${hasta}`;

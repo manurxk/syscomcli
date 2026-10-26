@@ -239,7 +239,8 @@
       }).join('')).show();
     });
 
-    $sug.on('click', '.list-group-item-action', function() {
+    $sug.on('mousedown', '.list-group-item-action', function(e) {
+      e.preventDefault();
       pacienteSeleccionado = { id: $(this).data('id'), nombre: $(this).data('nom') };
       $input.val($(this).data('nom')); $hid.val($(this).data('id'));
       $btn.prop('disabled', false); $sug.hide().empty();

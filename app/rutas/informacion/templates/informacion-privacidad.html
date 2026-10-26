@@ -1,0 +1,79 @@
+{% extends "informacion-base.html" %}
+{% block titulo %}Política de privacidad{% endblock %}
+{% block titulo_pagina %}Política de privacidad{% endblock %}
+{% block migas %}Privacidad{% endblock %}
+{% block contenido %}
+<div class="small border-start border-primary border-3 ps-3 mb-4">
+    <div class="fw-semibold mb-1">Contenido</div>
+    <ol class="mb-0 ps-3">
+        <li><a href="#s1">Quién es el responsable</a></li>
+        <li><a href="#s2">Qué datos se recogen</a></li>
+        <li><a href="#s3">Para qué se usan</a></li>
+        <li><a href="#s4">Quién puede verlos</a></li>
+        <li><a href="#s5">Avisos por WhatsApp y correo</a></li>
+        <li><a href="#s6">Seguridad y auditoría</a></li>
+        <li><a href="#s7">Cuánto tiempo se conservan</a></li>
+        <li><a href="#s8">Derechos de las personas</a></li>
+        <li><a href="#s9">Cookies y dispositivo de confianza</a></li>
+        <li><a href="#s10">Cambios y contacto</a></li>
+    </ol>
+</div>
+
+<h2 id="s1">1. Quién es el responsable</h2>
+<p>El responsable del tratamiento de los datos es <strong>{{ clinica.razon_social or clinica.nombre }}</strong>{% if clinica.ruc %}, RUC {{ clinica.ruc }}{% endif %}{% if clinica.direccion %}, con domicilio en {{ clinica.direccion }}{% if clinica.ciudad %}, {{ clinica.ciudad }}{% endif %}{% endif %}, Paraguay. SYSCLIN es la herramienta con la que la clínica gestiona agenda, historia clínica, facturación y caja. El tratamiento se adecúa a la Ley N.º 7593/2025 de Protección de Datos Personales.</p>
+
+<h2 id="s2">2. Qué datos se recogen</h2>
+<ul>
+    <li><strong>Identificación y contacto:</strong> nombre, cédula, fecha de nacimiento, teléfono, correo, dirección y, en el caso de menores, datos de su madre, padre o representante legal.</li>
+    <li><strong>Datos de salud (sensibles):</strong> motivo de consulta, evaluaciones, diagnósticos, evolución, derivaciones, órdenes de estudios e insumos utilizados.</li>
+    <li><strong>Datos administrativos:</strong> citas, facturas, cobros y notas de crédito.</li>
+    <li><strong>Datos de las cuentas del personal:</strong> usuario, rol, dispositivos de confianza y registro de actividad.</li>
+</ul>
+
+<h2 id="s3">3. Para qué se usan</h2>
+<ul>
+    <li>Brindar la atención clínica y dar continuidad al tratamiento.</li>
+    <li>Agendar citas y enviar recordatorios.</li>
+    <li>Emitir comprobantes y llevar el control de caja.</li>
+    <li>Cumplir obligaciones legales y tributarias.</li>
+</ul>
+<p>No se venden ni se ceden datos a terceros con fines comerciales, ni se usan para publicidad.</p>
+
+<h2 id="s4">4. Quién puede verlos</h2>
+<p>El acceso depende del rol. Cada persona ve únicamente lo necesario para su función:</p>
+<div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle">
+        <thead class="table-light"><tr><th>Rol</th><th>Acceso</th></tr></thead>
+        <tbody>
+            <tr><td>Clínico</td><td>Fichas, consultas y agenda propias.</td></tr>
+            <tr><td>Recepción</td><td>Datos de contacto, agenda y citas. Sin contenido clínico.</td></tr>
+            <tr><td>Ventas / caja</td><td>Datos de facturación y la referencia del documento. Nunca contenido clínico.</td></tr>
+            <tr><td>Administrador</td><td>Gestión de usuarios, permisos y reportes.</td></tr>
+        </tbody>
+    </table>
+</div>
+<p>Todo el personal está obligado a guardar el secreto profesional y la confidencialidad.</p>
+
+<h2 id="s5">5. Avisos por WhatsApp y correo</h2>
+<p>Con la autorización de la persona, el sistema envía recordatorios de citas y documentos (por ejemplo, el consentimiento informado u órdenes de estudios) al número o correo registrado. Estos canales pertenecen a servicios de terceros; por eso se envía el mínimo necesario y no se incluyen diagnósticos en los mensajes. Puede pedir en cualquier momento que se dejen de enviar.</p>
+
+<h2 id="s6">6. Seguridad y auditoría</h2>
+<ul>
+    <li>Contraseñas almacenadas cifradas y verificación en dos pasos (MFA) en las cuentas del personal.</li>
+    <li>Bloqueo automático de cuentas ante intentos fallidos.</li>
+    <li>Registro de auditoría: quién consultó o modificó un dato, y cuándo.</li>
+    <li>Copias de seguridad periódicas de la base de datos.</li>
+</ul>
+
+<h2 id="s7">7. Cuánto tiempo se conservan</h2>
+<p>Los datos se conservan mientras dure la atención y durante el plazo que exijan la normativa sanitaria y tributaria aplicables. Cumplido ese plazo, y agotada la finalidad para la que se recogieron, se eliminan o se anonimizan.</p>
+
+<h2 id="s8">8. Derechos de las personas</h2>
+<p>Toda persona puede solicitar <strong>acceso, rectificación, actualización y supresión</strong> de sus datos, así como oponerse a determinados usos, y retirar en cualquier momento las autorizaciones que haya dado, dentro de los límites que fije la ley (por ejemplo, la obligación de conservar la historia clínica). La solicitud se presenta en la clínica{% if clinica.email %} o por <strong>{{ clinica.email }}</strong>{% endif %}.</p>
+
+<h2 id="s9">9. Cookies y dispositivo de confianza</h2>
+<p>SYSCLIN usa una cookie de sesión para mantener el acceso y, si el usuario lo acepta, una cookie de <em>dispositivo de confianza</em> por 60 días para no pedir el código MFA en cada ingreso. También puede recordar el nombre de usuario (nunca la contraseña) por 30 días. No se usan cookies de publicidad ni de seguimiento.</p>
+
+<h2 id="s10">10. Cambios y contacto</h2>
+<p>Si esta política cambia, se publicará la nueva versión con su fecha. Para consultas: {% if clinica.email %}<strong>{{ clinica.email }}</strong>{% endif %}{% if clinica.email and clinica.telefono %} · {% endif %}{% if clinica.telefono %}<strong>{{ clinica.telefono }}</strong>{% endif %}{% if not clinica.email and not clinica.telefono %}en la recepción de la clínica{% endif %}.</p>
+{% endblock %}

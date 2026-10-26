@@ -81,14 +81,14 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label small fw-bold">Monto esperado (sistema)</label>
+            <label class="form-label small fw-bold">Efectivo y cheques esperados (sistema)</label>
             <div class="input-group">
               <span class="input-group-text" id="lblSimboloEsperado">Gs.</span>
               <input type="text" class="form-control bg-light fw-bold" id="lblMontoEsperado" readonly value="...">
             </div>
           </div>
           <div class="col-md-4">
-            <label class="form-label small fw-bold">Monto real (recuento físico) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-bold">Efectivo y cheques contados <span class="text-danger">*</span></label>
             <div class="input-group">
               <span class="input-group-text" id="lblSimboloReal">Gs.</span>
               <input type="number" class="form-control" id="txtMontoReal" min="0" step="1000" placeholder="0">
@@ -100,6 +100,9 @@
               <span class="input-group-text" id="lblSimboloDif">Gs.</span>
               <input type="text" class="form-control bg-light fw-bold" id="lblDiferencia" readonly value="—">
             </div>
+          </div>
+          <div class="col-12 small text-muted">
+            <i class="fas fa-circle-info me-1"></i>Se cuenta lo que hay en el cajón: el efectivo y los cheques. El esperado incluye el saldo inicial y descuenta lo que ya se depositó en el banco (recaudaciones). Las tarjetas y las transferencias no están en la caja física y no se cuentan acá.
           </div>
           <div class="col-12">
             <label class="form-label small fw-bold">Observaciones</label>
@@ -191,8 +194,8 @@ document.getElementById('btnCargarApertura').addEventListener('click', async () 
       montoEsperado = parseFloat(jsonSaldo.data.monto_esperado || 0);
       document.getElementById('lblMontoEsperado').value = fmt(montoEsperado, decArqueo);
     } else {
-      montoEsperado = parseFloat(apertura.saldo_inicial || 0);
-      document.getElementById('lblMontoEsperado').value = fmt(montoEsperado, decArqueo) + ' (estimado)';
+      Swal.fire({icon:'warning', title:'No se pudo calcular', text: jsonSaldo.error || 'No se pudo calcular el efectivo esperado: no se puede hacer el arqueo ahora.'});
+      document.getElementById('contenedorArqueo').style.display = 'none';
     }
   } catch(e) {
     Swal.fire({icon:'error', title:'Error', text:'No se pudo cargar la apertura activa.'});

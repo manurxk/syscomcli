@@ -388,7 +388,11 @@
 
                         <!-- Columna 2: Soporte & Legal -->
                         <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
-                            {# TODO: modulo informacion pendiente de reconstruir (ver app/rutas/legacy/seguridad/informacion) #}
+                            <div class="small mb-1">
+                                <a href="{{ url_for('informacion.privacidad') }}" class="text-decoration-none" style="color:#a7aeb8;">Política de privacidad</a>
+                                <span style="color:#a7aeb8;"> · </span>
+                                <a href="{{ url_for('informacion.terminos') }}" class="text-decoration-none" style="color:#a7aeb8;">Términos y condiciones</a>
+                            </div>
                             <a href="mailto:armanuramirez16@gmail.com" class="text-decoration-none small" style="color:#a7aeb8;">armanuramirez16@gmail.com</a>
                         </div>
 
